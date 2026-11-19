@@ -2,8 +2,8 @@
 # @manual
 #
 # "@manual" in the first lines: this file is NOT loaded on the first boot. Load it (or just pick the lines
-# you like and type them) with:  /alias -examples my-shortcuts
-# An alias that already exists stays as it is.
+# you like and type them) with:  /alias -examples my-shortcuts   (it only shows them; /alias -yes -examples my-shortcuts loads)
+# With -yes an alias that already exists is replaced by the file's; the preview says which ones.
 #
 # The addresses and the contacts of the originals were replaced by placeholders: edit /end.home, /end.work
 # and /funny to your own. Then try /alias to list them.

@@ -1,7 +1,7 @@
 /*
  * .zb files (ZapBot): the commands you would type in WhatsApp, saved in a file. They are in examples/ and
  * the bot loads each one once, on the first boot after it appears (the alias.examples setting keeps which ones
- * were loaded: an alias you removed does not come back). /alias -examples lists and loads them by hand.
+ * were loaded: an alias you removed does not come back). /alias -examples lists them, shows what one creates and, with -yes, loads it by hand.
  *
  * Format:
  *   # a comment: a line that starts with # (after spaces) is left out; \# at the start is a literal #
@@ -111,13 +111,14 @@ function silentMsg(replies) {
 
 /**
  * Registers the aliases of an example file. An alias that already exists stays as it is, unless `overwrite`
- * (/alias -examples <file> -yes): then the file's definition replaces it (`updated`).
+ * (/alias -yes -examples <file>): then the file's definition replaces it (`updated`). With `preview` every block is
+ * checked as always but nothing is saved: `preview` has each alias as it would be saved, with `exists`.
  * @returns {Promise<{ loaded: string[], updated: string[], skipped: string[], failed: { name: string, error: string }[] }>}
  */
-async function loadExample(example, { overwrite = false } = {}) {
+async function loadExample(example, { overwrite = false, preview = false } = {}) {
     const { cmdAlias } = require('./commands/alias'); // in here: alias imports the aliases
     await dbReady;
-    const result = { loaded: [], updated: [], skipped: [], failed: [] };
+    const result = { loaded: [], updated: [], skipped: [], failed: [], preview: [] };
     if (!readable(example.file)) {
         result.failed.push({ name: example.name, error: `not read (a symlink, or bigger than ${MAX_FILE_BYTES / 1024} KB)` });
         return result;
@@ -134,11 +135,18 @@ async function loadExample(example, { overwrite = false } = {}) {
             continue;
         }
         const existed = Boolean(await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [name]));
-        if (existed && !overwrite) {
+        if (existed && !overwrite && !preview) {
             result.skipped.push(name);
             continue;
         }
         const replies = [];
+        if (preview) {
+            const collected = [];
+            await cmdAlias({ msg: silentMsg(replies), args: block.replace(/^\/alias\s+/, ''), collect: collected });
+            if (collected.length) result.preview.push({ ...collected[0], exists: existed });
+            else result.failed.push({ name, error: safe(replies.join(' ').split('\n')[0]) || 'not valid' });
+            continue;
+        }
         await cmdAlias({ msg: silentMsg(replies), args: block.replace(/^\/alias\s+/, '') });
         const saved = await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [name]);
         if (saved) (existed ? result.updated : result.loaded).push(name);

@@ -43,8 +43,8 @@ module.exports = {
         {
             opts: ['examples', 'ex'],
             values: ['[<file>]'],
-            desc: 'Without a name, lists the example files (examples/*.zb: aliases ready to use, loaded once on the first boot after they appear). With a name, loads that file; an alias that already exists stays as it is, unless -yes (-y): then the definition of the file replaces it (to apply a newer version of an example).',
-            ex: ['/alias -examples', '/alias -examples tts-voices', '/alias -examples tts-voices -yes']
+            desc: 'Without a name, lists the example files (examples/*.zb: aliases ready to use, loaded once on the first boot after they appear). With a name, only SHOWS the aliases the file would create (the same block of the /alias list, with the marks and which ones already exist): nothing is loaded. To load it, confirm with -yes (/alias -yes -examples <name>), which replaces the ones that already exist.',
+            ex: ['/alias -examples', '/alias -examples tts-voices', '/alias -yes -examples tts-voices']
         },
         {
             opts: ['move', 'm'],

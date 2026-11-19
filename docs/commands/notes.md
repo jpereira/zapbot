@@ -293,7 +293,7 @@ preview on the phone can show it for an instant; the question is safer).
 
 For a tag you use all the time (the `#stash` below), three [aliases](alias.md) make each use one word. They are in
 [`examples/secret-notes.zb`](https://github.com/jpereira/zapbot/blob/main/examples/secret-notes.zb) (load them with
-`/alias -examples secret-notes`), or create them by hand. They are **private** (`-p`, see [Private aliases](alias.md#private-aliases)): only you see and run
+`/alias -yes -examples secret-notes`; without the `-yes` it only shows them), or create them by hand. They are **private** (`-p`, see [Private aliases](alias.md#private-aliases)): only you see and run
 them. The `-desc` of each one explains it in `/alias`:
 
 ```text

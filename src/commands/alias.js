@@ -14,8 +14,10 @@ const aliasName = nameAlt => '/' + nameAlt.replace(/^\//, '');
 const NAME = /^\/?[\p{L}\p{N}_.-]+$/u;
 const MATCH_MAX = 10;   // aliases shown when /alias <part> finds several
 
-// /alias -examples: lists the examples/*.zb files; with a name, loads it (an alias that already exists stays)
-async function examplesReply(msg, name, overwrite = false) {
+// /alias -examples: lists the examples/*.zb files; with a name, shows the aliases the file would create (the same blocks of
+// the /alias list, with the marks and which ones already exist) and loads nothing; only with -yes it loads, replacing
+// the ones that exist
+async function examplesReply(msg, name, yes = false) {
     const files = listExampleFiles();
     const done = getSetting('alias.examples');
     if (!name) {
@@ -25,7 +27,18 @@ async function examplesReply(msg, name, overwrite = false) {
     }
     const example = files.find(f => f.name === name.replace(/\.zb$/, '').toLowerCase());
     if (!example) return msg.reply(t('adm.alias.examplesMissing', { nome: name, lista: files.map(f => f.name).join(', ') }));
-    const { loaded, updated, skipped, failed } = await loadExample(example, { overwrite });
+    if (!yes) {
+        const { preview, failed } = await loadExample(example, { preview: true });
+        const blocks = preview.map(a => aliasBlock(a) + (a.exists ? `\n${t('adm.alias.previewExists')}` : ''));
+        const news = preview.filter(a => !a.exists).length;
+        return msg.reply([
+            t('adm.alias.previewTitle', { nome: example.name, n: preview.length, novos: news, existentes: preview.length - news }),
+            ...blocks,
+            ...failed.map(f => t('adm.alias.examplesFailed', { nome: f.name, erro: f.error })),
+            t('adm.alias.previewTip', { nome: example.name })
+        ].join('\n\n'), undefined, { linkPreview: false });
+    }
+    const { loaded, updated, skipped, failed } = await loadExample(example, { overwrite: true });
     if (!done.includes(example.name)) await setSetting('alias.examples', [...done, example.name]);
     return msg.reply([
         t('adm.alias.examplesLoaded', { nome: example.name, n: loaded.length, lista: loaded.join(', ') || '-' }),
@@ -35,12 +48,12 @@ async function examplesReply(msg, name, overwrite = false) {
     ].filter(Boolean).join('\n'), undefined, { linkPreview: false });
 }
 
-async function cmdAlias({ msg, args }) {
+async function cmdAlias({ msg, args, collect = null }) {
     await dbReady;
     const textAlt = args.trim();
     if (!textAlt || /^-(list|l)$/.test(textAlt)) return listAliases(msg);
-    // /alias -examples [<file>] [-yes]: lists, loads one (what exists stays) or, with -yes, replaces what exists with the file's
-    // (-yes|-y may come before the -examples or anywhere after it)
+    // /alias -examples [<file>] [-yes]: lists the files; with a file, shows what it would create; with -yes, loads it
+    // (replacing what exists). -yes|-y may come before the -examples or anywhere after it
     const examples = textAlt.match(/^((?:-(?:yes|y)\s+)*)-(?:examples|ex)((?:\s+\S+)*)$/i);
     if (examples) {
         const words = `${examples[1]} ${examples[2]}`.split(/\s+/).filter(Boolean);
@@ -180,6 +193,11 @@ async function cmdAlias({ msg, args }) {
         }
     }
     commandAlt = fixDash(commandAlt);
+    // collect (the preview of /alias -examples): everything was checked as always; it only hands back what it would save
+    if (collect) {
+        collect.push({ name: nameAlt, description, command: commandAlt, quiet: quiet ? 1 : 0, owner_only: privateFlag ? 1 : 0 });
+        return;
+    }
     await dbRun(`INSERT INTO command_aliases (name, description, command, quiet, owner_only) VALUES (?, ?, ?, ?, ?)
         ON CONFLICT(name) DO UPDATE SET description = excluded.description,
         command = excluded.command, quiet = excluded.quiet, owner_only = excluded.owner_only`,

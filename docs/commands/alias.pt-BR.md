@@ -23,7 +23,7 @@ escreva um bom `-desc`.
 | `-public`, `-pub` | | Tira o cadeado de um alias privado (`/alias -public /end.froes`) |
 | `-desc`, `-d` | `<texto>` | Descrição opcional entre aspas, antes do comando ou do texto; sem comando, atualiza só a descrição de um alias existente |
 | `-list`, `-l` | | Lista os aliases; o mesmo que `/alias` sem argumentos. Só com um nome (`/alias /eita`), mostra o que aquele alias faz (descrição e comando); se o nome não for um alias, lista os que têm aquele texto no nome (`/alias dol` acha `/dolar`, `/dolar2` e `/meu.dol`; até 10), ou um erro se nenhum casar |
-| `-examples`, `-ex` | `[<arquivo>]` | Sem nome, lista os arquivos de exemplos (`examples/*.zb`: aliases prontos para usar). Com um nome, carrega aquele arquivo; um alias que já existe fica como está, a menos que use `-yes` (`-y`): aí a definição do arquivo troca a dele (para aplicar uma versão mais nova de um exemplo) |
+| `-examples`, `-ex` | `[<arquivo>]` | Sem nome, lista os arquivos de exemplos (`examples/*.zb`: aliases prontos para usar). Com um nome, **só mostra** os aliases que o arquivo criaria (o mesmo bloco da lista do `/alias`, com as marcas 🔇/🔒 e quais já existem) e não carrega nada; para carregar, confirme com `-yes` (`-y`): `/alias -yes -examples my-shortcuts`, que também substitui os que já existem (para aplicar uma versão mais nova de um exemplo) |
 | `-move`, `-m` | `<nome atual> <novo nome>` | Renomeia um alias, mantendo comando, descrição e quiet; o novo nome não pode existir |
 | `-rm` | `<nome...\|all>` | Remove um ou mais aliases (separados por espaço ou vírgula), com ou sem `/`; `all` remove todos |
 
@@ -229,10 +229,19 @@ começa com `/` mantém o `\`.
 
 O bot traz arquivos `.zb` na pasta `examples/`: os comandos que você digitaria aqui, guardados num
 arquivo. Cada arquivo é carregado **uma vez só**, no primeiro boot depois que ele aparece (o setting
-`alias.examples` guarda quais já foram, então um alias que você apagou não volta). Para carregar um na mão,
-ou ver quais existem: `/alias -examples` e `/alias -examples tts-voices`. Um alias que já existe nunca é
-sobrescrito na carga do primeiro boot; na mão, `/alias -examples tts-voices -yes` troca os que existem pelos do arquivo
-(use quando vier uma versão mais nova de um exemplo).
+`alias.examples` guarda quais já foram, então um alias que você apagou não volta). Na mão são **dois passos**, para que
+nada seja criado sem você ver:
+
+```text
+/alias -examples                     → lista os arquivos (✅ carregado · ⬜ não carregado)
+/alias -examples tts-voices          → só MOSTRA os aliases que o arquivo criaria (nada é carregado)
+/alias -yes -examples tts-voices     → confirma: carrega
+```
+
+A prévia é o mesmo bloco da lista do `/alias` (o nome com 🔇 e 🔒, o `-desc` e o comando), diz quantos são novos e quais já
+existem (`♻️ Já existe: carregar substitui`), e termina com o comando de confirmar. Cada bloco é conferido como seria ao
+carregar, então um inválido aparece ali como erro. O `-yes` carrega o arquivo e **substitui** os aliases que já existem pelos do
+arquivo (use quando vier uma versão mais nova de um exemplo); a carga do primeiro boot nunca sobrescreve um alias que existe.
 
 ```text
 # um comentário: uma linha que começa com #
@@ -266,11 +275,11 @@ Os arquivos `.zb` que acompanham o bot estão na pasta [`examples/`](https://git
 | [`secret-notes.zb`](https://github.com/jpereira/zapbot/blob/main/examples/secret-notes.zb) | `/stash.add`, `/stash.view` e `/stash.lock`: uma tag protegida (cifrada) `#stash` em uma palavra cada, com os cenários de privacidade no `-desc` (veja [tags protegidas](notes.md#tags-protegidas--lock)) | só à mão: `/alias -examples secret-notes` |
 | [`my-shortcuts.zb`](https://github.com/jpereira/zapbot/blob/main/examples/my-shortcuts.zb) | Os atalhos do autor, abaixo (os endereços e os contatos foram trocados por exemplos) | só na mão: `/alias -examples my-shortcuts` |
 
-Um arquivo com `# @manual` nas primeiras linhas não carrega no boot, só com `/alias -examples <nome>`.
+Um arquivo com `# @manual` nas primeiras linhas não carrega no boot, só na mão: `/alias -examples <nome>` mostra e `/alias -yes -examples <nome>` carrega.
 
 ### Os atalhos do autor (`my-shortcuts.zb`)
 
-A maioria usa `-q` (sem o cabeçalho "🔗 Alias"). Pegue o arquivo inteiro com `/alias -examples my-shortcuts` ou copie só as linhas de que gostar.
+A maioria usa `-q` (sem o cabeçalho "🔗 Alias"). Veja o arquivo inteiro com `/alias -examples my-shortcuts` e carregue com `/alias -yes -examples my-shortcuts`, ou copie só as linhas de que gostar.
 
 **Cotações (cripto, ações, DeFi)**
 
