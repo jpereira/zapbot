@@ -18,6 +18,9 @@ it shows them, but only for the owner and admins.
 /whois
 Who is it? (1)
 • 🗣️ +u · 👤 Rafael Silva · +15559998888
+ → Only: /joke, /noffa
+ ✅ Can use (5): /help, /joke, /noffa, /usage, /whois
+ ⏱️ /joke  0/5 per day · renews Fri 11/20 00:00
 
 Permissions
 👑 +a: admin, uses everything
@@ -25,6 +28,9 @@ Permissions
 
 Type /help to see which commands are available.
 ```
+
+The **✅ Can use** line is the list of commands you can run in this chat, already with the `+cmd` rule applied (the
+rule shows above it and the usage limits below). The admins and the owner see "Can use all the commands".
 
 ```text
 /whois                          → you

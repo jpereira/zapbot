@@ -235,6 +235,8 @@ module.exports = {
     'whois.idsTitle': '*🆔 IDs*',
     'whois.idGroup': 'Grupo',
     'whois.idChat': 'Chat',
+    'whois.canUse': 'Pode usar ({n}): {lista}',
+    'whois.canUseAll': 'Pode usar todos os comandos ({n})',
     'whois.helpHint': 'Digite /help para saber quais comandos estão disponíveis.',
 
     // /me

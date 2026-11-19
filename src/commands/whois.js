@@ -3,6 +3,8 @@
  */
 
 const { ROLES, describeItem, chatScope, permissions } = require('./bot');
+const { activeCommands } = require('./base');
+const { ROLES: LEVEL } = require('../roles');
 const { isOOwner, textItems } = require('./set');
 const { client } = require('../client');
 const { resolveLidToPhone, groupResolverName } = require('../contacts');
@@ -131,12 +133,18 @@ async function cmdWhois({ msg, opts, quotedMsg, senderNumber, chatId, isGroup, a
     const levels = await Promise.all(numbers.map(n => levelAlt(n, chat)));
     // User with a rule (/bot +cmd|-cmd): their commands here, below
     const linesAlt = await Promise.all(numbers.map(async (n, i) => {
-        const { regras: rules } = permissionHere({ numero: n, chatId, isGroup });
+        const { regras: rules, pode: canUse } = permissionHere({ numero: n, chatId, isGroup });
         const user = levels[i].startsWith(ROLES.usuario);
+        const commands = activeCommands().filter(c => c.role !== LEVEL.OWNER).map(c => c.cmd).sort();
         // And the usage limits (/bot +limit), with what has already been used
         const limits = user ? await limitsWithUsage({ numero: n, chatId, isGroup }) : [];
+        // What they can use here: the user's, by the rule; the admin's and the owner's, all (the owner's included)
+        const allowed = user ? commands.filter(canUse) : [];
+        const everything = levels[i].startsWith(ROLES.admin) || levels[i].startsWith(ROLES.dono);
         return `• ${levels[i]} · ${await describeItem(n, scope)}` +
             (user && rules.length ? `\n → ${rules.map(describeRule).join('; ')}` : '') +
+            (user ? `\n ✅ ${t('whois.canUse', { n: allowed.length, lista: allowed.join(', ') })}` : '') +
+            (everything ? `\n ✅ ${t('whois.canUseAll', { n: levels[i].startsWith(ROLES.dono) ? activeCommands().length : commands.length })}` : '') +
             (limits.length ? `\n ⏱️ ${limits.map(usageLine).join('; ')}` : '');
     }));
 
