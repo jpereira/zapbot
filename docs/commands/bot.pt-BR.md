@@ -647,7 +647,12 @@ problema. Ele também avisa quando há versão nova do `yt-dlp` e do `whatsapp-w
 • Chromium: Chromium 141.0.7390.54
 • yt-dlp: 2026.09.21 · ⬆️ nova: 2026.9.30
 • ffmpeg: 7.1.1
+• ffprobe: 7.1.1
+• Python: 3.13.5
 • faster-whisper: 1.0.2 (modelo small) · stt.py 2.0.0
+• Piper: 1.8.0 (vozes pt_BR-faber-medium, en_US-lessac-medium) · tts.py 2.0.0
+• Tesseract: 5.5.0 (por+eng)
+• pdftotext: 25.03.0
 
 🖥️ Sistema
 • Linux 9f2c1a7d3e4b 6.8.0-85-generic #85-Ubuntu SMP x86_64 Linux

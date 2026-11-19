@@ -12,7 +12,7 @@ const packageJson = require('../package.json');
 
 const { estado: stateAlt } = require('./state');
 const { client } = require('./client');
-const { BIN_CHROMIUM, BIN_FFMPEG, BIN_PYTHON, BIN_YT, BOT_START_TIME, SCRIPT_STT } = require('./constants');
+const { BIN_CHROMIUM, BIN_FFMPEG, BIN_PYTHON, BIN_YT, BOT_START_TIME, BIN_FFPROBE, BIN_TESSERACT, SCRIPT_STT, SCRIPT_TTS } = require('./constants');
 const { dbGet, dbReady } = require('./db');
 const { getBotUptime } = require('./log');
 const { humanSize } = require('./util/files');
@@ -29,8 +29,9 @@ const notFound = () => t('sistema.naoEncontrado');
  */
 function output(bin, args) {
     return new Promise((resolve) => {
-        execFile(bin, args, { timeout: VERSION_TIMEOUT_MS }, (err, stdout) => {
-            const line = String(stdout ?? '').split('\n').find(l => l.trim())?.trim();
+        execFile(bin, args, { timeout: VERSION_TIMEOUT_MS }, (err, stdout, stderr) => {
+            // (pdftotext -v writes the version on the stderr)
+            const line = String(stdout || stderr || '').split('\n').find(l => l.trim())?.trim();
             resolve(err || !line ? null : line);
         });
     });
@@ -131,6 +132,17 @@ function describeWhisper(outputAlt, modelAlt) {
     }
 }
 
+// The output of "tts.py --version" ({"wrapper":"2.0.0","piper":"1.8.0"}) as text, with the default voices; null if it failed
+function describePiper(outputAlt, voices) {
+    try {
+        const v = JSON.parse(outputAlt);
+        return v.piper && v.wrapper
+            ? t('sistema.piper', { piper: v.piper, pt: voices.pt, en: voices.en, wrapper: v.wrapper }) : null;
+    } catch {
+        return null;
+    }
+}
+
 const inDocker = () => fs.existsSync('/.dockerenv');
 
 /**
@@ -139,11 +151,16 @@ const inDocker = () => fs.existsSync('/.dockerenv');
 async function infoText() {
     await dbReady;
 
-    const [chromium, ytDlp, ffmpeg, whisper, uname, sqlite, whatsappWeb, freshAlt2] = await Promise.all([
+    const [chromium, ytDlp, ffmpeg, ffprobe, python, whisper, piper, tesseract, pdftotext, uname, sqlite, whatsappWeb, freshAlt2] = await Promise.all([
         chromiumVersion(),
         output(BIN_YT, ['--version']),
         output(BIN_FFMPEG, ['-version']).then(ffmpegVersion),
+        output(BIN_FFPROBE, ['-version']).then(ffmpegVersion),
+        output(BIN_PYTHON, ['--version']).then(line => line?.replace(/^Python\s+/i, '') ?? null),
         output(BIN_PYTHON, [SCRIPT_STT, '--version']),
+        output(BIN_PYTHON, [SCRIPT_TTS, '--version']),
+        output(BIN_TESSERACT, ['--version']).then(line => line?.replace(/^tesseract\s+/i, '') ?? null),
+        output('pdftotext', ['-v']).then(line => line?.match(/version\s+(\S+)/)?.[1] ?? line),
         output('uname', ['-a']),
         dbGet('SELECT sqlite_version() AS v').then(r => r?.v).catch(() => null),
         client.getWWebVersion?.().catch(() => null),
@@ -167,7 +184,12 @@ async function infoText() {
         chromium,
         ytDlp: `${ytDlp ?? notFound()}${versionNote(ytDlp, freshAlt2.ytDlp)}`,
         ffmpeg: ffmpeg ?? notFound(),
+        ffprobe: ffprobe ?? notFound(),
+        python: python ?? notFound(),
         whisper: describeWhisper(whisper, getSetting('stt.model')) ?? notFound(),
+        piper: describePiper(piper, { pt: getSetting('tts.voice.pt'), en: getSetting('tts.voice.en') }) ?? notFound(),
+        tesseract: tesseract ? `${tesseract} (${getSetting('ocr.language')})` : notFound(),
+        pdftotext: pdftotext ?? notFound(),
         uname: uname ?? `${os.type()} ${os.release()} ${os.arch()}`,
         host: `${os.hostname()}${inDocker() ? ' (Docker)' : ''}`,
         cpu: `${cpus.length}× ${cpus[0]?.model?.trim() ?? os.arch()}`,
@@ -183,6 +205,7 @@ async function infoText() {
 
 module.exports = {
     compareVersions,
+    describePiper,
     describeWhisper,
     cleanNews,
     versionNote,
