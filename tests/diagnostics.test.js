@@ -62,6 +62,10 @@ test('/bot -flush-email: sem IMAP configurado avisa; não combina com as outras 
     assert.match((await bot.replyAlt('/bot -fe'))[0], /❌ Não consegui.*QRCODE_EMAIL_IMAP_HOST/);
     assert.match((await bot.replyAlt('/bot -fe -t'))[0], /não combina/);
     assert.match((await bot.replyAlt('/bot -fe talvez'))[0], /O -flush-email não combina/);
+    // the old "true" value is gone: it is a stray word now; -yes (-y) is what deletes (without IMAP, the same notice)
+    assert.match((await bot.replyAlt('/bot -fe true'))[0], /O -flush-email não combina/);
+    assert.match((await bot.replyAlt('/bot -fe -yes'))[0], /❌ Não consegui.*QRCODE_EMAIL_IMAP_HOST/);
+    assert.match((await bot.replyAlt('/bot -fe -y'))[0], /❌ Não consegui.*QRCODE_EMAIL_IMAP_HOST/);
 });
 
 test('imap: acha Sent e Trash pelo atributo ou pelo nome', () => {

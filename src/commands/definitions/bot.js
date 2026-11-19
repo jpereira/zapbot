@@ -68,9 +68,16 @@ module.exports = {
         {
             opts: ['reset', 'r'],
             values: ['[force]'],
-            desc: 'Removes all users (and their limits), from any chat and group: only you and the extra admins remain. The admins, the on/off state, and the daily -status delivery do not change. With force, everything goes back to default: also removes the extra admins and turns the bot on. Both ask first: reply sim within 10 s. Accepts -mask; the other options are refused. Owner only.',
-            ex: ['/bot -r', '/bot -r force'],
+            desc: 'Removes all users (and their limits), from any chat and group: only you and the extra admins remain. The admins, the on/off state, and the daily -status delivery do not change. With force, everything goes back to default: also removes the extra admins and turns the bot on. Both ask first: reply sim within 10 s (with -yes or -y, it does not ask and runs right away). Accepts -mask; the other options are refused. Owner only.',
+            ex: ['/bot -r', '/bot -r force', '/bot -r -y', '/bot -r force -yes'],
             cron: false
+        },
+        {
+            opts: ['yes', 'y'],
+            values: [],
+            desc: 'With -reset: confirms right away, without the question (reply sim within 10 s). With -flush-email: deletes the messages (without it, only counts). Only valid with those two.',
+            ex: ['/bot -reset -yes', '/bot -r force -y', '/bot -fe -yes'],
+            cron: 'dono'
         },
         {
             opts: ['status', 's'],
@@ -127,9 +134,9 @@ module.exports = {
         },
         {
             opts: ['flush-email', 'fe'],
-            values: ['[true]'],
-            desc: 'Connects to the email IMAP (QRCODE_EMAIL_IMAP_HOST, with the SMTP login) and shows how many messages there are in Sent and Trash. With true, deletes all those in Sent and Trash and finishes by showing how many were cleaned (⏳ while cleaning). Only the owner deletes. Alone: the other options are refused.',
-            ex: ['/bot -fe', '/bot -fe true'],
+            values: [],
+            desc: 'Connects to the email IMAP (QRCODE_EMAIL_IMAP_HOST, with the SMTP login) and shows how many messages there are in Sent and Trash. With -yes (-y), deletes all those in Sent and Trash and finishes by showing how many were cleaned (⏳ while cleaning). Only the owner deletes. Alone: the other options are refused.',
+            ex: ['/bot -fe', '/bot -fe -yes'],
             cron: 'dono'
         },
         {

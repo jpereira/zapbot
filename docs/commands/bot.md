@@ -27,16 +27,17 @@ users and the daily delivery), the versions of what it uses
 | `+cmd`, `-cmd` | `<commands>`: a user's commands. With `+u`, sets them (`+cmd`: only these; `-cmd`: all, except these); alone, `+cmd` grants and `-cmd` removes. See [Each user's commands](#each-users-commands) |
 | `+limit`, `-limit` | `<N[/period]>` (with `+cmd`) or `<commands>`: the usage limit of a user per command (`+cmd /gpt +limit 5/day`); `-limit /gpt` or `all` removes it. See [Usage limits per user](#usage-limits-per-user-limit) |
 | `-list-users`, `-lu` | `[all]`: the users of this chat; with `all`, everyone, in any chat (in a group, the phone of those from outside is hidden). Accepts `-mask`. See [User list](#user-list) |
-| `-reset`, `-r` | `[force]`: removes all users and their limits (the extra admins and the on/off stay). With `force`, everything goes back to the default: it also removes the extra admins and turns the bot on. Both ask first. Accepts `-mask`; the other options are refused. Owner only. See [Back to the default](#back-to-the-default) |
+| `-reset`, `-r` | `[force]`: removes all users and their limits (the extra admins and the on/off stay). With `force`, everything goes back to the default: it also removes the extra admins and turns the bot on. Both ask first (with `-yes` or `-y`, they run at once). Accepts `-mask`; the other options are refused. Owner only. See [Back to the default](#back-to-the-default) |
 | `-status`, `-s` | The status now and its daily delivery (`[<time>\|off]`). Accepts `-to` and `-mask`; the other options are refused. See [Bot status](#bot-status) |
 | `-to` | `<destination>`: together with `-status`, where the report goes (person, group or email; repeat for several). See [Bot status](#bot-status) |
+| `-yes`, `-y` | With `-reset`: confirms right away, without the question (it runs at once). With `-flush-email`: deletes the messages (without it, only counts). Only valid with those two |
 | `-info`, `-i` | Versions of the bot and of what it uses, and the system. Accepts `-mask`; the other options are refused. See [System information](#system-information) |
 | `-test`, `-t` | Tests everything (cache, disk, database, WhatsApp, internet, speed, SMTP, IMAP and programs), with ✅ or ❌ on each item. The other options are refused. See [Bot test](#bot-test) |
 | `-denied`, `-d` | `[on\|off\|reset\|<text>]`: the notice for whoever types a command they can't use, instead of silence. Without a value, shows it; `on`/`off` turn it on and off; `reset` brings back the default text; any other text becomes the message (`$cmd` is the typed command and `$admin`, the bot owner). See [Notice for denied commands](#notice-for-denied-commands) |
 | `-flood`, `-f` | `[off\|on\|<N>[/<seconds>]]`: the [flood protection](#flood-protection). Without a value, shows it; `off` turns it off; `on` brings back the defaults (3 times in 2 seconds); `N` changes the maximum and `N/S` also the interval in seconds |
 | `-passwd` | `<password\|off>`: owner only. Sets the password for `-login` (min. 8 characters; only the scrypt hash is stored in the database, in the `bot.login` setting). With `off`, turns login off |
 | `-login` | `<password>`: for outsiders, in private only. With the right password, the person goes into `bot.admins` and the owner is notified by WhatsApp and email. 5 wrong tries, 15 min blocked. The password is deleted from the message database. To revoke: `/bot -a +number` |
-| `-flush-email`, `-fe` | `[true]`: connects to the email IMAP (needs `QRCODE_EMAIL_IMAP_HOST`) and shows how many messages are in Sent and Trash; with `true`, deletes them all. Only the owner deletes. The other options are refused. See [Cleaning the email](#cleaning-the-email) |
+| `-flush-email`, `-fe` | connects to the email IMAP (needs `QRCODE_EMAIL_IMAP_HOST`) and shows how many messages are in Sent and Trash; with `-yes` (or `-y`), deletes them all. Only the owner deletes. The other options are refused. See [Cleaning the email](#cleaning-the-email) |
 | `-mask`, `-m` | Obfuscates phone numbers in the output of this run. E.g.: `+55219****44` |
 
 Use `/bot -list-users -mask` to show names with obfuscated phone numbers. The mask keeps the first
@@ -450,7 +451,8 @@ The default text (`🚫 No permission to run $cmd, talk to $admin`) follows the 
 
 Two levels, both owner-only and both ask for confirmation: reply **yes** within 10 seconds, in the
 same chat (**no**, or nothing, leaves everything as is; with no reply, the question becomes
-`⌛ Nothing changed: no *yes* within 10 s.`). The bot also accepts **sim** and **não**.
+`⌛ Nothing changed: no *yes* within 10 s.`). The bot also accepts **sim** and **não**. With `-yes` (or `-y`) it doesn't
+ask: `/bot -reset -yes` and `/bot -reset force -y` run at once.
 
 | | `/bot -reset` (`-r`) | `/bot -reset force` |
 |---|---|---|
@@ -615,9 +617,9 @@ much space that takes and cleans it.
 ```text
 /bot -fe
 📧 Mailbox: 128 in Sent and 14 in Trash
-💡 /bot -flush-email true to delete everything
+💡 /bot -flush-email -yes to delete everything
 
-/bot -fe true
+/bot -fe -yes
 ⏳ Cleaning the mailbox...        (edited when done)
 🧹 Mailbox cleaned: 128 in Sent and 14 in Trash (142 in total)
 ```

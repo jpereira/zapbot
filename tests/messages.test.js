@@ -683,6 +683,20 @@ describe('permissões', () => {
         assert.deepEqual(readAll(), INTACT);
         t.mock.timers.reset();
 
+        // -yes (-y) confirms: no question, it runs at once (both levels); -yes alone means nothing
+        await touch();
+        const sinceYes = bot.client.enviadas.length;
+        await bot.executar('/bot -r -y');
+        assert.deepEqual(bot.client.enviadas.slice(sinceYes).map(e => e.content).filter(c => c.includes('Responda *sim*')), [], 'sem pergunta');
+        assert.ok(bot.client.enviadas.at(-1).content.startsWith(LIGHT));
+        assert.deepEqual(readAll(), [true, ['5521911111111'], [], []]);
+        await touch();
+        await bot.executar('/bot -reset force -yes');
+        assert.equal(bot.client.enviadas.at(-1).content, DEFAULT);
+        assert.deepEqual(readAll(), [false, [], [], []]);
+        assert.match((await bot.replyAlt('/bot -yes'))[0], /O -yes só vale com o -reset/);
+        assert.match((await bot.replyAlt('/bot -info -y'))[0], /O -yes só vale com o -reset/);
+
         // An extra admin does neither; and it does not combine with the other options
         await bot.setSetting('bot.admins', [OTHERAlt.user]);
         assert.deepEqual(await bot.replyAlt('/bot -r', { de: OTHERAlt.jid }), ['⛔ Só o dono do bot tira todos os usuários.']);

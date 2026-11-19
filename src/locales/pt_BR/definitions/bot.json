@@ -93,10 +93,25 @@
       "values": [
         "[force]"
       ],
-      "desc": "Tira todos os usuários (e os limites deles), de qualquer chat e grupo: ficam só você e os admins extras. Os admins, o liga/desliga e o envio diário do -status não mudam. Com force, volta tudo ao padrão: também tira os admins extras e liga o bot. Os dois perguntam antes: responda sim em 10 s. Aceita -mask; as outras opções são recusadas. Só o dono.",
+      "desc": "Tira todos os usuários (e os limites deles), de qualquer chat e grupo: ficam só você e os admins extras. Os admins, o liga/desliga e o envio diário do -status não mudam. Com force, volta tudo ao padrão: também tira os admins extras e liga o bot. Os dois perguntam antes: responda sim em 10 s (com -yes ou -y, não pergunta e roda na hora). Aceita -mask; as outras opções são recusadas. Só o dono.",
       "ex": [
         "/bot -r",
-        "/bot -r force"
+        "/bot -r force",
+        "/bot -r -y",
+        "/bot -r force -yes"
+      ]
+    },
+    {
+      "opts": [
+        "yes",
+        "y"
+      ],
+      "values": [],
+      "desc": "Com -reset: confirma na hora, sem a pergunta (responder sim em até 10 s). Com -flush-email: apaga as mensagens (sem ele, só conta). Só vale com essas duas.",
+      "ex": [
+        "/bot -reset -yes",
+        "/bot -r force -y",
+        "/bot -fe -yes"
       ]
     },
     {
@@ -204,13 +219,11 @@
         "flush-email",
         "fe"
       ],
-      "values": [
-        "[true]"
-      ],
-      "desc": "Conecta no IMAP do e-mail (QRCODE_EMAIL_IMAP_HOST, com o login do SMTP) e mostra quantas mensagens há em Sent e Trash. Com true, apaga todas as de Sent e Trash e conclui mostrando quantas foram limpas (⏳ enquanto limpa). Só o dono apaga. Sozinho: as outras opções são recusadas.",
+      "values": [],
+      "desc": "Conecta no IMAP do e-mail (QRCODE_EMAIL_IMAP_HOST, com o login do SMTP) e mostra quantas mensagens há em Sent e Trash. Com -yes (-y), apaga todas as de Sent e Trash e conclui mostrando quantas foram limpas (⏳ enquanto limpa). Só o dono apaga. Sozinho: as outras opções são recusadas.",
       "ex": [
         "/bot -fe",
-        "/bot -fe true"
+        "/bot -fe -yes"
       ]
     },
     {

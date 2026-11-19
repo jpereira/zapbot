@@ -28,7 +28,8 @@ usuários e o envio diário), as versões do que ele usa
 | `+cmd`, `-cmd` | `<comandos>`: os comandos de um usuário. Com o `+u`, define (`+cmd`: só esses; `-cmd`: todos, menos esses); sozinho, `+cmd` libera e `-cmd` tira. Veja [Comandos de cada usuário](#comandos-de-cada-usuário) |
 | `+limit`, `-limit` | `<N[/período]>` (com o `+cmd`) ou `<comandos>`: o limite de uso de um usuário por comando (`+cmd /gpt +limit 5/dia`); `-limit /gpt` ou `all` tira. Veja [Limite de uso por usuário](#limite-de-uso-por-usuário-limit) |
 | `-list-users`, `-lu` | `[all]`: os usuários deste chat; com `all`, todos, em qualquer chat (num grupo, o telefone de quem é de fora sai escondido). Aceita `-mask`. Veja [Lista de usuários](#lista-de-usuários) |
-| `-reset`, `-r` | `[force]`: tira todos os usuários e os limites deles (os admins extras e o liga/desliga ficam). Com `force`, volta tudo ao padrão: também tira os admins extras e liga o bot. Os dois perguntam antes. Aceita `-mask`; as outras opções são recusadas. Só o dono. Veja [Voltar ao padrão](#voltar-ao-padrão) |
+| `-reset`, `-r` | `[force]`: tira todos os usuários e os limites deles (os admins extras e o liga/desliga ficam). Com `force`, volta tudo ao padrão: também tira os admins extras e liga o bot. Os dois perguntam antes (com `-yes` ou `-y`, rodam de uma vez). Aceita `-mask`; as outras opções são recusadas. Só o dono. Veja [Voltar ao padrão](#voltar-ao-padrão) |
+| `-yes`, `-y` | Com o `-reset`: confirma na hora, sem a pergunta (roda de uma vez). Com o `-flush-email`: apaga as mensagens (sem ele, só conta). Só vale com os dois |
 | `-status`, `-s` | O status agora e o envio diário dele (`[<hora>\|off]`). Aceita `-to` e `-mask`; as outras opções são recusadas. Veja [Status do bot](#status-do-bot) |
 | `-to` | `<destino>`: junto com `-status`, para onde vai o relatório (pessoa, grupo ou e-mail; repita para vários). Veja [Status do bot](#status-do-bot) |
 | `-info`, `-i` | Versões do bot e do que ele usa, e o sistema. Aceita `-mask`; as outras opções são recusadas. Veja [Informações do sistema](#informações-do-sistema) |
@@ -37,7 +38,7 @@ usuários e o envio diário), as versões do que ele usa
 | `-flood`, `-f` | `[off\|on\|<N>[/<segundos>]]`: a [proteção contra flood](#proteção-contra-flood). Sem valor, mostra; `off` desliga; `on` volta aos padrões (3 vezes em 2 segundos); `N` muda o máximo e `N/S` também o intervalo em segundos |
 | `-passwd` | `<senha\|off>`: só o dono. Define a senha do `-login` (mín. 8 caracteres; só o hash scrypt fica no banco, no setting `bot.login`). Com `off`, desliga o login |
 | `-login` | `<senha>`: para quem é de fora, só no privado. Com a senha certa, a pessoa entra no `bot.admins` e o dono é avisado por WhatsApp e e-mail. Erra 5 vezes, fica 15 min bloqueada. A senha é apagada do banco de mensagens. Para revogar: `/bot -a +número` |
-| `-flush-email`, `-fe` | `[true]`: conecta no IMAP do e-mail (precisa de `QRCODE_EMAIL_IMAP_HOST`) e mostra quantas mensagens há em Sent e Trash; com `true`, apaga todas. Só o dono apaga. As outras opções são recusadas. Veja [Limpar o e-mail](#limpar-o-e-mail) |
+| `-flush-email`, `-fe` | conecta no IMAP do e-mail (precisa de `QRCODE_EMAIL_IMAP_HOST`) e mostra quantas mensagens há em Sent e Trash; com `-yes` (ou `-y`), apaga todas. Só o dono apaga. As outras opções são recusadas. Veja [Limpar o e-mail](#limpar-o-e-mail) |
 | `-mask`, `-m` | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
 
 Use `/bot -list-users -mask` para exibir nomes com telefones ofuscados. A máscara mantém os cinco
@@ -446,7 +447,7 @@ O texto padrão (`🚫 Sem permissão para executar $cmd, fale com $admin`) acom
 
 Dois níveis, os dois só do dono e os dois pedem confirmação: responda **sim** em até 10 segundos, no
 mesmo chat (**não**, ou nada, deixa tudo como está; sem resposta, a pergunta vira
-`⌛ Nada mudou: sem sim em 10 s.`).
+`⌛ Nada mudou: sem sim em 10 s.`). Com `-yes` (ou `-y`) ele não pergunta: `/bot -reset -yes` e `/bot -reset force -y` rodam de uma vez.
 
 | | `/bot -reset` (`-r`) | `/bot -reset force` |
 |---|---|---|
@@ -609,9 +610,9 @@ quanto isso ocupa e limpa.
 ```text
 /bot -fe
 📧 *Caixa de e-mail:* 128 em Sent e 14 em Trash
-💡 /bot -flush-email true para apagar tudo
+💡 /bot -flush-email -yes para apagar tudo
 
-/bot -fe true
+/bot -fe -yes
 ⏳ Limpando a caixa de e-mail...        (editada ao concluir)
 🧹 *E-mail limpo:* 128 em Sent e 14 em Trash (142 no total)
 ```

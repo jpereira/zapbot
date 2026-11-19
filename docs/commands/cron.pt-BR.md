@@ -166,7 +166,7 @@ Preço do Dólar!
   `-wallet`, o `-pool`, o `-nft`, o `-name`, o `-rm`, o `-alert`, o `-fees` e o `-to` do `/defi`
   (rodam os protocolos, o `-l`, o `-mask` e o `aave -full`); e o `-flush` e o `-flush-all` do
   `/stats`.
-- O `/bot` é a exceção: só o dono cria um item com `{/bot -flush-email true}` (nele, só o `-info` e o
+- O `/bot` é a exceção: só o dono cria um item com `{/bot -flush-email -yes}` (nele, só o `-info` e o
   `-flush-email` rodam; as outras opções são recusadas). Um admin que não é o dono leva erro ao criar.
 - O comando é conferido ao criar (e no `-edit`): um que não existe ou que não roda no `/cron` dá
   erro na hora, não no envio.

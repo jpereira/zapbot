@@ -166,7 +166,7 @@ Dollar price!
   either: `-width` and `-char` of `/ascii`; `-add`, `-del` and `-alert` of `/crypto` and `/stocks`;
   `-address`, `-wallet`, `-pool`, `-nft`, `-name`, `-rm`, `-alert`, `-fees` and `-to` of `/defi`
   (the protocols, `-l`, `-mask` and `aave -full` run); and `-flush` and `-flush-all` of `/stats`.
-- `/bot` is the exception: only the owner creates an item with `{/bot -flush-email true}` (in it,
+- `/bot` is the exception: only the owner creates an item with `{/bot -flush-email -yes}` (in it,
   only `-info` and `-flush-email` run; the other options are refused). An admin who isn't the owner
   gets an error on creation.
 - The command is checked on creation (and on `-edit`): one that doesn't exist or doesn't run in

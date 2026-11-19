@@ -674,23 +674,26 @@ const CONFIRM_RESET_MS = 10_000;
 /*
  * -reset: removes all users and their limits; the extra admins and the on/off stay.
  * -reset force: puts everything back to default (also removes the extra admins and turns the bot on).
- * Both ask first (reply "sim" within 10 s).
+ * Both ask first (reply "sim" within 10 s), unless -yes (-y) comes along.
  */
-async function reset(msg, { chatId, completo: complete }) {
+async function reset(msg, { chatId, completo: complete, sim: yes = false }) {
     if (!msg.fromMe) {
         await msg.reply(t(complete ? 'adm.bot.resetOwnerFull' : 'adm.bot.resetOwner'));
         return;
     }
 
-    const seconds = CONFIRM_RESET_MS / 1000;
-    const question = await msg.reply(t(complete ? 'adm.bot.askFull' : 'adm.bot.ask', { segundos: seconds }));
-    const confirmed = await waitConfirmation(chatId, {
-        ms: CONFIRM_RESET_MS,
-        autor: authorAlt(msg),
-        aoExpirar: () => completeNotice(msg, question, t('adm.bot.resetExpired', { segundos: seconds }))
-    });
-    if (confirmed === false) await msg.reply(t('adm.bot.nothingChangedShort'));
-    if (!confirmed) return;
+    // -yes (-y) already confirms: no question
+    if (!yes) {
+        const seconds = CONFIRM_RESET_MS / 1000;
+        const question = await msg.reply(t(complete ? 'adm.bot.askFull' : 'adm.bot.ask', { segundos: seconds }));
+        const confirmed = await waitConfirmation(chatId, {
+            ms: CONFIRM_RESET_MS,
+            autor: authorAlt(msg),
+            aoExpirar: () => completeNotice(msg, question, t('adm.bot.resetExpired', { segundos: seconds }))
+        });
+        if (confirmed === false) await msg.reply(t('adm.bot.nothingChangedShort'));
+        if (!confirmed) return;
+    }
 
     const usersAlt = getSetting('bot.users').length;
     for (const key of complete ? RESET_COMPLETE : DO_RESET) await setSetting(key, SETTINGS_SCHEMA[key].default);
@@ -704,7 +707,7 @@ async function reset(msg, { chatId, completo: complete }) {
     await msg.reply(t('adm.bot.resetDone', { n: usersAlt, estado: botState() }));
 }
 
-// -flush-email: counts the Sent and Trash messages; with "true", deletes everything (owner only)
+// -flush-email: counts the Sent and Trash messages; with -yes (-y), deletes everything (owner only)
 async function cleanEmail(msg, { apagar: removeAlt }) {
     if (removeAlt && !msg.fromMe) {
         await msg.reply(t('adm.bot.flushOwner'));
@@ -714,7 +717,7 @@ async function cleanEmail(msg, { apagar: removeAlt }) {
     const notice = removeAlt ? await msg.reply(t('adm.bot.flushing')) : null;
     try {
         const { sent, trash } = await boxes({ apagar: removeAlt });
-        printInfo(`/bot -flush-email${removeAlt ? ' true' : ''}: Sent ${sent}, Trash ${trash}`);
+        printInfo(`/bot -flush-email${removeAlt ? ' -yes' : ''}: Sent ${sent}, Trash ${trash}`);
         const textAlt = removeAlt
             ? t('adm.bot.flushed', { sent, trash, total: sent + trash })
             : t('adm.bot.flushCount', { sent, trash });
@@ -797,8 +800,7 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
         return;
     }
 
-    // -info, -test, -reset and -flush-email: alone (-reset accepts force, which does not ask;
-    // o -flush-email, o true)
+    // -info, -test, -reset and -flush-email: alone (-reset accepts force; -reset and -flush-email accept -yes)
     // -passwd <password|off>: the /bot -login password (owner only)
     if (opts.given.has('passwd')) {
         if (!msg.fromMe) {
@@ -822,14 +824,21 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
         return;
     }
 
+    // -yes|-y confirms the -reset (no question) and makes the -flush-email delete; alone it means nothing
+    const yes = opts.given.has('yes');
+    if (yes && !opts.given.has('reset') && !opts.given.has('flush-email')) {
+        await msg.reply(t('adm.bot.yesOnlyReset'));
+        return;
+    }
+
     const ALONE = ['info', 'test', 'reset', 'flush-email'];
     for (const alone of ALONE) {
         if (!opts.given.has(alone)) continue;
         const other = ALONE.filter(o => o !== alone);
-        // The value of -reset: nothing or force; of -flush-email: nothing or true
-        const valueAlt = alone === 'reset' || alone === 'flush-email' ? opts.opt[alone] : null;
-        const force = new RegExp(`^${alone === 'reset' ? 'force' : 'true'}$`, 'i').test(valueAlt ?? '');
-        const combined = on || off || listAlt || opts.given.has('status') || other.some(o => opts.given.has(o));
+        // The value of -reset: nothing or force (-flush-email has no value: -yes deletes)
+        const valueAlt = alone === 'reset' ? opts.opt[alone] : null;
+        const force = alone === 'reset' && /^force$/i.test(valueAlt ?? '');
+        const combined = on || off || listAlt || opts.given.has('status') || other.some(o => opts.given.has(o)) || (yes && alone !== 'reset' && alone !== 'flush-email');
         if (combined || opts.argv.length || (valueAlt && !force)) {
             await msg.reply(t('adm.bot.noCombine', { opcao: alone }));
             return;
@@ -838,8 +847,8 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
         else if (alone === 'test') {
             const notice = await msg.reply(t('adm.bot.testing'));
             await completeNotice(msg, notice, await testText());
-        } else if (alone === 'flush-email') await cleanEmail(msg, { apagar: force });
-        else await reset(msg, { chatId, completo: force });
+        } else if (alone === 'flush-email') await cleanEmail(msg, { apagar: yes });
+        else await reset(msg, { chatId, completo: force, sim: yes });
         return;
     }
 
