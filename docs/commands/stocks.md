@@ -6,6 +6,7 @@ indexes** (MSTR, NVDA, PETR4.SA, the S&P 500...). It shows the enabled symbols (
 [`/crypto`](crypto.md) (BTC, ETH, **XAUT**, the gold token...).
 
 | Option | Value | Description |
+| `-tts` | | Speaks the reply as a voice note, with the default voice of [`/tts`](tts.md) (same as `/tts -q {/stocks -q ...}`). Settings `tts.*` apply |
 |---|---|---|
 | *(none)* | `[SYMBOL...]` | The enabled ones, or only the given symbols (enabled or not), in the order requested: `USD`, `EUR`, `GBP`, `USDT` or a ticker from Yahoo Finance |
 | `-list`, `-l` | | Lists everything it supports: the enabled symbols, the currencies (✅ the enabled ones) and the kinds of ticker, with examples |

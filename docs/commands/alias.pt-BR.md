@@ -189,6 +189,9 @@ Depois disso, `/btc`, `/xaut`, `/mstr`, `/dolar`... respondem direto com a cota�
 
 - **Vários de uma vez:** `/alias -q /cripto /crypto BTC ETH SOL XAUT` e `/alias -q /mercado /stocks USD EUR MSTR` trazem o
   grupo todo numa mensagem só.
+- **Cotação falada:** com `-tts` a resposta vem em um áudio (veja o [`/tts`](tts.md#comandos-no-texto)):
+  `/alias -q /horadobtc /crypto -tts BTC` e o `/horadobtc` fala "BTC $90,123.45". Vale igual para
+  `/stocks -tts USD`, `/weather -tts` e `/uptime -tts`.
 - **Um alias para qualquer moeda ou ticker**, com o [parâmetro](#parâmetros-1-n) `${1:-...}`:
 
 ```text

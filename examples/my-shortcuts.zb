@@ -15,6 +15,7 @@
 
 /alias -q /bitcoio /crypto BTC
 /alias -q /btc /crypto BTC
+/alias -q /horadobtc /crypto -tts BTC
 /alias -q /creptomoeda /crypto
 /alias -q /dolar /stocks USD
 /alias -q /eth /crypto ETH

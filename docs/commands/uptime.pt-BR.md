@@ -4,6 +4,10 @@ Mostra a versão e há quanto tempo o bot está no ar e conectado ao WhatsApp (`
 conectado` enquanto não estiver conectado). Pode ser usado dentro de um [`/alias`](alias.md) ou do
 [`/cron`](cron.md) com `{/uptime}`.
 
+| Opção | Valor | Descrição |
+|---|---|---|
+| `-tts` | | Fala a resposta em um áudio, com a voz padrão do [`/tts`](tts.md) (o mesmo que `/tts -q {/uptime ...}`). Valem os settings `tts.*` |
+
 ```text
 /uptime
 🤖 ZapBot 1.0.25 (devel) (git+7a89b92/HEAD)

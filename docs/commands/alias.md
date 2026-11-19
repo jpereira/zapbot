@@ -189,6 +189,9 @@ After that, `/btc`, `/xaut`, `/mstr`, `/dolar`... answer with the quote straight
 
 - **A few at once:** `/alias -q /cripto /crypto BTC ETH SOL XAUT` and `/alias -q /mercado /stocks USD EUR MSTR` bring the
   whole group in one message.
+- **Spoken quote:** with `-tts` the reply comes as a voice note (see [`/tts`](tts.md#commands-in-the-text)):
+  `/alias -q /btctime /crypto -tts BTC` and `/btctime` speaks "BTC $90,123.45". It works the same with
+  `/stocks -tts USD`, `/weather -tts` and `/uptime -tts`.
 - **One alias for any coin or ticker**, with the [parameter](#parameters-1-n) `${1:-...}`:
 
 ```text

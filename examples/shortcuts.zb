@@ -2,6 +2,7 @@
 #
 #   /dollar            the dollar quote (/stocks USD); /dollar EUR for another currency
 #   /idea some text    saves the text as a note tagged #ideas (/notes #ideas)
+#   /btctime           speaks the Bitcoin price as a voice note (/crypto -tts BTC)
 #
 # A \ at the end of a line joins it with the next one; a line that starts with # is a comment.
 
@@ -10,3 +11,6 @@
 
 /alias /idea -desc "Saves an idea in the notes" \
     /notes #ideas $@
+
+/alias -q /btctime -desc "Speaks the Bitcoin price as a voice note" \
+    /crypto -tts BTC

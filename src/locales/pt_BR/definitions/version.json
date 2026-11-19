@@ -2,5 +2,16 @@
   "summary": "Exibe a versão do bot",
   "usage": "/version",
   "help": "Exibe a versão do bot (mesmo banner do /uptime).",
-  "cmd_opts": []
+  "cmd_opts": [
+    {
+      "opts": [
+        "tts"
+      ],
+      "values": [],
+      "desc": "Fala a resposta em um áudio, com a voz padrão do /tts. O mesmo que /tts -q {/version ...}, só com o áudio. Valem os settings do /tts (tts.*).",
+      "ex": [
+        "/version -tts"
+      ]
+    }
+  ]
 }

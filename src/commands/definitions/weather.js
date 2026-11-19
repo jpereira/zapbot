@@ -26,8 +26,16 @@ module.exports = {
             values: [],
             desc: 'Only a natural sentence, with no emoji or markdown: city, condition, temperature, high and low, and the rain, wind or UV when they matter. Handy for a text ({/weather -q}) or for /tts.',
             ex: ['/weather -q', '/weather -q Niteroi']
+        },
+        {
+            opts: ['tts'],
+            values: [],
+            desc: 'Speaks the reply as a voice note, with the default voice of /tts. Same as /tts -q {/weather -q ...}, with only the voice note. The /tts settings (tts.*) apply.',
+            ex: ['/weather -tts'],
+            cron: false
         }
     ],
+    tts: true,   // -tts: speaks the reply (it is /tts {/weather -q ...})
     role: USER,
     cron: true
 };

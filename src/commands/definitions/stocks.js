@@ -42,8 +42,16 @@ module.exports = {
         { opts: ['list', 'l'], values: [], desc: 'Lists everything it supports: the enabled symbols, the currencies (✅ the enabled ones) and the kinds of ticker, with examples.' },
         OPTION_ALERT_MSG,
         OPTION_ALERT_RM,
-        OPTION_ALERT_TO
+        OPTION_ALERT_TO,
+        {
+            opts: ['tts'],
+            values: [],
+            desc: 'Speaks the reply as a voice note, with the default voice of /tts. Same as /tts -q {/stocks -q ...}, with only the voice note. The /tts settings (tts.*) apply.',
+            ex: ['/stocks -tts'],
+            cron: false
+        }
     ],
+    tts: true,   // -tts: speaks the reply (it is /tts {/stocks -q ...})
     role: USER,
     cron: true
 };

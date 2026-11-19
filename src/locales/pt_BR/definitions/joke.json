@@ -2,5 +2,16 @@
   "summary": "Piada aleatória",
   "usage": "/joke",
   "help": "Piada aleatória em português (nenhuma se repete até todas saírem).",
-  "cmd_opts": []
+  "cmd_opts": [
+    {
+      "opts": [
+        "tts"
+      ],
+      "values": [],
+      "desc": "Fala a resposta em um áudio, com a voz padrão do /tts. O mesmo que /tts -q {/joke ...}, só com o áudio. Valem os settings do /tts (tts.*).",
+      "ex": [
+        "/joke -tts"
+      ]
+    }
+  ]
 }

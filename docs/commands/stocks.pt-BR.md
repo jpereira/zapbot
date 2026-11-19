@@ -6,6 +6,7 @@ pedidos. O `/rates` é o mesmo comando (o nome antigo). Para **cripto**, use o [
 **XAUT**, o token do ouro...).
 
 | Opção | Valor | Descrição |
+| `-tts` | | Fala a resposta em um áudio, com a voz padrão do [`/tts`](tts.md) (o mesmo que `/tts -q {/stocks -q ...}`). Valem os settings `tts.*` |
 |---|---|---|
 | *(nada)* | `[SÍMBOLO...]` | Os habilitados, ou só os símbolos pedidos (habilitados ou não), na ordem pedida: `USD`, `EUR`, `GBP`, `USDT` ou um ticker do Yahoo Finance |
 | `-list`, `-l` | | Lista tudo o que ele suporta: os símbolos habilitados, as moedas (✅ as habilitadas) e os tipos de ticker, com exemplos |
