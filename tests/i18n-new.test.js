@@ -41,7 +41,7 @@ test('/promote, /demote e /invite', async () => {
 });
 
 test('/ocr, /tts, /qr, /carbon e /profile -set', async () => {
-    assert.match((await bot.replyAlt('/ocr'))[0], /^⚠️ OpenAI API key not found: \/ocr is disabled\./);
+    assert.match((await bot.replyAlt('/ocr -gpt'))[0], /^⚠️ OpenAI API key not found: \/ocr is disabled\./);
     assert.match((await bot.replyAlt('/tts -gpt hi'))[0], /^⚠️ OpenAI API key not found: \/tts is disabled\./);
 
     await setSetting('gpt.api.key', 'sk-teste');

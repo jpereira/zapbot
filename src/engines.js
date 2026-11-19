@@ -21,4 +21,23 @@ function pickEngine(opts, setting) {
     return getSetting(setting);
 }
 
-module.exports = { pickEngine };
+const CHATGPT = 'ChatGPT';
+
+/**
+ * The "⏳ ... with {engine}" notice of every command that has an engine (ChatGPT or local).
+ * @param {string} cmd     'gpt' | 'tldr' | 'draw' | 'ocr' | 'tts' | 'stt'
+ * @param {string} engine  the name shown: 'ChatGPT', 'Tesseract', 'Piper', 'faster-whisper'...
+ * @param {object} [params]  extra values of the action text (the /tldr scope)
+ */
+const engineProcessing = (cmd, engine, params = {}) => t('engine.processing', { action: t(`engine.action.${cmd}`, params), engine });
+
+/**
+ * The "💡 Read by {engine}" line that ends the reply.
+ * @param {string} text   the reply
+ * @param {string} sep    what goes between the reply and the tip
+ */
+function withEngineTip(text, cmd, engine, { sep = '\n\n' } = {}) {
+    return `${text}${sep}${t('engine.tip', { verb: t(`engine.verb.${cmd}`), engine })}`;
+}
+
+module.exports = { CHATGPT, engineProcessing, pickEngine, withEngineTip };
