@@ -60,7 +60,7 @@ installClosing();
 const { markDbReady } = require('./src/db');
 const { initializeDb } = require('./src/initialization');
 
-initializeDb().then(markDbReady).catch((e) => {
+initializeDb().then(markDbReady).then(() => require('./src/zb').loadNewExamples()).catch((e) => {
     console.error('Bootstrap error:', e);
     process.exit(1);
 });

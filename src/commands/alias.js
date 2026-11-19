@@ -6,15 +6,46 @@ const { dbGet, dbReady, dbRun } = require('../db');
 const { aliasBlock, fixDash, textIsAlias, listAliases } = require('../aliases');
 const { commandsInText, commandsError, breakLines } = require('../textCommands');
 const { findCommand } = require('./base');
+const { listExampleFiles, loadExample } = require('../zb');
+const { getSetting, setSetting } = require('../settings');
 const { t } = require('../i18n');
 
 const aliasName = nameAlt => '/' + nameAlt.replace(/^\//, '');
 const NAME = /^\/?[\p{L}\p{N}_.-]+$/u;
 
+// /alias -examples: lists the examples/*.zb files; with a name, loads it (an alias that already exists stays)
+async function examplesReply(msg, name, overwrite = false) {
+    const files = listExampleFiles();
+    const done = getSetting('alias.examples');
+    if (!name) {
+        if (!files.length) return msg.reply(t('adm.alias.examplesNone'));
+        const linesAlt = files.map(f => `${done.includes(f.name) ? '✅' : '⬜'} ${f.name}${f.manual ? t('adm.alias.examplesManual') : ''}`).join('\n');
+        return msg.reply(t('adm.alias.examplesList', { lista: linesAlt }));
+    }
+    const example = files.find(f => f.name === name.replace(/\.zb$/, '').toLowerCase());
+    if (!example) return msg.reply(t('adm.alias.examplesMissing', { nome: name, lista: files.map(f => f.name).join(', ') }));
+    const { loaded, updated, skipped, failed } = await loadExample(example, { overwrite });
+    if (!done.includes(example.name)) await setSetting('alias.examples', [...done, example.name]);
+    return msg.reply([
+        t('adm.alias.examplesLoaded', { nome: example.name, n: loaded.length, lista: loaded.join(', ') || '-' }),
+        updated.length && t('adm.alias.examplesUpdated', { n: updated.length, lista: updated.join(', ') }),
+        skipped.length && t('adm.alias.examplesSkipped', { n: skipped.length, lista: skipped.join(', '), nome: example.name }),
+        ...failed.map(f => t('adm.alias.examplesFailed', { nome: f.name, erro: f.error }))
+    ].filter(Boolean).join('\n'), undefined, { linkPreview: false });
+}
+
 async function cmdAlias({ msg, args }) {
     await dbReady;
     const textAlt = args.trim();
     if (!textAlt || /^-(list|l)$/.test(textAlt)) return listAliases(msg);
+    // /alias -examples [<file>] [-yes]: lists, loads one (what exists stays) or, with -yes, replaces what exists with the file's
+    // (-yes|-y may come before the -examples or anywhere after it)
+    const examples = textAlt.match(/^((?:-(?:yes|y)\s+)*)-(?:examples|ex)((?:\s+\S+)*)$/i);
+    if (examples) {
+        const words = `${examples[1]} ${examples[2]}`.split(/\s+/).filter(Boolean);
+        const isYes = (w) => /^-(?:yes|y)$/i.test(w);
+        return examplesReply(msg, words.find(w => !isYes(w)), words.some(isYes));
+    }
     const mover = textAlt.match(/^-(?:move|m)\s+(\S+)\s+(\S+)$/);
     if (/^-(?:move|m)(?:\s|$)/.test(textAlt) && !mover) return msg.reply(t('adm.alias.usageMove'));
     if (mover) {

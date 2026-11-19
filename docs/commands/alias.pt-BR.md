@@ -19,6 +19,7 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 | `-quiet`, `-q` | | Ao executar, omite o cabeçalho `🔗 Alias ...`; vale antes ou depois do nome |
 | `-desc`, `-d` | `<texto>` | Descrição opcional entre aspas, antes do comando ou do texto; sem comando, atualiza só a descrição de um alias existente |
 | `-list`, `-l` | | Lista os aliases; o mesmo que `/alias` sem argumentos. Só com um nome (`/alias /eita`), mostra o que aquele alias faz (descrição e comando); se o nome não for um alias, o bot responde com um erro |
+| `-examples`, `-ex` | `[<arquivo>]` | Sem nome, lista os arquivos de exemplos (`examples/*.zb`: aliases prontos para usar). Com um nome, carrega aquele arquivo; um alias que já existe fica como está, a menos que use `-yes` (`-y`): aí a definição do arquivo troca a dele (para aplicar uma versão mais nova de um exemplo) |
 | `-move`, `-m` | `<nome atual> <novo nome>` | Renomeia um alias, mantendo comando, descrição e quiet; o novo nome não pode existir |
 | `-rm` | `<nome...\|all>` | Remove um ou mais aliases (separados por espaço ou vírgula), com ou sem `/`; `all` remove todos |
 
@@ -201,6 +202,34 @@ Depois disso, `/btc`, `/xaut`, `/mstr`, `/dolar`... respondem direto com a cota�
 /cot nvda              → /stocks NVDA
 /cot PETR4.SA          → /stocks PETR4.SA
 ```
+
+## Arquivos de exemplos (`.zb`)
+
+O bot traz arquivos `.zb` na pasta `examples/`: os comandos que você digitaria aqui, guardados num
+arquivo. Cada arquivo é carregado **uma vez só**, no primeiro boot depois que ele aparece (o setting
+`alias.examples` guarda quais já foram, então um alias que você apagou não volta). Para carregar um na mão,
+ou ver quais existem: `/alias -examples` e `/alias -examples tts-voices`. Um alias que já existe nunca é
+sobrescrito na carga do primeiro boot; na mão, `/alias -examples tts-voices -yes` troca os que existem pelos do arquivo
+(use quando vier uma versão mais nova de um exemplo).
+
+```text
+# um comentário: uma linha que começa com #
+
+/alias /dolar -d "Cotação de moeda, USD por padrão" \
+    /stocks ${1:-USD}
+
+/alias /test.tts.vozes /batch -q
+    /tts -q -l -v cadu $@
+    /tts -q -l -v faber $@
+```
+
+- Um comando começa numa linha sem recuo que começa com `/`; as linhas com recuo embaixo dele fazem parte
+  dele (como digitadas, igual às linhas de um atalho de [`/batch`](batch.md)).
+- Um `\` no fim da linha junta ela com a próxima (com um espaço só).
+- Uma linha que começa com `#` é comentário; para começar uma linha com um `#` de verdade, escreva `\#`.
+- Só roda a forma `/alias [-q] <nome> [-desc "texto"] <comando>`, então um arquivo só consegue **definir** atalhos: `-rm`, `-move`, `-list`
+  e parecidos são recusados, e qualquer outro comando também. Um arquivo é limitado a 128 KB e 200 aliases, e link simbólico não é lido.
+  Mesmo assim, um `.zb` é código de confiança (ele cria atalhos que qualquer pessoa autorizada pode rodar): leia um arquivo antes de colocá-lo em `examples/`.
 
 ## Texto com comandos
 
