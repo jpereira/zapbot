@@ -1,6 +1,6 @@
 {
   "summary": "Tempo agora, máxima e mínima",
-  "usage": "/weather [N|Nd] [cidade]",
+  "usage": "/weather [-q] [N|Nd] [cidade]",
   "help": "Tempo agora, máx./mín. e chance de chuva do dia (Open-Meteo); com N (ou Nd), previsão de N dias contando hoje. Sem cidade usa o setting weather.city.",
   "cmd_opts": [
     {
@@ -20,6 +20,18 @@
       "desc": "Cidade, opcionalmente com estado ou país após uma vírgula.",
       "ex": [
         "/weather Paris, Texas"
+      ]
+    },
+    {
+      "opts": [
+        "quiet",
+        "q"
+      ],
+      "values": [],
+      "desc": "Só uma frase natural, sem emoji nem markdown: cidade, condição, temperatura, máxima e mínima, e a chuva, o vento ou o UV quando importam. Bom para um texto ({/weather -q}) ou para o /tts.",
+      "ex": [
+        "/weather -q",
+        "/weather -q Niterói"
       ]
     }
   ]

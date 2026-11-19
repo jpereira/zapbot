@@ -6,6 +6,7 @@ it also shows the forecast for the next days.
 
 | Argument | Description |
 |---|---|
+| `-quiet`, `-q` | Only a natural sentence, with no emoji or markdown (see [Quiet mode](#quiet-mode)) |
 | `[N]` or `[Nd]` | N-day forecast, counting today (`16` or `16d`). From 1 up to the `weather.maxDays` setting (default 16, Open-Meteo's maximum). Only valid as the first argument |
 | `[city]` | City to look up, optionally with a state or country after a comma. Without it, uses the `weather.city` setting |
 
@@ -17,6 +18,7 @@ it also shows the forecast for the next days.
 /weather 7d Niteroi              → now + forecast for today and the next 6 days
 /weather 16d Niteroi             → today and the next 15 days
 /weather 3                       → default city, today and the next 2 days
+/weather -q Niteroi              → only the sentence, to read or to speak
 /weather -h                      → command help
 ```
 
@@ -50,6 +52,24 @@ With days (`/weather 3d Niteroi`), after the current weather:
 
 The last line (from 2 days on) gives the range of the period and how many days have a 50% chance of rain
 or more.
+
+## Quiet mode
+
+`-q` replaces the whole reply with **one natural sentence**, with no emoji, markdown, other sources or footer.
+It is meant for a text, like `{/weather -q}` in the [`/tts`](tts.md#commands-in-the-text), and the forecast days
+are ignored. It only says what matters:
+
+- always: the city, the condition, the temperature, and the high and low;
+- the feels-like only when it differs from the temperature by 2° or more;
+- the rain only from a 30% chance (and its volume, when it is 1 mm or more);
+- the wind only with gusts of 40 km/h or more, and the UV only from 8.
+
+```text
+/weather -q Niteroi
+In Niterói, partly cloudy, 28 degrees, feels like 34. High of 32 and low of 23. Chance of rain of 100%, about 12 millimeters. Wind with gusts of 45 km/h. Very high UV.
+
+/tts Good morning! {/weather -q}
+```
 
 Above the maximum the bot refuses and states the limit. To limit queries, use
 `/set weather.maxDays 7`; `/set -reset weather.maxDays` sets the limit back to 16 days. A saved limit

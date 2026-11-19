@@ -35,6 +35,10 @@ const TIME_COLD = 5;   // °C: "It's freezing!"
 const TIME_CALOR = 30; // °C: "So hot!"
 const DIVERGENCE = 3; // °C: from there /weather warns that the sources diverge
 const RAIN_LIKELY = 50; // %: the day counts toward the "rainy days" in the summary
+const QUIET_FEELS = 2;  // °C: -quiet only says the feels-like when it differs this much from the temperature
+const QUIET_RAIN = 30;  // %: -quiet only mentions the rain from this chance
+const QUIET_GUSTS = 40; // km/h: -quiet only mentions the wind from these gusts
+const QUIET_UV = 8;     // -quiet only mentions the UV from this index
 
 // Geocoding kept in memory: a city's coordinates do not change and the city
 // default (weather.city) is queried all the time
@@ -176,6 +180,39 @@ function formatTime(local, { current: c, daily: d }, extras = []) {
     return textAlt;
 }
 
+/*
+ * -quiet: the weather as a natural sentence, with no emoji or markdown (good for {/weather -q} in /tts):
+ *   "Em Niterói, parcialmente nublado, 28 graus, com sensação de 34. Máxima de 32 e mínima de 23.
+ *    Chance de chuva de 100%, cerca de 12 milímetros. Vento com rajadas de 45 km/h. UV muito alto."
+ * Only what matters: the feels-like when it differs, the rain from QUIET_RAIN %, the gusts and the UV when strong.
+ */
+function quietTime(local, { current: c, daily: d }) {
+    const [, description] = weatherWmo(c.weather_code, c.is_day !== 0);
+    const temp = Math.round(c.temperature_2m);
+    const feels = c.apparent_temperature == null ? null : Math.round(c.apparent_temperature);
+    const parts = [];
+
+    const degrees = (n) => t('weather.quietDegrees', { n: Math.abs(n), value: n });
+    let first = t('weather.quietNow', { place: local.name, desc: description.toLowerCase(), temp: degrees(temp) });
+    if (feels !== null && Math.abs(feels - temp) >= QUIET_FEELS) first += t('weather.quietFeels', { feels });
+    parts.push(`${first}.`);
+
+    const max = d.temperature_2m_max?.[0];
+    const min = d.temperature_2m_min?.[0];
+    if (max != null && min != null) parts.push(t('weather.quietRange', { max: Math.round(max), min: Math.round(min) }));
+
+    const chance = d.precipitation_probability_max?.[0];
+    if (chance != null && chance >= QUIET_RAIN) {
+        const mm = Math.round(d.precipitation_sum?.[0] ?? 0);
+        parts.push(t('weather.quietRain', { chance: Math.round(chance) }) + (mm >= 1 ? t('weather.quietMm', { n: mm }) : '') + '.');
+    }
+
+    if (c.wind_gusts_10m != null && c.wind_gusts_10m >= QUIET_GUSTS) parts.push(t('weather.quietGusts', { gust: Math.round(c.wind_gusts_10m) }));
+    if (d.uv_index_max?.[0] != null && d.uv_index_max[0] >= QUIET_UV) parts.push(t('weather.quietUv'));
+
+    return parts.join(' ');
+}
+
 // "2026-09-30" → "qua 30/09" (the date already comes in the city timezone: timezone=auto)
 function dayLabel(iso) {
     const [, mes, day] = iso.split('-');
@@ -216,8 +253,8 @@ function readArgumentsTime(args) {
     return m ? { dias: Number(m[1]), cidade: m[2].trim() } : { dias: null, cidade: args.trim() };
 }
 
-async function cmdWeather({ msg, args }) {
-    const request = readArgumentsTime(args);
+async function cmdWeather({ msg, opts }) {
+    const request = readArgumentsTime(opts.argv.join(' '));
     const max = getSetting('weather.maxDays');
 
     if (request.dias !== null && (request.dias < 1 || request.dias > max)) {
@@ -239,6 +276,12 @@ async function cmdWeather({ msg, args }) {
         // The extra sources go in parallel with Open-Meteo; today, in the city, picks the CPTEC day
         const query = queryTime(local, request.dias ?? 1);
         const today = query.then(d => String(d.current?.time ?? d.daily?.time?.[0] ?? '').slice(0, 10));
+        // -quiet: only the sentence (it does not even look at the other sources, nor at the days)
+        if (opts.opt.quiet) {
+            await msg.reply(quietTime(local, await query));
+            return;
+        }
+
         const [dataAlt, extras] = await Promise.all([query, querySources(local, today)]);
         let textAlt = formatTime(local, dataAlt, extras);
         if (request.dias) textAlt += `\n\n${formatForecast(dataAlt)}`;
