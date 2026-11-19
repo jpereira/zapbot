@@ -411,3 +411,30 @@ test('$@ e $*: todos os argumentos, em cada lugar, sem sobras (atalho de /batch)
     // $1 keeps working as before: the leftovers still go to the end
     assert.deepEqual(applyParams('/rec -ss $1 -es $2', '10 20 url'), { comando: '/rec -ss 10 -es 20', sobras: 'url' });
 });
+
+test('/alias foo: não é um alias, lista os que têm "foo" no nome (sem diferenciar maiúsculas, até 10); sem nenhum, o erro', async () => {
+    await bot.replyAlt('/alias /foo /ping');
+    await bot.replyAlt('/alias /foobar -desc "outro" /uptime');
+    await bot.replyAlt('/alias /my.Foo /version');
+    await bot.replyAlt('/alias /bar /ping');
+    // exact: shows that one, as before
+    assert.match((await bot.replyAlt('/alias /foo'))[0], /^\*\/foo\*\n→ \/ping$/);
+    // a part of the name: the ones that match
+    const [found] = await bot.replyAlt('/alias oob');
+    assert.match(found, /🔎 \*ALIASES\* com "oob" no nome \(1\)\n\n\*\/foobar\*\n📝 outro/);
+    const [many] = await bot.replyAlt('/alias FOO');
+    assert.match(many, /com "foo" no nome \(3\)/);
+    assert.deepEqual([...many.matchAll(/^\*(\/[^*]+)\*/gm)].map(m => m[1]), ['/foo', '/foobar', '/my.Foo']);
+    // the % and _ are not wildcards
+    assert.match((await bot.replyAlt('/alias f_o'))[0], /não encontrado/);
+    assert.match((await bot.replyAlt('/alias %'))[0], /não encontrado|alias/i);
+    // nothing matches: the error, or "it is a command"
+    assert.match((await bot.replyAlt('/alias zzz'))[0], /Alias \/zzz não encontrado/);
+    // more than 10: the first 10 and how many are left
+    for (let i = 0; i < 12; i++) await bot.replyAlt(`/alias /many${String(i).padStart(2, '0')} /ping`);
+    const [lots] = await bot.replyAlt('/alias many');
+    assert.match(lots, /\(12\)/);
+    assert.equal([...lots.matchAll(/^\*\//gm)].length, 10);
+    assert.match(lots, /… e mais 2\. Refine: \/alias <mais do nome>/);
+    await bot.replyAlt('/alias -rm all');
+});

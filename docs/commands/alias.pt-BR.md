@@ -18,7 +18,7 @@ aliases. Quem executa um atalho precisa ter permissão para os comandos de desti
 |---|---|---|
 | `-quiet`, `-q` | | Ao executar, omite o cabeçalho `🔗 Alias ...`; vale antes ou depois do nome |
 | `-desc`, `-d` | `<texto>` | Descrição opcional entre aspas, antes do comando ou do texto; sem comando, atualiza só a descrição de um alias existente |
-| `-list`, `-l` | | Lista os aliases; o mesmo que `/alias` sem argumentos. Só com um nome (`/alias /eita`), mostra o que aquele alias faz (descrição e comando); se o nome não for um alias, o bot responde com um erro |
+| `-list`, `-l` | | Lista os aliases; o mesmo que `/alias` sem argumentos. Só com um nome (`/alias /eita`), mostra o que aquele alias faz (descrição e comando); se o nome não for um alias, lista os que têm aquele texto no nome (`/alias dol` acha `/dolar`, `/dolar2` e `/meu.dol`; até 10), ou um erro se nenhum casar |
 | `-examples`, `-ex` | `[<arquivo>]` | Sem nome, lista os arquivos de exemplos (`examples/*.zb`: aliases prontos para usar). Com um nome, carrega aquele arquivo; um alias que já existe fica como está, a menos que use `-yes` (`-y`): aí a definição do arquivo troca a dele (para aplicar uma versão mais nova de um exemplo) |
 | `-move`, `-m` | `<nome atual> <novo nome>` | Renomeia um alias, mantendo comando, descrição e quiet; o novo nome não pode existir |
 | `-rm` | `<nome...\|all>` | Remove um ou mais aliases (separados por espaço ou vírgula), com ou sem `/`; `all` remove todos |

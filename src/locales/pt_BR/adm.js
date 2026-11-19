@@ -68,6 +68,8 @@ module.exports = {
     'adm.alias.invalidName': '❌ Nome inválido: {nome}',
     'adm.alias.allReserved': '❌ O nome all é reservado para remover todos os aliases.',
     'adm.alias.isCommand': '❌ {nome} já é um comando do bot.',
+    'adm.alias.match': '🔎 *ALIASES* com "{termo}" no nome ({n})',
+    'adm.alias.matchMore': '… e mais {n}. Refine: /alias <mais do nome>',
     'adm.alias.notFound': '❌ Alias {nome} não encontrado.',
     'adm.alias.sameName': '❌ O alias já se chama {nome}.',
     'adm.alias.exists': '❌ Já existe um alias {nome}.',
