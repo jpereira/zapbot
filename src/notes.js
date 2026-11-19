@@ -20,6 +20,8 @@ const { printError, printInfo } = require('./log');
 const { unescape, formatData, paraMs, summarizeText } = require('./util/format');
 const { language, t } = require('./i18n');
 const { generatePdf } = require('./util/pdf');
+const lock = require('./notesLock');
+const { extractPassword, normalizeLock } = require('./util/lockPassword');
 const { compileSearch } = require('./watch/rules');
 const { fmtWhen, readWhen } = require('./util/when');
 const packageJson = require('../package.json');
@@ -64,7 +66,11 @@ const noticeWhere = (destinations) => (destinations.length ? describeDestination
 const countAlt = (keyAlt, n, vars = {}) => t(keyAlt, { ...vars, n: n === 1 ? 1 : 2, count: n });
 const indent = (textAlt) => textAlt.replace(/\n(?=[^\n])/g, '\n   ');
 
-const listNotes = () => dbAll('SELECT * FROM notes ORDER BY id');
+// The notes as the code sees them: those of a protected tag decrypted (unlocked) or just the lock (locked), see notesLock
+const listNotes = async () => {
+    await lock.refresh();
+    return (await dbAll('SELECT * FROM notes ORDER BY id')).map(lock.open);
+};
 
 const withoutTag = () => t('notes.noTag');
 const WITHOUT_PREVIEW = { linkPreview: false };  // lists do not show a link thumbnail
@@ -223,7 +229,8 @@ async function removeNotes(msg, textIdsTyped, soAlert) {
 
     for (const n of notes.filter(x => ids.includes(x.id))) {
         await dbRun('DELETE FROM notes WHERE id = ?', [n.id]);
-        if (n.media_path) await fs.remove(n.media_path).catch(err => printError('/notes: image not deleted:', err.message));
+        if (n.media_file) await fs.remove(n.media_file).catch(err => printError('/notes: image not deleted:', err.message));
+        if (n.plain) await fs.remove(n.media_path).catch(() => {});
     }
     await msg.reply(countAlt('notes.rm.removed', ids.length));
 }
@@ -262,7 +269,7 @@ const mediaOrigin = (msg, quotedMsg) => [msg, quotedMsg].find(m => m?.hasMedia);
 const isImage = (mime) => String(mime ?? '').startsWith('image/');
 
 // The stored file is "<time>_<draw>_<name>": the original name comes back on send
-const nameOriginal = (fileAlt) => path.basename(fileAlt).replace(/^\d+_[a-z0-9]+_/, '');
+const nameOriginal = (fileAlt) => path.basename(fileAlt).replace(/\.enc$/, '').replace(/^\d+_[a-z0-9]+_/, '');
 
 // 🖼️ image, 🎬 video, 🎵 audio or 📎 file name (document and the rest)
 function mediaLabel(n, plan = false) {
@@ -335,6 +342,15 @@ async function addAlt(msg, textTyped, quotedMsg) {
         return;
     }
 
+    // A protected tag only takes notes while unlocked (/notes -lock #tag); what is saved goes encrypted
+    await lock.refresh();
+    const protectedTag = lock.isProtected(tag.toLowerCase());
+    if (protectedTag && !(lock.isUnlocked(tag.toLowerCase()) && lock.inPrivate())) {
+        await lock.purgeCopies(msg, `/notes #${tag} ***`);
+        await msg.reply(lock.lockedNotice(tag.toLowerCase()));
+        return;
+    }
+
     if (withDestination && !m) {
         await msg.reply(t('notes.add.toNeedsAlert'));
         return;
@@ -363,17 +379,21 @@ async function addAlt(msg, textTyped, quotedMsg) {
         }
     }
 
+    if (protectedTag && image) image.path = await lock.sealFile(tag.toLowerCase(), image.path);
     const c = destinationColumns(destinations[0]);
     const r = await dbRun(
         `INSERT INTO notes (text, tag, media_path, media_mime, created_at, alert_at, dest_id, dest_name, dest_is_group,
                             dest_email, recipients)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [textAlt, tag, image?.path ?? null, image?.mime ?? null, Date.now(), alert, c.dest_id, c.dest_name,
+        [protectedTag ? lock.sealText(tag.toLowerCase(), textAlt) : textAlt, tag, image?.path ?? null, image?.mime ?? null, Date.now(), alert, c.dest_id, c.dest_name,
             c.dest_is_group, c.dest_email, recipientsDe(destinations)]
     );
 
+    // What you sent stays out of the history (the command and the media that came with it)
+    if (protectedTag) await lock.purgeCopies(msg, `/notes #${tag} ***`);
+
     // Only the notice that it saved (no., #tag, the start of the text): you already sent the body
-    const summary = [`📝 *#${r.lastID}*`, tag && `#${tag}`, image && mediaLabel({ media_mime: image.mime, media_path: image.path }, true).split(' ')[0], textAlt && textStart(textAlt)]
+    const summary = [`📝 *#${r.lastID}*`, tag && `#${tag}`, image && mediaLabel({ media_mime: image.mime, media_path: image.path }, true).split(' ')[0], textAlt && (protectedTag ? '🔒' : textStart(textAlt))]
         .filter(Boolean).join(' · ');
     await msg.reply(summary + (alert ? `\n⏰ ${fmtWhen(alert)} → ${noticeWhere(destinations)}` : ''),
         undefined, WITHOUT_PREVIEW);
@@ -386,7 +406,9 @@ async function update(msg, rest, quotedMsg) {
         return;
     }
 
-    const note = await dbGet('SELECT * FROM notes WHERE id = ?', [Number(m[1])]);
+    await lock.refresh();
+    const found = await dbGet('SELECT * FROM notes WHERE id = ?', [Number(m[1])]);
+    const note = lock.open(found);
     if (!note) {
         await msg.reply(t('notes.idNotFound', { id: m[1] }));
         return;
@@ -401,8 +423,18 @@ async function update(msg, rest, quotedMsg) {
     }
 
     tag ??= note.tag;
-    await dbRun('UPDATE notes SET text = ?, tag = ? WHERE id = ?', [textAlt, tag, note.id]);
-    await msg.reply(`✏️ *#${note.id}*${tag ? ` · #${tag}` : ''} · ${textStart(textAlt)}`, undefined, WITHOUT_PREVIEW);
+    // The note of a protected tag stays in it (the key is of the tag) and needs it unlocked; nothing goes into one
+    const toProtected = lock.isProtected(String(tag ?? '').toLowerCase());
+    const moves = String(tag ?? '').toLowerCase() !== String(note.tag ?? '').toLowerCase();
+    if (note.locked || (moves && (toProtected || lock.isProtected(note.tag)))) {
+        await lock.purgeCopies(msg, `/notes -u ${note.id} ***`);
+        await msg.reply(note.locked ? lock.lockedNotice(note.tag) : t('notes.lock.noMoveTag', { tag: note.tag ?? tag }));
+        return;
+    }
+    await dbRun('UPDATE notes SET text = ?, tag = ? WHERE id = ?',
+        [toProtected ? lock.sealText(String(tag).toLowerCase(), textAlt) : textAlt, tag, note.id]);
+    if (toProtected) await lock.purgeCopies(msg, `/notes -u ${note.id} ***`);
+    await msg.reply(`✏️ *#${note.id}*${tag ? ` · #${tag}` : ''} · ${toProtected ? '🔒' : textStart(textAlt)}`, undefined, WITHOUT_PREVIEW);
 }
 
 async function alertAlt(msg, rest) {
@@ -452,7 +484,7 @@ async function alertAlt(msg, rest) {
         }
         targets = allAlt.filter(n => tags.includes(n.tag));
     } else {
-        const note = await dbGet('SELECT * FROM notes WHERE id = ?', [Number(m[1])]);
+        const note = lock.open(await dbGet('SELECT * FROM notes WHERE id = ?', [Number(m[1])]));
         if (!note) {
             await msg.reply(t('notes.idNotFound', { id: m[1] }));
             return;
@@ -647,6 +679,11 @@ async function moverTag(msg, textAlt) {
         await msg.reply(t('notes.move.same'));
         return;
     }
+    await lock.refresh();
+    if (lock.isProtected(de) || lock.isProtected(para)) {
+        await msg.reply(t('notes.lock.noMoveTag', { tag: lock.isProtected(de) ? de : para }));
+        return;
+    }
 
     const r = await dbRun('UPDATE notes SET tag = ? WHERE tag = ?', [para, de]);
     if (!r.changes) {
@@ -729,7 +766,8 @@ async function seeNotes(msg, filter) {
         const textAlt = [header(n), n.text && formatText(n.text)].filter(Boolean).join('\n');
         let media = null;
         let withBorder = null;
-        if (n.media_path) {
+        if (n.media_path && !n.locked) {
+            await lock.ensurePlain(n);
             withBorder = await imageWithBorder(n.media_path, n.media_mime);
             media = await Promise.resolve().then(() => {
                 const m = withBorder ? new MessageMedia(n.media_mime, withBorder.toString('base64'))
@@ -876,7 +914,8 @@ async function exportar(msg, filter = '') {
             blocks.push({ tipo: 'espaco', altura: 6 });
         }
         for (const [pos, n] of items.entries()) {
-            const image = n.media_path && isImage(n.media_mime) ? await imageForPdf(n.media_path) : null;
+            if (!n.locked) await lock.ensurePlain(n);
+            const image = n.media_path && !n.locked && isImage(n.media_mime) ? await imageForPdf(n.media_path) : null;
             const alert = (n.media_path && !image
                 ? (isImage(n.media_mime) ? t('notes.pdf.imageNotIncluded') : t('notes.pdf.fileNotIncluded', { name: nameOriginal(n.media_path) })) : '') +
                 (n.alert_at ? t('notes.pdf.alert', { when: fmtWhen(n.alert_at) }) : '');
@@ -942,12 +981,155 @@ async function exportar(msg, filter = '') {
     if (failures.length) await msg.reply(t('notes.export.fail', { list: failures.join('; ') }));
 }
 
-async function cmdNote({ msg, args, quotedMsg }) {
+/*
+ * -lock #tag: asks the password (first time: creates the protection); -lock #tag -now|-no|-n: locks at once;
+ * -lock #tag -clean -yes: deletes the old commands of that tag from the history.
+ */
+async function lockTag(msg, rest, chatId, password = null) {
+    const now = /(^|\s)-(?:now|no|n)(?=\s|$)/i.test(rest);
+    const clean = /(^|\s)-clean(?=\s|$)/i.test(rest);
+    const yes = /(^|\s)-(?:yes|y)(?=\s|$)/i.test(rest);
+    const tags = rest.match(/(^|\s)#[^\s#]+/g)?.map(x => readTag(x.trim())) ?? [];
+    if (tags.length !== 1) {
+        if (password) await lock.eraseMessage(msg, { mask: false });
+        await (password ? client.sendMessage(chatId, t('notes.lock.usage')) : msg.reply(t('notes.lock.usage')));
+        return;
+    }
+    const tag = tags[0];
+
+    // The password only opens (-lock <password> #tag): with -now or -clean it is not needed; it leaves the chat anyway
+    if (password && (now || clean)) {
+        await lock.eraseMessage(msg, { mask: false });
+        await client.sendMessage(chatId, t('notes.lock.passwordNotNeeded'));
+        return 'asked';
+    }
+    if (password) {
+        await lock.tryInline({ msg, chatId, tag, password });
+        return 'asked';
+    }
+
+    if (now) return msg.reply(await lock.stop(tag));
+    if (clean) {
+        await lock.refresh();
+        if (!lock.isProtected(tag)) return msg.reply(t('notes.lock.notProtected', { tag }));
+        const n = (await lock.oldCopies(tag)).length;
+        if (!yes) return msg.reply(t('notes.lock.cleanAsk', { n, tag }));
+        return msg.reply(t('notes.lock.cleaned', { n: await lock.cleanCopies(tag) }));
+    }
+    await msg.reply(await lock.start({ chatId, tag }));
+}
+
+/*
+ * What shows notes (view, PDF, lists, search and a lone #tag) of a protected tag that is locked says it is locked:
+ * the placeholders alone would not say how to open it.
+ */
+async function hintLocked(msg, args) {
+    const text = String(args ?? '').trim();
+    const first = text.split(/\s+/)[0].toLowerCase();
+    const shows = ['-view', '-v', '-export', '-e', '-list', '-l', '-compact', '-c', '-search', '-s'].includes(first) || first.startsWith('#');
+    if (!shows) return;
+
+    await lock.refresh();
+    const tags = new Set((text.match(/(^|\s)#[^\s#]+/g) ?? []).map(x => readTag(x.trim())));
+    const ids = ['-view', '-v'].includes(first) ? (text.match(/(^|[\s,])\d+(?=[\s,]|$)/g) ?? []).map(x => Number(x.replace(/\D/g, ''))) : [];
+    if (ids.length) {
+        for (const n of await dbAll(`SELECT tag FROM notes WHERE id IN (${ids.map(() => '?').join(',')})`, ids)) if (n.tag) tags.add(n.tag);
+    }
+    for (const tag of tags) {
+        if (lock.isProtected(tag) && !(lock.isUnlocked(tag) && lock.canRead())) await msg.reply(lock.lockedNotice(tag));
+    }
+}
+
+// The protected tags a command names (#tags and the tags of the numbers it asks to see)
+async function protectedNamed(args) {
+    const text = String(args ?? '').trim();
+    const first = text.split(/\s+/)[0].toLowerCase();
+    await lock.refresh();
+    const tags = new Set((text.match(/(^|\s)#[^\s#]+/g) ?? []).map(x => readTag(x.trim())));
+    if (['-view', '-v'].includes(first)) {
+        const ids = (text.match(/(^|[\s,])\d+(?=[\s,]|$)/g) ?? []).map(x => Number(x.replace(/\D/g, '')));
+        if (ids.length) for (const n of await dbAll(`SELECT tag FROM notes WHERE id IN (${ids.map(() => '?').join(',')})`, ids)) if (n.tag) tags.add(n.tag);
+    }
+    return [...tags].filter(tag => lock.isProtected(tag));
+}
+
+/*
+ * The command runs knowing where it is: the notes of a protected tag only open in your own private chat and are
+ * never sent to other destinations (-to): there, the command that names one is refused.
+ */
+async function cmdNote(ctx) {
+    const sending = Boolean(extractDestinations(String(ctx.args ?? '')).informado);
+    const privateChat = await lock.isOwnPrivate(ctx.chatId).catch(() => false);
+    return lock.runIn({ privateChat, sending }, async () => {
+        if (sending && /^(?:-view|-v|-export|-e|-list|-l|-compact|-c|-search|-s|#)/i.test(String(ctx.args ?? '').trim())) {
+            const named = await protectedNamed(ctx.args);
+            if (named.length) {
+                await ctx.msg.reply(t('notes.lock.noSend', { tag: named[0] }));
+                return;
+            }
+        }
+        if (!['locked', 'asked'].includes(await cmdNoteRun(ctx))) await hintLocked(ctx.msg, ctx.args);
+    });
+}
+
+// What shows notes: with -lock beside it (/notes -v -lock #tag) it asks the password first and then shows
+const VIEWING = ['-view', '-v', '-export', '-e', '-list', '-l', '-compact', '-c', '-search', '-s'];
+const LOCK_TOKEN = /(^|\s)-(?:lock|lo)(?=\s|$)/i;
+
+async function viewWithLock({ msg, args, quotedMsg, chatId }, textAlt, password) {
+    const withoutLock = textAlt.replace(LOCK_TOKEN, '$1').replace(/\s+/g, ' ').trim();
+    const tags = [...new Set((withoutLock.match(/(^|\s)#[^\s#]+/g) ?? []).map(x => readTag(x.trim())))];
+    if (tags.length !== 1) {
+        // With a password in it, the message leaves anyway: it carries it
+        if (password) await lock.eraseMessage(msg, { mask: false });
+        await (password ? client.sendMessage(chatId, t('notes.lock.viewUsage')) : msg.reply(t('notes.lock.viewUsage')));
+        return;
+    }
+    const [tag] = tags;
+    const show = () => cmdNote({ msg, args: withoutLock, quotedMsg, chatId });
+    if (!password && !lock.isProtected(tag)) {
+        await msg.reply(t('notes.lock.notProtected', { tag }));
+        return;
+    }
+    if (password) {
+        await lock.tryInline({ msg, chatId, tag, password, then: show });
+        return 'asked';
+    }
+    if (lock.isUnlocked(tag)) return show();
+    await msg.reply(await lock.start({ chatId, tag, then: show }));
+    return 'asked'; // the question is the answer: no "locked" hint after it
+}
+
+async function cmdNoteRun({ msg, args, quotedMsg, chatId }) {
     await dbReady;
-    const textAlt = String(args ?? '').trim();
+    await lock.refresh();
+    // "/notes -v -l #tag": a -l beside another way of seeing is not "list" (two at once mean nothing): it is -lock
+    let textAlt = normalizeLock(String(args ?? '').trim());
+    // The password typed in the command (-lock <password> #tag): it leaves the text, the command message is deleted
+    const typed = extractPassword(textAlt);
+    const password = typed?.password ?? null;
+    if (typed) textAlt = typed.rest;
     const [optionAlt = '', ...words] = textAlt.split(/\s+/);
     const rest = textAlt.slice(optionAlt.length).trim();
     const nameAlt = optionAlt.toLowerCase();
+
+    // The -now (-n, -no) among the options at the start locks the tag, in any order: -n -lock #tag, -lock -n #tag,
+    // -n #tag, even -l -n #tag (-n means nothing else here; a "-n" inside the text of a note does not count)
+    const leading = [];
+    for (const word of textAlt.split(/\s+/)) {
+        if (!word.startsWith('-')) break;
+        leading.push(word.toLowerCase());
+    }
+    const STARTS = ['-now', '-n', '-no', '-lock', '-lo', '-list', '-l', '-view', '-v', '-search', '-s', '-compact', '-c'];
+    if (STARTS.includes(leading[0]) && leading.some(x => ['-now', '-n', '-no'].includes(x))) {
+        await lockTag(msg, textAlt, chatId, password);
+        return 'locked'; // it was not asking to see anything: no "locked" hint after it
+    }
+
+    // "/notes -v -lock #tag": the password first, then it shows (no -now: that is another thing)
+    if (VIEWING.includes(nameAlt) && LOCK_TOKEN.test(textAlt) && !/(^|\s)-(?:now|no|n)(?=\s|$)/i.test(textAlt)) {
+        return viewWithLock({ msg, args, quotedMsg, chatId }, textAlt, password);
+    }
 
     // The -to of the lists/PDF: "/notes -to X", "/notes #casa -to X", "-l ... -to X", "-e ... -to X"
     const { informado: withDestination, resto: withoutDestination } = extractDestinations(textAlt);
@@ -963,6 +1145,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
     if (nameAlt === '-desc' || nameAlt === '-d') return describeTag(msg, rest);
     if (nameAlt === '-move' || nameAlt === '-m') return moverTag(msg, rest);
     if (nameAlt === '-export' || nameAlt === '-e') return exportar(msg, rest);
+    if (nameAlt === '-lock' || nameAlt === '-lo') return lockTag(msg, rest, chatId, password);
     if (withDestination && !withoutDestination.trim()) return listAlt(msg, textAlt);
     if (textTags && removeCompact(withoutDestination).compacto) return listAlt(msg, textAlt);
     // Just #tag, without text: lists its own. In a reply or with media, saves what came under that tag
@@ -997,13 +1180,18 @@ async function checkNotes() {
         const expired = await dbAll('SELECT * FROM notes WHERE alert_at IS NOT NULL AND alert_at <= ? ORDER BY alert_at, id',
             [Date.now()]);
 
-        for (const n of expired) {
+        await lock.refresh();
+        for (const raw of expired) {
+            const n = lock.open(raw);
             await dbRun('UPDATE notes SET alert_at = NULL WHERE id = ?', [n.id]);
 
+            // A protected tag does not put its text in an alert (WhatsApp, email): only that there is a note
+            const hidden = lock.isProtected(n.tag);
+            const textAlert = hidden ? t('notes.lock.alertText', { tag: n.tag }) : n.text;
             const destinations = noteDestinations(n);
             await sendToDestinations(destinations,
-                t('notes.alert.fired', { id: n.id, text: n.text, date: formatData(n.created_at) }),
-                { assunto: t('notes.subject.alert', { id: n.id, text: summarizeText(n.text, 60) }), opcoes: WITHOUT_PREVIEW }
+                t('notes.alert.fired', { id: n.id, text: textAlert, date: formatData(n.created_at) }),
+                { assunto: t('notes.subject.alert', { id: n.id, text: summarizeText(textAlert, 60) }), opcoes: WITHOUT_PREVIEW }
             ).catch(err => printError('/notes -alert: failed to notify:', err.message));
 
             printInfo(`/notes -alert triggered: #${n.id}` +
@@ -1018,6 +1206,7 @@ async function checkNotes() {
 
 // Called in app.js
 function startNotes() {
+    lock.cleanLeftovers();
     setInterval(checkNotes, 60 * 1000);
 }
 

@@ -102,6 +102,7 @@ em português).
 | `news.gazeta` | lista | `https://www.gazetadopovo.com.br/feed/rss/brasil.xml` | Feeds RSS do `/news -gazeta` |
 | `news.hack` | lista | The Hacker News, BleepingComputer, Krebs on Security | Feeds RSS do `/news -hack` |
 | `news.max` | 1–10 | `5` | Manchetes exibidas pelo `/news` (o `/news <quantidade>` sobrepõe) |
+| `notes.lockMinutes` | 1–120 | `5` | Minutos sem usar uma tag protegida ([`/notes -lock`](commands/notes.md#tags-protegidas--lock)) até ela travar sozinha |
 | `ocr.engine` | `local`, `gpt` | `local` | Motor do [`/ocr`](commands/ocr.md): `local` (Tesseract, sem chave) ou `gpt` (ChatGPT, visão da OpenAI). `-gpt` e `-local` escolhem na chamada |
 | `ocr.footer` | on/off | `on` | Termina a resposta do /ocr com a dica "💡 Lido por <motor>". O -quiet (-q) esconde na chamada. |
 | `ocr.language` | texto | `por+eng` | Idiomas do [`/ocr`](commands/ocr.md) local (Tesseract), separados por `+`: `por+eng`, `por`, `eng`, `spa`... O que não está na imagem Docker não é lido |

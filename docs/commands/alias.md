@@ -244,6 +244,7 @@ The `.zb` files that come with the bot are in the [`examples/`](https://github.c
 |---|---|---|
 | [`tts-voices.zb`](https://github.com/jpereira/zapbot/blob/main/examples/tts-voices.zb) | `/test.tts.voices` and `/test.tts.vozes`: a phrase in every local voice, one voice note each | on the first boot |
 | [`shortcuts.zb`](https://github.com/jpereira/zapbot/blob/main/examples/shortcuts.zb) | `/dollar` (currency quote) and `/idea` (a note with `#ideas`) | on the first boot |
+| [`secret-notes.zb`](https://github.com/jpereira/zapbot/blob/main/examples/secret-notes.zb) | `/stash.add`, `/stash.view` and `/stash.lock`: a protected (encrypted) `#stash` tag in one word each, with the privacy scenarios in the `-desc` (see [protected tags](notes.md#protected-tags--lock)) | by hand only: `/alias -examples secret-notes` |
 | [`my-shortcuts.zb`](https://github.com/jpereira/zapbot/blob/main/examples/my-shortcuts.zb) | The author's shortcuts, below (the addresses and the contacts were replaced by examples) | by hand only: `/alias -examples my-shortcuts` |
 
 A file with `# @manual` in its first lines isn't loaded on the boot, only with `/alias -examples <name>`.

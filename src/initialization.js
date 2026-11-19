@@ -302,6 +302,14 @@ async function initializeDb() {
         )
     `);
     await dbRun(`
+        CREATE TABLE IF NOT EXISTS note_locks (
+            tag TEXT PRIMARY KEY,     -- tag protected by /notes -lock (lowercase, no "#")
+            salt TEXT NOT NULL,       -- scrypt salt (hex)
+            verifier TEXT NOT NULL,   -- a known text encrypted with the key: tells if the password is right
+            created_at INTEGER NOT NULL
+        )
+    `);
+    await dbRun(`
         CREATE TABLE IF NOT EXISTS note_tags (
             tag TEXT PRIMARY KEY,   -- minúscula e sem o "#"
             description TEXT NOT NULL

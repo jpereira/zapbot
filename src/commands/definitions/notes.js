@@ -6,9 +6,9 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/notes',
-    usage: '/notes #tag <text>  or  /notes [-list|-l] [#tag...] [-to <destination>]...  or  /notes -search|-view|-update|-export|-move|-desc|-rm|-alert <...>',
-    summary: 'Notes saved in the database',
-    help: 'Notes saved in the database. To add one, the syntax is /notes #tag <text>: without the #tag it errors, and just /notes #tag lists the tag\'s notes. Replying to a message, its text becomes the note, with ↩️ (/notes #reminder); with text typed along (/notes #reminder Remember this!), the typed text comes first and the replied message follows it, with ↩️ and its media; media (image, document, audio, video...) in the message itself or in the replied one is saved to disk along with the note. With nothing, shows the tags with the count and description of each; -l lists all notes, with the ID, grouped by #tag (one message per tag). The -alert reminds you of a note at a date/time (once; the note stays): in your private chat or at the -to destinations.',
+    usage: '/notes #tag <text>  or  /notes [-list|-l] [#tag...] [-to <destination>]...  or  /notes -search|-view|-update|-export|-move|-desc|-rm|-alert|-lock <...>',
+    summary: 'Notes, with password-protected (encrypted) tags',
+    help: 'Notes saved in the database. To add one, the syntax is /notes #tag <text>: without the #tag it errors, and just /notes #tag lists the tag\'s notes. Replying to a message, its text becomes the note, with ↩️ (/notes #reminder); with text typed along (/notes #reminder Remember this!), the typed text comes first and the replied message follows it, with ↩️ and its media; media (image, document, audio, video...) in the message itself or in the replied one is saved to disk along with the note. With nothing, shows the tags with the count and description of each; -l lists all notes, with the ID, grouped by #tag (one message per tag). The -alert reminds you of a note at a date/time (once; the note stays): in your private chat or at the -to destinations. PRIVACY: /notes -lock #tag protects a tag with a password (the text and the files are encrypted; the password is never stored); /notes -v -lock #tag asks it and shows; -lock #tag -now locks. A protected tag only unlocks and opens in your own private chat, locks again by itself after notes.lockMinutes, and is never sent with -to.',
     ex: [
         '/notes #home buy milk',
         '/notes #home',
@@ -23,7 +23,10 @@ module.exports = {
         '/notes #reminder call John -alert tomorrow 9h',
         '/notes -alert 3 +2h -to /Family/',
         '/notes -alert #home 18h -to /Family/',
-        '/notes -r 2'
+        '/notes -r 2',
+        '/notes -lock #stash (protects it, or unlocks)',
+        '/notes -v -lock #stash',
+        '/notes -lock #stash -now'
     ],
     cmd_opts: [
         {
@@ -85,6 +88,27 @@ module.exports = {
             values: ['[#tag...]'],
             desc: 'Sends the notes in a PDF, with the images and the text as caption (ZapBot_notes_YYYYMMDD_HHMM.pdf), or only those of the tags (ZapBot_notes_tag-casa_YYYYMMDD_HHMM.pdf). The tag can be partial, and its description (-desc) comes at the start of the document. With -to, the PDF goes to the destination.',
             ex: ['/notes -e', '/notes -e #home', '/notes -e #home -to /Family/'],
+            cron: false
+        },
+        {
+            opts: ['lock', 'lo'],
+            values: ['[password] #tag'],
+            desc: 'Protects a tag with a password (text and files encrypted) or unlocks it: the bot asks for the password and deletes the message you typed. It locks by itself after notes.lockMinutes without use. Beside a viewing option (-v, -e, -l, -s) it asks the password first and then shows: /notes -v -lock #foo. The password can come in the command (/notes -v -lock <password> #foo): the message is deleted, hidden in the logs and in the history, but it travels in a normal command: the question is safer. Protected notes only unlock and open in your own private chat (in a group or with -to they stay locked).',
+            ex: ['/notes -lock #foo', '/notes -v -lock #foo', '/notes -v -lock <password> #foo'],
+            cron: false
+        },
+        {
+            opts: ['now', 'n', 'no'],
+            values: [],
+            desc: 'Locks the tag right now. Alone or with -lock, in any order: /notes -n #foo, /notes -lock #foo -now, /notes -n -lock #foo.',
+            ex: ['/notes -lock #foo -now', '/notes -n #foo'],
+            cron: false
+        },
+        {
+            opts: ['clean'],
+            values: [],
+            desc: 'With -lock #tag: deletes from the history the old commands you typed for that tag (with -yes; without it, only counts).',
+            ex: ['/notes -lock #foo -clean -yes'],
             cron: false
         },
         {
