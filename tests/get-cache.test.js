@@ -67,6 +67,30 @@ describe('/get', () => {
         assert.deepEqual(filesTemporary(), [], 'os temporários foram apagados');
     });
 
+    test('vários links: um depois do outro, com 🔗 i/n e as mesmas opções; mais de 10 é recusado', async () => {
+        const URL2 = 'http://8.8.4.4/outro';
+        const r = await bot.executar(`/get -a ${URL} ${URL2}`, { de: OTHERAlt.jid });
+        assert.deepEqual(r.filter(x => typeof x.content === 'string' && x.content.startsWith('🔗')).map(x => x.content), ['🔗 1/2', '🔗 2/2']);
+        assert.equal(r.filter(x => x.content instanceof MessageMedia).length, 2, 'duas mídias');
+        const downloads = processes.chamadas.filter(c => path.basename(c.bin) === 'yt-dlp');
+        assert.deepEqual(downloads.map(c => c.args.at(-1)), [URL, URL2]);
+        assert.ok(processes.chamadas.filter(c => path.basename(c.bin) === 'ffmpeg').every(c => c.args.includes('libmp3lame')), '-a vale para todos');
+
+        // What picks a piece of one link is refused with several (-audio and -stt are fine); /sticker takes one
+        processes.chamadas.length = 0;
+        for (const opt of ['-ss 10', '-es 20', '-photo 2', '-st', '-pos top', '-pc']) {
+            assert.match((await bot.replyAlt(`/get ${opt} ${URL} ${URL2}`))[0], /^❌ Com vários links -\w+.* não valem/, opt);
+        }
+        assert.match((await bot.replyAlt(`/sticker ${URL} ${URL2}`))[0], /^❌ O \/sticker recebe um link por vez\./);
+        assert.equal(processes.chamadas.length, 0, 'nada rodou');
+
+        // Above the limit: nothing runs
+        processes.chamadas.length = 0;
+        const links = Array.from({ length: 11 }, (_, i) => `http://8.8.8.${i + 1}/v`).join(' ');
+        assert.match((await bot.replyAlt(`/get ${links}`))[0], /^❌ 11 links: no máximo 10 por vez\./);
+        assert.equal(processes.chamadas.length, 0);
+    });
+
     test('-a: só o áudio em mp3', async () => {
         await bot.executar(`/get -a ${URL}`);
         const ff = argsDo('ffmpeg');

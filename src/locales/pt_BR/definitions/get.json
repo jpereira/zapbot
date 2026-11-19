@@ -1,7 +1,7 @@
 {
   "summary": "Baixa vídeo ou áudio de redes sociais",
-  "usage": "/get [OPÇÃO]... <url>  ou  /get [OPÇÃO]... (respondendo um link ou uma mídia)",
-  "help": "Baixa vídeo ou áudio de redes sociais (Instagram, YouTube, X, TikTok e outros sites do yt-dlp), pela URL ou respondendo uma mensagem com link. Respondendo um vídeo, uma imagem ou um áudio do WhatsApp, usa a própria mídia: sem opção, devolve o arquivo original. Escolha áudio, figurinha ou transcrição por execução; vídeo e áudio são enviados como documento.",
+  "usage": "/get [OPÇÃO]... <url>...  ou  /get [OPÇÃO]... (respondendo um link ou uma mídia)",
+  "help": "Vários links de uma vez (até 10): um depois do outro, com -a ou -stt para todos (sem -ss, -es, -photo, -pos ou -st). Baixa vídeo ou áudio de redes sociais (Instagram, YouTube, X, TikTok e outros sites do yt-dlp), pela URL ou respondendo uma mensagem com link. Respondendo um vídeo, uma imagem ou um áudio do WhatsApp, usa a própria mídia: sem opção, devolve o arquivo original. Escolha áudio, figurinha ou transcrição por execução; vídeo e áudio são enviados como documento.",
   "cmd_opts": [
     {
       "opts": [
