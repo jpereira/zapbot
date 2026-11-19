@@ -114,6 +114,12 @@ describe('/backup', () => {
         assert.match(question, /⚠️ \*Restaurar o backup de [^?]+\?\*[\s\S]*Para confirmar: \/backup -r zapbot-\d{8}-\d{6} -yes$/);
         assert.equal(bot.getSetting('weather.city'), 'Lisboa', 'sem -yes nada muda');
 
+        // -y is the short for -yes
+        const { GetOptFromCommand } = bot.src('options');
+        const def = bot.src('commands/definitions/backup');
+        assert.equal(GetOptFromCommand('-r 1 -y', def).opt.yes, true);
+        assert.equal(GetOptFromCommand('-r 1 -yes', def).opt.yes, true);
+
         const [r] = await bot.replyAlt(`/backup -r ${b.nome} -yes`);
         assert.match(r, /♻️ \*Backup restaurado:\*[\s\S]*💾 O estado anterior ficou no backup (zapbot-\S+): para desfazer, \/backup -r \1 -yes/);
 

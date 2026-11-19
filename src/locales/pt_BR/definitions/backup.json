@@ -60,7 +60,8 @@
     },
     {
       "opts": [
-        "yes"
+        "yes",
+        "y"
       ],
       "values": [],
       "desc": "Confirma: junto com -restore, a restauração; junto com -send -to outro chat, o envio (o banco tem as mensagens de todos os chats)."
