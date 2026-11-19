@@ -33,6 +33,7 @@ lista de apagados.
 | `-edited`, `-e` | | Mensagens editadas, com o texto de antes e o de depois. Cada edição é um item: uma mensagem editada duas vezes aparece duas vezes |
 | `-status`, `-s` | | Status apagados: num privado, os da pessoa; no seu privado, sem chat, os de todos |
 | `-reaction`, `-r` | | Reações removidas ou trocadas, com a reação de antes (e a nova, se trocou) e o texto da mensagem reagida. Veja [Reações](#reações) |
+| `-all`, `-a` | | O **histórico geral** do chat, não só as apagadas. Nunca despeja um chat inteiro: dá o total por mês e você desce com o período (`2026-05`, `2026-05-05`, `14h`). O `-N` mostra as últimas N, o `-q` busca no histórico e o `-f -a -yes` apaga. Veja [Histórico geral](#histórico-geral--all) |
 | `-list`, `-l` | `[chat]` | Lista todos os chats com conteúdo no cache (em qualquer chat), numerado para o `/show <nº>`, marcando com `← este chat` o chat atual. Com chat (nº, nome, `@menção` ou `/regex/`), só os que casam. Veja [Listar](#listar) |
 | `-query`, `-q` | `<texto\|/regex/flags>` | Busca as que têm o texto (sem diferenciar maiúsculas nem acentos) ou que casam com a regex: neste chat, no chat pedido ou, no seu privado, em todos. Sem `-N`: as 5 mais recentes. Veja [Buscar](#buscar) |
 | `-flush`, `-f` | | Remove do cache as apagadas deste chat ou, com `-e`, `-s`, `-r` ou chat, o que foi pedido (no seu privado, sem chat: de todos os chats) |
@@ -162,6 +163,83 @@ o privado e os status da pessoa:
 
 💡 /show <nº, nome, @menção ou /regex/> reexibe as de um chat: apagadas, editadas, status e reações juntos.
    …
+```
+
+## Histórico geral (`-all`)
+
+**Mesmo apagando mensagens no celular ou no WhatsApp Web, o bot guarda tudo.** Ele salva cada mensagem que
+chega (o texto, e a mídia em `cache/media`) na hora, por `cache.messageRetentionHours` (90 dias nesta
+instalação; a mídia, `cache.messageMediaRetentionHours`). Apagar no celular não avisa nada ao bot, então a
+mensagem continua no histórico e o `/show -a` traz de volta, com a foto, o áudio ou o arquivo. (Quando a *outra
+pessoa* apaga para todos, o bot também percebe e marca `🗑️`: isso é o `-d`.) O que o bot nunca viu (ele estava
+desligado ou desconectado) não está lá.
+
+Um chat pode ter milhares de mensagens, então o `-a` **nunca despeja o chat inteiro**: com mais mensagens que o
+`show.max` (20), ele dá o total e a contagem por mês, e você desce com o período, um nível de cada vez. Toda
+resposta termina com o comando do próximo nível.
+
+```text
+/show -a /Fulano/
+🗄️ Histórico · Fulano
+4.213 mensagens (312 com mídia), de 2026-08-12 a 2026-11-19
+
+2026-11 · 987 · 🖼️ 60
+2026-10 · 1.460 · 🖼️ 112
+2026-09 · 1.211 · 🖼️ 98
+2026-08 · 555 · 🖼️ 42
+💡 Para ler, repita com o período: /show -a /Fulano/ 2026-11
+   Dia: 2026-05-05 (ou 05/05/2026, hoje, ontem) · mês: 2026-05 · hora: 14h
+💡 Mesmo apagando mensagens no celular ou no WhatsApp Web, o bot continua com o histórico
+(e as mídias) por 90 dias (setting cache.messageRetentionHours): daqui dá para recuperar tudo.
+
+/show -a /Fulano/ 2026-11
+🗄️ Fulano · 2026-11
+987 mensagens (60 com mídia)
+
+2026-11-19 · 41 · 🖼️ 3
+2026-11-18 · 63 · 🖼️ 5
+…
+💡 Para ler, repita com o período: /show -a /Fulano/ 2026-11-19
+
+/show -a /Fulano/ 2026-11-19
+🗄️ Fulano · 2026-11-19
+41 mensagens (3 com mídia)
+
+21h · 15 · 🖼️ 1
+14h · 22 · 🖼️ 2
+09h · 4
+💡 Para ler, repita com o período: /show -a /Fulano/ 2026-11-19 14h
+
+/show -a /Fulano/ 2026-11-19 14h
+💬 22 mensagens · Fulano · 2026-11-19 14h
+💬 MENSAGEM (1/22)
+…            (as mensagens, com a mídia, da mais antiga para a mais nova)
+```
+
+- **Período:** um mês (`2026-11` ou `11/2026`), um dia (`2026-11-19`, `19/11/2026`, `19/11`, `hoje`, `ontem`) e,
+  junto com um dia, a hora (`14h` ou `14:00`). Os dias e as horas são os de São Paulo. O bot sempre escreve a
+  data como ano-mês-dia, para não misturar mês com dia.
+- **Poucas mensagens:** quando o mês, o dia ou o chat inteiro tem até `show.max` mensagens, elas saem direto.
+  `/show -a /Fulano/ ontem` mostra as de ontem se forem poucas, ou as horas se não forem.
+- **Partes:** uma hora com mais de `show.max` mensagens vem em partes: `… 14h` (parte 1/3), `… 14h p2`, `… 14h p3`.
+- **As últimas:** `/show -a -5 /Fulano/` mostra as 5 últimas mensagens; com um período, as 5 últimas dele.
+- **Busca:** o `-q` busca no texto (e nas transcrições de áudio já feitas) e dá o mesmo resumo por mês só do
+  que casa: `/show -a -q boleto /Fulano/`, depois `… 2026-10`, e assim por diante.
+- **Sem chat:** num grupo, o histórico do grupo; no seu privado, lista os chats com histórico (`/show -a`) ou,
+  com um período, cobre todos (`/show -a ontem`).
+- **Apagar:** `/show -f -a /Fulano/ 2026-05 -yes` apaga as mensagens daquele período (e os arquivos de mídia
+  delas). Sem o `-yes`, só diz quantas sairiam. Sem período, é o histórico inteiro do chat.
+- Os status não entram no histórico (veja o `-s`), e o `-a` não combina com `-d`, `-e`, `-s`, `-r` e `-l`.
+
+```text
+/show -a                         → no seu privado: os chats com histórico
+/show -a /Fulano/                → por mês
+/show -a /Fulano/ 2026-11-19     → as horas do dia (ou as mensagens, se forem poucas)
+/show -a -10 /Fulano/            → as 10 últimas
+/show -a -q boleto               → busca no chat onde você digitou
+/show -a /Família/ hoje          → as de hoje do grupo
+/show -f -a /Fulano/ 2026-05     → diz quantas sairiam
+/show -f -a /Fulano/ 2026-05 -y  → apaga as de maio (mensagens e arquivos de mídia)
 ```
 
 ## Exemplos de saída

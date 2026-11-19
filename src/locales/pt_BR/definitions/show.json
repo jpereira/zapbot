@@ -1,6 +1,6 @@
 {
   "summary": "Mostra mensagens do cache do bot",
-  "usage": "/show [-N] [OPÇÃO] [chat]  ou  /show -l [chat]  ou  /show -q <texto|/regex/flags> [-N] [chat]",
+  "usage": "/show [-N] [OPÇÃO] [chat]  ou  /show -l [chat]  ou  /show -q <texto|/regex/flags> [-N] [chat]  ou  /show -a [-N] [-q <texto>] [chat] [2026-05|2026-05-05|hoje] [14h]",
   "help": "Sem parâmetros no privado, lista o cache de todos os chats, como /show -l. Em grupos, reexibe a última mensagem apagada do grupo. Reexibe as mensagens apagadas, editadas, os status apagados e as reações removidas ou trocadas que estão no cache: deste chat ou de outro (pelo nº do -l, nome, @menção ou /regex/). Publicações de canais (@newsletter) são identificadas com 📰 Canal e o nome, sem nome ou telefone de contato.",
   "cmd_opts": [
     {
@@ -34,6 +34,22 @@
       ],
       "values": [],
       "desc": "Reações removidas ou trocadas, com a reação de antes (e a nova, se trocou) e o texto da mensagem reagida."
+    },
+    {
+      "opts": [
+        "all",
+        "a"
+      ],
+      "values": [],
+      "desc": "O histórico geral do chat, não só as apagadas: o bot guarda toda mensagem (e a mídia) mesmo que você apague no celular ou no WhatsApp Web, por cache.messageRetentionHours. Ele nunca despeja o chat inteiro: com mais mensagens que o show.max, dá o total por mês, e você desce com o período: 2026-05 (os dias), 2026-05-05 (as horas; ou as mensagens, se forem poucas), 2026-05-05 14h (as mensagens; p2, p3 para as próximas partes). Vale também 05/05/2026, 05/05, hoje e ontem. O -N mostra as últimas N; o -q busca no histórico; o -f -a -yes apaga. No seu privado, sem chat, lista os chats com histórico.",
+      "ex": [
+        "/show -a /Fulano/",
+        "/show -a /Fulano/ 2026-05",
+        "/show -a /Fulano/ 2026-05-05 14h",
+        "/show -a -5 /Fulano/",
+        "/show -a -q boleto /Fulano/",
+        "/show -a ontem"
+      ]
     },
     {
       "opts": [

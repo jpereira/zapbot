@@ -6,7 +6,7 @@ const fs = require('fs-extra');
 
 const { client, completeNotice } = require('../client');
 const { commandUsage } = require('./base');
-const { DAY_MS } = require('../constants');
+const { DAY_MS, MEDIA_DIR } = require('../constants');
 const { chatCurrentIds } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
 const { resolverDestination } = require('../destinations');
@@ -481,7 +481,314 @@ function itemsSummary(types, rows) {
     return `${TOGETHER.icone} *${total}* (${accounts.join(' · ')})`;
 }
 
-async function cmdShow({ msg, opts, chatId, admin }) {
+
+/*
+ * /show -all (-a): the general history of a chat, kept in the messages table (not just the deleted ones) and in
+ * cache/media: even deleting messages on the phone or on WhatsApp Web, the bot keeps them (for
+ * cache.messageRetentionHours). It never dumps a whole chat: with more messages than show.max, it summarizes by
+ * month, then by day, then by hour, and says how to go down a level:
+ *   /show -a /Fulano/                   → the months (total, with media)
+ *   /show -a /Fulano/ 2026-11           → the days of the month
+ *   /show -a /Fulano/ 2026-11-19        → the hours of the day (or the messages, if there are few)
+ *   /show -a /Fulano/ 2026-11-19 14h    → the messages of that hour (in parts of show.max: p2, p3...)
+ *   /show -a -5 /Fulano/                → the last 5       /show -a -q boleto /Fulano/ → searches the history
+ */
+const HISTORY_TZ = 'America/Sao_Paulo';
+const hoursFormat = new Intl.DateTimeFormat('en-CA', {
+    timeZone: HISTORY_TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23'
+});
+
+// { month: '2026-11', day: '2026-11-19', hour: '14' } of a timestamp, in the bot's time zone
+function whenOf(ms) {
+    const p = Object.fromEntries(hoursFormat.formatToParts(ms).map(x => [x.type, x.value]));
+    return { month: `${p.year}-${p.month}`, day: `${p.year}-${p.month}-${p.day}`, hour: p.hour };
+}
+
+const pad2 = (n) => String(n).padStart(2, '0');
+const validDay = (y, m, d) => m >= 1 && m <= 12 && d >= 1 && d <= new Date(Date.UTC(y, m, 0)).getUTCDate();
+
+/**
+ * Separates what is a period (2026-05, 2026-05-05, 05/05/2026, 05/05, today, yesterday, 14h, p2) from the
+ * words of the chat. { period: { month?, day?, hour? }, page, rest: string[] } or { error } ready to reply.
+ */
+function readPeriod(words) {
+    const now = whenOf(Date.now());
+    const period = {};
+    const rest = [];
+    let page = 1;
+    let day = null;
+    let month = null;
+
+    // The date typed → { y, mo, d } (d null: a month), or null when it is not a date
+    const asDate = (w) => {
+        let m;
+        if ((m = w.match(/^(\d{4})-(\d{1,2})(?:-(\d{1,2}))?$/))) return { y: Number(m[1]), mo: Number(m[2]), d: m[3] ? Number(m[3]) : null };
+        if ((m = w.match(/^(\d{1,2})\/(\d{4})$/))) return { y: Number(m[2]), mo: Number(m[1]), d: null };
+        if ((m = w.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/))) return { y: Number(m[3]), mo: Number(m[2]), d: Number(m[1]) };
+        if ((m = w.match(/^(\d{1,2})\/(\d{1,2})$/))) return { y: Number(now.month.slice(0, 4)), mo: Number(m[2]), d: Number(m[1]) };
+        return null;
+    };
+
+    for (const w of words) {
+        let m;
+        if ((m = w.match(/^p(\d+)$/i))) {
+            page = Math.max(1, Number(m[1]));
+        } else if ((m = w.match(/^(\d{1,2})(?:h|:00)$/i))) {
+            if (Number(m[1]) > 23) return { error: tr('show.history.badDate', { text: w }) };
+            period.hour = pad2(m[1]);
+        } else if (/^(hoje|today)$/i.test(w) || /^(ontem|yesterday)$/i.test(w)) {
+            if (day || month) return { error: tr('show.history.manyDates') };
+            day = /^(hoje|today)$/i.test(w) ? now.day : whenOf(Date.now() - DAY_MS).day;
+        } else if (asDate(w)) {
+            const { y, mo, d } = asDate(w);
+            if (!validDay(y, mo, d ?? 1)) return { error: tr('show.history.badDate', { text: w }) };
+            if (day || month) return { error: tr('show.history.manyDates') };
+            if (d == null) month = `${y}-${pad2(mo)}`;
+            else day = `${y}-${pad2(mo)}-${pad2(d)}`;
+        } else {
+            rest.push(w);
+        }
+    }
+    if (day) period.day = day;
+    else if (month) period.month = month;
+    return { period, page, rest };
+}
+
+// "2026-11", "2026-11-19" or "2026-11-19 14h"
+const periodLabel = (p) => (p.day ? `${p.day}${p.hour ? ` ${p.hour}h` : ''}` : p.month ?? '');
+const msgsAlt = (n) => countAlt('show.history.msgs', n);
+const mediaAlt = (n) => (n ? tr('show.history.withMedia', { count: n }) : '');
+
+// The chats with messages in the history (without the statuses), in the list order
+function historyChats() {
+    return dbAll(
+        `SELECT chat_id, MAX(chat_name) AS chat_name, MAX(is_group) AS is_group, COUNT(*) AS total,
+                SUM(has_media) AS com_midia, MAX(timestamp) AS ultima
+           FROM messages
+          WHERE chat_id IS NOT NULL AND chat_id <> '${STATUS}' AND ${NOT_MY_COMMAND}
+          GROUP BY chat_id
+          ORDER BY ultima DESC`
+    );
+}
+
+// The commands you typed (/show -a itself, /ping...) are not part of the conversation
+const NOT_MY_COMMAND = "NOT (from_me = 1 AND body LIKE '/%')";
+
+const marksOf = (ids) => ids.map(() => '?').join(', ');
+
+// The deleted messages come with their title; the others, with the plain one
+async function resendHistory(destination, row, i, total) {
+    const info = await resolverAuthorDeleted(row);
+    await sendMessageDeleted(destination, row, info, {
+        titulo: tr(row.revoked ? 'show.history.msgTitleRevoked' : 'show.history.msgTitle', { i: i + 1, total }),
+        extras: row.revoked ? [tr('show.deletedAt', { date: formatData(row.revoked_at) })] : []
+    });
+}
+
+// Deletes the media files of the rows (and the empty date folders), returns how many and the size
+function deleteMediaFiles(rows) {
+    let files = 0;
+    let bytes = 0;
+    for (const { media_path } of rows) {
+        if (!mediaIsPath(media_path)) continue;
+        try {
+            bytes += fs.statSync(media_path).size;
+            fs.unlinkSync(media_path);
+            files++;
+        } catch { /* file no longer exists */ }
+    }
+    pruneEmptyDirs(MEDIA_DIR);
+    return { arquivos: files, bytes };
+}
+
+// Removes the empty folders (media/YYYY/MM/DD) under `dir`, never `dir` itself
+function pruneEmptyDirs(dir) {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (!entry.isDirectory()) continue;
+        const sub = `${dir}/${entry.name}`;
+        pruneEmptyDirs(sub);
+        if (!fs.readdirSync(sub).length) fs.rmdirSync(sub);
+    }
+}
+
+/**
+ * @param {object} o
+ * @param {string[]} o.words    the words typed (the chat, the period, pN)
+ * @param {number|null} o.n     the -N: the last N messages
+ * @param {string|null} o.search  the -q text, and o.home its compiled test
+ */
+async function showHistory({ msg, opts, chatId, chatName: currentName, words, n, search, home }) {
+    const read = readPeriod(words);
+    if (read.error) {
+        await msg.reply(read.error);
+        return;
+    }
+    const { period, page, rest } = read;
+    if (period.hour && !period.day) {
+        await msg.reply(tr('show.history.hourNeedsDay', { cmd: '/show -a' }));
+        return;
+    }
+
+    // The chat: given (name, @mention, /regex/) or this one; in your private chat without a chat, all of them
+    let target = null;
+    if (rest.length) {
+        target = await resolverTarget(msg, rest.join(' '), { chats: await historyChats() });
+        if (!target) return;
+    }
+    const myId = client.info.wid._serialized;
+    const ids = target ? target.ids : await chatCurrentIds(chatId);
+    const allChats = !target && ids.includes(myId);
+
+    // With no chat and no period/search/-N, in your private chat: which chats have history
+    if (allChats && !search && n == null && !period.month && !period.day && !opts.opt.flush) {
+        await listHistoryChats(msg);
+        return;
+    }
+
+    const scope = allChats ? '' : `AND chat_id IN (${marksOf(ids)})`;
+    const params = allChats ? [] : ids;
+    const rows = await dbAll(
+        `SELECT id, timestamp, has_media, revoked, media_path${search ? ', body, transcription' : ''}
+           FROM messages
+          WHERE chat_id IS NOT NULL AND chat_id <> '${STATUS}' AND ${NOT_MY_COMMAND} ${scope}
+          ORDER BY timestamp, id`, params);
+
+    const name = target?.nome ?? (allChats ? tr('show.history.allChats') : null);
+    let items = rows.map(r => ({ ...r, ms: paraMs(r.timestamp), when: whenOf(paraMs(r.timestamp)) }));
+    if (home) items = items.filter(r => [r.body, r.transcription].filter(Boolean).some(home));
+    const slice = items.filter(r => (!period.month || r.when.month === period.month) && (!period.day || r.when.day === period.day) &&
+        (!period.hour || r.when.hour === period.hour));
+
+    const whereAlt = allChats ? tr('show.history.allChats') : target ? tr('show.whereChat', { name: target.nome }) : tr('show.whereHere');
+    const sentence = periodLabel(period) ? ` · ${periodLabel(period)}` : '';
+
+    // -flush -all: removes the history of the scope (only with -yes)
+    if (opts.opt.flush) {
+        await flushHistory({ msg, ids, allChats, slice, where: whereAlt, cmd: `/show -f -a ${rest.length ? `/${target.nome}/ ` : ''}${periodLabel(period)}`.trim() }, Boolean(opts.opt.yes));
+        return;
+    }
+
+    if (!slice.length) {
+        await msg.reply(tr('show.history.none', { where: `${whereAlt}${search ? tr('show.history.query', { query: search }) : ''}`, period: sentence }));
+        return;
+    }
+
+    const max = getSetting('show.max');
+    const chatName = name ?? currentName ?? tr('show.whereHere');
+    const cmdBase = `/show -a${search ? ` -q ${/\s/.test(search) ? `"${search}"` : search}` : ''}${target ? ` /${target.nome}/` : ''}`;
+    const media = slice.filter(r => r.has_media).length;
+    const queryAlt = search ? tr('show.history.query', { query: search }) : '';
+
+    // The last N
+    if (n != null) {
+        const last = slice.slice(-Math.min(n, max));
+        await sendHistoryMessages({ msg, chatId, items: last, head: tr('show.history.leafLast', { msgs: msgsAlt(last.length), name: chatName }) + queryAlt });
+        return;
+    }
+
+    // Few messages (or the hour): the messages themselves, in parts of show.max
+    if (slice.length <= max || period.hour) {
+        const pages = Math.ceil(slice.length / max);
+        const p = Math.min(page, pages);
+        const part = slice.slice((p - 1) * max, p * max);
+        const head = tr('show.history.leaf', {
+            msgs: msgsAlt(slice.length), name: chatName, period: periodLabel(period) || tr('show.history.allPeriod'), page: pages > 1 ? tr('show.history.page', { p, pages }) : ''
+        }) + queryAlt;
+        const next = p < pages ? tr('show.history.next', { cmd: `${cmdBase} ${periodLabel(period)} p${p + 1}`.replace(/\s+/g, ' ') }) : '';
+        await sendHistoryMessages({ msg, chatId, items: part, head: head + next });
+        return;
+    }
+
+    // Many: the next level, by month, day or hour
+    const level = period.day ? 'hour' : period.month ? 'day' : 'month';
+    const buckets = new Map();
+    for (const r of slice) {
+        const key = r.when[level];
+        const b = buckets.get(key) ?? { n: 0, media: 0 };
+        b.n++;
+        if (r.has_media) b.media++;
+        buckets.set(key, b);
+    }
+    const keys = [...buckets.keys()].sort().reverse();
+    const labelOf = (k) => (level === 'hour' ? `${k}h` : k);
+    const lines = keys.map(k => `${labelOf(k)} · ${buckets.get(k).n}${buckets.get(k).media ? ` · 🖼️ ${buckets.get(k).media}` : ''}`).join('\n');
+    const from = slice[0].when.day;
+    const to = slice.at(-1).when.day;
+    const title = period.month || period.day
+        ? tr('show.history.titleOf', { name: chatName, period: periodLabel(period), msgs: msgsAlt(slice.length), media: mediaAlt(media) })
+        : tr('show.history.title', { name: chatName, msgs: msgsAlt(slice.length), media: mediaAlt(media), from, to });
+    const first = keys[0];
+    const example = level === 'hour' ? `${period.day} ${first}h` : first;
+    let textAlt = `${title}${queryAlt}\n\n${lines}\n`;
+    textAlt += tr('show.history.hintDown', { cmd: `${cmdBase} ${example}` });
+    textAlt += tr('show.history.hintFormats');
+    if (level === 'month') {
+        textAlt += tr('show.history.keeps', { days: Math.round(getSetting('cache.messageRetentionHours') / 24) });
+    }
+    await msg.reply(textAlt);
+}
+
+// The chats that have history (the numbered list of -a in your private chat)
+async function listHistoryChats(msg) {
+    const chats = await historyChats();
+    if (!chats.length) {
+        await msg.reply(tr('show.history.none', { where: tr('show.history.allChats'), period: '' }));
+        return;
+    }
+    const total = chats.reduce((sum, c) => sum + c.total, 0);
+    const media = chats.reduce((sum, c) => sum + (c.com_midia ?? 0), 0);
+    const LIMIT = 20;
+    let textAlt = tr('show.history.chatsTitle', { chats: countAlt('show.history.chats', chats.length), msgs: msgsAlt(total), media: mediaAlt(media) });
+    chats.sort((a, b) => b.total - a.total).slice(0, LIMIT).forEach((c, i) => {
+        textAlt += tr('show.history.chatsLine', { n: i + 1, chat: describeChat(c), msgs: msgsAlt(c.total), media: mediaAlt(c.com_midia ?? 0), date: formatData(c.ultima) });
+    });
+    if (chats.length > LIMIT) textAlt += tr('show.history.chatsMore', { count: chats.length - LIMIT });
+    textAlt += tr('show.history.chatsHint') + tr('show.history.keeps', { days: Math.round(getSetting('cache.messageRetentionHours') / 24) });
+    await msg.reply(textAlt);
+}
+
+// The header and then each message (the full row, with the media and the sender), spaced by show.delayMs
+async function sendHistoryMessages({ msg, chatId, items, head }) {
+    const full = items.length
+        ? await dbAll(`SELECT * FROM messages WHERE id IN (${marksOf(items)}) ORDER BY timestamp, id`, items.map(r => r.id))
+        : [];
+    await msg.reply(head);
+    for (const [i, row] of full.entries()) {
+        try {
+            await resendHistory(chatId, row, i, full.length);
+        } catch (err) {
+            printError(`/show -a: failed to resend ${row.id}:`, err.message);
+            await client.sendMessage(chatId, tr('show.resendFailed', { i: i + 1, total: full.length, error: err.message }));
+        }
+        if (i < full.length - 1) await wait(getSetting('show.delayMs'));
+    }
+}
+
+// /show -f -a [chat] [period]: deletes the history of the scope (the messages and their media files); asks for -yes
+async function flushHistory({ msg, ids, allChats, slice, where, cmd }, yes) {
+    if (!slice.length) {
+        await msg.reply(tr('show.history.none', { where, period: '' }));
+        return;
+    }
+    const full = await dbAll(`SELECT id, media_path FROM messages WHERE id IN (${marksOf(slice)})`, slice.map(r => r.id));
+    const withFiles = full.filter(r => mediaIsPath(r.media_path));
+    const size = withFiles.reduce((sum, r) => { try { return sum + fs.statSync(r.media_path).size; } catch { return sum; } }, 0);
+
+    if (!yes) {
+        await msg.reply(tr('show.history.flushAsk', { msgs: msgsAlt(slice.length), where, files: withFiles.length, size: humanSize(size), cmd }));
+        return;
+    }
+    const removed = deleteMediaFiles(full);
+    for (let i = 0; i < full.length; i += 400) {
+        const part = full.slice(i, i + 400);
+        await dbRun(`DELETE FROM messages WHERE id IN (${marksOf(part)})`, part.map(r => r.id));
+    }
+    printInfo(`/show -f -a (${allChats ? 'all' : ids[0]}): ${full.length} messages, ${removed.arquivos} files removed`);
+    await msg.reply(tr('show.history.flushed', { msgs: msgsAlt(full.length), where, files: removed.arquivos, size: removed.bytes ? ` _(${humanSize(removed.bytes)})_` : '' }));
+}
+
+async function cmdShow({ msg, opts, chatId, chatName, admin }) {
     await dbReady;
 
     const syntax = () => msg.reply(commandUsage('/show'));
@@ -516,6 +823,16 @@ async function cmdShow({ msg, opts, chatId, admin }) {
             await msg.reply(tr('show.queryInvalid', { error: err.message }));
             return;
         }
+    }
+
+    // -all (-a): the general history of the chat
+    if (opts.opt.all) {
+        if (requests.length || opts.opt.list) {
+            await msg.reply(tr('show.history.noCombine'));
+            return;
+        }
+        await showHistory({ msg, opts, chatId, chatName, words, n, search, home });
+        return;
     }
 
     const privateWithoutParams = /@(c\.us|lid)$/.test(chatId) &&

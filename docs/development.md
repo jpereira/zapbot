@@ -216,6 +216,7 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `agenda.test.js` | Typed dates (`6h`, `+2h`, `at 18h`, `friday`...) and `/cron`, in message and reminder modes, with several `-to` in a single item, `-edit`, `-pause`/`-resume` and the `{/command}` and the `\n` in the text (and `-test`) |
 | `alias.test.js` | Persistent registration, descriptions with straight and curly quotes, listing, single and full removal, reserved names, additional arguments, target permissions and the text aliases (`{/command}`, `\n` and each command's permissions) |
 | `apagadas-editadas.test.js` | Delete/edit events (the notice's Name comes from the schedule) (and the `show.alert.*` notices) and `/show` (deleted, edited and status, the requested chat and the `-q` search) |
+| `show-history.test.js` | `/show -a`: the general history by month, day and hour, the period, the parts, the last N, the search and `-f -a -yes` |
 | `ascii.test.js` | `/ascii`: the 5 lines inside the code block, wrapping by width (`-w`), `-c`, the replied message's text, accents and errors |
 | `backup.test.js` | `/backup` (creation, list, restore, sending in private, by email and with one or several `-to`) and the daily backup |
 | `batch.test.js` | `/batch`: the split into blocks (blank lines, URLs and a `/` that isn't a command), the summary, `-dry`, `-stop`, the refusal of `/batch` inside `/batch` and owner-only use |
