@@ -31,6 +31,10 @@ mensalidade, e as suas mensagens ficam no seu servidor. Você digita comandos em
 
 Pois é, a gente andou ocupado. O melhor da última leva:
 
+- 🔐 **Notas privadas de verdade.** O `/notes -lock #stash` protege uma tag com senha: o texto e os arquivos ficam
+  **cifrados** (AES-256-GCM), ela só libera e abre no **seu próprio privado**, trava sozinha de novo e nunca sai com
+  `-to`. A senha nunca é guardada, registrada em log nem mantida no histórico, e um alias como `/stash.view` deixa tudo em
+  uma palavra. [`/notes`](docs/commands/notes.md#tags-protegidas--lock)
 - 🎙️ **Transcreva qualquer vídeo ou áudio.** Mande um link (Instagram, YouTube, X, TikTok...) ou responda um vídeo ou
   uma nota de voz e receba o **texto da fala**, ou `-sum` para um **resumo** em cima. Roda no seu próprio servidor
   (faster-whisper), então sem conta da OpenAI e o áudio nunca sai de casa. [`/stt`](docs/commands/stt.md) · [`/get -t`](docs/commands/get.md)
@@ -106,7 +110,8 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 | 📣 | **Seu perfil e Status** | Posta no seu Status do WhatsApp (e agenda), mostra o recado de qualquer pessoa e troca o seu, exporta seus contatos com fotos | [`/status`](docs/commands/status.md) · [`/profile`](docs/commands/profile.md) · [`/contacts`](docs/commands/contacts.md) |
 | 🔌 | **API e MCP (experimental)** | Uma API HTTP local (desligada por padrão) para mandar mensagens e ler as suas notas por scripts, e um servidor MCP experimental para clientes de IA | [API e MCP](docs/api.md) |
 | ⭐ | **Pro: limites por pessoa** | Divida o `/gpt` e outros comandos com amigos e grupos, com um limite de chamadas bem-sucedidas por pessoa, por dia, semana ou mês, e o `/usage` para ver o que resta | [`/usage`](docs/commands/usage.md) |
-| 🛡️ | **Seu, e seguro** | Papéis de dono, admin e usuário por comando, proteção contra flood, anti-SSRF nos downloads, backups, login do QR Code por e-mail, em inglês ou português do Brasil | [`/bot`](docs/commands/bot.md) · [`/backup`](docs/commands/backup.md) · [`/set`](docs/commands/set.md) |
+| 🔐 | **Notas privadas** | Anotações com `#tags` e **tags protegidas**: texto e arquivos cifrados com senha, abertos só no seu próprio privado, travados de novo sozinhos e nunca enviados a outros | [`/notes`](docs/commands/notes.md#tags-protegidas--lock) · [`/notes -lock`](docs/commands/notes.md#senha-no-comando) |
+| 🛡️ | **Seu, e seguro** | Papéis de dono, admin e usuário por comando, proteção contra flood, anti-SSRF nos downloads, backups, **notas cifradas**, login do QR Code por e-mail, em inglês ou português do Brasil | [`/bot`](docs/commands/bot.md) · [`/backup`](docs/commands/backup.md) · [`/set`](docs/commands/set.md) |
 
 Todos os comandos, com as opções e os exemplos, estão em [Comandos](docs/commands/index.md).
 
@@ -484,7 +489,7 @@ e deixe o bot do seu jeito:
 | [`/mute`](https://jpereira.github.io/zapbot/pt-BR/commands/mute/) | | `admin` | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](https://jpereira.github.io/zapbot/pt-BR/commands/news/) | | `user` | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brazil` |
 | [`/noffa`](https://jpereira.github.io/zapbot/pt-BR/commands/noffa/) | | `user` | Piada: enfeita o texto com arco-íris |
-| [`/notes`](https://jpereira.github.io/zapbot/pt-BR/commands/notes/) | | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), editar (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alert` que avisa numa data/hora |
+| [`/notes`](https://jpereira.github.io/zapbot/pt-BR/commands/notes/) | | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), editar (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`), `-alert` que avisa numa data/hora e `-lock`, que protege uma tag com senha (cifrada, só no seu privado) |
 | [`/ocr`](https://jpereira.github.io/zapbot/pt-BR/commands/ocr/) | | `user` | O texto de uma foto, lido localmente (Tesseract) ou pelo ChatGPT (`-gpt`) |
 | [`/ping`](https://jpereira.github.io/zapbot/pt-BR/commands/ping/) | | `user` | Verifica se o bot está vivo |
 | [`/pixelart`](https://jpereira.github.io/zapbot/pt-BR/commands/pixelart/) | | `user` | Arte ANSI/ASCII aleatória (16colo.rs) |

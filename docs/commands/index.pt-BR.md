@@ -288,7 +288,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/mute`](mute.md) | | `admin` | Silencia os avisos de apagadas, editadas, status e reações (e os do `/watch`) de uma pessoa, um grupo ou uma comunidade; respondendo um aviso, de onde ele veio |
 | [`/news`](news.md) | | `user` | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brazil` |
 | [`/noffa`](noffa.md) | | `user` | Piada: enfeita o texto com arco-íris |
-| [`/notes`](notes.md) | | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), editar (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alert` que avisa numa data/hora |
+| [`/notes`](notes.md) | | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), editar (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`), `-alert` que avisa numa data/hora e `-lock`, que protege uma tag com senha (cifrada, só no seu privado) |
 | [`/ocr`](ocr.md) | | `user` | O texto de uma foto, lido localmente (Tesseract) ou pelo ChatGPT (`-gpt`) |
 | [`/ping`](ping.md) | | `user` | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | | `user` | Arte ANSI/ASCII aleatória (16colo.rs) |

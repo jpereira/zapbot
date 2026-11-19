@@ -36,6 +36,12 @@ Alguns pontos merecem atenção especial num relato:
   (anti-SSRF).
 - **Chaves de API** (OpenAI, GIPHY, Google Translate) e a senha do SMTP: nunca devem aparecer no
   chat nem nos logs.
+- **Notas protegidas** (`/notes -lock`): o texto e os arquivos de uma tag protegida são cifrados (AES-256-GCM, chave
+  derivada por scrypt) e a senha nunca é guardada. Conta como vulnerabilidade qualquer jeito de lê-los **sem a
+  senha** ou **fora do seu próprio privado**: num grupo ou no chat de outra pessoa, enviados com `-to`, num alerta,
+  nos logs, no histórico (`messages`) ou num backup; a senha aparecendo em qualquer lugar onde o bot escreve; ou uma
+  tag que continua liberada depois do tempo (`notes.lockMinutes`), de um reinício ou do `-now`. O que ele não promete
+  está em [Cenários de privacidade](https://jpereira.github.io/zapbot/pt-BR/commands/notes/#cenários-de-privacidade).
 - **Mensagens guardadas**: o banco (`cache/zapbot.db`), as mídias em `cache/media` e os
   backups em `cache/backups` têm conversas de terceiros. O `/backup -send` para outro chat pede
   confirmação (`-yes`) por isso.

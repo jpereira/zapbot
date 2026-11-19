@@ -113,7 +113,8 @@ The copy is made with SQLite's `VACUUM INTO` (consistent, without stopping the
 bot) and compressed with gzip.
 
 `/notes` images (`cache/notes`) go in a separate file, only when there are any, and come back
-along with `-r`. `-send` and the automatic backup send only the database (the images may exceed the
+along with `-r`. The notes of a [protected tag](notes.md#protected-tags--lock) go in the backup **encrypted** (database and
+files), so a leaked backup does not open them; the backups made **before** protecting the tag keep the text in the clear. `-send` and the automatic backup send only the database (the images may exceed the
 attachment limit).
 
 **The other media (`cache/media`) is not included**: after a restore, a deleted message with media
