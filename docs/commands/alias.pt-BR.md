@@ -2,7 +2,9 @@
 
 Salva atalhos no banco do bot: para um comando com argumentos ou para um texto com vários
 `{/comando}`, como no [`/cron`](cron.md#comandos-no-texto). O dono e os admins cadastram e removem
-aliases. Quem executa um atalho precisa ter permissão para os comandos de destino.
+aliases. Quem executa um atalho precisa ter permissão para os comandos de destino. Um usuário (`+u`) vê os atalhos que
+levam a comandos que ele pode usar no fim do seu [`/help`](help.md) (o comando para o qual leva e o `-desc`), então
+escreva um bom `-desc`.
 
 ```text
 /alias <nome> [-quiet|-q] [-desc|-d "Descrição"] </comando argumentos>

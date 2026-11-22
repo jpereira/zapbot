@@ -77,7 +77,7 @@ async function resolveSaved(alias, nameAlt, args) {
         const targets = foundAlt4.map(a => a?.command).filter(Boolean);
         return {
             command: { cmd: nameAlt, role: roleMoreRestricted(targets.map(c => c.role)), targets: targets.map(c => c.cmd) },
-            alias: nameAlt, text: alias.command, args, quiet: Boolean(alias.quiet)
+            alias: nameAlt, text: alias.command, args, quiet: Boolean(alias.quiet), ownerOnly: Boolean(alias.owner_only)
         };
     }
 
@@ -86,7 +86,10 @@ async function resolveSaved(alias, nameAlt, args) {
     const target = findCommand(destination);
     if (!target) return null;
     const argsFinal = [commandAlt.slice(destination.length).trim(), leftovers].filter(Boolean).join(' ');
-    return { command: await withTargets(target, argsFinal), alias: nameAlt, destination, args: argsFinal, quiet: Boolean(alias.quiet) };
+    return {
+        command: await withTargets(target, argsFinal), alias: nameAlt, destination, args: argsFinal,
+        quiet: Boolean(alias.quiet), ownerOnly: Boolean(alias.owner_only)
+    };
 }
 
 /*
@@ -108,7 +111,7 @@ async function byPrefix(nameAlt, args) {
     // Each alias enters with the target's permissions (targets), so the bot filters the list
     const deAlias = (await Promise.all(saved.map(async a => {
         const c = (await resolveSaved(a, a.name, ''))?.command;
-        return c && { ...c, cmd: a.name, targets: c.targets ?? [c.cmd] };
+        return c && { ...c, cmd: a.name, targets: c.targets ?? [c.cmd], ownerOnly: Boolean(a.owner_only) };
     }))).filter(Boolean);
     const possible = [...commands, ...deAlias];
     return possible.length ? { candidates: possible } : null;
@@ -129,11 +132,14 @@ async function textRunAlias(msg, resolved, { chatId, chatName, isGroup, who }) {
     for (const { content, options } of mediaAltAlt) await msg.reply(content, undefined, { caption: options?.caption });
 }
 
-async function listAliases(msg, can = () => true) {
+// The aliases whose every target (the command, or each {/command} of the text) the `can` accepts, by name.
+// A private alias (-private) is the owner's: only with `owner` it is in the list.
+async function aliasesFor(can = () => true, { owner = false } = {}) {
     await dbReady;
     const allAlt2 = await dbAll('SELECT * FROM command_aliases ORDER BY name');
     const aliases = [];
     for (const a of allAlt2) {
+        if (a.owner_only && !owner) continue;
         // The destination or the text's {/command}s (which may be other aliases)
         const linesAlt = textIsAlias(a.command) ? commandsInText(a.command).map(c => c.line) : [a.command];
         // The disabled ones too (the alias stays listed); an alias inside the text counts by its target
@@ -142,22 +148,28 @@ async function listAliases(msg, can = () => true) {
             return botConfig.commands.find(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt))
                 ?? (await findCommandAlt(line))?.command;
         }));
-        if (targets.length && targets.every(target => target && can(target))) aliases.push(a);
+        if (targets.length && targets.every(target => target && can(target))) aliases.push({ ...a, targets: targets.map(c => c.cmd) });
     }
+    return aliases;
+}
+
+async function listAliases(msg, can = () => true) {
+    const aliases = await aliasesFor(can, { owner: Boolean(msg.fromMe) });
     await msg.reply(aliases.length
         ? `${t('adm.alias.list', { n: aliases.length })}\n\n` + aliases.map(aliasBlock).join('\n\n') + t('adm.alias.tips')
         : t('adm.alias.none'), undefined, { linkPreview: false });
 }
 
-// The name in bold (🔇 if quiet), the description and the destination; the text with {/command} goes on across several lines
-function aliasBlock(a) {
+// The name in bold (🔇 if quiet, 🔒 if private), the description and the destination; the text with {/command} goes on
+// across several lines. /help shows the same block of the user's aliases without the marks ({ marks: false })
+function aliasBlock(a, { marks = true } = {}) {
     const [first, ...rest] = String(a.command).split('\n');
     return [
-        `*${a.name}*${a.quiet ? ' 🔇' : ''}`,
+        `*${a.name}*${marks && a.quiet ? ' 🔇' : ''}${marks && a.owner_only ? ' 🔒' : ''}`,
         a.description && `📝 ${a.description}`,
         `→ ${first}`,
         ...rest.map(l => `   ${l}`)
     ].filter(Boolean).join('\n');
 }
 
-module.exports = { applyParams, fixDash, aliasBlock, textIsAlias, isCommandOrAlias, textRunAlias, listAliases, resolverAlias };
+module.exports = { applyParams, fixDash, aliasBlock, aliasesFor, textIsAlias, isCommandOrAlias, textRunAlias, listAliases, resolverAlias };

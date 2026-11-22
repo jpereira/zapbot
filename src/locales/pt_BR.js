@@ -16,6 +16,7 @@ module.exports = {
     'help.title': '🤖 *AJUDA*',
     'help.menuTitle': '🤖 *MENU DE AJUDA*',
     'help.menuUserNote': '_(os comandos que você pode usar)_',
+    'help.aliasesTitle': '🔗 *Atalhos* ({n}): funcionam como os comandos (/help alias mostra cada um por inteiro)',
     'help.menuFooter': '💡 Utilize */help /comando* ou */comando -h* para mais informações.',
     'help.notFound': '❌ Comando não encontrado: {cmd}',
     'help.restricted': '⛔ O {cmd} é só do dono do bot{e}.',
