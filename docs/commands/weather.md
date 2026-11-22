@@ -5,6 +5,7 @@ chance of rain, from [Open-Meteo](https://open-meteo.com/) (free, no API key). W
 it also shows the forecast for the next days.
 
 | Argument | Description |
+| `-tts` | Speaks the reply as a voice note, with the default voice of [`/tts`](tts.md) (same as `/tts -q {/weather -q ...}`). Settings `tts.*` apply |
 |---|---|
 | `-quiet`, `-q` | Only a natural sentence, with no emoji or markdown (see [Quiet mode](#quiet-mode)) |
 | `[N]` or `[Nd]` | N-day forecast, counting today (`16` or `16d`). From 1 up to the `weather.maxDays` setting (default 16, Open-Meteo's maximum). Only valid as the first argument |

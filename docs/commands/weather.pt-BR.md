@@ -5,6 +5,7 @@ dia, pela [Open-Meteo](https://open-meteo.com/) (gratuita, sem chave de API). Co
 mostra também a previsão dos próximos dias.
 
 | Argumento | Descrição |
+| `-tts` | Fala a resposta em um áudio, com a voz padrão do [`/tts`](tts.md) (o mesmo que `/tts -q {/weather -q ...}`). Valem os settings `tts.*` |
 |---|---|
 | `-quiet`, `-q` | Só uma frase natural, sem emoji nem markdown (veja [Modo quieto](#modo-quieto)) |
 | `[N]` ou `[Nd]` | Previsão de N dias, contando hoje (`16` ou `16d`). De 1 até o setting `weather.maxDays` (padrão 16, máximo da Open-Meteo). Só vale como primeiro argumento |

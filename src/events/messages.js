@@ -8,6 +8,7 @@ const fs = require('fs-extra');
 const { client, botConsumeSending, wasSentByBot, messageToSelf } = require('../client');
 const { getCommandSyntax, helpProtocol } = require('../commands/base');
 const { textRunAlias, resolverAlias } = require('../aliases');
+const { ttsRewrite } = require('../ttsOption');
 const { HANDLERS } = require('../commands/index');
 const {
     scheduleName, contactName, removeDeviceSuffix, resolveLidToPhone, groupResolverName, privateResolverName
@@ -290,7 +291,10 @@ client.on('message_create', (msg) => withContextDebug({
         const caller = body.startsWith('/') && !sentByBot ? body.split(/\s+/, 1)[0] : null;
 
         if (sentByBot) printInfo(`Bot's own message starting with '/' ignored as a command: ${body.slice(0, 60)}`);
-        const resolved = caller ? await resolverAlias(body) : null;
+        let resolved = caller ? await resolverAlias(body) : null;
+        // -tts (/crypto -tts BTC): it is /tts {/crypto -q BTC}; the log of the call keeps what was typed
+        const spoken = ttsRewrite(resolved?.command, resolved?.args ?? '');
+        if (spoken) resolved = await resolverAlias(spoken);
         const command = resolved?.command ?? null;
 
         /*

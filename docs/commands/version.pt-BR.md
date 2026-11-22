@@ -3,6 +3,10 @@
 Exibe o mesmo banner do `/uptime`, com a versão do bot (é o mesmo tratador). Também pode ser usado
 dentro de um [`/alias`](alias.md) ou do [`/cron`](cron.md) com `{/version}`.
 
+| Opção | Valor | Descrição |
+|---|---|---|
+| `-tts` | | Fala a resposta em um áudio, com a voz padrão do [`/tts`](tts.md) (o mesmo que `/tts -q {/version ...}`). Valem os settings `tts.*` |
+
 ```text
 /version
 🤖 ZapBot 1.0.25 (devel) (git+7a89b92/HEAD)

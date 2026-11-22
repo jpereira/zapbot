@@ -95,6 +95,16 @@
         "-to email (o QRCODE_EMAIL_SMTP_TO)",
         "-to voce@exemplo.com"
       ]
+    },
+    {
+      "opts": [
+        "tts"
+      ],
+      "values": [],
+      "desc": "Fala a resposta em um áudio, com a voz padrão do /tts. O mesmo que /tts -q {/stocks -q ...}, só com o áudio. Valem os settings do /tts (tts.*).",
+      "ex": [
+        "/stocks -tts"
+      ]
     }
   ]
 }

@@ -4,6 +4,7 @@ Current price and 24 h change for the enabled coins (via the Binance API, `<TOKE
 only the requested ones. Default: BTC, ETH, SOL and HYPE.
 
 | Option | Value | Description |
+| `-tts` | | Speaks the reply as a voice note, with the default voice of [`/tts`](tts.md) (same as `/tts -q {/crypto -q ...}`). Settings `tts.*` apply |
 |---|---|---|
 | *(none)* | `[TOKEN...]` | Quotes for the enabled coins, or only the given coins (enabled or not), in the order requested. An unsupported one: warns and lists the supported ones |
 | `-list`, `-l` | | Lists the supported coins; the enabled ones are marked with `*` |

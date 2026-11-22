@@ -4,6 +4,7 @@ Preço atual e variação de 24 h das moedas ativadas (via API da Binance, par `
 das pedidas. Por padrão: BTC, ETH, SOL e HYPE.
 
 | Opção | Valor | Descrição |
+| `-tts` | | Fala a resposta em um áudio, com a voz padrão do [`/tts`](tts.md) (o mesmo que `/tts -q {/crypto -q ...}`). Valem os settings `tts.*` |
 |---|---|---|
 | *(nenhuma)* | `[TOKEN...]` | Cotação das ativadas, ou só das moedas informadas (ativadas ou não), na ordem pedida. Uma que não é suportada: avisa e lista as suportadas |
 | `-list`, `-l` | | Lista as moedas suportadas; as ativadas vêm marcadas com `*` |

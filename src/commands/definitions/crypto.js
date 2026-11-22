@@ -41,8 +41,16 @@ module.exports = {
         { opts: ['list', 'l'], values: [], desc: 'Lists the supported coins (* = enabled).' },
         OPTION_ALERT_MSG,
         OPTION_ALERT_RM,
-        OPTION_ALERT_TO
+        OPTION_ALERT_TO,
+        {
+            opts: ['tts'],
+            values: [],
+            desc: 'Speaks the reply as a voice note, with the default voice of /tts. Same as /tts -q {/crypto -q ...}, with only the voice note. The /tts settings (tts.*) apply.',
+            ex: ['/crypto -tts'],
+            cron: false
+        }
     ],
+    tts: true,   // -tts: speaks the reply (it is /tts {/crypto -q ...})
     role: USER,
     cron: true
 };

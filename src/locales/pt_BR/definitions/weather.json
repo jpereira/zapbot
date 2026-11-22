@@ -33,6 +33,16 @@
         "/weather -q",
         "/weather -q Niterói"
       ]
+    },
+    {
+      "opts": [
+        "tts"
+      ],
+      "values": [],
+      "desc": "Fala a resposta em um áudio, com a voz padrão do /tts. O mesmo que /tts -q {/weather -q ...}, só com o áudio. Valem os settings do /tts (tts.*).",
+      "ex": [
+        "/weather -tts"
+      ]
     }
   ]
 }

@@ -517,3 +517,14 @@ describe('/stocks -q', () => {
         assert.doesNotMatch(r, /MERCADO|🕐|Yahoo|💰/);
     });
 });
+
+describe('/crypto -tts e /stocks -tts', () => {
+    test('/crypto -tts BTC fala só o preço; /stocks -tts USD também', async () => {
+        bot.processes.spoken = null;
+        const replies = await bot.replyAlt('/crypto -tts BTC');
+        assert.deepEqual(replies.filter(r => typeof r === 'string' && /Áudio gerado|Gerado por|Gerando/.test(r)), [], 'só o áudio, sem rodapé');
+        assert.equal(bot.processes.spoken, 'BTC $95,000.00');
+        await bot.execute('/stocks -tts USD');
+        assert.equal(bot.processes.spoken, 'USD R$ 5,2000');
+    });
+});
