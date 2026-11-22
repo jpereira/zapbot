@@ -104,8 +104,13 @@ async function cmdTts({ msg, args, opts, quotedMsg, chatId, chatName, isGroup, l
         let text = restore(withoutOption(masked.replace(VALUE_OPTIONS, ' '), FLAG_OPTIONS).trim());
         const error = await commandsError(text, '/tts');
         if (error) return { error };
-        ({ text } = await assembleText(text, chat, { where: '/tts', transform: speakable, origin: msg.body, who }));
-        return { text };
+        const assembled = await assembleText(text, chat, { where: '/tts', transform: speakable, origin: msg.body, who });
+        // A {/command} that failed ("❌ Não consegui consultar o tempo agora") is not spoken: its message goes as text
+        if (assembled.failures.length) {
+            printError(`/tts: not spoken, the command inside failed: ${assembled.failures.join(' | ')}`);
+            return { error: assembled.failures.join('\n\n') };
+        }
+        return { text: assembled.text };
     };
 
     // Several lines: one speech per line, in a single voice note (local voice only)

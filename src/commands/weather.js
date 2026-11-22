@@ -86,6 +86,8 @@ async function queryTime({ latitude, longitude }, daysAlt = 1) {
         }
     });
 
+    // An answer without the current weather (Open-Meteo answers {error, reason} with a 200 sometimes) is a failure
+    if (!data?.current) throw new Error(`Open-Meteo answered without the weather${data?.reason ? `: ${data.reason}` : ''}`);
     return data;
 }
 
@@ -275,12 +277,14 @@ async function cmdWeather({ msg, opts }) {
 
         // The extra sources go in parallel with Open-Meteo; today, in the city, picks the CPTEC day
         const query = queryTime(local, request.days ?? 1);
-        const today = query.then(d => String(d.current?.time ?? d.daily?.time?.[0] ?? '').slice(0, 10));
         // -quiet: only the sentence (it does not even look at the other sources, nor at the days)
         if (opts.opt.quiet) {
             await msg.reply(quietTime(local, await query));
             return;
         }
+        // (a rejected query is handled by the await below; this derived promise must not become an unhandled rejection)
+        const today = query.then(d => String(d.current?.time ?? d.daily?.time?.[0] ?? '').slice(0, 10));
+        today.catch(() => {});
 
         const [dataAlt, extras] = await Promise.all([query, querySources(local, today)]);
         let textAlt = formatTime(local, dataAlt, extras);

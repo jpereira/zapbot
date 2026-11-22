@@ -281,6 +281,24 @@ describe('/weather', () => {
         network.responder('get', 'geocoding-api.open-meteo.com', errorHttp(500));
         assert.deepEqual(await bot.replyAlt('/weather Lugar', { expectedError: true }), ['❌ Não consegui consultar o tempo agora.']);
     });
+
+    test('a forecast without the current weather, or one that times out with -quiet, is a failure message (never a crash)', async () => {
+        const unhandled = [];
+        const onUnhandled = (reason) => unhandled.push(reason);
+        process.on('unhandledRejection', onUnhandled);
+        try {
+            network.responder('get', 'geocoding-api.open-meteo.com', { results: [local] });
+            network.responder('get', 'api.open-meteo.com/v1/forecast', { error: true, reason: 'Cannot initialize WeatherVariable' });
+            assert.deepEqual(await bot.replyAlt('/weather Niteroi', { expectedError: true }), ['❌ Não consegui consultar o tempo agora.']);
+
+            network.responder('get', 'api.open-meteo.com/v1/forecast', errorHttp(500));
+            assert.deepEqual(await bot.replyAlt('/weather -q Niteroi', { expectedError: true }), ['❌ Não consegui consultar o tempo agora.']);
+            await new Promise(resolve => setImmediate(resolve));
+            assert.deepEqual(unhandled, [], 'no unhandled rejection');
+        } finally {
+            process.off('unhandledRejection', onUnhandled);
+        }
+    });
 });
 
 describe('/news', () => {
@@ -1769,5 +1787,19 @@ describe('/weather -q|-quiet: uma frase natural', () => {
         assert.equal(bot.processes.spoken, 'Em Niterói, céu limpo, 25 graus. Máxima de 28 e mínima de 22.');
         await bot.execute('/tts {weather -q}');
         assert.equal(bot.processes.spoken, 'Em Niterói, céu limpo, 25 graus. Máxima de 28 e mínima de 22.');
+    });
+
+    test('dentro do /tts: se o /weather falhar, a mensagem de erro vai como texto e nenhum áudio é gerado', async () => {
+        network.responder('get', 'geocoding-api.open-meteo.com', { results: [local] });
+        network.responder('get', 'api.open-meteo.com/v1/forecast', errorHttp(500));
+        bot.processes.spoken = null;
+        const r = await bot.execute('/tts Hoje: {/weather -q Niteroi}', { expectedError: true });
+        assert.deepEqual(r.map(x => x.content), ['❌ Não consegui consultar o tempo agora.']);
+        assert.equal(bot.processes.spoken ?? null, null, 'nada foi falado');
+
+        // the same for the -tts shortcut
+        const [short] = await bot.execute('/weather -tts Niteroi', { expectedError: true });
+        assert.equal(short.content, '❌ Não consegui consultar o tempo agora.');
+        assert.equal(bot.processes.spoken ?? null, null);
     });
 });

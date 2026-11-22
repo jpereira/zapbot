@@ -133,6 +133,9 @@ function messageSynthetic(chatId, line, replies) {
     };
 }
 
+// The bot starts a reply that is a failure, a warning or a refusal with one of these
+const FAILURE_MARK = /^\s*(?:❌|⚠️|🚫)/u;
+
 /*
  * Runs a {/command}: the reply text and the media. Without `who`, it runs as
  * you (admin); with it, with the admin and the permissions of whoever runs.
@@ -140,7 +143,7 @@ function messageSynthetic(chatId, line, replies) {
 async function runCommand(chatId, line, { chatName, isGroup, where: whereAlt = '/cron', who = null, origin = null }) {
     // without `who`: runs as the owner; a private alias only runs for the owner
     const { error: errorAlt, command, args, opts } = await readCommand(line, whereAlt, !who, !who || who.level === ROLES.OWNER);
-    if (errorAlt) return { text: t('cnt.naoRodaNo', { cmd: line.split(/\s+/, 1)[0], where: whereAlt }), mediaItems: [] };
+    if (errorAlt) return { text: t('cnt.naoRodaNo', { cmd: line.split(/\s+/, 1)[0], where: whereAlt }), mediaItems: [], failed: true };
 
     printExpand(who?.senderName ?? client.info?.pushname ?? '-', origin ?? line, line);
 
@@ -151,7 +154,7 @@ async function runCommand(chatId, line, { chatName, isGroup, where: whereAlt = '
 
     const owner = { level: ROLES.OWNER, admin: true, senderName: client.info?.pushname || t('core.voce') };
     const reject = optionsError(command, opts) ?? denial(command, opts, who?.level ?? owner.level);
-    if (reject) return { text: reject, mediaItems: [] };
+    if (reject) return { text: reject, mediaItems: [], failed: true };
 
     try {
         await HANDLERS[command.cmd](assembleContext({
@@ -159,13 +162,14 @@ async function runCommand(chatId, line, { chatName, isGroup, where: whereAlt = '
         }));
     } catch (err) {
         printError(`${whereAlt}: ${line} failed:`, err.message);
-        return { text: `⚠️ ${command.cmd} falhou`, mediaItems: [] };
+        return { text: `⚠️ ${command.cmd} falhou`, mediaItems: [], failed: true };
     }
 
     const texts = replies.filter(r => typeof r.content === 'string').map(r => r.content.trim());
     const mediaAltAlt = replies.filter(r => typeof r.content !== 'string');
-    // Several replies (/defi sends one per position): separated by a blank line
-    return { text: texts.join('\n\n'), mediaItems: mediaAltAlt };
+    // Several replies (/defi sends one per position): separated by a blank line.
+    // failed: the command answered with a warning or an error (❌, ⚠️, 🚫), not with what it was asked for
+    return { text: texts.join('\n\n'), mediaItems: mediaAltAlt, failed: texts.some(x => FAILURE_MARK.test(x)) };
 }
 
 /*
@@ -201,19 +205,21 @@ async function assembleText(textAlt, s, { where: whereAlt, who, transform = null
     const commands = commandsInText(textAlt);
     // \-foo becomes -foo in the sent text; a text that is a command (starts with /) stays as it is
     const literal = (s) => (String(s).trimStart().startsWith('/') ? s : unescape(s).replace(/\\\{/g, '{'));
-    if (!commands.length) return { text: literal(textAlt), mediaItems: [], commands: [] };
+    if (!commands.length) return { text: literal(textAlt), mediaItems: [], commands: [], failures: [] };
 
     const ctx = { chatName: s.chat_name, isGroup: Boolean(s.is_group), where: whereAlt, who, origin };
     const mediaAltAlt = [];
+    const failures = [];
     let final = textAlt;
 
     for (const { mark, line } of commands) {
         const r = await runCommand(s.chat_id, line, ctx);
+        if (r.failed) failures.push(r.text);
         final = fit(final, mark, transform ? transform(r.text) : r.text);
         mediaAltAlt.push(...r.mediaItems);
     }
 
-    return { text: literal(final.trim()), mediaItems: mediaAltAlt, commands: commands.map(c => c.line) };
+    return { text: literal(final.trim()), mediaItems: mediaAltAlt, commands: commands.map(c => c.line), failures };
 }
 
 // Sends the stored media, in order, to the chat
