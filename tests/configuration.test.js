@@ -755,6 +755,26 @@ describe('banco', () => {
         await bot.dbRun('DROP TABLE teste_antiga');
     });
 
+    test('destinos salvos antes da troca dos identificadores ({ nome, grupo }) viram { name, group } (o /crypto -alert listava "undefined")', async () => {
+        const { initializeDb } = bot.src('initialization');
+        await bot.prepare();
+        const old = JSON.stringify([{ id: '1@c.us', nome: 'Jorge Pereira', grupo: false }, { id: '2@g.us', nome: 'Grupo "nome": X', grupo: true }]);
+        await bot.dbRun("INSERT INTO price_alerts (kind, symbol, op, target, created_at, recipients) VALUES ('crypto', 'BTC', '>', 1, 1, ?)", [old]);
+        await bot.dbRun("INSERT INTO schedules (kind, chat_id, chat_name, text, due_at, created_at, recipients) VALUES ('agendar', '1@c.us', 'x', 'oi', 1, 1, ?)", [old]);
+
+        await initializeDb();
+        await initializeDb(); // again: nothing else changes
+
+        for (const table of ['price_alerts', 'schedules']) {
+            const [row] = await bot.dbAll(`SELECT recipients FROM ${table}`);
+            const list = JSON.parse(row.recipients);
+            assert.deepEqual(list.map(r => [r.id, r.name, r.group]), [['1@c.us', 'Jorge Pereira', false], ['2@g.us', 'Grupo "nome": X', true]], table);
+            assert.ok(list.every(r => !('nome' in r) && !('grupo' in r)));
+        }
+        await bot.dbRun('DELETE FROM price_alerts');
+        await bot.dbRun('DELETE FROM schedules');
+    });
+
     test('defi_positions antiga (position): vira address (Orca) e wallet (carteiras), com o alerta', async () => {
         const { initializeDb } = bot.src('initialization');
         await bot.prepare();

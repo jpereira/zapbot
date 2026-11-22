@@ -90,6 +90,22 @@ async function migrateDefiForAddressAndWallet() {
  *
  * Handlers that use the database do `await dbReady` before querying.
  */
+/*
+ * The destinations were saved as [{ id, nome, grupo }] before the identifiers went to English: the code reads
+ * [{ id, name, group }] now (a row with the old keys listed "👤 undefined"). Every "recipients" column is converted;
+ * the ones already converted do not match, so it is safe to run at every start.
+ */
+async function migrateRecipientsKeys() {
+    const tables = await dbAll("SELECT name FROM sqlite_master WHERE type = 'table'");
+    for (const { name } of tables) {
+        const columns = (await dbAll(`PRAGMA table_info(${name})`)).map(c => c.name).filter(c => /recipients$/.test(c));
+        for (const column of columns) {
+            await dbRun(`UPDATE ${name} SET ${column} = REPLACE(REPLACE(${column}, '"nome":', '"name":'), '"grupo":', '"group":')
+                WHERE ${column} LIKE '%"nome":%' OR ${column} LIKE '%"grupo":%'`).catch(() => {});
+        }
+    }
+}
+
 async function initializeDb() {
     await dbRun(`CREATE TABLE IF NOT EXISTS monitor_contacts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -319,7 +335,7 @@ async function initializeDb() {
         CREATE TABLE IF NOT EXISTS forward_lists (
             list TEXT PRIMARY KEY,      -- minúscula e sem o "#"
             description TEXT,
-            recipients TEXT NOT NULL    -- JSON dos destinos já resolvidos (id/nome/grupo ou e-mail)
+            recipients TEXT NOT NULL    -- JSON dos destinos já resolvidos (id/name/group ou e-mail)
         )
     `);
     await addColumns('notes', {
@@ -582,6 +598,7 @@ async function initializeDb() {
     // Without a row, the rule shows everything as it came.
     await dbRun('CREATE TABLE IF NOT EXISTS watch_masks (rule TEXT PRIMARY KEY)');
 
+    await migrateRecipientsKeys();
     await loadSettings();
 
     for (const dir of [CONTACTS_DIR, MEDIA_DIR, NOTES_DIR, TMP_DIR]) {
