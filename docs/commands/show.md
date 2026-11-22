@@ -33,6 +33,7 @@ enter the deleted list.
 | `-edited`, `-e` | | Edited messages, with the text from before and after. Each edit is an item: a message edited twice shows up twice |
 | `-status`, `-s` | | Deleted statuses: in a private chat, the person's; in your private chat, with no chat, everyone's |
 | `-reaction`, `-r` | | Removed or changed reactions, with the previous reaction (and the new one, if changed) and the text of the message reacted to. See [Reactions](#reactions) |
+| `-all`, `-a` | | The **general history** of the chat, not just the deleted ones. It never dumps a whole chat: it gives the total by month and you go down with the period (`2026-05`, `2026-05-05`, `14h`). `-N` shows the last N, `-q` searches the history and `-f -a -yes` deletes it. See [General history](#general-history--all) |
 | `-list`, `-l` | `[chat]` | Lists all chats with content in the cache (in any chat), numbered for `/show <no.>`, marking the current chat with `← this chat`. With a chat (number, name, `@mention` or `/regex/`), only the ones that match. See [List](#list) |
 | `-query`, `-q` | `<text\|/regex/flags>` | Searches for the ones that have the text (ignoring case and accents) or that match the regex: in this chat, in the requested chat or, in your private chat, in all of them. Without `-N`: the 5 most recent. See [Search](#search) |
 | `-flush`, `-f` | | Removes from the cache the deleted ones of this chat or, with `-e`, `-s`, `-r` or chat, whatever was requested (in your private chat, with no chat: from all chats) |
@@ -165,6 +166,83 @@ typed. With `@mention`, the person's private chat and statuses are included:
 
 💡 /show <number, name, @mention or /regex/> shows the ones of a chat: deleted, edited, status and reactions together.
    …
+```
+
+## General history (`-all`)
+
+**Even if you delete messages on your phone or on WhatsApp Web, the bot keeps everything.** It saves each
+message that arrives (text, and the media in `cache/media`) as soon as it comes, for
+`cache.messageRetentionHours` (90 days in this setup; the media, `cache.messageMediaRetentionHours`).
+Deleting on your phone doesn't tell the bot anything, so the message stays in the history and `/show -a`
+brings it back, with the photo, the voice note or the file. (When the *other person* deletes for everyone,
+the bot also notices and marks it `🗑️`: that is `-d`.) What the bot never saw (it was off or disconnected) isn't there.
+
+A chat can have thousands of messages, so `-a` **never dumps the whole chat**: with more messages than
+`show.max` (20), it gives the total and the count by month, and you go down with the period, one level at a time.
+Every answer ends with the command for the next level.
+
+```text
+/show -a /Fulano/
+🗄️ History · Fulano
+4,213 messages (312 with media), from 2026-08-12 to 2026-11-19
+
+2026-11 · 987 · 🖼️ 60
+2026-10 · 1,460 · 🖼️ 112
+2026-09 · 1,211 · 🖼️ 98
+2026-08 · 555 · 🖼️ 42
+💡 To read, repeat with the period: /show -a /Fulano/ 2026-11
+   Day: 2026-05-05 (or 05/05/2026, today, yesterday) · month: 2026-05 · hour: 14h
+💡 Even if you delete messages on the phone or on WhatsApp Web, the bot keeps the history
+(and the media) for 90 days (setting cache.messageRetentionHours): you can recover everything from here.
+
+/show -a /Fulano/ 2026-11
+🗄️ Fulano · 2026-11
+987 messages (60 with media)
+
+2026-11-19 · 41 · 🖼️ 3
+2026-11-18 · 63 · 🖼️ 5
+…
+💡 To read, repeat with the period: /show -a /Fulano/ 2026-11-19
+
+/show -a /Fulano/ 2026-11-19
+🗄️ Fulano · 2026-11-19
+41 messages (3 with media)
+
+21h · 15 · 🖼️ 1
+14h · 22 · 🖼️ 2
+09h · 4
+💡 To read, repeat with the period: /show -a /Fulano/ 2026-11-19 14h
+
+/show -a /Fulano/ 2026-11-19 14h
+💬 22 messages · Fulano · 2026-11-19 14h
+💬 MESSAGE (1/22)
+…            (the messages, with the media, from the oldest to the newest)
+```
+
+- **Period:** a month (`2026-11` or `11/2026`), a day (`2026-11-19`, `19/11/2026`, `19/11`, `today`,
+  `yesterday`) and, together with a day, the hour (`14h` or `14:00`). The days and hours are those of
+  São Paulo. The bot always writes the date as year-month-day, so there's no mix-up between month and day.
+- **Few messages:** when the month, the day or the whole chat has up to `show.max` messages, they come out
+  directly. `/show -a /Fulano/ yesterday` shows yesterday's if it's few, or the hours if not.
+- **Parts:** an hour with more than `show.max` messages comes in parts: `… 14h` (part 1/3), `… 14h p2`, `… 14h p3`.
+- **The last ones:** `/show -a -5 /Fulano/` shows the last 5 messages; with a period, the last 5 of it.
+- **Search:** `-q` searches the text (and the transcriptions of the voice notes already made) and gives the
+  same by-month summary only for what matches: `/show -a -q invoice /Fulano/`, then `… 2026-10`, and so on.
+- **Without a chat:** in a group, the group's history; in your private chat, it lists the chats with history
+  (`/show -a`) or, with a period, covers all of them (`/show -a yesterday`).
+- **Delete:** `/show -f -a /Fulano/ 2026-05 -yes` deletes the messages of that period (and their media files).
+  Without `-yes`, it only says how many would go. Without a period, it's the whole history of the chat.
+- Statuses aren't in the history (see `-s`), and `-a` doesn't combine with `-d`, `-e`, `-s`, `-r` and `-l`.
+
+```text
+/show -a                         → in your private chat: the chats with history
+/show -a /Fulano/                → by month
+/show -a /Fulano/ 2026-11-19     → the hours of the day (or the messages, if few)
+/show -a -10 /Fulano/            → the last 10
+/show -a -q boleto               → searches in the chat where you typed it
+/show -a /Family/ today          → today's of the group
+/show -f -a /Fulano/ 2026-05     → says how many would go
+/show -f -a /Fulano/ 2026-05 -y  → deletes May's (messages and media files)
 ```
 
 ## Output examples

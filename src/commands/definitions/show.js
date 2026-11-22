@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/show',
-    usage: '/show [-N] [OPTION] [chat]  or  /show -l [chat]  or  /show -q <text|/regex/flags> [-N] [chat]',
+    usage: '/show [-N] [OPTION] [chat]  or  /show -l [chat]  or  /show -q <text|/regex/flags> [-N] [chat]  or  /show -a [-N] [-q <text>] [chat] [2026-05|2026-05-05|today] [14h]',
     summary: 'Shows messages from the bot cache',
     help: 'With no parameters in the private chat, lists the cache of all chats, like /show -l. In groups, shows again the last deleted message of the group. Shows again the deleted and edited messages, the deleted statuses and the removed or changed reactions that are in the cache: from this chat or another (by the -l number, name, @mention or /regex/). Channel (@newsletter) posts are identified with 📰 Canal and the name, without a contact name or phone number.',
     cmd_opts: [
@@ -25,6 +25,12 @@ module.exports = {
             opts: ['reaction', 'r'],
             values: [],
             desc: 'Removed or changed reactions, with the previous reaction (and the new one, if changed) and the text of the reacted message.'
+        },
+        {
+            opts: ['all', 'a'],
+            values: [],
+            desc: 'The general history of the chat, not just the deleted ones: the bot keeps every message (and its media) even if you delete it on the phone or on WhatsApp Web, for cache.messageRetentionHours. It never dumps the whole chat: with more messages than show.max it gives the total by month, and you go down with the period: 2026-05 (the days), 2026-05-05 (the hours; or the messages, if few), 2026-05-05 14h (the messages; p2, p3 for the next parts). Also 05/05/2026, 05/05, today and yesterday. -N shows the last N; -q searches the history; -f -a -yes deletes it. In your private chat without a chat, lists the chats with history.',
+            ex: ['/show -a /Fulano/', '/show -a /Fulano/ 2026-05', '/show -a /Fulano/ 2026-05-05 14h', '/show -a -5 /Fulano/', '/show -a -q boleto /Fulano/', '/show -a yesterday']
         },
         {
             opts: ['list', 'l'],
