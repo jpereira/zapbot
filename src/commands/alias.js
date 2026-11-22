@@ -6,15 +6,46 @@ const { dbGet, dbReady, dbRun } = require('../db');
 const { aliasBlock, fixDash, textIsAlias, listAliases } = require('../aliases');
 const { commandsInText, commandsError, breakLines } = require('../textCommands');
 const { findCommand } = require('./base');
+const { listExampleFiles, loadExample } = require('../zb');
+const { getSetting, setSetting } = require('../settings');
 const { t } = require('../i18n');
 
 const aliasName = nameAlt => '/' + nameAlt.replace(/^\//, '');
 const NAME = /^\/?[\p{L}\p{N}_.-]+$/u;
 
+// /alias -examples: lists the examples/*.zb files; with a name, loads it (an alias that already exists stays)
+async function examplesReply(msg, name, overwrite = false) {
+    const files = listExampleFiles();
+    const done = getSetting('alias.examples');
+    if (!name) {
+        if (!files.length) return msg.reply(t('adm.alias.examplesNone'));
+        const linesAlt = files.map(f => `${done.includes(f.name) ? '✅' : '⬜'} ${f.name}${f.manual ? t('adm.alias.examplesManual') : ''}`).join('\n');
+        return msg.reply(t('adm.alias.examplesList', { list: linesAlt }));
+    }
+    const example = files.find(f => f.name === name.replace(/\.zb$/, '').toLowerCase());
+    if (!example) return msg.reply(t('adm.alias.examplesMissing', { name, list: files.map(f => f.name).join(', ') }));
+    const { loaded, updated, skipped, failed } = await loadExample(example, { overwrite });
+    if (!done.includes(example.name)) await setSetting('alias.examples', [...done, example.name]);
+    return msg.reply([
+        t('adm.alias.examplesLoaded', { name: example.name, n: loaded.length, list: loaded.join(', ') || '-' }),
+        updated.length && t('adm.alias.examplesUpdated', { n: updated.length, list: updated.join(', ') }),
+        skipped.length && t('adm.alias.examplesSkipped', { n: skipped.length, list: skipped.join(', '), name: example.name }),
+        ...failed.map(f => t('adm.alias.examplesFailed', { name: f.name, error: f.error }))
+    ].filter(Boolean).join('\n'), undefined, { linkPreview: false });
+}
+
 async function cmdAlias({ msg, args }) {
     await dbReady;
     const textAlt = args.trim();
     if (!textAlt || /^-(list|l)$/.test(textAlt)) return listAliases(msg);
+    // /alias -examples [<file>] [-yes]: lists, loads one (what exists stays) or, with -yes, replaces what exists with the file's
+    // (-yes|-y may come before the -examples or anywhere after it)
+    const examples = textAlt.match(/^((?:-(?:yes|y)\s+)*)-(?:examples|ex)((?:\s+\S+)*)$/i);
+    if (examples) {
+        const words = `${examples[1]} ${examples[2]}`.split(/\s+/).filter(Boolean);
+        const isYes = (w) => /^-(?:yes|y)$/i.test(w);
+        return examplesReply(msg, words.find(w => !isYes(w)), words.some(isYes));
+    }
     const move = textAlt.match(/^-(?:move|m)\s+(\S+)\s+(\S+)$/);
     if (/^-(?:move|m)(?:\s|$)/.test(textAlt) && !move) return msg.reply(t('adm.alias.usageMove'));
     if (move) {

@@ -5,6 +5,8 @@
 !patches/
 !patches/**
 !scripts/
+!examples/
+!examples/**
 !scripts/apply-patches.js
 !package.json
 !package-lock.json

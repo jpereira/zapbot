@@ -19,6 +19,7 @@ aliases. Whoever runs a shortcut needs permission for the target commands.
 | `-quiet`, `-q` | | When running, omits the `🔗 Alias ...` header; works before or after the name |
 | `-desc`, `-d` | `<text>` | Optional description in quotes, before the command or the text; without a command, updates only the description of an existing alias |
 | `-list`, `-l` | | Lists the aliases; same as `/alias` without arguments. With only a name (`/alias /demo`), it shows what that alias does (description and command); if the name isn't an alias, the bot replies with an error |
+| `-examples`, `-ex` | `[<file>]` | Without a name, lists the example files (`examples/*.zb`: aliases ready to use). With a name, loads that file; an alias that already exists stays as it is, unless `-yes` (`-y`): then the file's definition replaces it (to apply a newer version of an example) |
 | `-move`, `-m` | `<current name> <new name>` | Renames an alias, keeping command, description and quiet; the new name can't exist |
 | `-rm` | `<name...\|all>` | Removes one or more aliases (separated by space or comma), with or without `/`; `all` removes all of them |
 
@@ -201,6 +202,34 @@ After that, `/btc`, `/xaut`, `/mstr`, `/dolar`... answer with the quote straight
 /mkt nvda              → /stocks NVDA
 /mkt PETR4.SA          → /stocks PETR4.SA
 ```
+
+## Example files (`.zb`)
+
+The bot ships with `.zb` files in the `examples/` folder: the commands you would type here, saved in a
+file. Each file is loaded **once**, on the first boot after it appears (the `alias.examples` setting
+keeps which ones were loaded, so an alias you removed doesn't come back). To load one by hand, or to see
+which exist: `/alias -examples` and `/alias -examples tts-voices`. An alias that already exists is never
+overwritten by the first-boot load; by hand, `/alias -examples tts-voices -yes` replaces the existing ones with the file's
+(use it when a newer version of an example comes).
+
+```text
+# a comment: a line that starts with #
+
+/alias /dollar -d "Currency quote, USD by default" \
+    /stocks ${1:-USD}
+
+/alias /test.tts.voices /batch -q
+    /tts -q -l -v amy $@
+    /tts -q -l -v ryan $@
+```
+
+- A command starts at a line with no indentation that begins with `/`; the indented lines under it
+  belong to it (as typed, like the lines of a [`/batch`](batch.md) shortcut).
+- A `\` at the end of a line joins it with the next one (with a single space).
+- A line that starts with `#` is a comment; to start a line with a literal `#`, write `\#`.
+- Only the form `/alias [-q] <name> [-desc "text"] <command>` runs, so a file can only **define** shortcuts: `-rm`, `-move`, `-list`
+  and the like are refused, and so is any other command. A file is limited to 128 KB and 200 aliases, and a symlink isn't read.
+  Still, a `.zb` is trusted code (it creates shortcuts that anyone allowed can run): read a file before putting it in `examples/`.
 
 ## Text with commands
 

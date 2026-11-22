@@ -73,6 +73,12 @@ function validateUrlFeed(v) {
 }
 
 const SETTINGS_SCHEMA = {
+    'alias.examples': {
+        default: [],
+        type: 'list',
+        desc: 'Arquivos de examples/*.zb que o bot já carregou (um por boot novo, uma vez só: alias que você apagou não volta). Apague o nome para carregar de novo, ou use /alias -examples <nome>.',
+        item: (v) => v.toLowerCase()
+    },
     'ascii.defaultChar': {
         default: '#',
         type: 'string',
