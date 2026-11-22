@@ -1,7 +1,7 @@
 {
   "summary": "Calcula e soma os números de uma lista",
   "usage": "/calc [OPÇÃO]... <conta>  ou  /calc [OPÇÃO]... (respondendo uma lista de números)",
-  "help": "Faz uma conta (+ - * / % x ^ e parênteses, como 100/2*6 ou ((1+7)*8)/2) ou soma os números de uma lista, do texto ou da mensagem que você responde. Numa lista pega o primeiro número de cada linha (\"437 maromba\" e \"351 corrida\" dão 788); número com sinal colado conta como positivo ou negativo (-50, +30, R$ -20). Entende 1.234,56 e 1,234.56, ignora datas, horas e telefones, e mostra o total, uma fita com todos os números que achou (sinal, valor e nome, alinhados) e a média (ou, com positivos e negativos, o saldo, o que entrou, o que saiu e o maior gasto). Um + ou - no começo da linha vale como o sinal do número dela.",
+  "help": "Faz uma conta (+ - * / % x ^ e parênteses, como 100/2*6 ou ((1+7)*8)/2) ou soma os números de uma lista, do texto ou da mensagem que você responde. Numa lista pega o primeiro número de cada linha (\"437 maromba\" e \"351 corrida\" dão 788); número com sinal colado conta como positivo ou negativo (-50, +30, R$ -20); reconhece as moedas R$, US$, USD$, EUR$, $, €, £, USD e EUR, e uma lista com a mesma moeda em todas as linhas mostra a moeda no resultado. Entende 1.234,56 e 1,234.56, ignora datas, horas e telefones, e mostra o total, uma fita com todos os números que achou (sinal, valor e nome, alinhados) e a média (ou, com positivos e negativos, o saldo, o que entrou, o que saiu e o maior gasto). Um + ou - no começo da linha vale como o sinal do número dela.",
   "ex": [
     "/calc 100/2*6",
     "/calc ((1+7)*8)/2",

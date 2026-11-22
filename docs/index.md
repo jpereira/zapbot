@@ -31,7 +31,7 @@ Yep, we've been busy. The best of the latest batch:
   and the audio never leaves home. [`/transcribe`](commands/transcribe.md) · [`/get -t`](commands/get.md)
 - 📈 **Quotes in one command.** `/stocks` now has the dollar, euro and USDT too (it replaces `/rates`), and `/stocks MSTR` brings the price, the change and the 52-week range of any stock (MSTR, NVDA, PETR4.SA,
   `^GSPC`...), with alerts like `/stocks MSTR -alert < 90`; gold is `/crypto XAUT`. [`/stocks`](commands/stocks.md) · [`/crypto`](commands/crypto.md)
-- 🧮 **A calculator for lists.** Reply to a message like `437 gym / 351 running` (or a debt list, with `R$`, signs
+- 🧮 **A calculator for lists.** Reply to a message like `437 gym / 351 running` (or a debt list, with `R$`, `EUR`, `USD`, signs
   and the total) with `/calc`: it reads the numbers, prints a tape with all of them and checks the total of the
   text. It also does `100/2*6` and `((1+7)*8)/2`. [`/calc`](commands/calc.md)
 - 📸 **An Instagram carousel becomes an album.** `/get <link>` on a post with only photos sends **all of them** to the
