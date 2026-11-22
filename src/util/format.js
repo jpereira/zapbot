@@ -17,6 +17,11 @@ function formatData(valueAlt) {
     return new Date(paraMs(valueAlt)).toLocaleString(localeCurrent(), { timeZone: 'America/Sao_Paulo', hourCycle: 'h23' });
 }
 
+// "14/10/2026 13:03": the date and the hour, without the seconds (for lists)
+function formatDataShort(valueAlt) {
+    return new Date(paraMs(valueAlt)).toLocaleString(localeCurrent(), { timeZone: 'America/Sao_Paulo', hourCycle: 'h23', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(', ', ' ');
+}
+
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
 const plural = (n, um, several) => `${n} ${n === 1 ? um : several}`;
@@ -56,6 +61,7 @@ module.exports = {
     wait,
     fmtInA,
     formatData,
+    formatDataShort,
     localeCurrent,
     paraMs,
     plural,

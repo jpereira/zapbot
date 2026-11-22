@@ -173,8 +173,9 @@ Help, usage and errors never count, you and the admins have no limit, and the hi
 /crypto -alert BTC < 90000
 🔔 Alert created
 ₿ BTC/USDT below $90,000.00
+   📨 your private chat
 💰 Now: $64,820.55
-💡 Notice in your private chat; checked every 5 minutes.
+💡 Checked every 5 minutes.
 ```
 
 **Your own shortcuts, and several commands in one:**

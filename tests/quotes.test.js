@@ -235,7 +235,7 @@ describe('/crypto', () => {
 describe('alertas de preço (-alert)', () => {
     test('cria, lista e dispara uma vez no seu privado', async () => {
         const [created] = await bot.replyAlt('/stocks -alert USD > 5.30');
-        assert.match(created, /🔔 \*Alerta criado\*\n🇺🇸 USD\/BRL acima de \*R\$ 5,3000\*\n💰 Agora: R\$ 5,2000/);
+        assert.match(created, /🔔 \*Alerta criado\*\n🇺🇸 USD\/BRL acima de \*R\$ 5,3000\*\n   📨 seu privado\n💰 Agora: R\$ 5,2000/);
 
         const [list] = await bot.replyAlt('/stocks -alert');
         assert.match(list, /🔔 \*ALERTAS DE PREÇO\* _\(\/stocks\)_\n\n1\. 🇺🇸 USD\/BRL acima de \*R\$ 5,3000\*/);
@@ -315,7 +315,7 @@ describe('alertas de preço (-alert)', () => {
         const [r] = await bot.replyAlt('/crypto -alert -rm 3 1,3');
         assert.match(r, /^🗑️ \*Alertas removidos\* \(2\)\n• ₿ BTC\/USDT acima de \*\$96,000\.00\*\n• ₿ BTC\/USDT acima de \*\$98,000\.00\*$/);
         const [list] = await bot.replyAlt('/crypto -alert');
-        assert.match(list, /1\. ₿ BTC\/USDT acima de \*\$97,000\.00\*.*\n2\. ₿ BTC\/USDT acima de \*\$99,000\.00\*/);
+        assert.match(list, /1\. ₿ BTC\/USDT acima de \*\$97,000\.00\*\n   🗓️ \d\d\/\d\d\/\d{4} \d\d:\d\d\n\n2\. ₿ BTC\/USDT acima de \*\$99,000\.00\*/);
     });
 
     test('-m é o atalho do -msg (no /crypto e no /stocks)', async () => {
@@ -329,8 +329,8 @@ describe('alertas de preço (-alert)', () => {
 
     test('a moeda antes do -alert; -msg vai no início do aviso', async () => {
         const [created] = await bot.replyAlt('/crypto BTC -alert > 96000 -to /Fulano/ -msg Isso é uma mensagem: hora de vender!');
-        assert.match(created, /^🔔 \*Alerta criado\*\n₿ BTC\/USDT acima de \*\$96,000\.00\*\n   💬 Isso é uma mensagem: hora de vender!\n💰 Agora/);
-        assert.match((await bot.replyAlt('/crypto -alert'))[0], /→ 👤 Fulano _\(criado .*\)_\n   💬 Isso é uma mensagem: hora de vender!/);
+        assert.match(created, /^🔔 \*Alerta criado\*\n₿ BTC\/USDT acima de \*\$96,000\.00\*\n   📨 Fulano\n   💬 Isso é uma mensagem: hora de vender!\n💰 Agora/);
+        assert.match((await bot.replyAlt('/crypto -alert'))[0], /\n   📨 Fulano\n   💬 Isso é uma mensagem: hora de vender!\n   🗓️ /);
 
         // -to can also come after -msg; and in /stocks
         await bot.replyAlt('/stocks USD -alert > 6 -msg Dólar subiu! -to /Fulano/');
@@ -361,9 +361,9 @@ describe('alertas de preço (-alert)', () => {
         bot.createGroup('120363000000000201@g.us', 'Família Ônibus', [OWNER.jid]);
 
         const [created] = await bot.replyAlt('/crypto -alert BTC < 90000 -to /Grupo L200/');
-        assert.match(created, /₿ BTC\/USDT abaixo de \*\$90,000\.00\*\n💰 Agora: \$95,000\.00\n💡 _Aviso em 👥 Grupo sobre L200;/);
+        assert.match(created, /₿ BTC\/USDT abaixo de \*\$90,000\.00\*\n   📨 Grupo sobre L200 👥\n💰 Agora: \$95,000\.00\n💡 _Verificação a cada/);
 
-        assert.match((await bot.replyAlt('/crypto -alert'))[0], /1\. ₿ BTC\/USDT abaixo de \*\$90,000\.00\* → 👥 Grupo sobre L200/);
+        assert.match((await bot.replyAlt('/crypto -alert'))[0], /1\. ₿ BTC\/USDT abaixo de \*\$90,000\.00\*\n   📨 Grupo sobre L200 👥\n   🗓️ /);
 
         // Other forms: quotes, one word, with @, -to before the rule
         for (const line of ['/stocks -alert USD > 6 -to "l200 grupo"', '/stocks -alert -to L200 EUR > 7', '/stocks -alert USD > 8 -to onibus']) {
@@ -389,7 +389,7 @@ describe('alertas de preço (-alert)', () => {
             { dest_id: OTHERAlt.jid, dest_name: 'Fulano', dest_is_group: 0 },
             { dest_id: OTHERAlt.jid, dest_name: 'Fulano', dest_is_group: 0 }
         ]);
-        assert.match((await bot.replyAlt('/stocks -alert'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 👤 Fulano/);
+        assert.match((await bot.replyAlt('/stocks -alert'))[0], /USD\/BRL acima de \*R\$ 6,0000\*\n   📨 Fulano\n   🗓️ /);
 
         prices.USD = 6.1;
         const beforeAlt = bot.client.sent.length;
@@ -402,8 +402,8 @@ describe('alertas de preço (-alert)', () => {
         bot.createGroup(L200, 'Grupo sobre L200', [OWNER.jid]);
 
         const [created] = await bot.replyAlt('/stocks -alert USD > 6 -to /Grupo L200/ -to fulano -to +5521911111111');
-        assert.match(created, /💡 _Aviso em 👥 Grupo sobre L200, 👤 Fulano;/);
-        assert.match((await bot.replyAlt('/stocks -alert'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 👥 Grupo sobre L200, 👤 Fulano/);
+        assert.match(created, /\n   📨 Grupo sobre L200 👥\n      Fulano\n💰 Agora/);
+        assert.match((await bot.replyAlt('/stocks -alert'))[0], /USD\/BRL acima de \*R\$ 6,0000\*\n   📨 Grupo sobre L200 👥\n      Fulano\n   🗓️ /);
 
         const [a] = await bot.dbAll('SELECT dest_id, recipients FROM price_alerts');
         assert.equal(a.dest_id, L200, 'as dest_* ficam com o primeiro');
@@ -442,8 +442,8 @@ describe('alertas de preço (-alert)', () => {
         const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com', QRCODE_EMAIL_SMTP_TO: 'Eu <eu@exemplo.com>' };
         Object.assign(process.env, env);
         try {
-            assert.match((await bot.replyAlt('/stocks -alert USD > 6 -to email'))[0], /💡 _Aviso em 📧 eu@exemplo\.com;/);
-            assert.match((await bot.replyAlt('/stocks -alert'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 📧 eu@exemplo\.com/);
+            assert.match((await bot.replyAlt('/stocks -alert USD > 6 -to email'))[0], /\n   📨 eu@exemplo\.com 📧\n💰 Agora/);
+            assert.match((await bot.replyAlt('/stocks -alert'))[0], /USD\/BRL acima de \*R\$ 6,0000\*\n   📨 eu@exemplo\.com 📧\n   🗓️ /);
 
             prices.USD = 6.1;
             const beforeAlt = bot.client.sent.length;
@@ -470,8 +470,8 @@ describe('alertas de preço (-alert)', () => {
 
         const [list, created] = await bot.replyChoosing('/stocks -alert USD > 6 -to trabalho', 1);
         assert.match(list, /^🔎 "trabalho" corresponde a 2 grupos:\n\n1\. 👥 Trabalho Rio\n2\. 👥 Trabalho SP\n/);
-        assert.match(created, /💡 _Aviso em 👥 Trabalho Rio;/);
-        assert.match((await bot.replyAlt('/stocks -alert USD > 6 -to /trabalho sp/'))[0], /💡 _Aviso em 👥 Trabalho SP;/);
+        assert.match(created, /\n   📨 Trabalho Rio 👥\n💰 Agora/);
+        assert.match((await bot.replyAlt('/stocks -alert USD > 6 -to /trabalho sp/'))[0], /\n   📨 Trabalho SP 👥\n💰 Agora/);
         assert.match((await bot.replyAlt('/stocks -alert USD > 6 -to xyz'))[0], /❌ Nenhum contato ou grupo com "xyz" no nome/);
         assert.match((await bot.replyAlt('/stocks -alert USD > 6 -to +5521988888888'))[0], /❌ O número \+5521988888888 não está no WhatsApp/);
         assert.match((await bot.replyAlt('/stocks -alert USD > 6 -to +123'))[0], /❌ Número inválido: \+123/);

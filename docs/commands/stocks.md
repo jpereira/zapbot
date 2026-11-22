@@ -216,8 +216,9 @@ message. The destination is a contact, group, number or email. Exact names take 
 - If the name matches more than one contact (or group), the bot lists them and you reply with the
   number; the alert is only created after the choice.
 - The group has to be one your account is in; the number, a WhatsApp account (the bot checks).
-- The list (`-alert`) shows each alert's destination: `→ 👥 L200 Group` or
-  `→ 📧 you@example.com` (several: `→ 👥 L200 Group, 📧 you@example.com`).
+- The list (`-alert`) shows each alert on its own lines: the rule, then `📨` with where it notifies (one destination
+  per line: `📨 L200 Group 👥`, `📨 you@example.com 📧`; nothing when it goes to your private chat), the `💬`
+  message and the `🗓️` date.
 
 ```text
 🔔 PRICE ALERT

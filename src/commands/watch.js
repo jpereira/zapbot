@@ -6,7 +6,7 @@ const { commandUsage } = require('./base');
 const { resolverMentions, channelResolverName, groupResolverName } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
 const {
-    destinationColumns, describeDestinations, lineDestination, destinationsSaved, recipientsDe,
+    destinationColumns, describeDestinations, describeDestinationsBlock, lineDestination, destinationsSaved, recipientsDe,
     resolverDestinations, resolverOrChoose
 } = require('../destinations');
 const { printInfo } = require('../log');
@@ -111,7 +111,7 @@ async function listRules(rules) {
         const only = origin ? t('watch.onlyIn', { icon: origin.source_kind === 'canal' ? '📰'
             : origin.source_kind === 'grupo' ? '👥' : '👤', name: origin.source_name }) : '';
         return `${`#${i + 1}`.padEnd(width)}  ${r}  (${count.get(r) ?? 0})${locked.has(r) ? ' 🔒' : ''}${only}` +
-            (destinations.get(r)?.length ? `  → ${describeDestinations(destinations.get(r))}` : '');
+            describeDestinationsBlock(destinations.get(r) ?? [], { indent: ' '.repeat(width + 2) });
     });
     return t('watch.listTitle', { count: rules.length, max: getSetting('watch.max') }) +
         (list.length ? list.join('\n') : t('watch.noRules'));

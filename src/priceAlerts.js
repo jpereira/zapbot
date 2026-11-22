@@ -9,7 +9,7 @@ const { findCommand } = require('./commands/base');
 const { QUOTE_TIMEOUT_MS, searchQuote, fmtPriceCrypto, fmtReal, fmtChange } = require('./quotes');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const {
-    destinationColumns, describeDestinations, lineDestination, destinationsSaved, sendToDestinations, extractDestinations,
+    destinationColumns, describeDestinations, describeDestinationsBlock, lineDestination, destinationsSaved, sendToDestinations, extractDestinations,
     recipientsDe, resolverDestinations
 } = require('./destinations');
 const { printError, printInfo } = require('./log');
@@ -18,7 +18,7 @@ const { QUOTE_SUPPORTED, CRYPTO_SUPPORTED } = require('./currencies');
 const { t } = require('./i18n');
 const { GetOptFromCommand } = require('./options');
 const { getSetting } = require('./settings');
-const { formatData, plural } = require('./util/format');
+const { formatData, formatDataShort, plural } = require('./util/format');
 
 /*
  * Price alerts: /stocks -alert and /crypto -alert
@@ -117,12 +117,16 @@ function extractMessage(textAlt) {
 // The -msg message, indented below the alert (in the list and in the confirmation)
 const messageLine = (a) => (a.message ? `\n   💬 ${a.message.replace(/\n/g, '\n   ')}` : '');
 
-function describeAlert(kind, a) {
+// withDestinations: the old "→ A, B" at the end of the line (the removal notices); the lists put them below instead
+function describeAlert(kind, a, { withDestinations = true } = {}) {
     const type = ALERT_TYPES[kind];
     const destinations = alertDestinations(a);
     return `${type.icon(a.symbol)} ${type.pair(a.symbol)} ${OPERATORS[a.op].text} *${type.fmt(a.target, a.symbol)}*` +
-        (destinations.length ? ` → ${describeDestinations(destinations)}` : '');
+        (withDestinations && destinations.length ? ` → ${describeDestinations(destinations)}` : '');
 }
+
+// What goes under the alert in the list and in the confirmation: where it notifies, one per line, and the message
+const detailsAlert = (a, { whenEmpty = '' } = {}) => describeDestinationsBlock(alertDestinations(a), { whenEmpty }) + messageLine(a);
 
 async function priceHandleAlert(kind, { msg, args, admin }) {
     const type = ALERT_TYPES[kind];
@@ -199,11 +203,10 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
             return;
         }
 
-        const linesAlt = alerts.map((a, i) => t('alerts.listItem', { n: i + 1, alert: describeAlert(kind, a), date: formatData(a.created_at) }) +
-            messageLine(a));
+        const linesAlt = alerts.map((a, i) => t('alerts.listItem', { n: i + 1, alert: describeAlert(kind, a, { withDestinations: false }), details: detailsAlert(a), date: formatDataShort(a.created_at) }));
         await msg.reply(t('alerts.list', {
             cmd: type.cmd,
-            items: linesAlt.join('\n'),
+            items: linesAlt.join('\n\n'),
             every: plural(alertSetting(type, 'intervalMin'), t('alerts.minute'), t('alerts.minutes'))
         }));
         return;
@@ -266,9 +269,8 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
 
     await msg.reply(t('alerts.created', {
         alert: describeAlert(kind, { symbol: rule.sym, op: rule.op, target: rule.target }) +
-            messageLine({ message: messageAlt }),
+            describeDestinationsBlock(destinations, { whenEmpty: t('alerts.yourPrivate') }) + messageLine({ message: messageAlt }),
         price: type.fmt(price, rule.sym),
-        where: destinations.length ? t('alerts.whereIn', { dest: describeDestinations(destinations) }) : t('alerts.wherePrivate'),
         every: plural(alertSetting(type, 'intervalMin'), t('alerts.minute'), t('alerts.minutes'))
     }));
 }

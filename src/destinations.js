@@ -477,10 +477,23 @@ async function contactName(id, digits) {
 const describeDestination = (d) => `${d.email ? '📧' : d.channel ? '📰' : d.group ? '👥' : '👤'} ${d.email ?? d.name}`;
 const describeDestinations = (destinations) => destinations.map(describeDestination).join(', ');
 
+/**
+ * Where it notifies, one destination per line, to go under an item of a list: "📨 Jorge Pereira" and, below it, the
+ * others aligned ("   Lourival", "   Grupo L200 👥"). A contact has no icon (the 📨 says it is a destination); a group, an
+ * email and a channel have theirs after the name. No destinations (your private chat): nothing, so the common case stays short.
+ * @returns {string} lines that start with a line break, or ''
+ */
+function describeDestinationsBlock(destinations, { indent = '   ', whenEmpty = '' } = {}) {
+    if (!destinations.length) return whenEmpty ? `\n${indent}📨 ${whenEmpty}` : '';
+    const label = (d) => (d.email ? `${d.email} 📧` : d.channel ? `${d.name} 📰` : d.group ? `${d.name} 👥` : String(d.name ?? d.id));
+    return destinations.map((d, i) => `\n${indent}${i === 0 ? '📨 ' : '   '}${label(d)}`).join('');
+}
+
 module.exports = {
     destinationColumns,
     describeDestination,
     describeDestinations,
+    describeDestinationsBlock,
     lineDestination,
     destinationsForSave,
     destinationsSaved,

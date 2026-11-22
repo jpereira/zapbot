@@ -57,7 +57,7 @@ describe('en_US: informação', () => {
 
         const [created] = await bot.replyAlt('/stocks -alert USD > 5.30');
         assert.match(created, /^🔔 \*Alert created\*\n/);
-        assert.match(created, /💰 Now: R\$ 5\.2000\n💡 _Notice in your private chat; checked every \d+ minutes?\._$/);
+        assert.match(created, /\n   📨 your private chat\n💰 Now: R\$ 5\.2000\n💡 _Checked every \d+ minutes?\._$/);
 
         assert.match((await bot.replyAlt('/stocks -alert'))[0], /^🔔 \*PRICE ALERTS\* _\(\/stocks\)_\n\n1\. /);
         assert.equal((await bot.replyAlt('/stocks -alert -rm 9'))[0],

@@ -249,7 +249,7 @@ describe('/watch -to', () => {
         assert.match(notices.find(a => a.chatId === OWNER.jid).text, /🔎 \*Regra #2:\* pix\n👥/);
 
         const [list] = await bot.replyAlt('/watch -l');
-        assert.match(list, /#1  promoção  \(1\)  → 👥 Grupo sobre L200\n#2  pix  \(1\)/);
+        assert.match(list, /#1  promoção  \(1\)\n    📨 Grupo sobre L200 👥\n#2  pix  \(1\)/);
     });
 
     test('-s N -to troca destinos; off volta ao privado; -rm apaga os destinos', async () => {
@@ -273,7 +273,7 @@ describe('/watch -to', () => {
         const notices = await someoneWrite('promoção no pix');
         assert.deepEqual(notices.map(a => a.chatId).sort(), [L200, OTHERAlt.jid].sort());
         assert.match(notices.find(a => a.chatId === OTHERAlt.jid).text, /🔎 \*Regra #1:\* promoção\n🔎 \*Regra #2:\* pix\n/);
-        assert.match((await bot.replyAlt('/watch -l'))[0], /#1  promoção  \(1\)  → 👥 Grupo sobre L200, 👤 Fulano/);
+        assert.match((await bot.replyAlt('/watch -l'))[0], /#1  promoção  \(1\)\n    📨 Grupo sobre L200 👥\n       Fulano\n#2  pix  \(1\)\n    📨 Fulano/);
 
         // -N with several -to changes all; off does not mix with others
         assert.deepEqual(await bot.replyAlt('/watch -s 2 -to /Fulano/ -to /Grupo sobre L200/'),

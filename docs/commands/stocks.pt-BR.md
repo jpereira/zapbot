@@ -214,8 +214,9 @@ destino é um contato, grupo, número ou e-mail. Nomes exatos têm prioridade, c
 - Se o nome servir para mais de um contato (ou grupo), o bot lista e você responde com o nº; o
   alerta só é criado depois da escolha.
 - O grupo precisa ser um em que a sua conta está; o número, uma conta do WhatsApp (o bot confere).
-- A lista (`-alert`) mostra o destino de cada alerta: `→ 👥 Grupo sobre L200` ou
-  `→ 📧 voce@exemplo.com` (vários: `→ 👥 Grupo sobre L200, 📧 voce@exemplo.com`).
+- A lista (`-alert`) mostra cada alerta em linhas próprias: a regra, depois o `📨` com para onde avisa (um destino
+  por linha: `📨 Grupo sobre L200 👥`, `📨 voce@exemplo.com 📧`; nada quando vai para o seu privado), a mensagem `💬`
+  e a data `🗓️`.
 
 ```text
 🔔 ALERTA DE PREÇO

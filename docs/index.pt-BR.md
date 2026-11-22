@@ -174,8 +174,9 @@ Ajuda, uso e erros nunca contam, você e os admins não têm limite, e o histór
 /crypto -alert BTC < 90000
 🔔 Alerta criado
 ₿ BTC/USDT abaixo de $90,000.00
+   📨 seu privado
 💰 Agora: $64,820.55
-💡 Aviso no seu privado; verificação a cada 5 minutos.
+💡 Verificação a cada 5 minutos.
 ```
 
 **Seus próprios atalhos, e vários comandos em um:**
