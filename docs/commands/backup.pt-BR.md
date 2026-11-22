@@ -12,7 +12,7 @@ Remover contatos ou reduzir o histórico local não altera os backups já existe
 | `-list`, `-l` | | Lista os backups, numerados do mais novo para o mais antigo, com data, tamanho e motivo |
 | `-info`, `-i` | `<nº>` | Detalhes do backup: data, motivo, versão do bot que o criou (com o commit, ex.: `X.Y.Z (git+4465374/vX.Y.Z)`) e as entradas de cada tabela, comparadas com o banco atual |
 | `-restore`, `-r` | `<nº\|nome>` | Restaura o backup. Sem `-yes`, só mostra o que vai acontecer e o comando para confirmar |
-| `-yes` | | Confirma: junto com `-restore`, a restauração; junto com `-send -to` outro chat, o envio |
+| `-yes`, `-y` | | Confirma: junto com `-restore`, a restauração; junto com `-send -to` outro chat, o envio |
 | `-send`, `-s` | `[nº]` | Envia o arquivo do backup (sem nº: o mais recente) no seu privado ou nos destinos do `-to`. Veja [Enviar o arquivo](#enviar-o-arquivo) |
 | `-to` | `<destino>` | Junto com `-send`: por e-mail, como anexo (`email` é o `QRCODE_EMAIL_SMTP_TO`, ou um endereço), ou noutro chat: um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`) ou um número (`+5521999999999`) (pede `-yes`). Repita para vários. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
 | `-rm` | `<nº\|all>` | Apaga o backup nº N (ou todos) |

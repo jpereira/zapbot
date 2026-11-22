@@ -13,7 +13,7 @@ Removing contacts or reducing the local history doesn't change the backups that 
 | `-list`, `-l` | | Lists the backups, numbered from newest to oldest, with date, size and reason |
 | `-info`, `-i` | `<no.>` | Backup details: date, reason, version of the bot that created it (with the commit, e.g.: `X.Y.Z (git+4465374/vX.Y.Z)`) and the entries of each table, compared with the current database |
 | `-restore`, `-r` | `<no.\|name>` | Restores the backup. Without `-yes`, it only shows what will happen and the command to confirm |
-| `-yes` | | Confirms: with `-restore`, the restore; with `-send -to` another chat, the sending |
+| `-yes`, `-y` | | Confirms: with `-restore`, the restore; with `-send -to` another chat, the sending |
 | `-send`, `-s` | `[no.]` | Sends the backup file (without no.: the most recent) to your private chat or to the `-to` destinations. See [Send the file](#send-the-file) |
 | `-to` | `<destination>` | With `-send`: by email, as an attachment (`email` is the `QRCODE_EMAIL_SMTP_TO`, or an address), or to another chat: a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/L200 Group/`) or a number (`+5521999999999`) (asks for `-yes`). Repeat for several. See [Destinations](index.md#destinations-contact-group-number-or-email) |
 | `-rm` | `<no.\|all>` | Deletes backup no. N (or all of them) |

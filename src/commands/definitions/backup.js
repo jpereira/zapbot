@@ -39,7 +39,7 @@ module.exports = {
             desc: 'Sends the backup file (without a no.: the latest) to your private chat or to the -to destinations.'
         },
         {
-            opts: ['yes'],
+            opts: ['yes', 'y'],
             values: [],
             desc: 'Confirms: with -restore, the restore; with -send -to another chat, the sending (the database has the messages of all chats).'
         },
