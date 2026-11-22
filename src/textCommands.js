@@ -7,11 +7,12 @@
 const { ROLES, roleMoreRestricted } = require('./roles');
 const { client } = require('./client');
 const { activeCommands, findCommand } = require('./commands/base');
-const { printError } = require('./log');
+const { printError, printExpand } = require('./log');
 const { optionsError, readOptions, assembleContext, denial } = require('./execute');
 const { dbGet, dbReady } = require('./db');
 const { t } = require('./i18n');
 const { unescape } = require('./util/format');
+const { parseMarks } = require('./commandMarks');
 
 /*
  * Only the commands with "cron": true in commands.js (the query ones), and without the
@@ -20,9 +21,8 @@ const { unescape } = require('./util/format');
  * who runs), but the replies are stored instead of sent: the text goes
  * in place of the {...} and the media (/meme, /giphy...) go out after the message.
  */
-const MARK = /\{(\/[^{}\n]+)\}/g;
-
-const commandsInText = (textAlt) => [...String(textAlt ?? '').matchAll(MARK)].map(m => ({ mark: m[0], line: m[1].trim() }));
+// {/cmd args} or {cmd args} (the slash is optional for the commands that exist): see commandMarks.js
+const commandsInText = parseMarks;
 
 /*
  * The typed "\n" becomes a line break, without the surrounding spaces: in the
@@ -62,7 +62,7 @@ async function findCommandAlt(line) {
  * (and the role) are its own and each one's (targets), checked before running.
  */
 async function withTargets(command, textAlt) {
-    if (command?.cmd !== '/me') return command;
+    if (command?.cmd !== '/me' && !command?.expandCommands) return command;
     const foundAlt4 = await Promise.all(commandsInText(textAlt).map(c => findCommandAlt(c.line)));
     const targets = foundAlt4.map(a => a?.command).filter(Boolean);
     return { ...command, role: roleMoreRestricted([command.role, ...targets.map(c => c.role)]),
@@ -136,9 +136,11 @@ function messageSynthetic(chatId, line, replies) {
  * Runs a {/command}: the reply text and the media. Without `who`, it runs as
  * you (admin); with it, with the admin and the permissions of whoever runs.
  */
-async function runCommand(chatId, line, { chatName, isGroup, where: whereAlt = '/cron', who = null }) {
+async function runCommand(chatId, line, { chatName, isGroup, where: whereAlt = '/cron', who = null, origin = null }) {
     const { error: errorAlt, command, args, opts } = await readCommand(line, whereAlt, !who); // without `who`: runs as the owner
     if (errorAlt) return { text: t('cnt.naoRodaNo', { cmd: line.split(/\s+/, 1)[0], where: whereAlt }), mediaItems: [] };
+
+    printExpand(who?.senderName ?? client.info?.pushname ?? '-', origin ?? line, line);
 
     // The handler lives in commands/index, which loads /cron (and this file): only here, at the time
     const { HANDLERS } = require('./commands/index');
@@ -190,20 +192,22 @@ function fit(textAlt, mark, reply) {
  * @param {object} [o]
  * @param {string} [o.where]  who asked, for the error messages ('/cron')
  * @param {object} [o.who]  admin, canUse, senderName... of whoever runs (without it: you)
+ * @param {string} [o.origin]  the text that had the marks, for the log (the typed command; by default, the text)
+ * @param {Function} [o.transform]  what to do with each reply before it goes in (the /tts cleans it to be spoken)
  */
-async function assembleText(textAlt, s, { where: whereAlt, who } = {}) {
+async function assembleText(textAlt, s, { where: whereAlt, who, transform = null, origin = textAlt } = {}) {
     const commands = commandsInText(textAlt);
     // \-foo becomes -foo in the sent text; a text that is a command (starts with /) stays as it is
-    const literal = (s) => (String(s).trimStart().startsWith('/') ? s : unescape(s));
+    const literal = (s) => (String(s).trimStart().startsWith('/') ? s : unescape(s).replace(/\\\{/g, '{'));
     if (!commands.length) return { text: literal(textAlt), mediaItems: [], commands: [] };
 
-    const ctx = { chatName: s.chat_name, isGroup: Boolean(s.is_group), where: whereAlt, who };
+    const ctx = { chatName: s.chat_name, isGroup: Boolean(s.is_group), where: whereAlt, who, origin };
     const mediaAltAlt = [];
     let final = textAlt;
 
     for (const { mark, line } of commands) {
         const r = await runCommand(s.chat_id, line, ctx);
-        final = fit(final, mark, r.text);
+        final = fit(final, mark, transform ? transform(r.text) : r.text);
         mediaAltAlt.push(...r.mediaItems);
     }
 

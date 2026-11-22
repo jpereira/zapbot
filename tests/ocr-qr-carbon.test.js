@@ -117,7 +117,7 @@ describe('/tts', () => {
         assert.match((await bot.replyAlt('/tts -gpt oi'))[0], /⚠️ API key da OpenAI não encontrada: o \/tts está desativado/);
 
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        assert.deepEqual(await bot.replyAlt('/tts'), ['```Usage: /tts [-gpt|-g] [-local|-l] [-status|-s] [<texto>]```\n💡 _/tts -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/tts'), ['```Usage: /tts [-gpt|-g] [-local|-l] [-voice|-v <nome>] [-speed|-sp <%>] [-pitch|-pi <semitons>] [-volume|-vol <%>] [-quiet|-q] [-status|-s] [<texto>]```\n💡 _/tts -h para ajuda_']);
 
         network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
         const r = (await bot.execute('/tts -gpt Bom dia!')).at(-1);
@@ -140,7 +140,7 @@ describe('/tts', () => {
 
     test('texto grande demais', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        assert.match((await bot.replyAlt(`/tts ${'a'.repeat(4097)}`))[0], /❌ O texto tem 4097 caracteres: a voz aceita até 4096\./);
+        assert.match((await bot.replyAlt(`/tts ${'a'.repeat(32001)}`))[0], /❌ O texto tem 32001 caracteres: a voz aceita até 32000\./);
     });
 });
 
@@ -349,5 +349,215 @@ describe('-quiet (-q): sem o aviso "⏳" e sem a dica', () => {
         const texts = sent().filter(c => c !== '[mídia]' && !c.startsWith('/'));
         assert.deepEqual(texts, []);
         assert.ok(sent().includes('[mídia]'), 'o áudio foi enviado');
+    });
+});
+
+describe('/tts: voz, velocidade, tom e volume', () => {
+    const { processes, network } = bot;
+    const { voiceFilters, readVoiceOptions } = bot.src('ttsVoice');
+    const call = (name) => processes.calls.filter(c => c.bin.endsWith(name));
+    const flag = (args, name) => args[args.indexOf(name) + 1];
+    const chat = () => network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('opus'));
+
+    test('filtros do ffmpeg: tom em semitons e volume em %; o normal não filtra', () => {
+        assert.equal(voiceFilters({ pitch: 0, volume: 100 }), null);
+        assert.equal(voiceFilters({ pitch: 12, volume: 100 }), 'asetrate=48000*2.000000,aresample=48000,atempo=0.500000');
+        assert.equal(voiceFilters({ pitch: 0, volume: 150 }), 'volume=1.50');
+    });
+
+    test('limites e voz inválida', () => {
+        const opts = (o) => ({ given: new Set(Object.keys(o)), opt: o });
+        assert.throws(() => readVoiceOptions(opts({ speed: '300' }), 'local'), /-speed: "300" não vale\. Use um número de 50 a 200/);
+        assert.throws(() => readVoiceOptions(opts({ pitch: '13' }), 'local'), /-pitch/);
+        assert.throws(() => readVoiceOptions(opts({ voice: 'robo' }), 'gpt'), /não é uma voz do ChatGPT/);
+        assert.throws(() => readVoiceOptions(opts({ voice: 'robo' }), 'local'), /não é uma voz local \(Piper\)/);
+        assert.deepEqual(readVoiceOptions(opts({ speed: '120%', pitch: '+3', voice: 'NOVA' }), 'gpt'), { voice: 'nova', speed: 120, pitch: 3, volume: 100 });
+    });
+
+    test('/tts local: velocidade e voz vão para o Piper, tom e volume para o ffmpeg; o texto sai sem as opções', async () => {
+        await bot.execute('/tts -speed 150 -pitch 3 -volume 200 -voice en_US-amy-medium bom dia');
+        const py = call('python')[0].args;
+        assert.equal(flag(py, '--voice'), 'en_US-amy-medium');
+        assert.equal(flag(py, '--speed'), '1.5');
+        const ff = call('ffmpeg').at(-1).args;
+        assert.match(ff[ff.indexOf('-af') + 1], /^asetrate=48000\*1\.189207,aresample=48000,atempo=0\.840896,volume=2\.00$/);
+    });
+
+    test('settings tts.speed|pitch|volume são o padrão; a opção da chamada vence', async () => {
+        await bot.setSetting('tts.speed', 80);
+        await bot.setSetting('tts.pitch', -2);
+        await bot.execute('/tts bom dia');
+        assert.equal(flag(call('python')[0].args, '--speed'), '0.8');
+        assert.match(call('ffmpeg').at(-1).args.join(' '), /asetrate=48000\*0\.890899/);
+        await bot.execute('/tts -speed 100 bom dia');
+        assert.equal(flag(call('python').at(-1).args, '--speed'), '1');
+    });
+
+    test('o log mostra o comando do wrapper Python e do ffmpeg, com os argumentos exatos', async () => {
+        await bot.execute('/tts -speed 150 -voice cadu bom dia');
+        const running = bot.logs.filter(l => l.includes('> Running:'));
+        assert.ok(running.some(l => /\/venv\/bin\/python \S*scripts\/tts\.py --input \S+ --voice pt_BR-cadu-medium --dir \/opt\/piper --output \S+voice\.wav --speed 1\.5$/.test(l)), running.join('\n'));
+        assert.ok(running.some(l => /ffmpeg -y -i \S+voice\.wav -c:a libopus/.test(l)), running.join('\n'));
+    });
+
+    test('a velocidade padrão é por motor: tts.speed (Piper, 50) e gpt.tts.speed (ChatGPT, 100)', async () => {
+        const { readVoiceOptions } = bot.src('ttsVoice');
+        assert.equal(readVoiceOptions(null, 'local').speed, 50);
+        assert.equal(readVoiceOptions(null, 'gpt').speed, 100);
+        await bot.setSetting('gpt.tts.speed', 120);
+        assert.equal(readVoiceOptions(null, 'gpt').speed, 120);
+        await bot.execute('/tts bom dia');
+        assert.equal(flag(call('python')[0].args, '--speed'), '0.5');
+    });
+
+    test('valor inválido: erro e nada é falado', async () => {
+        const r = await bot.replyAlt('/tts -speed 999 bom dia');
+        assert.match(r[0], /-speed: "999" não vale/);
+        assert.equal(call('python').length, 0);
+    });
+
+    test('/tts -gpt: voz e velocidade vão para a API; o tom passa pelo ffmpeg', async () => {
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        chat();
+        await bot.execute('/tts -gpt -voice nova -speed 120 -pitch 2 bom dia');
+        const body = network.calls.at(-1).cfg.body;
+        assert.equal(body.voice, 'nova');
+        assert.equal(body.speed, 1.2);
+        assert.equal(body.input, 'bom dia');
+        assert.ok(call('ffmpeg').length >= 1);
+    });
+});
+
+describe('/tts -v: lista as vozes', () => {
+    test('/tts -v lista as do Piper (português e inglês, com o padrão marcado); /tts -g -v as do ChatGPT', async () => {
+        const [local] = await bot.replyAlt('/tts -v');
+        assert.match(local, /^🎙️ \*Vozes do \/tts\* \(local, Piper\)\n\n\*Português \(Brasil\)\*\n• cadu\n• edresson\n• faber ✅\n• jeff\n\n\*Português \(Portugal\)\*\n• tugão\n/);
+        assert.match(local, /\*Inglês \(EUA\)\*\n• amy \(low, medium\)\n[\s\S]*• lessac \(low, medium ✅, high\)/);
+        assert.match(local, /\*Inglês \(Reino Unido\)\*\n• alan \(low, medium\)/);
+        const [gpt] = await bot.replyAlt('/tts -g -v');
+        assert.match(gpt, /^🎙️ \*Vozes do \/tts\* \(ChatGPT\)\n\n• alloy\n/);
+        assert.match(gpt, /• onyx ✅\n/);
+        assert.equal(bot.processes.calls.length, 0, 'nada é falado');
+    });
+
+    test('/tts -v: o nome, o nome com a qualidade ou o id completo; sem maiúsculas nem acentos', async () => {
+        for (const [typed, id] of [['tugão', 'pt_PT-tugão-medium'], ['TUGAO-medium', 'pt_PT-tugão-medium'], ['pt_PT-tugão-medium', 'pt_PT-tugão-medium'],
+            ['amy', 'en_US-amy-medium'], ['amy-low', 'en_US-amy-low'], ['EN_US-AMY-MEDIUM', 'en_US-amy-medium'], ['edresson', 'pt_BR-edresson-low']]) {
+            bot.processes.calls.length = 0;
+            await bot.execute(`/tts -v ${typed} teste`);
+            const args = bot.processes.calls.find(c => c.bin.endsWith('python')).args;
+            assert.equal(args[args.indexOf('--voice') + 1], id, typed);
+        }
+    });
+});
+
+describe('/tts: várias opções na frente do texto', () => {
+    test('withoutOption tira todas as opções do texto, e as quebras de linha ficam', () => {
+        const { withoutOption } = bot.src('commands/openaiCommon');
+        assert.equal(withoutOption('-q -local ACABOU', 'status|s|quiet|q|gpt|g|local|l'), 'ACABOU');
+        assert.equal(withoutOption('oi -q tudo\n\nbem -local', 'quiet|q|local|l'), 'oi tudo\n\nbem');
+    });
+
+    test('/tts -q -local -voice cadu ACABOU fala só ACABOU (todas as opções saem do texto)', async () => {
+        for (const cmd of ['/tts -q -local -voice cadu ACABOU', '/tts -local -q -v cadu ACABOU', '/tts -voice cadu -q -l ACABOU']) {
+            bot.processes.calls.length = 0;
+            await bot.execute(cmd);
+            const args = bot.processes.calls.find(c => c.bin.endsWith('python')).args;
+            assert.equal(args[args.indexOf('--voice') + 1], 'pt_BR-cadu-medium', cmd);
+        }
+    });
+});
+
+describe('/tts: texto longo (tts.maxChars)', () => {
+    const { processes, network } = bot;
+    const { splitSpeech } = bot.src('ttsVoice');
+    const call = (name) => processes.calls.filter(c => c.bin.endsWith(name));
+    const sentence = 'Esta é uma frase de teste com bastante texto para ocupar espaço. ';
+
+    test('splitSpeech: parte no fim da frase, sem cortar palavra, e uma palavra gigante em pedaços', () => {
+        const parts = splitSpeech(sentence.repeat(10), 150);
+        assert.ok(parts.length >= 4 && parts.every(p => p.length <= 150), parts.map(p => p.length).join(','));
+        assert.ok(parts.every(p => p.endsWith('.')), 'cada parte termina numa frase');
+        assert.equal(parts.join(' '), sentence.repeat(10).trim());
+        assert.deepEqual(splitSpeech('a'.repeat(250), 100).map(p => p.length), [100, 100, 50]);
+        assert.deepEqual(splitSpeech('Uma frase só.', 4096), ['Uma frase só.']);
+    });
+
+    test('/tts local: 8409 caracteres não são mais recusados (o Piper fala tudo de uma vez)', async () => {
+        const text = sentence.repeat(150).slice(0, 8409);
+        const r = await bot.replyAlt(`/tts ${text}`);
+        assert.ok(!r.some(x => /aceita até/.test(x)), r.join('|'));
+        assert.equal(call('python').length, 1, 'uma chamada só ao Piper');
+    });
+
+    test('o limite é o setting tts.maxChars; acima dele, o aviso com o máximo', async () => {
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        await bot.setSetting('tts.maxChars', 100);
+        assert.match((await bot.replyAlt(`/tts ${'x'.repeat(150)}`))[0], /O texto tem 150 caracteres: a voz aceita até 100\./);
+        assert.equal(call('python').length, 0);
+        assert.match((await bot.replyAlt('/tts -gpt ' + 'x'.repeat(150)))[0], /aceita até 100/);
+    });
+
+    test('/tts -gpt: um texto maior que 4096 vai em partes (uma requisição cada) e o áudio é junto', async () => {
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('opus'));
+        await bot.execute(`/tts -gpt ${sentence.repeat(150).slice(0, 9000)}`);
+        const calls = network.calls.filter(c => /audio\/speech/.test(c.url ?? c.cfg?.url ?? ''));
+        assert.equal(calls.length, 3, 'três partes de até 4096');
+        assert.ok(calls.every(c => c.cfg.body.input.length <= 4096));
+        assert.ok(calls.map(c => c.cfg.body.input.length).reduce((a, b) => a + b, 0) >= 8900);
+        assert.ok(call('ffmpeg').some(c => c.args.includes('-filter_complex') && c.args.join(' ').includes('concat=n=3')), 'o ffmpeg junta as três');
+    });
+});
+
+describe('/tts: {/comando} no texto (a barra é opcional)', () => {
+    const { processes } = bot;
+    const { parseMarks, maskMarks } = bot.src('commandMarks');
+    const { speakable } = bot.src('util/speech');
+
+    test('parseMarks: com e sem barra; {nome} que não é comando e \\{ ficam como texto', () => {
+        assert.deepEqual(parseMarks('a {/crypto USD} b {crypto BTC} c {nome} d \\{/ping} e {/stocks EUR}').map(m => m.line),
+            ['/crypto USD', '/crypto BTC', '/stocks EUR']);
+        assert.deepEqual(parseMarks('{CRYPTO usd}').map(m => m.line), ['/CRYPTO usd']);
+        const { masked, restore } = maskMarks('oi {/crypto -s -v} e {stocks -list}');
+        assert.ok(!masked.includes('-s') && !masked.includes('{'));
+        assert.equal(restore(masked), 'oi {/crypto -s -v} e {stocks -list}');
+    });
+
+    test('speakable: sem emoji, markdown, links nem separadores; uma linha vira uma frase', () => {
+        assert.equal(speakable('🪙 *Bitcoin* · $90.000 (+2,3%)\n📈 _alta_ https://x.com/a'), 'Bitcoin, $90.000 (+2,3%). alta');
+        assert.equal(speakable('```\ncodigo\n```\ntexto'), 'texto');
+    });
+
+    test('/tts fala a resposta do comando, limpa; {version} sem barra também; o texto do usuário fica como veio', async () => {
+        await bot.execute('/tts A versão é {/version} e de novo {version}! Fim {nome} e \\{/version}.');
+        assert.match(processes.spoken, /^A versão é ZapBot [^*]*e de novo ZapBot [^*]*! Fim \{nome\} e \{\/version\}\.$/);
+        assert.doesNotMatch(processes.spoken, /\*|🤖/);
+    });
+
+    test('as opções de dentro das chaves não são do /tts; comando que não roda é recusado e nada é falado', async () => {
+        const { readOptions } = bot.src('execute');
+        const { findCommand } = bot.src('commands/base');
+        const opts = readOptions(findCommand('/tts'), 'oi {/crypto -s -v -q} -g');
+        assert.deepEqual([...opts.given].sort(), ['gpt']);
+        assert.deepEqual(opts.argv, ['oi', '{/crypto -s -v -q}']);
+
+        processes.spoken = null;
+        const r = await bot.replyAlt('/tts oi {/bot -off}');
+        assert.match(r[0], /❌/);
+        assert.equal(processes.spoken, null, 'nada foi falado');
+        assert.equal(processes.calls.filter(c => c.bin.endsWith('python')).length, 0);
+    });
+});
+
+describe('log dos comandos aninhados ({/comando} no texto)', () => {
+    test('/tts com {/version}: o log mostra o EXPAND com o texto digitado, o comando e quem', async () => {
+        const before = bot.logs.length;
+        await bot.execute('/tts A versão é {/version} e {uptime}');
+        const lines = bot.logs.slice(before).filter(l => /EXPAND/.test(l));
+        assert.equal(lines.length, 2);
+        assert.match(lines[0], /\[\+\]          EXPAND '\/tts A versão é \{\/version\} e \{uptime\}' > \/version '.+'$/);
+        assert.match(lines[1], /> \/uptime '/);
+        assert.ok(bot.logs.slice(before).some(l => /executed '\/tts A versão é/.test(l)), 'a linha do "executed" vem antes');
     });
 });

@@ -1,7 +1,7 @@
 {
   "summary": "O texto numa nota de voz, com uma voz local (Piper) ou o ChatGPT (-gpt)",
-  "usage": "/tts [-gpt|-g] [-local|-l] [-status|-s] [<texto>]",
-  "help": "Transforma o texto numa nota de voz: por padrão com uma voz local do Piper (sem chave), em português ou inglês conforme o texto; com -gpt (-g), pelo ChatGPT (API de voz da OpenAI, como o /gpt -voice), que exige a chave da OpenAI. Até 4096 caracteres. Respondendo um texto, fala a mensagem (um áudio é transcrito antes), e o que você digitou vira o estilo da fala (\"fale como um robô\"). O -gpt exige OPENAI_API_KEY no config/.env ou o setting gpt.api.key.",
+  "usage": "/tts [-gpt|-g] [-local|-l] [-voice|-v <nome>] [-speed|-sp <%>] [-pitch|-pi <semitons>] [-volume|-vol <%>] [-quiet|-q] [-status|-s] [<texto>]",
+  "help": "Transforma o texto numa nota de voz: por padrão com uma voz local do Piper (sem chave), em português ou inglês conforme o texto; com -gpt (-g), pelo ChatGPT (API de voz da OpenAI, como o /gpt -voice), que exige a chave da OpenAI. A voz, a velocidade, o tom e o volume vêm das opções (-voice, -speed, -pitch, -volume) ou dos settings tts.*. Até o setting tts.maxChars (32000 caracteres; o ChatGPT fala em partes de 4096 e o áudio é junto). Os {/comando} do texto rodam antes e a resposta é falada (a barra é opcional: {stocks USD}). Respondendo um texto, fala a mensagem (um áudio é transcrito antes), e o que você digitou vira o estilo da fala (\"fale como um robô\"). O -gpt exige OPENAI_API_KEY no config/.env ou o setting gpt.api.key.",
   "ex": [
     "/tts Bom dia!",
     "/tts fale devagar"
@@ -33,6 +33,63 @@
       "desc": "Fala com a voz local do Piper (sem chave, usa a CPU do servidor), mesmo com o tts.engine em gpt.",
       "ex": [
         "/tts -local Bom dia!"
+      ]
+    },
+    {
+      "opts": [
+        "voice",
+        "v"
+      ],
+      "values": [
+        "<nome>"
+      ],
+      "desc": "A voz, pelo nome da pessoa. Local (Piper): português (Brasil): cadu, edresson, faber, jeff; português (Portugal): tugão; inglês (EUA): amy (low/medium), arctic, bryce, danny, hfc_female, hfc_male, hifi_tts_92, joe, john, kathleen (low/medium), kristin, kusal, l2arctic, lessac (low/medium/high), libritts, libritts_r, ljspeech (medium/high), mike, norman, reza_ibrahim, ryan (low/medium/high), sam; inglês (Reino Unido): alan (low/medium), alba, aru, cori (medium/high), jenny_dioco, northern_english_male, semaine, southern_english_female, vctk. Escreva só o nome (faber), o nome com a qualidade (faber-medium) ou o id completo (pt_BR-faber-medium); com várias qualidades, só o nome é a medium. O padrão é o tts.voice.pt ou o tts.voice.en, pelo idioma do texto; a que não está na imagem é baixada na primeira vez. Com -gpt: alloy, ash, ballad, coral, echo, fable, nova, onyx, sage, shimmer, verse (o padrão é o gpt.tts.voice). O /tts -v lista as vozes do Piper e o /tts -g -v as do ChatGPT.",
+      "ex": [
+        "/tts -voice cadu Bom dia!",
+        "/tts -voice jeff Bom dia!",
+        "/tts -gpt -voice nova Bom dia!",
+        "/tts -v",
+        "/tts -g -v"
+      ]
+    },
+    {
+      "opts": [
+        "speed",
+        "sp"
+      ],
+      "values": [
+        "<percentual>"
+      ],
+      "desc": "A velocidade da voz, em % de 50 a 200 (100 normal, 150 mais rápido, 75 mais devagar). O padrão é o setting tts.speed (50) na voz local e o gpt.tts.speed (100) com -gpt.",
+      "ex": [
+        "/tts -speed 130 Bom dia!"
+      ]
+    },
+    {
+      "opts": [
+        "pitch",
+        "pi"
+      ],
+      "values": [
+        "<semitons>"
+      ],
+      "desc": "O tom da voz, em semitons de -12 a 12 (0 normal, 3 mais agudo, -3 mais grave). O padrão é o setting tts.pitch.",
+      "ex": [
+        "/tts -pitch 3 Bom dia!",
+        "/tts -pitch -4 Bom dia!"
+      ]
+    },
+    {
+      "opts": [
+        "volume",
+        "vol"
+      ],
+      "values": [
+        "<percentual>"
+      ],
+      "desc": "O volume da voz, em % de 20 a 300 (100 normal, 200 o dobro). O padrão é o setting tts.volume.",
+      "ex": [
+        "/tts -volume 150 Bom dia!"
       ]
     },
     {

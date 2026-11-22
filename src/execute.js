@@ -10,6 +10,7 @@ const { t } = require('./i18n');
 const { getSetting } = require('./settings');
 const { ROLES, answer } = require('./roles');
 const { askedHelpWatch, askedMaskWatch } = require('./watch/options');
+const { maskMarks } = require('./commandMarks');
 
 const ASKED_HELP = /^-h(?:elp)?$/;
 
@@ -27,7 +28,13 @@ const READERS_OWN = {
  */
 function readOptions(command, args) {
     const free = command.freeArguments && !ASKED_HELP.test(args);
-    const opts = GetOptFromCommand(free ? '' : args, command);
+    // A command that runs the {/command}s of its text (/tts): what is inside the braces is not its options
+    const marks = command.expandCommands ? maskMarks(args) : null;
+    const opts = GetOptFromCommand(free ? '' : (marks ? marks.masked : args), command);
+    if (marks?.marks.length) {
+        opts.argv = opts.argv.map(marks.restore);
+        for (const [k, v] of Object.entries(opts.opt)) if (typeof v === 'string') opts.opt[k] = marks.restore(v);
+    }
     READERS_OWN[command.cmd]?.(opts, args);
     return opts;
 }

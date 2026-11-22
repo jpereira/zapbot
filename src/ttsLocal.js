@@ -8,10 +8,11 @@ const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
 
-const { BIN_FFMPEG, BIN_PYTHON, PIPER_DIR, SCRIPT_TTS } = require('./constants');
+const { BIN_PYTHON, PIPER_DIR, SCRIPT_TTS } = require('./constants');
 const { language } = require('./i18n');
 const { getSetting } = require('./settings');
 const { captureOutput } = require('./util/processes');
+const { encodeVoice } = require('./ttsVoice');
 
 // Words that tell Portuguese from English (the most common ones that the two languages do not share)
 const WORDS_PT = new Set('o a os as um uma de do da dos das em no na nos nas que não nao é eu você voce ele ela nós nos para por com mais muito está esta estou são sao foi ser ter tem tudo bom dia boa noite obrigado obrigada oi olá ola como quando onde porque mas ou se já ja aqui isso isto esse essa meu minha seu sua'.split(' '));
@@ -37,19 +38,22 @@ function detectSpeechLanguage(textAlt) {
 
 // More than the synthesis: the voice may be downloaded the first time
 const TTS_TIMEOUT_MS = 5 * 60 * 1000;
+const MS_PER_CHARACTER = 40;   // a long text takes longer (the CPU speaks it a few times faster than a person)
 
 /**
- * Speaks a text with the voice of its language (tts.voice.pt or tts.voice.en).
+ * Speaks a text with the voice of its language (tts.voice.pt or tts.voice.en) or the one asked for.
  * @param {string} textAlt
+ * @param {{ voice?: string|null, speed?: number, pitch?: number, volume?: number }} [voice]  see ttsVoice.js
  * @returns {Promise<Buffer>} the voice note, in Ogg/Opus
  */
-async function speakLocal(textAlt) {
+async function speakLocal(textAlt, voice = {}) {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zapbot-tts-'));
     const [file, wav, ogg] = ['text.txt', 'voice.wav', 'voice.ogg'].map(n => path.join(dir, n));
     try {
         fs.writeFileSync(file, textAlt);
-        await captureOutput(BIN_PYTHON, [SCRIPT_TTS, file, getSetting(`tts.voice.${detectSpeechLanguage(textAlt)}`), PIPER_DIR, wav], TTS_TIMEOUT_MS);
-        await captureOutput(BIN_FFMPEG, ['-y', '-i', wav, '-c:a', 'libopus', '-b:a', '32k', '-ar', '48000', '-ac', '1', ogg], TTS_TIMEOUT_MS);
+        const model = voice.voice || getSetting(`tts.voice.${detectSpeechLanguage(textAlt)}`);
+        await captureOutput(BIN_PYTHON, [SCRIPT_TTS, '--input', file, '--voice', model, '--dir', PIPER_DIR, '--output', wav, '--speed', String((voice.speed ?? 100) / 100)], Math.max(TTS_TIMEOUT_MS, textAlt.length * MS_PER_CHARACTER), { log: true });
+        await encodeVoice(wav, ogg, voice);
         return fs.readFileSync(ogg);
     } finally {
         fs.rmSync(dir, { recursive: true, force: true });

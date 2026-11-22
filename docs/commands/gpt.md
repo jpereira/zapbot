@@ -205,7 +205,7 @@ At the **start of the text**, `@me`/`@this` work even without `-p`: `/gpt @me @t
 - **With no typed text**, it speaks the replied message's (an audio is transcribed first). **With no
   reply**, it speaks the typed text. **With both**, it speaks the replied one and the typed one
   becomes the style (only the `gpt-4o-*` models follow the style). `-voice` can go anywhere in the text.
-  Up to 4096 characters.
+  Up to the `tts.maxChars` setting (32000 characters; ChatGPT speaks in parts of 4096 and the audio is joined).
 - Three settings choose how it sounds: `gpt.tts.model` (`gpt-4o-mini-tts`; the id your account
   has), `gpt.tts.voice` (`onyx`, the default, or `alloy`, `ash`, `ballad`, `coral`, `echo`,
   `fable`, `nova`, `sage`, `shimmer`, `verse`), and `gpt.tts.instructions` (the style: the
