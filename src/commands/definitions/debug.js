@@ -27,7 +27,7 @@ module.exports = {
         {
             opts: ['level', 'lvl'],
             values: ['<0|1|2|3>'],
-            desc: 'Cumulative level: 0 (default) basic logs and command arguments; 1 received commands, parser calls and exported functions; 2 APIs and other integrations with parameters; 3 results, SQL and development diagnostics. Needs debug on or -on in the same command.',
+            desc: 'Level: 0 (default) basic logs and command arguments; 1 what the bot is calling, one line each with the duration (commands, database queries, HTTP requests, external processes, email, WhatsApp); 2 the same calls with their arguments and every exported function of the modules, with depth and duration; 3 results and the execution in Chromium (the most verbose). Needs debug on or -on in the same command.',
             ex: ['-lvl 2', '-on -lvl 3']
         },
         {

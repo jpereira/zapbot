@@ -15,17 +15,30 @@ boot, o debug começa desligado, no nível `0`.
 | Nível | Label | Diagnóstico |
 |---|---|---|
 | `0` | `DEBUG0` | Mensagens básicas e argumentos dos comandos, incluindo opções e destinos; nível padrão |
-| `1` | `DEBUG1` | Comandos recebidos, chamadas do parser, entrada e saída das funções exportadas, profundidade e duração das chamadas, contexto do chat |
-| `2` | `DEBUG2` | Chamadas externas: Axios com URL e parâmetros, WhatsApp, SMTP e processos externos |
-| `3` | `DEBUG3` | Resultados das funções, consultas ao banco, dados das mensagens e execução no Chromium |
+| `1` | `DEBUG1` | **O que o bot está chamando**, uma linha cada, com a duração: a mensagem recebida, o comando, as consultas ao banco (o SQL), as requisições HTTP (método, URL e status), os processos externos, os e-mails e as chamadas do WhatsApp; contexto do chat. O leve: bom para acompanhar o que acontece |
+| `2` | `DEBUG2` | As mesmas chamadas com início e fim, **com os parâmetros**, mais todas as funções exportadas dos módulos (parser, handlers...), profundidade e duração das chamadas. Verboso |
+| `3` | `DEBUG3` | Tudo do nível 2 mais os **resultados** de cada chamada, os dados das mensagens e a execução no Chromium. Muito verboso |
 
-Cada nível inclui os anteriores. Credenciais são ocultadas e objetos grandes, mídia e estruturas
+Cada nível inclui os anteriores (do nível 2 em diante, os resumos de uma linha do nível 1 viram o início e o fim completos da mesma chamada). Credenciais são ocultadas e objetos grandes, mídia e estruturas
 circulares são resumidos. O filtro também vale para logs de informação e erro enquanto o debug está
 ligado. Flags como `i`, `g`, `m`, `s`, `u` e `y` seguem a sintaxe de regex do JavaScript; cada
 registro de log é avaliado independentemente. O contexto inclui `chatName` e `chatId` a partir do
 nível `1`, permitindo filtrar pelo nome ou ID do chat. No console com cores habilitadas, os trechos
 que casam com o filtro aparecem em vermelho e negrito, como no `grep --color`. As cópias enviadas ao
 WhatsApp contêm texto sem os códigos de cor.
+
+O nível `1` para um `/ping` (uma linha por chamada, `+Nms` é quanto demorou):
+
+```text
+[DEBUG1] message_create start { body: '/ping', type: 'chat' } {chatName=Família}
+[DEBUG1] whatsapp getChatById 120363000000000001@g.us +3ms
+[DEBUG1] database SELECT 1 AS ok FROM messages WHERE id = ? +0ms
+[DEBUG1] database INSERT INTO messages (id, sender_name, sender_jid, ...) VALUES (?, ?, ?, ...) +1ms
+[DEBUG1] command /ping +2ms
+[DEBUG1] whatsapp sendMessage 120363000000000001@g.us +41ms
+[DEBUG1] request GET https://www.kernel.org/releases.json → 200 +312ms      (um /kernel)
+[DEBUG1] process /usr/bin/ffmpeg -y -i in.wav -c:a libopus out.ogg +0ms      (um /tts)
+```
 
 O `DEBUG0` inclui o parser dos comandos: argumentos posicionais, opções informadas, valores entre
 aspas ou barras e todos os destinos `-to`. O `/watch`, o `/debug` e o `/cron` exibem os campos de

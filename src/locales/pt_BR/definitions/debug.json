@@ -43,7 +43,7 @@
       "values": [
         "<0|1|2|3>"
       ],
-      "desc": "Nível cumulativo: 0 (padrão) logs básicos e argumentos dos comandos; 1 comandos recebidos, chamadas do parser e funções exportadas; 2 APIs e outras integrações com parâmetros; 3 resultados, SQL e diagnósticos de desenvolvimento. Precisa do debug ligado ou de -on no mesmo comando.",
+      "desc": "Nível: 0 (padrão) logs básicos e argumentos dos comandos; 1 o que o bot está chamando, uma linha cada com a duração (comandos, consultas ao banco, requisições HTTP, processos externos, e-mail, WhatsApp); 2 as mesmas chamadas com os parâmetros e todas as funções exportadas dos módulos, com profundidade e duração; 3 resultados e a execução no Chromium (o mais verboso). Precisa do debug ligado ou de -on no mesmo comando.",
       "ex": [
         "-lvl 2",
         "-on -lvl 3"

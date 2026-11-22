@@ -46,7 +46,7 @@ shows are in Portuguese; the ones here are in English).
 | `debug.copyTo` | text (can be empty) | *(empty)* | Chat that receives a copy of the logs; set it with [`/debug -copy-to`](commands/debug.md). Empty: console only |
 | `debug.enabled` | on/off | `off` | Debug mode (same as `/debug -on`/`-off`) |
 | `debug.filter` | text (can be empty) | *(empty)* | `/regex/flags` filter for the logs during debug. Empty: no filter; `/debug -off` clears it. The filter applies after startup; matches are highlighted in the console with colors |
-| `debug.level` | 0–3 | `0` | Cumulative level: basic, functions and commands, integrations, development. See [`/debug`](commands/debug.md) |
+| `debug.level` | 0–3 | `0` | Debug level: 0 basic, 1 what the bot is calling (commands, database, requests, processes, email, WhatsApp), one line each, 2 the same calls with their arguments and every function of the modules, 3 results and Chromium. See [`/debug`](commands/debug.md) |
 | `defi.aave.chains` | list | `1 8453` | Networks (chain id) where [`/defi aave`](commands/defi.md#aave-v3) looks for positions: `1` (Ethereum), `8453` (Base) |
 | `defi.aave.wallet` | text (can be empty) | *(empty)* | Wallet for [`/defi aave`](commands/defi.md#aave-v3) when no wallet is registered, used when `AAVE_WALLET_ADDRESS` is not in `config/.env` |
 | `defi.alert.intervalMin` | 1–1440 | `10` | Interval (minutes) between [`/defi -alert`](commands/defi.md#out-of-range-alert) checks; it queries the positions on Solana and HyperEVM, depending on the protocol |

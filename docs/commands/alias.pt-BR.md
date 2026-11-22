@@ -314,6 +314,15 @@ A maioria usa `-q` (sem o cabeçalho "🔗 Alias"). Pegue o arquivo inteiro com 
 | `/vf` | `/batch -q` + `/tts -q -l -v $@` com as vozes tugão, cadu, edresson, faber |
 | `/vfazol` | `/batch -q` + `/tts -q -l -v $@` com as vozes cadu, edresson, faber |
 
+**Debug (`/debug`)**
+
+| Shortcut | Runs |
+|---|---|
+| `/dbg.off` | `/debug -off` |
+| `/dbg.on` | `/debug -on -level 1` |
+| `/dbg.on2` | `/debug -on -level 2` |
+| `/dbg.on3` | `/debug -on -level 3` |
+
 **Envio (`/me`, `/forward`) e outros**
 
 | Atalho | Executa |
