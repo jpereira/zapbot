@@ -122,11 +122,13 @@ shows are in Portuguese; the ones here are in English).
 | `stocks.alert.intervalMin` | 1–60 | `5` | Interval, in minutes, between [price alert](commands/stocks.md#price-alerts) checks of `/stocks` |
 | `stocks.alert.max` | 1–100 | `20` | Max price alerts of `/stocks` |
 | `stocks.symbols` | list | `USD, EUR, USDT, MSTR` | Symbols shown by [`/stocks`](commands/stocks.md) (and `/rates`): currencies against the real (`USD`, `EUR`, `GBP`, `USDT`) and Yahoo Finance tickers (`MSTR`, `NVDA`, `PETR4.SA`, `BRK-B`, `^GSPC`); usually changed with `/stocks -a`/`-d` |
+| `stt.beam` | 1–10 | `1` | Beam size of the faster-whisper search in [`/stt`](commands/stt.md) (`1` is the fastest; more can get a little more right and takes longer). `-beam` changes it per call |
 | `stt.engine` | `local`, `gpt` | `local` | Engine of [`/stt`](commands/stt.md) and `/get -stt`: `local` (faster-whisper, no key) or `gpt` (ChatGPT, OpenAI API). `-gpt` and `-local` pick it per call |
 | `stt.footer` | on/off | `on` | Ends the /stt and /get -stt transcription with the tip "💡 Transcribed by <engine>". -quiet (-q) hides it on the call. |
-| `stt.language` | text | `auto` | Language of the speech in [`/get -stt`](commands/get.md#transcribe-the-speech--stt) (`pt`, `en`, `es`...). `auto`: whisper detects it |
+| `stt.language` | text | `auto` | Language of the speech in [`/stt`](commands/stt.md) (`pt`, `en`, `es`...). `auto`: whisper detects it. `-lang` changes it per call |
 | `stt.maxMinutes` | 1–180 | `20` | Longest audio (minutes) `/get -stt` transcribes: it uses the server CPU |
-| `stt.model` | text | `small` | faster-whisper model of `/get -stt`: `tiny`, `base`, `small`, `medium` or `large-v3-turbo` (bigger is better and slower). `small` comes in the image; another one is downloaded the first time |
+| `stt.model` | text | `small` | faster-whisper model of [`/stt`](commands/stt.md): `tiny`, `base`, `small`, `medium` or `large-v3-turbo` (bigger is better and slower). `small` comes in the image; another one is downloaded the first time. `-model` changes it per call |
+| `stt.vad` | on/off | `on` | Skips the silence and the music before transcribing in [`/stt`](commands/stt.md) (where whisper invents text). `-vad on\|off` changes it per call |
 | `tldr.footer` | on/off | `on` | Ends the /tldr summary with the tip "💡 Summarized by ChatGPT". -quiet (-q) hides it on the call. |
 | `tldr.maxMsgs` | 10–2000 | `500` | Max messages sent to OpenAI per [`/tldr`](commands/tldr.md) |
 | `translate.lang` | text | `pt` | Default target language of [`/translate`](commands/translate.md) (code: `pt`, `en`, `es`...) |

@@ -45,7 +45,7 @@ module.exports = {
     'sistema.nova': ' · ⬆️ *new: {v}*',
     'sistema.maisRecente': ' · ✅ the latest',
     'sistema.commitsNovos': { one: ' · ⬆️ {n} new commit on main', other: ' · ⬆️ {n} new commits on main' },
-    'sistema.whisper': '{fw} (model {model}) · transcribe.py {wrapper}',
+    'sistema.whisper': '{fw} (model {model}) · stt.py {wrapper}',
     'sistema.info': 'ℹ️ *ZapBot {version}* · system information\n\n🤖 *Bot*\n• ZapBot: {zapbot}\n• Node.js: {node} (V8 {v8})\n• whatsapp-web.js: {wwebjs}\n• WhatsApp Web: {whatsappWeb}\n• SQLite: {sqlite}\n\n🧰 *Programs*\n• Chromium: {chromium}\n• yt-dlp: {ytDlp}\n• ffmpeg: {ffmpeg}\n• faster-whisper: {whisper}\n\n🖥️ *System*\n• {uname}\n• Host: {host}\n• CPU: {cpu} · load {load}\n• Memory: {memUsed} of {memTotal} in use · the bot uses {memBot}\n• Uptime: system for {systemUp} · bot for {botUp} (PID {pid})',
     'diag.leituraDifere': 'what was read differs from what was written',
     'diag.escritaLeitura': 'wrote and read {tam} ({ms})',

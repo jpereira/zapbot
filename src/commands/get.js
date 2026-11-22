@@ -17,7 +17,7 @@ const { t } = require('../i18n');
 const { WITHOUT_KEY, keyOpenAi, errorOpenAi, askOnChat, transcribeAudio } = require('../openaiChat');
 const { downloadPhoto, postPhotos } = require('../postPhotos');
 const { CHATGPT, engineProcessing, pickEngine, withEngineTip } = require('../engines');
-const { transcriptionCommand, transcribeFile } = require('../transcription');
+const { readSttOptions, transcriptionCommand, transcribeFile } = require('../transcription');
 const { humanSize } = require('../util/files');
 const { wait } = require('../util/format');
 const { captureOutput, runCommand } = require('../util/processes');
@@ -482,6 +482,14 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
         return;
     }
     const gpt = engine === 'gpt';
+    // -lang, -model, -beam and -vad: of the call (the stt.* settings are the default)
+    let sttOptions;
+    try {
+        sttOptions = readSttOptions(opts);
+    } catch (e) {
+        await msg.reply(e.message);
+        return;
+    }
     const id = crypto.randomUUID();
     const raw = path.join(TMP_DIR, `${id}_fala.${media ? extension(media) : '%(ext)s'}`);
     // -gpt sends the audio to OpenAI (25 MB ceiling): a small Opus; the local engine reads 16 kHz mono wav
@@ -543,11 +551,14 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
         try {
             r = gpt
                 ? {
-                    text: await transcribeAudio({ cmd: '/stt', audio: { file: 'speech.ogg', mimetype: 'audio/ogg', data: fs.readFileSync(wav).toString('base64') } }),
+                    text: await transcribeAudio({
+                        cmd: '/stt', language: sttOptions.language ?? getSetting('stt.language'), model: sttOptions.model,
+                        audio: { file: 'speech.ogg', mimetype: 'audio/ogg', data: fs.readFileSync(wav).toString('base64') }
+                    }),
                     language: 'auto',
                     duration
                 }
-                : await transcribeFile(wav);
+                : await transcribeFile(wav, sttOptions);
         } catch (inner) {
             throw new Error(t('get.transcribeFailed'), { cause: inner });
         }
@@ -557,8 +568,8 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
             if (cmdYt) textMsg += `💾 *yt-dlp*: _${cmdYt}_\n\n`;
             textMsg += `🔗 *ffmpeg*: _${cmdFfmpeg}_\n\n`;
             textMsg += gpt
-                ? `🧠 *OpenAI* (${((Date.now() - start) / 1000).toFixed(1)} s): _${getSetting('gpt.transcribe.model')}_\n\n`
-                : `🧠 *faster-whisper* (${((Date.now() - start) / 1000).toFixed(1)} s): _${transcriptionCommand(wav)}_\n\n`;
+                ? `🧠 *OpenAI* (${((Date.now() - start) / 1000).toFixed(1)} s): _${sttOptions.model ?? getSetting('gpt.transcribe.model')}_\n\n`
+                : `🧠 *faster-whisper* (${((Date.now() - start) / 1000).toFixed(1)} s): _${transcriptionCommand(wav, sttOptions)}_\n\n`;
             textMsg += '🧩 *cmdArgs*:```\n' + JSON.stringify(opts, null, 4) + '\n```';
             await msg.reply(textMsg, null, { linkPreview: false });
         }

@@ -12,7 +12,7 @@ const packageJson = require('../package.json');
 
 const { state: stateAlt } = require('./state');
 const { client } = require('./client');
-const { BIN_CHROMIUM, BIN_FFMPEG, BIN_PYTHON, BIN_YT, BOT_START_TIME, SCRIPT_TRANSCRIPTION } = require('./constants');
+const { BIN_CHROMIUM, BIN_FFMPEG, BIN_PYTHON, BIN_YT, BOT_START_TIME, SCRIPT_STT } = require('./constants');
 const { dbGet, dbReady } = require('./db');
 const { getBotUptime } = require('./log');
 const { humanSize } = require('./util/files');
@@ -120,7 +120,7 @@ async function chromiumVersion() {
     return await output(BIN_CHROMIUM, ['--version']) ?? notFound();
 }
 
-// The output of "transcribe.py --version" ({"wrapper":"1.0.0","faster_whisper":"1.2.0"}) as text; null if it failed
+// The output of "stt.py --version" ({"wrapper":"1.0.0","faster_whisper":"1.2.0"}) as text; null if it failed
 function describeWhisper(outputAlt, modelAlt) {
     try {
         const v = JSON.parse(outputAlt);
@@ -143,7 +143,7 @@ async function infoText() {
         chromiumVersion(),
         output(BIN_YT, ['--version']),
         output(BIN_FFMPEG, ['-version']).then(ffmpegVersion),
-        output(BIN_PYTHON, [SCRIPT_TRANSCRIPTION, '--version']),
+        output(BIN_PYTHON, [SCRIPT_STT, '--version']),
         output('uname', ['-a']),
         dbGet('SELECT sqlite_version() AS v').then(r => r?.v).catch(() => null),
         client.getWWebVersion?.().catch(() => null),

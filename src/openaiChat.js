@@ -312,12 +312,16 @@ async function askOnChat({ cmd, system, text: textAlt, image = null, images = []
  * @param {string} o.cmd  command that called (for the log)
  * @param {{ file: string, mimetype: string, data: string }} o.audio  the audio in base64; the name
  * of the file (with the right extension) is what OpenAI uses to know the format
+ * @param {string} [o.language]  the language of the speech (the gpt.* model detects it without)
+ * @param {string} [o.model]  the model (overrides the gpt.transcribe.model setting)
  * @returns {Promise<string>}  the text (empty if there is no speech)
  */
-async function transcribeAudio({ cmd, audio }) {
+async function transcribeAudio({ cmd, audio, language = null, model = null }) {
     const form = new FormData();
     form.append('file', new Blob([Buffer.from(audio.data, 'base64')], { type: audio.mimetype }), audio.file);
-    form.append('model', getSetting('gpt.transcribe.model'));
+    form.append('model', model || getSetting('gpt.transcribe.model'));
+    // The language of the speech (ISO 639-1: pt, en...): helps the model; without it, it detects
+    if (language && language !== 'auto') form.append('language', String(language).split('-')[0].toLowerCase());
 
     try {
         const { data } = await axios.post(OPENAI_TRANSCRIPTION_URL, form, {

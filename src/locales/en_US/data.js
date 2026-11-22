@@ -34,6 +34,7 @@ module.exports = {
     'get.transcribeNeedsAudio': '❌ To transcribe, reply to a video or an audio (or send a link).',
     'get.transcribeTooLong': 'Audio too long to transcribe ({dur}; max. {max} min, see the stt.maxMinutes setting). Use -ss and -es to pick a part',
     'get.transcribeFailed': 'Problems transcribing the audio (faster-whisper)',
+    'stt.badOption': '❌ {name}: "{value}" is not valid. Use {hint}.',
     'get.transcribeEmpty': '🔇 No speech found in the audio.',
     'get.transcribeResult': '📝 *Transcription* · 🗣️ {lang} · {dur}\n\n{text}',
     'get.sumInstructions': 'You summarize the speech of a video or audio, in English. Write a short summary, in topics (one per line, starting with "• "), with only what was said. No introduction, no opinion, no Markdown.',

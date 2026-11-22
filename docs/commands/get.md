@@ -23,6 +23,10 @@ through ffmpeg. If the media has a link in the caption, the media wins.
 | `-gpt`, `-g` | | With `-t`: transcribes with ChatGPT (OpenAI API, spends your account) instead of the local faster-whisper. Without `-gpt` or `-local`, the [`stt.engine`](../settings.md) setting decides |
 | `-local`, `-l` | | With `-t`: transcribes with the local faster-whisper (no key, uses the server CPU), even with `stt.engine` at `gpt` |
 | `-summary`, `-sum` | | With `-t`: also summarizes the speech with ChatGPT. See [Transcribe the speech](#transcribe-the-speech--stt) |
+| `-lang`, `-L` | `<code>` | The language of the speech: `pt`, `en`, `es`, `pt-br`... or `auto` (whisper detects it). With `-gpt`, it also goes to the OpenAI API. The default is the `stt.language` setting (`auto`). (`-l` is the short of `-local`) |
+| `-model`, `-M` | `<name>` | The faster-whisper model (`tiny`, `base`, `small`, `medium`, `large-v3-turbo`...; bigger is better and slower; one that isn't in the image is downloaded the first time). With `-gpt`, the OpenAI model. The default is the `stt.model` setting |
+| `-beam`, `-b` | `<1-10>` | The beam size of the local search: `1` is the fastest, more can get a little more right and takes longer. The default is the `stt.beam` setting |
+| `-vad` | `<on\|off>` | `on`: skips the silence and the music before transcribing (where whisper invents text); `off`: transcribes it all. Local engine only. The default is the `stt.vad` setting |
 | `-startSec`, `-ss` | `<time>` | Starts at this point of the original video (default 0), in seconds (`22`, `1.5`) or in `min:sec` (`09:33`, or `h:min:sec`). With a `-` in front, counts from the **end** of the video (`-10`, `-01:44`) |
 | `-endSec`, `-es` | `<time>` | Ends at this point of the original video, in the same format as `-ss` (`-es -5` ends 5 s before the end); must be greater than the start. Also works without `-ss` and for stickers |
 | `-verbose`, `-v` | | Shows the parameters used in yt-dlp/ffmpeg |

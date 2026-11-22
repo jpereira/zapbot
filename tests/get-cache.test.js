@@ -745,8 +745,9 @@ describe('/get -stt', () => {
         }
         assert.ok(ff.includes('-vn'));
         const py = argsDo('python');
-        assert.match(py[0], /scripts\/transcribe\.py$/);
-        assert.deepEqual(py.slice(2), ['small', '/opt/whisper', 'auto']);
+        assert.match(py[0], /scripts\/stt\.py$/);
+        assert.deepEqual(['--model', '--dir', '--language'].map(f => py[py.indexOf(f) + 1]), ['small', '/opt/whisper', 'auto']);
+        assert.ok(py.includes('--input'));
         assert.deepEqual(filesTemporary(), [], 'os temporários foram apagados');
     });
 
@@ -757,8 +758,9 @@ describe('/get -stt', () => {
         const ff = argsDo('ffmpeg');
         assert.equal(ff[ff.indexOf('-ss') + 1], '30');
         assert.equal(ff[ff.indexOf('-to') + 1], '90');
-        assert.equal(argsDo('python')[2], 'medium');
-        assert.equal(argsDo('python')[4], 'pt');
+        const py2 = argsDo('python');
+        assert.equal(py2[py2.indexOf('--model') + 1], 'medium');
+        assert.equal(py2[py2.indexOf('--language') + 1], 'pt');
     });
 
     test('respondendo um áudio do WhatsApp: transcreve sem baixar nada', async () => {
@@ -828,6 +830,59 @@ describe('/stt', () => {
         assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg', 'ffprobe', 'python']);
     });
 
+    test('-lang|-L, -model|-M, -beam|-b e -vad: vão para o stt.py; o padrão vem dos settings stt.*', async () => {
+        const flag = (args, f) => args[args.indexOf(f) + 1];
+        await bot.execute(`/stt ${URL}`);
+        let py = argsDo('python');
+        assert.deepEqual(['--language', '--model', '--beam'].map(f => flag(py, f)), ['auto', 'small', '1']);
+        assert.ok(!py.includes('--no-vad'));
+
+        bot.processes.calls.length = 0;
+        await bot.execute(`/stt -lang EN -M medium -b 5 -vad off ${URL}`);
+        py = argsDo('python');
+        assert.deepEqual(['--language', '--model', '--beam'].map(f => flag(py, f)), ['en', 'medium', '5']);
+        assert.ok(py.includes('--no-vad'));
+        assert.ok(py.includes('--input') && py.includes('--dir'));
+
+        // the settings are the default
+        await bot.setSetting('stt.language', 'pt');
+        await bot.setSetting('stt.beam', 3);
+        await bot.setSetting('stt.vad', false);
+        bot.processes.calls.length = 0;
+        await bot.execute(`/get -t ${URL}`);
+        py = argsDo('python');
+        assert.deepEqual(['--language', '--beam'].map(f => flag(py, f)), ['pt', '3']);
+        assert.ok(py.includes('--no-vad'));
+        bot.processes.calls.length = 0;
+        await bot.execute(`/stt -L es -vad on ${URL}`);
+        py = argsDo('python');
+        assert.equal(flag(py, '--language'), 'es');
+        assert.ok(!py.includes('--no-vad'), '-vad on vence o setting');
+    });
+
+    test('-lang, -model, -beam e -vad inválidos: erro, nada é baixado nem transcrito', async () => {
+        for (const [typed, re] of [['-lang portugues', /-lang: "portugues" não vale/], ['-model ../x', /-model: "..\/x" não vale/],
+            ['-beam 0', /-beam: "0" não vale\. Use 1 to 10/], ['-beam 11', /-beam/], ['-vad talvez', /-vad: "talvez" não vale\. Use on or off/]]) {
+            bot.processes.calls.length = 0;
+            const r = await bot.execute(`/stt ${typed} ${URL}`);
+            assert.match(r[0].text, re, typed);
+            assert.equal(bot.processes.calls.length, 0, typed);
+        }
+    });
+
+    test('-gpt: o idioma e o modelo vão para a API da OpenAI (sem auto)', async () => {
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com/v1/audio/transcriptions', { text: 'oi' });
+        await bot.execute(`/stt -gpt -lang pt-br -model gpt-4o-transcribe ${URL}`);
+        const form = network.calls.at(-1).cfg.body ?? network.calls.at(-1).data;
+        const get = (k) => (typeof form?.get === 'function' ? form.get(k) : form?.[k]);
+        assert.equal(get('language'), 'pt');
+        assert.equal(get('model'), 'gpt-4o-transcribe');
+        await bot.execute(`/stt -gpt ${URL}`);
+        const again = network.calls.at(-1).cfg.body ?? network.calls.at(-1).data;
+        assert.equal(typeof again?.get === 'function' ? again.get('language') : again?.language ?? null, null, 'auto: sem o campo');
+    });
+
     test('-q: SÓ o texto, sem cabeçalho (idioma e duração), sem a dica do motor e sem o aviso ⏳', async () => {
         const r = await bot.execute(`/stt -q ${URL}`);
         assert.equal(r.length, 1, 'nem o ⏳ nem outra mensagem');
@@ -849,7 +904,7 @@ describe('/stt', () => {
 
     test('-v: manda os comandos do yt-dlp, ffmpeg e faster-whisper antes do texto', async () => {
         const r = await bot.execute(`/stt -v ${URL}`);
-        assert.match(r[1].text, /🛠️ \*Verbose Mode\*[\s\S]*yt-dlp[\s\S]*ffmpeg[\s\S]*faster-whisper\* \(\d+\.\d s\)[\s\S]*transcribe\.py[\s\S]*small/);
+        assert.match(r[1].text, /🛠️ \*Verbose Mode\*[\s\S]*yt-dlp[\s\S]*ffmpeg[\s\S]*faster-whisper\* \(\d+\.\d s\)[\s\S]*stt\.py[\s\S]*small/);
         assert.match(r[0].text, /olá mundo/, 'o aviso vira o texto');
         const g = await bot.execute(`/get -t -v ${URL}`);
         assert.match(g[1].text, /Verbose Mode/);

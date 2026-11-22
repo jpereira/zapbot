@@ -118,6 +118,58 @@
     },
     {
       "opts": [
+        "lang",
+        "L"
+      ],
+      "values": [
+        "<código>"
+      ],
+      "desc": "O idioma da fala: pt, en, es, pt-br... ou auto (o whisper detecta). Com -gpt, também vai para a API da OpenAI. O padrão é o setting stt.language (auto). (O -l é o atalho do -local.)",
+      "ex": [
+        "/get -t -lang en <url>",
+        "/get -t -L pt"
+      ]
+    },
+    {
+      "opts": [
+        "model",
+        "M"
+      ],
+      "values": [
+        "<nome>"
+      ],
+      "desc": "O modelo do faster-whisper (tiny, base, small, medium, large-v3-turbo...; maior é melhor e mais lento; o que não está na imagem é baixado na primeira vez). Com -gpt, o modelo da OpenAI. O padrão é o setting stt.model.",
+      "ex": [
+        "/get -t -model medium <url>"
+      ]
+    },
+    {
+      "opts": [
+        "beam",
+        "b"
+      ],
+      "values": [
+        "<1-10>"
+      ],
+      "desc": "O tamanho do beam da busca local: 1 é o mais rápido, mais pode acertar um pouco mais e demora mais. O padrão é o setting stt.beam.",
+      "ex": [
+        "/get -t -beam 5 <url>"
+      ]
+    },
+    {
+      "opts": [
+        "vad"
+      ],
+      "values": [
+        "<on|off>"
+      ],
+      "desc": "on: pula o silêncio e a música antes de transcrever (onde o whisper inventa texto); off: transcreve tudo. Só no motor local. O padrão é o setting stt.vad.",
+      "ex": [
+        "/get -t -vad off <url>"
+      ]
+    },
+    {
+      "opts": [
         "startSec",
         "ss"
       ],
