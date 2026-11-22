@@ -31,7 +31,7 @@ module.exports = {
             values: [],
             desc: 'Lists the chats with content in the cache. Numbered for /show <no.>, marking the current chat. With chat (no., name, @mention or /regex/), only the ones that match, and the counts only for them.',
             ex: ['/show -l', '/show -l /^Maria/'],
-            outrosChats: true
+            otherChats: true
         },
         {
             opts: ['flush', 'f'],
@@ -49,13 +49,13 @@ module.exports = {
             argv: ['-N'],
             desc: 'Number of messages (default 1, max. show.max).',
             ex: ['/show -3'],
-            numero: true
+            number: true
         },
         {
             argv: ['chat'],
             desc: 'Another chat: the number from the -l list, part of the name, @mention or /regex/ (case- and accent-insensitive). Without -d, -e, -s and -r, deleted, edited, statuses and reactions come together, by date.',
             ex: ['/show -3 /^Maria/'],
-            outrosChats: true
+            otherChats: true
         },
         {
             opts: ['mask', 'm'],
@@ -64,8 +64,8 @@ module.exports = {
             ex: ['/show -m']
         }
     ],
-    estrito: true,
+    strict: true,
     mask: true,
-    delegavel: true,
+    isDelegable: true,
     role: ADMIN // delegable: current chat only (-flush is owner only)
 };

@@ -10,6 +10,6 @@ module.exports = {
     aliases: [],
     summary: 'Lists the group members',
     help: 'Lists the group members (number, name, admins).',
-    delegavel: true,
+    isDelegable: true,
     role: ADMIN // delegable: lists the current group
 };

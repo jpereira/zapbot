@@ -41,18 +41,18 @@ test('httpGetSeguro recusa conectar em loopback (pin antes do connect)', async (
 test('httpGetSeguro não segue redirect para endereço interno', async (t) => {
     // Public server (from the test's point of view, an IP not blocked via fake lookup):
     // here we validate that an internal Location is refused on the hop's revalidation
-    const servidor = http.createServer((req, res) => {
+    const server = http.createServer((req, res) => {
         res.writeHead(302, { location: 'http://169.254.169.254/latest/meta-data/' });
         res.end();
     });
-    await new Promise((r) => servidor.listen(0, '127.0.0.1', r));
-    t.after(() => servidor.close());
+    await new Promise((r) => server.listen(0, '127.0.0.1', r));
+    t.after(() => server.close());
 
     // The first hop is loopback: it is already refused at the pin, even before the redirect.
     // (Guarantees that no path reaches the internal host.)
-    const porta = servidor.address().port;
+    const port = server.address().port;
     await assert.rejects(
-        () => httpGetSafe(`http://127.0.0.1:${porta}/`),
+        () => httpGetSafe(`http://127.0.0.1:${port}/`),
         /endereço não permitido/
     );
 });

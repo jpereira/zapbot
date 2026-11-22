@@ -9,7 +9,7 @@ const assert = require('node:assert/strict');
 const { OWNER, OTHERAlt } = bot;
 const usage = bot.src('usageLimit');
 const OWNER_CHAT = { chat: OWNER.jid };
-const dele = (line, extras = {}) => bot.replyAlt(line, { de: OTHERAlt.jid, ...extras });
+const own = (line, extras = {}) => bot.replyAlt(line, { de: OTHERAlt.jid, ...extras });
 
 beforeEach(async () => {
     await bot.restart();
@@ -20,12 +20,12 @@ beforeEach(async () => {
 });
 
 test('lerLimite: N, N/período em português e inglês; inválido lança', () => {
-    assert.deepEqual(usage.readLimit('5'), { max: 5, periodo: 'total' });
-    assert.deepEqual(usage.readLimit('5/dia'), { max: 5, periodo: 'day' });
-    assert.deepEqual(usage.readLimit('5/day'), { max: 5, periodo: 'day' });
-    assert.deepEqual(usage.readLimit('3/sem'), { max: 3, periodo: 'week' });
-    assert.deepEqual(usage.readLimit('20/mês'), { max: 20, periodo: 'month' });
-    assert.deepEqual(usage.readLimit('20/mes'), { max: 20, periodo: 'month' });
+    assert.deepEqual(usage.readLimit('5'), { max: 5, period: 'total' });
+    assert.deepEqual(usage.readLimit('5/dia'), { max: 5, period: 'day' });
+    assert.deepEqual(usage.readLimit('5/day'), { max: 5, period: 'day' });
+    assert.deepEqual(usage.readLimit('3/sem'), { max: 3, period: 'week' });
+    assert.deepEqual(usage.readLimit('20/mês'), { max: 20, period: 'month' });
+    assert.deepEqual(usage.readLimit('20/mes'), { max: 20, period: 'month' });
     for (const bad of ['0', 'x', '5/ano', '5/', '-1']) assert.throws(() => usage.readLimit(bad), undefined, bad);
 });
 
@@ -46,9 +46,9 @@ test('/bot +u +cmd /ping +limit 2: grava o limite; só o 3º uso é barrado, com
     assert.match(r, /Fulano/);
     assert.deepEqual(bot.getSetting('bot.users.limits'), [`${OTHERAlt.user}=/ping:2`]);
 
-    assert.deepEqual(await dele('/ping'), ['pong', '📊 /ping: restam 1 de 2 no total']);
-    assert.deepEqual(await dele('/ping'), ['pong', '📊 /ping: restam 0 de 2 no total']);
-    const [blocked] = await dele('/ping');
+    assert.deepEqual(await own('/ping'), ['pong', '📊 /ping: restam 1 de 2 no total']);
+    assert.deepEqual(await own('/ping'), ['pong', '📊 /ping: restam 0 de 2 no total']);
+    const [blocked] = await own('/ping');
     assert.match(blocked, /^🚫 Limite do \/ping atingido: 2 de 2 no total\. Não renova/);
 });
 
@@ -65,20 +65,20 @@ test('+cmd e +limit juntos: uma resposta só, com o ⏱️ de cada usuário na l
 test('usage.footer desligado: sem o aviso de quanto resta', async () => {
     await bot.replyAlt('/bot +u /Fulano/ +cmd /ping +limit 3/dia', OWNER_CHAT);
     await bot.setSetting('usage.footer', false);
-    assert.deepEqual(await dele('/ping'), ['pong']);
+    assert.deepEqual(await own('/ping'), ['pong']);
 });
 
 test('só o que deu certo conta: ajuda, uso e erro devolvem o uso', async () => {
     await bot.replyAlt('/bot +u /Fulano/ +cmd /ping,/noffa +limit 1', OWNER_CHAT);
-    await dele('/ping -h');
-    await dele('/noffa'); // without text: shows the syntax
+    await own('/ping -h');
+    await own('/noffa'); // without text: shows the syntax
     const { limitsWithUsage } = usage;
-    const beforeAlt = await limitsWithUsage({ numero: OTHERAlt.user, chatId: OTHERAlt.jid, isGroup: false });
-    assert.deepEqual(beforeAlt.map(l => [l.cmd, l.usados]), [['/noffa', 0], ['/ping', 0]]);
+    const beforeAlt = await limitsWithUsage({ number: OTHERAlt.user, chatId: OTHERAlt.jid, isGroup: false });
+    assert.deepEqual(beforeAlt.map(l => [l.cmd, l.used]), [['/noffa', 0], ['/ping', 0]]);
 
-    assert.match((await dele('/noffa oi'))[0], /o/i);
-    const afterAlt = await limitsWithUsage({ numero: OTHERAlt.user, chatId: OTHERAlt.jid, isGroup: false });
-    assert.deepEqual(afterAlt.map(l => [l.cmd, l.usados]), [['/noffa', 1], ['/ping', 0]]);
+    assert.match((await own('/noffa oi'))[0], /o/i);
+    const afterAlt = await limitsWithUsage({ number: OTHERAlt.user, chatId: OTHERAlt.jid, isGroup: false });
+    assert.deepEqual(afterAlt.map(l => [l.cmd, l.used]), [['/noffa', 1], ['/ping', 0]]);
 });
 
 test('o "⏳ Processando..." editado para um erro não conta; editado para o resultado conta', async () => {
@@ -86,11 +86,11 @@ test('o "⏳ Processando..." editado para um erro não conta; editado para o res
     await bot.setSetting('bot.users', [OTHERAlt.user]);
     await bot.setSetting('bot.users.limits', [`${OTHERAlt.user}=/ping:2`]);
     await bot.setSetting('usage.footer', false);
-    const who = { numero: OTHERAlt.user, chatId: OTHERAlt.jid, isGroup: false };
-    const used = async () => (await usage.limitsWithUsage(who))[0].usados;
+    const who = { number: OTHERAlt.user, chatId: OTHERAlt.jid, isGroup: false };
+    const used = async () => (await usage.limitsWithUsage(who))[0].used;
     const run = async (final) => {
         const msg = { reply: async () => ({ edit: async () => true }) };
-        await usage.withLimit({ msg, quem: who, cmds: ['/ping'], params: 'x' }, async () => {
+        await usage.withLimit({ msg, who, cmds: ['/ping'], params: 'x' }, async () => {
             const notice = await msg.reply('⏳ Processando o /ping, aguarde.');
             await completeNotice(msg, notice, final);
         });
@@ -107,35 +107,35 @@ test('o "⏳ Processando..." editado para um erro não conta; editado para o res
 test('o dono e os admins não têm limite', async () => {
     await bot.setSetting('bot.admins', [OTHERAlt.user]);
     await bot.setSetting('bot.users.limits', [`${OTHERAlt.user}=/ping:1`]);
-    for (let i = 0; i < 3; i++) assert.deepEqual(await dele('/ping'), ['pong']);
+    for (let i = 0; i < 3; i++) assert.deepEqual(await own('/ping'), ['pong']);
     for (let i = 0; i < 3; i++) assert.deepEqual(await bot.replyAlt('/ping', OWNER_CHAT), ['pong']);
 });
 
 test('chamadas ao mesmo tempo não passam do limite', async () => {
     await bot.replyAlt('/bot +u /Fulano/ +cmd /ping +limit 2', OWNER_CHAT);
     await bot.setSetting('usage.footer', false);
-    const beforeAlt = bot.client.enviadas.length;
-    await Promise.all([1, 2, 3, 4].map(() => dele('/ping')));
-    const texts = bot.client.enviadas.slice(beforeAlt).map(e => String(e.content));
+    const beforeAlt = bot.client.sent.length;
+    await Promise.all([1, 2, 3, 4].map(() => own('/ping')));
+    const texts = bot.client.sent.slice(beforeAlt).map(e => String(e.content));
     assert.equal(texts.filter(x => x === 'pong').length, 2);
     assert.equal(texts.filter(x => x.startsWith('🚫')).length, 2);
 });
 
 test('/usage mostra o uso e quando renova; -l lista os últimos usos; outros: só admin', async () => {
     await bot.replyAlt('/bot +u /Fulano/ +cmd /ping +limit 3/dia', OWNER_CHAT);
-    await dele('/ping');
-    const [r] = await dele('/usage');
+    await own('/ping');
+    const [r] = await own('/usage');
     assert.match(r, /^⏱️ \*Limites de uso\*\n• \/ping {2}1\/3 por dia · renova /);
-    const [log] = await dele('/usage -l');
+    const [log] = await own('/usage -l');
     assert.match(log, /^🕘 \*Últimas chamadas que contaram\*\n• .* · \/ping/);
-    assert.match((await dele('/usage /Beltrano/'))[0], /Só o dono e os admins/);
+    assert.match((await own('/usage /Beltrano/'))[0], /Só o dono e os admins/);
     assert.match((await bot.replyAlt(`/usage +${OTHERAlt.user}`, OWNER_CHAT))[0], /\/ping {2}1\/3 por dia/);
     assert.match((await bot.replyAlt('/usage', OWNER_CHAT))[0], /não tem limites|Você não tem/);
 });
 
 test('o /whois do usuário mostra os limites com o uso', async () => {
     await bot.replyAlt('/bot +u /Fulano/ +cmd /ping +limit 3/sem', OWNER_CHAT);
-    await dele('/ping');
+    await own('/ping');
     const [w] = await bot.replyAlt(`/whois +${OTHERAlt.user}`, OWNER_CHAT);
     assert.match(w, /⏱️ \/ping {2}1\/3 por semana · renova /);
 });
@@ -171,9 +171,9 @@ test('limite do grupo é coletivo; o da pessoa naquele grupo vale primeiro', asy
     await bot.setSetting('bot.users', [GROUP]);
     await bot.setSetting('bot.users.limits', [`${GROUP}=/ping:2`]);
     await bot.setSetting('usage.footer', false);
-    assert.deepEqual(await dele('/ping', { chat: GROUP }), ['pong']);
+    assert.deepEqual(await own('/ping', { chat: GROUP }), ['pong']);
     assert.deepEqual(await bot.replyAlt('/ping', { de: OWNER.jid.replace('0000', '9999'), chat: GROUP }), ['pong']);
-    assert.match((await dele('/ping', { chat: GROUP }))[0], /^🚫/);
+    assert.match((await own('/ping', { chat: GROUP }))[0], /^🚫/);
 });
 
 test('/usage -all: o consumo de todos (ranking por pessoa e por comando); só dono e admins', async () => {
@@ -182,7 +182,7 @@ test('/usage -all: o consumo de todos (ranking por pessoa e por comando); só do
     assert.match((await bot.replyAlt('/usage -a', OWNER_CHAT))[0], /Nenhuma chamada com limite nos últimos 90 dias/);
 
     for (let i = 0; i < 3; i++) await log(OTHERAlt.user, '/gpt');
-    await log(`${OTHERAlt.user}:120363000000000009@g.us`, '/tldr');        // a pessoa naquele grupo soma nela
+    await log(`${OTHERAlt.user}:120363000000000009@g.us`, '/tldr');        // a person naquele group soma nela
     await log('5521922222222', '/gpt');
     await log('120363000000000009@g.us', '/draw');                       // group limit: shows up as a group
     await log(OTHERAlt.user, '/gpt', nowAlt - 200 * 24 * 3600_000);          // outside the 90-day window
@@ -193,5 +193,5 @@ test('/usage -all: o consumo de todos (ranking por pessoa e por comando); só do
     assert.match(r, /\*Por comando:\* \/gpt 4 · \/tldr 1 · \/draw 1$|\*Por comando:\* \/gpt 4 · (\/draw 1 · \/tldr 1|\/tldr 1 · \/draw 1)$/);
 
     await bot.setSetting('bot.users', [OTHERAlt.user]);
-    assert.match((await dele('/usage -a'))[0], /Só o dono e os admins/);
+    assert.match((await own('/usage -a'))[0], /Só o dono e os admins/);
 });

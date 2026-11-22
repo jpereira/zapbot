@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 const registration = async (id = bot.OTHERAlt.jid, nameAlt = 'Fulano') =>
-    (await monitor.registerMonitored({ id, nome: nameAlt })).contato;
+    (await monitor.registerMonitored({ id, name: nameAlt })).contact;
 const time = (lastSeen = 1792007399, extra = {}) => ({
     presenceData: { isOnline: false, hasData: true, lastSeen,
         chatstate: { type: 'unavailable', t: lastSeen }, ...extra },
@@ -40,7 +40,7 @@ test('cadastro por nome, delimitadores, número e menção não duplica a pessoa
     for (const commandAlt of ['/monitor -add Fulano', '/monitor -a /Fulano/',
         '/monitor -add "Fulano"', `/monitor -a +${bot.OTHERAlt.user}`,
         `/monitor -add @${bot.OTHERAlt.user}`]) {
-        const [r] = await bot.replyAlt(commandAlt, { mencoes: [bot.OTHERAlt.jid] });
+        const [r] = await bot.replyAlt(commandAlt, { mentions: [bot.OTHERAlt.jid] });
         assert.match(r, /cadastrado/);
     }
     assert.equal((await monitor.listMonitored()).length, 1);
@@ -51,7 +51,7 @@ test('LID da menção e telefone do contato compartilham cadastro', async () => 
     const lid = '100000000123451@lid';
     bot.client.lids.set(lid, bot.OTHERAlt.jid);
     await bot.replyAlt('/monitor -a /Fulano/');
-    await bot.replyAlt('/monitor -a @100000000123451', { mencoes: [lid] });
+    await bot.replyAlt('/monitor -a @100000000123451', { mentions: [lid] });
     assert.equal((await monitor.listMonitored()).length, 1);
 });
 
@@ -66,9 +66,9 @@ test('nome com espaços e ambiguidades usa a escolha padrão', async () => {
 
 test('limite absoluto de 5 é atômico sob cadastros concorrentes', async () => {
     const results = await Promise.all(Array.from({ length: 7 }, (_, i) =>
-        monitor.registerMonitored({ id: `552199999${1100 + i}@c.us`, nome: `Contato ${i}` })));
+        monitor.registerMonitored({ id: `552199999${1100 + i}@c.us`, name: `Contato ${i}` })));
     assert.equal((await monitor.listMonitored()).length, 5);
-    assert.equal(results.filter(r => r.limite).length, 2);
+    assert.equal(results.filter(r => r.limit).length, 2);
     const [r] = await bot.replyAlt('/monitor -a /Fulano/');
     assert.match(r, /Limite de 5 contatos atingido/);
 });
@@ -142,9 +142,9 @@ test('conexão, pausa, comando desativado e setting off impedem consultas', asyn
     await registration();
     let calls = 0;
     bot.client.pupPage = { evaluate: async () => { calls++; return time(); } };
-    bot.estado.pronto = false;
+    bot.state.ready = false;
     await monitor.checkMonitor();
-    bot.estado.pronto = true;
+    bot.state.ready = true;
     await bot.setSetting('monitor.enabled', false);
     await monitor.checkMonitor();
     await bot.setSetting('monitor.enabled', true);
@@ -240,7 +240,7 @@ test('histórico extenso é enviado completo como documento de texto', async () 
         [c.id, 1792007399 + i, Date.now(), 'Presence.chatstate.t', 'candidato offline']);
     }
     await bot.replyAlt('/monitor -list');
-    const media = bot.client.enviadas.at(-1).content;
+    const media = bot.client.sent.at(-1).content;
     assert.equal(media.filename, 'monitor-historico.txt');
     const textAlt = Buffer.from(media.data, 'base64').toString();
     assert.match(textAlt, /Histórico: 70 horário/);
@@ -281,7 +281,7 @@ test('remoção por contato usa o mesmo resolvedor do cadastro', async () => {
         '/monitor -rm "Fulano"', `/monitor -r @${bot.OTHERAlt.user}`,
         `/monitor -rm +${bot.OTHERAlt.user}`, `/monitor -r ${bot.OTHERAlt.user}`]) {
         await registration();
-        const [r] = await bot.replyAlt(line, { mencoes: [bot.OTHERAlt.jid] });
+        const [r] = await bot.replyAlt(line, { mentions: [bot.OTHERAlt.jid] });
         assert.match(r, /cadastro e histórico removidos/, line);
         assert.equal((await monitor.listMonitored()).length, 0);
     }
@@ -451,7 +451,7 @@ test('lista filtrada compara nome, delimitadores, telefone, id e menção dos ca
         assert.doesNotMatch(r, /📹.*Outro/);
     }
     const [r] = await bot.replyAlt(`/monitor -l @${bot.OTHERAlt.user}`, {
-        mencoes: [bot.OTHERAlt.jid]
+        mentions: [bot.OTHERAlt.jid]
     });
     assert.match(r, /Fulano/);
 });
@@ -489,7 +489,7 @@ test('alerta online vai ao dono uma vez por entrada observada, sem rearmar com d
         await query();
         dataAlt = time(null, { isOnline: true });
         await query();
-        let notices = bot.client.enviadas.filter(e => e.content.startsWith('🚨'));
+        let notices = bot.client.sent.filter(e => e.content.startsWith('🚨'));
         assert.equal(notices.length, 1);
         assert.equal(notices[0].chatId, bot.OWNER.jid);
         assert.match(notices[0].content, /O contato "Fulano" ficou online em/);
@@ -499,7 +499,7 @@ test('alerta online vai ao dono uma vez por entrada observada, sem rearmar com d
         await query();
         dataAlt = time(null, { isOnline: true });
         await query();
-        notices = bot.client.enviadas.filter(e => e.content.startsWith('🚨'));
+        notices = bot.client.sent.filter(e => e.content.startsWith('🚨'));
         assert.equal(notices.length, 2);
     });
 
@@ -508,7 +508,7 @@ test('sem alerta ativado não envia avisos e remoção durante consulta impede a
         const c = await registration();
         bot.client.pupPage = { evaluate: async () => time(null, { isOnline: true }) };
         await monitor.checkMonitor();
-        assert.equal(bot.client.enviadas.length, 0);
+        assert.equal(bot.client.sent.length, 0);
         await monitor.enableAlertMonitor(c.id);
         await bot.dbRun('UPDATE monitor_contacts SET online_state = 0, last_attempt_at = 0');
         bot.client.pupPage = { evaluate: async () => {
@@ -516,7 +516,7 @@ test('sem alerta ativado não envia avisos e remoção durante consulta impede a
             return time(null, { isOnline: true });
         } };
         await monitor.checkMonitor();
-        assert.equal(bot.client.enviadas.length, 0);
+        assert.equal(bot.client.sent.length, 0);
     });
 
 
@@ -525,10 +525,10 @@ test('migração de banco existente preserva contatos e inicia alertas desativad
     await bot.dbRun('ALTER TABLE monitor_contacts DROP COLUMN alert_enabled');
     await bot.dbRun('ALTER TABLE monitor_contacts DROP COLUMN online_state');
     await bot.src('initialization').initializeDb();
-    const [salvo] = await monitor.listMonitored();
-    assert.equal(salvo.id, c.id);
-    assert.equal(salvo.alert_enabled, 0);
-    assert.equal(salvo.online_state, null);
+    const [saved] = await monitor.listMonitored();
+    assert.equal(saved.id, c.id);
+    assert.equal(saved.alert_enabled, 0);
+    assert.equal(saved.online_state, null);
 });
 
 
@@ -540,7 +540,7 @@ test('pausar durante consulta impede envio do alerta pendente', async () => {
         return time(null, { isOnline: true });
     } };
     await monitor.checkMonitor();
-    assert.equal(bot.client.enviadas.length, 0);
+    assert.equal(bot.client.sent.length, 0);
 });
 
 

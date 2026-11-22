@@ -22,6 +22,6 @@ module.exports = {
             desc: 'Result of the most recent poll in the chat (or of the replied poll): votes per option and who voted.'
         }
     ],
-    delegavel: true,
+    isDelegable: true,
     role: ADMIN // delegable: creates in the current chat
 };

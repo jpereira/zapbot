@@ -34,6 +34,6 @@ module.exports = {
             ex: ['/warn @Fulano posted a link', '/warn /Fulano de Tal/ spam', '/warn off-topic (replying to a message)']
         }
     ],
-    delegavel: true,
+    isDelegable: true,
     role: ADMIN // Touches the current group: delegable
 };

@@ -79,12 +79,12 @@ async function cleanAll() {
     await dbReady;
 
     const bytesBefore = getDirSize(CACHE_DIR);
-    const { total, apagadas: deletedAlt } = await dbGet(
-        'SELECT COUNT(*) AS total, COALESCE(SUM(revoked), 0) AS apagadas FROM messages'
+    const { total, deleted: deletedAlt } = await dbGet(
+        'SELECT COUNT(*) AS total, COALESCE(SUM(revoked), 0) AS deleted FROM messages'
     );
 
-    const { editadas: edited } = await dbGet('SELECT COUNT(*) AS editadas FROM message_edits');
-    const { reacoes: reactions } = await dbGet('SELECT COUNT(*) AS reacoes FROM reaction_changes');
+    const { edited } = await dbGet('SELECT COUNT(*) AS edited FROM message_edits');
+    const { reactions } = await dbGet('SELECT COUNT(*) AS reactions FROM reaction_changes');
 
     await dbRun('DELETE FROM messages');
     await dbRun('DELETE FROM message_edits');
@@ -95,7 +95,7 @@ async function cleanAll() {
     const { backups } = await deleteAllBackups();
     await dbRun('VACUUM');
 
-    return { total, apagadas: deletedAlt, editadas: edited, reacoes: reactions, backups, liberado: Math.max(0, bytesBefore - getDirSize(CACHE_DIR)) };
+    return { total, deleted: deletedAlt, edited, reactions, backups, allowed: Math.max(0, bytesBefore - getDirSize(CACHE_DIR)) };
 }
 
 /*
@@ -129,7 +129,7 @@ async function cleanMedia() {
     const { changes } = await dbRun('UPDATE messages SET media_path = NULL WHERE media_path IS NOT NULL');
     printInfo(`/cache -media: ${files} files (${bytes} bytes) deleted from ${MEDIA_DIR}; ${changes} messages without media`);
 
-    return { arquivos: files, bytes };
+    return { files, bytes };
 }
 
 // Edits older than 'cache.editedRetentionDays'

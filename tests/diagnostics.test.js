@@ -10,7 +10,7 @@ const dns = require('dns').promises;
 
 beforeEach(async () => { await bot.restart(); });
 
-function simulateNetwork(t, { falhaNaVelocidade: failureInSpeed = false } = {}) {
+function simulateNetwork(t, { speedFailure: failureInSpeed = false } = {}) {
     t.mock.method(dns, 'lookup', async () => ({ address: '157.240.0.1', family: 4 }));
     t.mock.method(axios, 'get', async (url) => {
         if (new URL(url).hostname === 'speed.cloudflare.com') {
@@ -43,7 +43,7 @@ test('/bot -test: cache, disco, banco, internet e velocidade ✅; SMTP não conf
 });
 
 test('/bot -test: o que falha vira ❌ com o motivo e entra na contagem', async t => {
-    simulateNetwork(t, { falhaNaVelocidade: true });
+    simulateNetwork(t, { speedFailure: true });
     const textAlt = (await bot.replyAlt('/bot -test')).at(-1);
 
     assert.match(line(textAlt, 'Velocidade'), /^❌.*timeout/);

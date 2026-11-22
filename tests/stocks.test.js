@@ -127,13 +127,13 @@ test('/stocks MSTR -alert < 90: cria, lista e dispara uma vez quando o preço ca
     assert.match((await bot.replyAlt('/stocks -alert'))[0], /🔔 \*ALERTAS DE PREÇO\* _\(\/stocks\)_\n\n1\. 🏢 MSTR abaixo de/);
 
     // Still above 90: nothing
-    const beforeAlt = bot.client.enviadas.length;
-    await priceCheckAlerts({ forcar: true });
-    assert.equal(bot.client.enviadas.length, beforeAlt);
+    const beforeAlt = bot.client.sent.length;
+    await priceCheckAlerts({ force: true });
+    assert.equal(bot.client.sent.length, beforeAlt);
 
     market.MSTR = 88;
-    await priceCheckAlerts({ forcar: true });
-    assert.match(bot.client.enviadas.at(-1).content, /📉 🏢 \*MSTR\* ficou abaixo de US\$ 90,00\n💰 Agora: \*US\$ 88,00\*/);
+    await priceCheckAlerts({ force: true });
+    assert.match(bot.client.sent.at(-1).content, /📉 🏢 \*MSTR\* ficou abaixo de US\$ 90,00\n💰 Agora: \*US\$ 88,00\*/);
     assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 0);
 
     // A ticker with a dot also becomes an alert (PETR4.SA > 40)
@@ -143,11 +143,11 @@ test('/stocks MSTR -alert < 90: cria, lista e dispara uma vez quando o preço ca
 test('XAUT (ouro tokenizado) é suportado no /crypto, com o ícone 🥇', async () => {
     assert.equal(CRYPTO_SUPPORTED.XAUT, '🥇');
     network.responder('get', 'api.binance.com/api/v3/ticker/24hr', (url, cfg) =>
-        JSON.parse(cfg.params.symbols).map((par) => ({ symbol: par, lastPrice: 3837.83, priceChangePercent: '-0.325', highPrice: 3880, lowPrice: 3820, quoteVolume: 41_000_000 })));
+        JSON.parse(cfg.params.symbols).map((pair) => ({ symbol: pair, lastPrice: 3837.83, priceChangePercent: '-0.325', highPrice: 3880, lowPrice: 3820, quoteVolume: 41_000_000 })));
     bot.src('quotes').zeroStatusBrl();
-    network.responder('get', 'api.binance.com/api/v3/exchangeInfo', (url, cfg) => ({ symbols: JSON.parse(cfg.params.symbols).map((par) => ({ symbol: par, baseAsset: par.replace(/BRL$/, ''), status: 'TRADING' })) }));
-    // Without a direct reais pair: the dollar price × USDTBRL
-    network.responder('get', 'api.binance.com/api/v3/ticker/price', (url, cfg) => JSON.parse(cfg.params.symbols).map((par) => ({ symbol: par, price: '5.78' })));
+    network.responder('get', 'api.binance.com/api/v3/exchangeInfo', (url, cfg) => ({ symbols: JSON.parse(cfg.params.symbols).map((pair) => ({ symbol: pair, baseAsset: pair.replace(/BRL$/, ''), status: 'TRADING' })) }));
+    // Without a direct brl pair: the dollar price × USDTBRL
+    network.responder('get', 'api.binance.com/api/v3/ticker/price', (url, cfg) => JSON.parse(cfg.params.symbols).map((pair) => ({ symbol: pair, price: '5.78' })));
     const [r] = await bot.replyAlt('/crypto XAUT');
     assert.match(r, /🥇 XAUT\n {4}💰 \$3,837\.83[^\n]*\n {4}🇧🇷 R\$ 22\.182,66\n/);
     assert.match((await bot.replyAlt('/crypto -l'))[0], /🥇 XAUT/);

@@ -15,29 +15,29 @@ const { headerOrigin, channelId } = require('../util/origin');
 const { appendMentions, messageResolverMentions } = require('../mentions');
 
 /*
- * Mensagens editadas
+ * Mensagens edited
  *
  * Same idea as the deleted ones: the 'message_edit' event saves the edit (text of
  * before and after) in the message_edits table and notifies you in private (setting
  * 'show.alert.edited'); o /show -e reexibe sob demanda.
  */
-async function sendMessageEdited(destination, row, info, { titulo: title = t('editadas.titulo') } = {}) {
+async function sendMessageEdited(destination, row, info, { title = t('editadas.titulo') } = {}) {
     let textAlt = `${title}\n\n`;
 
     textAlt += headerOrigin({
-        chatId: row.chat_id, chatName: info.nomeChat, isGroup: row.is_group,
-        senderName: info.nomeRemetente, senderNumber: info.numeroRemetente
+        chatId: row.chat_id, chatName: info.chatName, isGroup: row.is_group,
+        senderName: info.senderName, senderNumber: info.senderNumber
     }) +
         t('editadas.corpo', {
-            enviada: formatData(row.timestamp), editada: formatData(row.edited_at),
-            antes: await messageResolverMentions(row.old_body, row.message_id) || t('editadas.vazio'),
-            depois: await messageResolverMentions(row.new_body, row.message_id) || t('editadas.vazio')
+            sent: formatData(row.timestamp), editada: formatData(row.edited_at),
+            before: await messageResolverMentions(row.old_body, row.message_id) || t('editadas.vazio'),
+            after: await messageResolverMentions(row.new_body, row.message_id) || t('editadas.vazio')
         });
 
     // Records where it came from (/mute replying to the notice)
     const sent = await client.sendMessage(destination, textAlt, { linkPreview: false });
-    const sender = info.numeroRemetente || row.sender_number;
-    await registerNotice(sent, { chatId: row.chat_id, remetente: sender });
+    const sender = info.senderNumber || row.sender_number;
+    await registerNotice(sent, { chatId: row.chat_id, sender });
 }
 
 client.on('message_edit', async (msg, newBody, prevBody) => {
@@ -84,9 +84,9 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
         };
 
         const info = await resolverAuthorDeleted(row, { after: msg, before: msg });
-        row.chat_name = info.nomeChat;
-        row.sender_name = info.nomeRemetente;
-        row.sender_number = info.numeroRemetente;
+        row.chat_name = info.chatName;
+        row.sender_name = info.senderName;
+        row.sender_number = info.senderNumber;
 
         const res = await dbRun(
             `INSERT OR IGNORE INTO message_edits
@@ -111,12 +111,12 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
             chatId, chatName: row.chat_name, isGroup: row.is_group,
             senderId: original?.sender_number || original?.sender_jid || row.sender_number,
             senderName: row.sender_name,
-            campos: { edited: 1 }
+            fields: { edited: 1 }
         });
 
         // /mute: this chat's or this person's notice is muted (the edit stays saved for /show -e)
         const senders = [original?.sender_jid, original?.sender_number, row.sender_number];
-        if (getSetting('show.alert.edited') && !(await ignoreNotice('editada', { chatId, remetentes: senders }))) {
+        if (getSetting('show.alert.edited') && !(await ignoreNotice('editada', { chatId, senders }))) {
             await sendMessageEdited(client.info.wid._serialized, row, info);
         }
     } catch (err) {

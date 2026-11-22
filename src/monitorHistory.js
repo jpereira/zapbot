@@ -6,9 +6,9 @@ async function limitHistoryMonitor(limitAlt, contactId = null) {
         SELECT id FROM (
             SELECT id, ROW_NUMBER() OVER (
                 PARTITION BY contact_id ORDER BY last_seen DESC, id DESC
-            ) AS posicao FROM monitor_history
+            ) AS position FROM monitor_history
             WHERE (? IS NULL OR contact_id = ?)
-        ) WHERE posicao > ?
+        ) WHERE position > ?
     )`, [contactId, contactId, limitAlt]);
 }
 

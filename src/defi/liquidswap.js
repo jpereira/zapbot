@@ -18,14 +18,14 @@ const { typeArguments, indexer, normalizeAddress, normalizeType, resource, view 
  */
 const VERSIONS = [
     {
-        nome: 'v0',
-        pacote: normalizeAddress('0x190d44266241744264b964a37b8f09863167a12d3e70cda39376cfb4e3561e12'),
-        contaDasPools: normalizeAddress('0x05a97986a9d031c4567e15b797be516910cfcb4156312482efc6a19c0a30c948')
+        name: 'v0',
+        pack: normalizeAddress('0x190d44266241744264b964a37b8f09863167a12d3e70cda39376cfb4e3561e12'),
+        poolAccounts: normalizeAddress('0x05a97986a9d031c4567e15b797be516910cfcb4156312482efc6a19c0a30c948')
     },
     {
-        nome: 'v0.5',
-        pacote: normalizeAddress('0x163df34fccbf003ce219d3f1d9e70d140b60622cb9dd47599c25fb2f797ba6e'),
-        contaDasPools: normalizeAddress('0x61d2c22a6cb7831bee0f48363b0eec92369357aece0d1142062f7d5d85c7bef8')
+        name: 'v0.5',
+        pack: normalizeAddress('0x163df34fccbf003ce219d3f1d9e70d140b60622cb9dd47599c25fb2f797ba6e'),
+        poolAccounts: normalizeAddress('0x61d2c22a6cb7831bee0f48363b0eec92369357aece0d1142062f7d5d85c7bef8')
     }
 ];
 
@@ -45,11 +45,11 @@ const BALANCES = `query ($dono: String) {
 // "LP<X, Y, Curve>" from one of the versions → { version, x, y, stable }; another type: null
 function lpReadType(type) {
     const t = normalizeType(type);
-    const version = VERSIONS.find(v => t.startsWith(`${v.contaDasPools}::lp_coin::LP<`));
+    const version = VERSIONS.find(v => t.startsWith(`${v.poolAccounts}::lp_coin::LP<`));
     if (!version) return null;
     const [x, y, curve] = typeArguments(t);
-    if (!curve?.startsWith(`${version.pacote}::curves::`)) return null;
-    return { versao: version, tipo: t, x, y, curva: curve, estavel: curve.endsWith('::Stable') };
+    if (!curve?.startsWith(`${version.pack}::curves::`)) return null;
+    return { version, type: t, x, y, curve, stable: curve.endsWith('::Stable') };
 }
 
 /*
@@ -64,24 +64,24 @@ function poolPrice(x, y, stable) {
 
 // The wallet in the indexer form (0x and 64 hex digits)
 async function walletLps(wallet) {
-    const r = await indexer(BALANCES, { dono: normalizeAddress(wallet) });
+    const r = await indexer(BALANCES, { owner: normalizeAddress(wallet) });
     const byType = new Map();
     for (const b of r?.current_fungible_asset_balances ?? []) {
         const lp = b.asset_type_v1 && lpReadType(b.asset_type_v1);
         if (!lp) continue;
         const balance = BigInt(b.amount);
         // The same LP in two places (coin and fungible asset): sum
-        byType.set(lp.tipo, { ...lp, saldo: (byType.get(lp.tipo)?.saldo ?? 0n) + balance });
+        byType.set(lp.type, { ...lp, balance: (byType.get(lp.type)?.balance ?? 0n) + balance });
     }
     return [...byType.values()].slice(0, MAX_POSITIONS);
 }
 
 // symbol and decimals of a coin, once per type
-async function infoDosTokens(types) {
+async function tokensInfo(types) {
     const unique = [...new Set(types)];
     const infos = await Promise.all(unique.map(async (t) => {
         const [[symbolAlt], [decimals]] = await Promise.all([view('0x1::coin::symbol', [t]), view('0x1::coin::decimals', [t])]);
-        return [t, { simbolo: symbolAlt, decimais: Number(decimals) }];
+        return [t, { symbol: symbolAlt, decimals: Number(decimals) }];
     }));
     return new Map(infos);
 }
@@ -94,43 +94,43 @@ async function positionsLiquidswap(wallet) {
     const lps = await walletLps(wallet);
     if (!lps.length) return [];
 
-    const tokens = await infoDosTokens(lps.flatMap(lp => [lp.x, lp.y]));
+    const tokens = await tokensInfo(lps.flatMap(lp => [lp.x, lp.y]));
     const positions = await Promise.all(lps.map(async (lp) => {
         const [pool, [supply]] = await Promise.all([
-            resource(lp.versao.contaDasPools, `${lp.versao.pacote}::liquidity_pool::LiquidityPool<${lp.x}, ${lp.y}, ${lp.curva}>`),
-            view('0x1::coin::supply', [lp.tipo])
+            resource(lp.version.poolAccounts, `${lp.version.pack}::liquidity_pool::LiquidityPool<${lp.x}, ${lp.y}, ${lp.curve}>`),
+            view('0x1::coin::supply', [lp.type])
         ]);
         const total = BigInt(supply?.vec?.[0] ?? 0);
         if (!pool || !total) return null;
 
         const tx = tokens.get(lp.x);
         const ty = tokens.get(lp.y);
-        const reserveX = Number(pool.data.coin_x_reserve.value) / 10 ** tx.decimais;
-        const reserveY = Number(pool.data.coin_y_reserve.value) / 10 ** ty.decimais;
-        const slice = Number(lp.saldo) / Number(total);
-        const price = poolPrice(reserveX, reserveY, lp.estavel);
-        const usdY = isStable(ty.simbolo) ? 1 : isStable(tx.simbolo) && price ? 1 / price : null;
+        const reserveX = Number(pool.data.coin_x_reserve.value) / 10 ** tx.decimals;
+        const reserveY = Number(pool.data.coin_y_reserve.value) / 10 ** ty.decimals;
+        const slice = Number(lp.balance) / Number(total);
+        const price = poolPrice(reserveX, reserveY, lp.stable);
+        const usdY = isStable(ty.symbol) ? 1 : isStable(tx.symbol) && price ? 1 / price : null;
 
         return {
-            tipo: lp.tipo,
-            versao: lp.versao.nome,
-            estavel: lp.estavel,
-            simboloX: tx.simbolo,
-            simboloY: ty.simbolo,
-            taxa: Number(pool.data.fee) / RATE_SCALE * 100,   // em %
-            fatia: slice,
-            qtdX: reserveX * slice,
-            qtdY: reserveY * slice,
-            reservaX: reserveX,
-            reservaY: reserveY,
-            preco: price,
+            type: lp.type,
+            version: lp.version.name,
+            stable: lp.stable,
+            symbolX: tx.symbol,
+            symbolY: ty.symbol,
+            rate: Number(pool.data.fee) / RATE_SCALE * 100,   // em %
+            slice,
+            qtyX: reserveX * slice,
+            qtyY: reserveY * slice,
+            reserveX,
+            reserveY,
+            price,
             usdX: usdY === null ? null : price * usdY,
             usdY
         };
     }));
 
     // From largest to smallest (in dollars; without a price, at the end)
-    const valueAlt = (p) => (p.usdY === null ? -1 : p.qtdX * p.usdX + p.qtdY * p.usdY);
+    const valueAlt = (p) => (p.usdY === null ? -1 : p.qtyX * p.usdX + p.qtyY * p.usdY);
     return positions.filter(Boolean).sort((a, b) => valueAlt(b) - valueAlt(a));
 }
 

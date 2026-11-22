@@ -20,31 +20,31 @@ beforeEach(async () => {
 });
 
 const countAlt = async (table) => (await bot.dbGet(`SELECT COUNT(*) AS n FROM ${table}`)).n;
-const names = async () => (await listBackups()).map(b => b.nome);
+const names = async () => (await listBackups()).map(b => b.name);
 
 describe('/backup', () => {
     test('-now: banco compactado em cache/backups, com o .json das entradas', async () => {
         await bot.setSetting('watch.rules', 'promoção');
-        await bot.deliver(bot.createMessage({ texto: 'oi', de: bot.OTHERAlt.jid }));
+        await bot.deliver(bot.createMessage({ text: 'oi', de: bot.OTHERAlt.jid }));
 
         const [r] = await bot.replyAlt('/backup -now');
         assert.match(r, /^💾 \*Backup criado\*\n📄 zapbot-\d{8}-\d{6}\n📦 [\d,.]+ \w+\n_.*messages 2.*settings \d+/);
 
         const [b] = await listBackups();
-        assert.ok(fs.existsSync(b.arquivo));
+        assert.ok(fs.existsSync(b.file));
         // It is a real SQLite, compressed
-        assert.equal(zlib.gunzipSync(fs.readFileSync(b.arquivo)).subarray(0, 15).toString(), 'SQLite format 3');
+        assert.equal(zlib.gunzipSync(fs.readFileSync(b.file)).subarray(0, 15).toString(), 'SQLite format 3');
 
-        const meta = JSON.parse(fs.readFileSync(path.join(BACKUP_DIR, `${b.nome}.json`), 'utf8'));
-        assert.equal(meta.motivo, 'manual');
+        const meta = JSON.parse(fs.readFileSync(path.join(BACKUP_DIR, `${b.name}.json`), 'utf8'));
+        assert.equal(meta.reason, 'manual');
         // The version with the commit and tag that created the backup: "2.0.0 (git+0c6164f/v2.0.0)"
-        assert.match(meta.versao, new RegExp(`^${require('../package.json').version.replaceAll('.', '\\.')}(?: \\(devel\\))? \\(git\\+[0-9a-f]{7}/[\\w.-]+\\)$`));
-        assert.equal(meta.entradas.messages, 2);
+        assert.match(meta.version, new RegExp(`^${require('../package.json').version.replaceAll('.', '\\.')}(?: \\(devel\\))? \\(git\\+[0-9a-f]{7}/[\\w.-]+\\)$`));
+        assert.equal(meta.inputs.messages, 2);
     });
 
     test('as imagens do /notes vão num .notes.tar.gz e voltam no -r; sem imagem, não há tar', async () => {
         const [withoutImage] = [await createBackup()];
-        assert.equal(withoutImage.arquivoNotas, undefined);
+        assert.equal(withoutImage.notesFile, undefined);
 
         fs.mkdirSync(NOTES_DIR, { recursive: true });
         const photo = path.join(NOTES_DIR, 'teste_backup.jpg');
@@ -54,17 +54,17 @@ describe('/backup', () => {
             const [r] = await bot.replyAlt('/backup -now');
             assert.match(r, /🖼️ [\d,.]+ \w+ de imagens do \/notes/);
             const [b] = await listBackups();
-            assert.ok(fs.existsSync(b.arquivoNotas));
-            assert.equal(b.imagens, 1);
+            assert.ok(fs.existsSync(b.notesFile));
+            assert.equal(b.images, 1);
             assert.match((await bot.replyAlt('/backup -l'))[0], new RegExp(`1\\. .* \\+ 🖼️ [\\d,.]+ \\w+ · manual`));
 
             fs.rmSync(photo);
-            assert.match((await bot.replyAlt(`/backup -r ${b.nome}`))[0], /imagens do \/notes deste backup voltam/);
-            await bot.replyAlt(`/backup -r ${b.nome} -yes`);
+            assert.match((await bot.replyAlt(`/backup -r ${b.name}`))[0], /imagens do \/notes deste backup voltam/);
+            await bot.replyAlt(`/backup -r ${b.name} -yes`);
             assert.equal(fs.readFileSync(photo, 'utf8'), 'conteudo da imagem');
 
-            await bot.replyAlt(`/backup -rm ${b.nome}`);
-            assert.ok(!fs.existsSync(b.arquivoNotas), '-rm leva o tar junto');
+            await bot.replyAlt(`/backup -rm ${b.name}`);
+            assert.ok(!fs.existsSync(b.notesFile), '-rm leva o tar junto');
         } finally {
             fs.rmSync(photo, { force: true });
         }
@@ -85,13 +85,13 @@ describe('/backup', () => {
 
     test('-l numera do mais novo para o mais antigo; -i compara com o banco atual', async () => {
         await createBackup('manual', Date.now() - 3600_000);
-        await bot.deliver(bot.createMessage({ texto: 'depois', de: bot.OTHERAlt.jid }));
+        await bot.deliver(bot.createMessage({ text: 'depois', de: bot.OTHERAlt.jid }));
         await createBackup('automático');
 
         const [list] = await bot.replyAlt('/backup -l');
         assert.match(list, /💾 \*Backups\* \(2\)\n\n1\. \*[^*]+\* · [^·]+ · automático\n2\. \*[^*]+\* · [^·]+ · manual/);
 
-        await bot.deliver(bot.createMessage({ texto: 'mais uma', de: bot.OTHERAlt.jid }));
+        await bot.deliver(bot.createMessage({ text: 'mais uma', de: bot.OTHERAlt.jid }));
         const [info] = await bot.replyAlt('/backup -i 2');
         assert.match(info, /💾 \*Backup 2\*\n📄 zapbot-\d{8}-\d{6}\n🕐 .* · manual · ZapBot [\d.]+(?: \(devel\))? \(git\+[0-9a-f]{7}\/[\w.-]+\)\n/);
         assert.match(info, /messages: 0 → 4/); // 2 received + the 2 /backup commands
@@ -114,7 +114,7 @@ describe('/backup', () => {
         assert.match(question, /⚠️ \*Restaurar o backup de [^?]+\?\*[\s\S]*Para confirmar: \/backup -r zapbot-\d{8}-\d{6} -yes$/);
         assert.equal(bot.getSetting('weather.city'), 'Lisboa', 'sem -yes nada muda');
 
-        const [r] = await bot.replyAlt(`/backup -r ${b.nome} -yes`);
+        const [r] = await bot.replyAlt(`/backup -r ${b.name} -yes`);
         assert.match(r, /♻️ \*Backup restaurado:\*[\s\S]*💾 O estado anterior ficou no backup (zapbot-\S+): para desfazer, \/backup -r \1 -yes/);
 
         // Settings reloaded into memory, and the tables back
@@ -124,23 +124,23 @@ describe('/backup', () => {
 
         const list = await listBackups();
         assert.equal(list.length, 2);
-        assert.ok(list.some(x => x.motivo === 'antes de restaurar'));
+        assert.ok(list.some(x => x.reason === 'antes de restaurar'));
     });
 
     test('restaura um backup de uma versão anterior (sem uma tabela e sem uma coluna)', async () => {
-        await bot.deliver(bot.createMessage({ texto: 'velha', de: bot.OTHERAlt.jid }));
+        await bot.deliver(bot.createMessage({ text: 'velha', de: bot.OTHERAlt.jid }));
         const b = await createBackup();
 
         await bot.dbRun('CREATE TABLE teste_nova (id INTEGER PRIMARY KEY, x TEXT)');
         await bot.dbRun("INSERT INTO teste_nova (x) VALUES ('nova')");
-        await bot.dbRun('ALTER TABLE messages ADD COLUMN teste_extra TEXT');
+        await bot.dbRun('ALTER TABLE messages ADD COLUMN extra_test TEXT');
         try {
-            await bot.replyAlt(`/backup -r ${b.nome} -yes`);
+            await bot.replyAlt(`/backup -r ${b.name} -yes`);
             assert.equal(await countAlt('teste_nova'), 0, 'tabela que não existia no backup fica vazia');
-            assert.deepEqual((await bot.dbAll('SELECT body, teste_extra FROM messages')).map(m => [m.body, m.teste_extra]), [['velha', null]]);
+            assert.deepEqual((await bot.dbAll('SELECT body, extra_test FROM messages')).map(m => [m.body, m.extra_test]), [['velha', null]]);
         } finally {
             await bot.dbRun('DROP TABLE teste_nova');
-            await bot.dbRun('ALTER TABLE messages DROP COLUMN teste_extra');
+            await bot.dbRun('ALTER TABLE messages DROP COLUMN extra_test');
         }
     });
 
@@ -148,12 +148,12 @@ describe('/backup', () => {
         await createBackup('manual', Date.now() - 60_000);
         await createBackup();
 
-        const r = await bot.executar('/backup -s');
+        const r = await bot.execute('/backup -s');
         assert.equal(r[0].chatId, OWNER.jid);
         assert.ok(r[0].content instanceof MessageMedia);
         assert.match(r[0].content.filename, /^zapbot-\d{8}-\d{6}\.db\.gz$/);
         assert.equal(r[0].options.sendMediaAsDocument, true);
-        assert.equal(r[1].texto, '💾 Backup enviado no seu privado.');
+        assert.equal(r[1].text, '💾 Backup enviado no seu privado.');
 
         assert.match((await bot.replyAlt('/backup -rm 1'))[0], /🗑️ Backup removido:/);
         assert.equal((await listBackups()).length, 1);
@@ -176,11 +176,11 @@ describe('/backup', () => {
             assert.equal(m.from, 'ZapBot <bot@exemplo.com>');
             assert.match(m.subject, /^\[ZapBot\] 💾 Backup de /);
             assert.match(m.text, /Código antiphishing: Frase42/);
-            assert.deepEqual(m.attachments, [{ filename: `${b.nome}.db.gz`, path: b.arquivo }]);
+            assert.deepEqual(m.attachments, [{ filename: `${b.name}.db.gz`, path: b.file }]);
 
             await bot.replyAlt('/backup -s 2 -to email');
             assert.equal(emails[1].to, 'eu@exemplo.com');
-            assert.notEqual(emails[1].attachments[0].filename, `${b.nome}.db.gz`, 'o nº 2 é o mais antigo');
+            assert.notEqual(emails[1].attachments[0].filename, `${b.name}.db.gz`, 'o nº 2 é o mais antigo');
 
             // The old form: the emails straight in -s
             await bot.replyAlt('/backup -s 2 email');
@@ -188,15 +188,15 @@ describe('/backup', () => {
             assert.match((await bot.replyAlt('/backup -s fulano@'))[0], /❌ E-mail inválido: fulano@/);
             assert.match((await bot.replyAlt('/backup -s a@b.com -to email'))[0], /❌ Informe o destino só no -to/);
 
-            nodemailer.falhar = true;
-            assert.match((await bot.replyAlt('/backup -s a@b.com', { erroEsperado: true }))[0], /❌ Não consegui enviar o e-mail: SMTP fora do ar/);
+            nodemailer.fail = true;
+            assert.match((await bot.replyAlt('/backup -s a@b.com', { expectedError: true }))[0], /❌ Não consegui enviar o e-mail: SMTP fora do ar/);
         } finally {
-            nodemailer.falhar = false;
+            nodemailer.fail = false;
             for (const k of Object.keys(env)) delete process.env[k];
         }
 
         await createBackup();
-        assert.match((await bot.replyAlt('/backup -s a@b.com', { erroEsperado: true }))[0], /❌ Não consegui enviar o e-mail: SMTP não configurado/);
+        assert.match((await bot.replyAlt('/backup -s a@b.com', { expectedError: true }))[0], /❌ Não consegui enviar o e-mail: SMTP não configurado/);
     });
 
     test('-s -to outro chat: pede -yes (o banco tem as mensagens de todos os chats)', async () => {
@@ -205,16 +205,16 @@ describe('/backup', () => {
         const [notice] = await bot.replyAlt('/backup -s -to /Fulano/');
         assert.match(notice, /^⚠️ O backup tem o banco inteiro: .*\nPara enviar mesmo em 👤 Fulano, repita com -yes: \/backup -s -to Fulano -yes$/);
 
-        const r = await bot.executar('/backup -s 1 -to +5521911111111 -yes');
+        const r = await bot.execute('/backup -s 1 -to +5521911111111 -yes');
         assert.equal(r[0].chatId, bot.OTHERAlt.jid);
         assert.ok(r[0].content instanceof MessageMedia);
-        assert.equal(r[1].texto, '💾 Backup enviado em 👤 Fulano.');
+        assert.equal(r[1].text, '💾 Backup enviado em 👤 Fulano.');
 
         // For yourself it does not need -yes; -to without -send is an error
-        bot.createContact(OWNER.jid, OWNER.nome);
-        const eu = await bot.executar('/backup -s -to +5521900000000');
+        bot.createContact(OWNER.jid, OWNER.name);
+        const eu = await bot.execute('/backup -s -to +5521900000000');
         assert.equal(eu[0].chatId, OWNER.jid);
-        assert.equal(eu[1].texto, '💾 Backup enviado no seu privado.');
+        assert.equal(eu[1].text, '💾 Backup enviado no seu privado.');
         assert.match((await bot.replyAlt('/backup -to email'))[0], /❌ O -to é do -send/);
     });
 
@@ -226,19 +226,19 @@ describe('/backup', () => {
         const [notice] = await bot.replyAlt('/backup -s -to /Fulano/ -to /Grupo L200/ -to /Fulano/');
         assert.match(notice, /\nPara enviar mesmo em 👤 Fulano, 👥 Grupo sobre L200, repita com -yes: \/backup -s -to Fulano -to \/Grupo L200\/ -to Fulano -yes$/);
 
-        const r = await bot.executar('/backup -s -to Fulano -to /Grupo L200/ -yes');
+        const r = await bot.execute('/backup -s -to Fulano -to /Grupo L200/ -yes');
         assert.deepEqual(r.slice(0, 2).map(e => e.chatId), [bot.OTHERAlt.jid, L200]);
         assert.ok(r.slice(0, 2).every(e => e.content instanceof MessageMedia));
-        assert.equal(r[2].texto, '💾 Backup enviado em 👤 Fulano, 👥 Grupo sobre L200.');
+        assert.equal(r[2].text, '💾 Backup enviado em 👤 Fulano, 👥 Grupo sobre L200.');
 
         const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com', QRCODE_EMAIL_SMTP_TO: 'eu@exemplo.com' };
         Object.assign(process.env, env);
         try {
-            const m = await bot.executar('/backup -s -to email -to outro@x.com -to /Fulano/ -yes');
+            const m = await bot.execute('/backup -s -to email -to outro@x.com -to /Fulano/ -yes');
             assert.equal(emails.at(-1).to, 'eu@exemplo.com, outro@x.com');
-            assert.match(m[0].texto, /^📧 Backup de .* enviado para eu@exemplo\.com, outro@x\.com\.$/);
+            assert.match(m[0].text, /^📧 Backup de .* enviado para eu@exemplo\.com, outro@x\.com\.$/);
             assert.equal(m[1].chatId, bot.OTHERAlt.jid);
-            assert.equal(m[2].texto, '💾 Backup enviado em 👤 Fulano.');
+            assert.equal(m[2].text, '💾 Backup enviado em 👤 Fulano.');
         } finally {
             for (const k of Object.keys(env)) delete process.env[k];
         }
@@ -250,11 +250,11 @@ describe('/backup', () => {
             : send.call(bot.client, chatId, ...rest));
         try {
             const line = '/backup -s -to /Grupo L200/ -to Fulano -yes';
-            const f = await bot.executar(line, { erroEsperado: true });
-            assert.equal(f[0].texto, '❌ Não consegui enviar o backup em 👥 Grupo sobre L200: fora do ar');
+            const f = await bot.execute(line, { expectedError: true });
+            assert.equal(f[0].text, '❌ Não consegui enviar o backup em 👥 Grupo sobre L200: fora do ar');
             assert.equal(f[1].chatId, bot.OTHERAlt.jid);
             assert.ok(f[1].content instanceof MessageMedia);
-            assert.equal(f[2].texto, '💾 Backup enviado em 👤 Fulano.');
+            assert.equal(f[2].text, '💾 Backup enviado em 👤 Fulano.');
         } finally {
             bot.client.sendMessage = send;
         }
@@ -276,7 +276,7 @@ describe('backup diário', () => {
         };
         Object.assign(process.env, env);
         t.after(() => {
-            nodemailer.falhar = false;
+            nodemailer.fail = false;
             for (const key of Object.keys(env)) delete process.env[key];
         });
     }
@@ -286,26 +286,26 @@ describe('backup diário', () => {
         assert.equal(await checkBackupDaily(day(1, 2)), null, 'antes das 3h');
 
         const b = await checkBackupDaily(day(1, 3));
-        assert.equal(b.motivo, 'automático');
+        assert.equal(b.reason, 'automático');
         assert.equal(await checkBackupDaily(day(1, 15)), null, 'já feito hoje');
         assert.ok(await checkBackupDaily(day(2, 9)), 'outro dia (bot fora do ar às 3h: sai quando volta)');
 
         await bot.setSetting('backup.enabled', false);
         assert.equal(await checkBackupDaily(day(3, 9)), null);
-        assert.deepEqual(bot.client.enviadas, []);
+        assert.deepEqual(bot.client.sent, []);
         assert.deepEqual(emails, []);
     });
 
     test('backup.to email: anexo do arquivo local, uma vez por dia', async (t) => {
         smtp(t);
         await bot.replyAlt('/set backup.to email');
-        bot.client.enviadas.length = 0;
+        bot.client.sent.length = 0;
         const b = await checkBackupDaily(day(1, 3));
-        assert.ok(fs.existsSync(b.arquivo));
+        assert.ok(fs.existsSync(b.file));
         assert.equal(emails.length, 1);
         assert.equal(emails[0].to, 'eu@exemplo.com');
         assert.deepEqual(emails[0].attachments, [{
-            filename: `${b.nome}.db.gz`, path: b.arquivo
+            filename: `${b.name}.db.gz`, path: b.file
         }]);
         assert.equal(await checkBackupDaily(day(1, 5)), null);
         assert.equal(emails.length, 1);
@@ -332,16 +332,16 @@ describe('backup diário', () => {
         ];
         for (const [i, [valueAlt, id]] of destinations.entries()) {
             await bot.replyAlt(`/set backup.to ${valueAlt}`);
-            bot.client.enviadas.length = 0;
+            bot.client.sent.length = 0;
             const b = await checkBackupDaily(day(i + 1, 3));
-            const [sending] = bot.client.enviadas;
-            assert.equal(bot.client.enviadas.length, 1);
+            const [sending] = bot.client.sent;
+            assert.equal(bot.client.sent.length, 1);
             assert.equal(sending.chatId, id);
             assert.ok(sending.content instanceof MessageMedia);
-            assert.equal(sending.content.data, fs.readFileSync(b.arquivo).toString('base64'));
+            assert.equal(sending.content.data, fs.readFileSync(b.file).toString('base64'));
             assert.equal(sending.options.sendMediaAsDocument, true);
             assert.match(sending.options.caption, /\(automático\)/);
-            assert.ok(fs.existsSync(b.arquivo));
+            assert.ok(fs.existsSync(b.file));
         }
     });
 
@@ -350,19 +350,19 @@ describe('backup diário', () => {
         const valueAlt = '-to email -to eu@exemplo.com -to /Família/ -to /Fulano/ -to Fulano';
         await bot.replyAlt(`/set backup.to "${valueAlt}"`);
         assert.equal(bot.getSetting('backup.to'), valueAlt);
-        bot.client.enviadas.length = 0;
+        bot.client.sent.length = 0;
         const b = await checkBackupDaily(day(1, 3));
         assert.equal(emails.length, 1);
         assert.equal(emails[0].to, 'eu@exemplo.com');
-        assert.deepEqual(bot.client.enviadas.map(e => e.chatId), [bot.GROUP, bot.OTHERAlt.jid]);
-        assert.ok(fs.existsSync(b.arquivo));
+        assert.deepEqual(bot.client.sent.map(e => e.chatId), [bot.GROUP, bot.OTHERAlt.jid]);
+        assert.ok(fs.existsSync(b.file));
         assert.equal((await listBackups()).length, 1);
         await bot.replyAlt('/set backup.to ""');
         assert.equal(bot.getSetting('backup.to'), '');
-        const sendings = bot.client.enviadas.length;
+        const sendings = bot.client.sent.length;
         await checkBackupDaily(day(2, 3));
         assert.equal(emails.length, 1);
-        assert.equal(bot.client.enviadas.length, sendings);
+        assert.equal(bot.client.sent.length, sendings);
     });
 
     test('destino ausente ou ambíguo: preserva o backup e não escolhe alguém sozinho', async () => {
@@ -371,8 +371,8 @@ describe('backup diário', () => {
             await bot.setSetting('backup.to', valueAlt);
             const beforeAlt = bot.logs.length;
             const b = await checkBackupDaily(day(i + 1, 3));
-            assert.ok(fs.existsSync(b.arquivo));
-            assert.deepEqual(bot.client.enviadas, []);
+            assert.ok(fs.existsSync(b.file));
+            assert.deepEqual(bot.client.sent, []);
             assert.match(bot.errorsInLog(beforeAlt).join('\n'), /Sending the daily backup failed/);
             assert.equal(await checkBackupDaily(day(i + 1, 4)), null);
         }
@@ -387,20 +387,20 @@ describe('backup diário', () => {
         await bot.setSetting('backup.to', '-to /Família/ -to Fulano');
         const beforeAlt = bot.logs.length;
         const b = await checkBackupDaily(day(1, 3));
-        assert.ok(fs.existsSync(b.arquivo));
-        assert.equal(bot.client.enviadas[0].chatId, bot.OTHERAlt.jid);
+        assert.ok(fs.existsSync(b.file));
+        assert.equal(bot.client.sent[0].chatId, bot.OTHERAlt.jid);
         assert.match(bot.errorsInLog(beforeAlt).join('\n'), /Família: fora do ar/);
         assert.equal(await checkBackupDaily(day(1, 4)), null);
-        assert.equal(bot.client.enviadas.length, 1);
+        assert.equal(bot.client.sent.length, 1);
     });
 
     test('SMTP falha: mantém o backup e registra o erro', async (t) => {
         smtp(t);
-        nodemailer.falhar = true;
+        nodemailer.fail = true;
         await bot.setSetting('backup.to', 'email');
         const beforeAlt = bot.logs.length;
         const b = await checkBackupDaily(day(1, 3));
-        assert.ok(fs.existsSync(b.arquivo));
+        assert.ok(fs.existsSync(b.file));
         assert.match(bot.errorsInLog(beforeAlt).join('\n'), /e-mail: SMTP fora do ar/);
         assert.equal((await listBackups()).length, 1);
     });
@@ -411,7 +411,7 @@ describe('backup diário', () => {
         await createBackup('antes de restaurar', day(1, 2));
         await bot.setSetting('backup.enabled', false);
         assert.equal(await checkBackupDaily(day(1, 3)), null);
-        assert.deepEqual(bot.client.enviadas, []);
+        assert.deepEqual(bot.client.sent, []);
         assert.deepEqual(emails, []);
     });
 
@@ -421,8 +421,8 @@ describe('backup diário', () => {
         for (const d of [1, 2, 3, 4]) await checkBackupDaily(day(d, 4));
 
         const list = await listBackups();
-        assert.deepEqual(list.map(b => b.motivo), ['automático', 'automático', 'manual']);
-        assert.equal(new Date(list[0].criadoEm).getTime(), day(4, 4));
+        assert.deepEqual(list.map(b => b.reason), ['automático', 'automático', 'manual']);
+        assert.equal(new Date(list[0].createdAt).getTime(), day(4, 4));
     });
 
     test('falha: fica no log', async () => {

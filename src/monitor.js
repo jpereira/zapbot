@@ -5,7 +5,7 @@
 const crypto = require('node:crypto');
 const { messageToSelf } = require('./client');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
-const { estado: stateAlt } = require('./state');
+const { state: stateAlt } = require('./state');
 const { getSetting } = require('./settings');
 const { language, t } = require('./i18n');
 const { limitHistoryMonitor } = require('./monitorHistory');
@@ -35,7 +35,7 @@ function waitBetweenContacts() {
     });
 }
 
-const active = () => stateAlt.pronto && !stateAlt.reiniciando &&
+const active = () => stateAlt.ready && !stateAlt.restarting &&
     !getSetting('bot.paused') && getSetting('monitor.enabled') &&
     !getSetting('commands.disabled').includes('/monitor');
 
@@ -48,17 +48,17 @@ async function registerMonitored(contactAlt) {
     await dbReady;
     const existing = await dbGet('SELECT * FROM monitor_contacts WHERE contact_id = ?',
         [contactAlt.id]);
-    if (existing) return { existente: existing };
+    if (existing) return { existing };
     const r = await dbRun(`INSERT OR IGNORE INTO monitor_contacts
         (contact_id, contact_name, created_at)
         SELECT ?, ?, ? WHERE (SELECT COUNT(*) FROM monitor_contacts) < ?`,
-    [contactAlt.id, contactAlt.nome, Date.now(), getSetting('monitor.max')]);
+    [contactAlt.id, contactAlt.name, Date.now(), getSetting('monitor.max')]);
     if (!r.changes) {
         const repeated = await dbGet('SELECT * FROM monitor_contacts WHERE contact_id = ?',
             [contactAlt.id]);
-        return repeated ? { existente: repeated } : { limite: true };
+        return repeated ? { existing: repeated } : { limit: true };
     }
-    return { contato: await dbGet('SELECT * FROM monitor_contacts WHERE id = ?', [r.lastID]) };
+    return { contact: await dbGet('SELECT * FROM monitor_contacts WHERE id = ?', [r.lastID]) };
 }
 
 async function removeMonitored(id) {
@@ -145,17 +145,17 @@ async function checkMonitor() {
                 const p = dataAlt.presenceData ?? {};
                 const online = p.hasData === true && p.chatstate?.deny !== true
                     ? (p.isOnline === true ? 1 : p.isOnline === false ? 0 : null) : null;
-                const salvo = await dbGet('SELECT * FROM monitor_contacts WHERE id = ?',
+                const saved = await dbGet('SELECT * FROM monitor_contacts WHERE id = ?',
                     [contactAlt.id]);
                 const resultAlt = await dbRun(`UPDATE monitor_contacts
                     SET online_state = COALESCE(?, online_state) WHERE id = ?`,
                 [online, contactAlt.id]);
                 if (active() && current === generation && resultAlt.changes &&
-                    salvo?.alert_enabled && online === 1 &&
-                    salvo.online_state !== 1) {
+                    saved?.alert_enabled && online === 1 &&
+                    saved.online_state !== 1) {
                     const when = new Date(at).toLocaleString(language() === 'pt_BR' ? 'pt-BR' : 'en-US',
                         { timeZone: 'America/Sao_Paulo' });
-                    await messageToSelf(t('monitor.alert.fired', { name: salvo.contact_name, when: when }));
+                    await messageToSelf(t('monitor.alert.fired', { name: saved.contact_name, when: when }));
                 }
                 await dbRun(`UPDATE monitor_contacts SET last_checked_at = ?, last_status = ?,
                     last_seen = CASE WHEN ? IS NULL THEN last_seen

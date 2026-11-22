@@ -9,7 +9,7 @@ const sharp = require('sharp');
 const { MessageMedia } = require('whatsapp-web.js');
 const { client } = require('./client');
 const { NOTES_DIR } = require('./constants');
-const { estado: stateAlt } = require('./state');
+const { state: stateAlt } = require('./state');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const {
     destinationColumns, describeDestinations, lineDestination, destinationsSaved, sendToDestinations, extractDestinations,
@@ -28,7 +28,7 @@ const packageJson = require('../package.json');
  * /notes
  * /notes | -list | -l [#tag...]       → lists the notes, with the ID, grouped by #tag
  * /notes #tag                         → only those of that tag (the same as -l #tag)
- *   -search | -s [#tag...] <texto|/regex/flags>
+ *   -search | -s [#tag...] <text|/regex/flags>
  * → only those that match (text case and accent insensitive;
  * the same -q as /show and /watch); also matches the #tag
  * -update | -u <id> [#tag] <text>    → replaces the text (and the tag, if one comes) of the note
@@ -36,13 +36,13 @@ const packageJson = require('../package.json');
  * -desc | -d #tag [<text>]           → tag description (without text, shows it; -d #tag -rm, deletes it)
  * -view | -v <id...|#tag...> [-to ...] → shows the note with the image (text, if it has none)
  * -export | -e [#tag...]              → sends the notes (or only those of the tags) in a PDF, with the images
- *   -list | #tag | -export ... -to <destino>...
+ *   -list | #tag | -export ... -to <destination>...
  * → the list (or the PDF) goes to the destinations, as in the other commands
  * /notes #tag <text>                 → notes (the same as -add, when it does not start with "-"); the #tag is required
  * (with an image, or in reply to one) /notes #tag [<text>] → saves the media in NOTES_DIR
  * (in reply to a message) /notes #tag | -add #tag [-alert ...]
  * → saves the replied message's text, with the ↩️ in front
- *   -add | -a #tag <texto>            → anota
+ *   -add | -a #tag <text>            → anota
  * -add <text> -alert <when> [-to <destination>]...
  * → saves the note and notifies at the date/time (-to works as in the other -alert)
  * -rm | -r <id...|#tag...|all>       → removes (-r 1 2 3, -r 1,2,3, -r #casa or all)
@@ -68,10 +68,10 @@ const withoutTag = () => t('notes.noTag');
 const WITHOUT_PREVIEW = { linkPreview: false };  // lists do not show a link thumbnail
 const readTag = (t) => t.replace(/^#/, '').toLowerCase();
 
-// "#casa Lembrar do pão" → { tag: 'casa', texto: 'Lembrar do pão' } (the tag only counts at the start)
+// "#casa Lembrar do pão" → { tag: 'casa', text: 'Lembrar do pão' } (the tag only counts at the start)
 function separateTag(textAlt) {
     const m = textAlt.match(/^#([^\s#]+)(?:\s+([\s\S]*))?$/);
-    return m ? { tag: readTag(m[1]), texto: (m[2] ?? '').trim() } : { tag: null, texto: textAlt };
+    return m ? { tag: readTag(m[1]), text: (m[2] ?? '').trim() } : { tag: null, text: textAlt };
 }
 
 // A partial tag works: #idei finds #ideias (the exact one wins; otherwise starts with; otherwise contains).
@@ -114,8 +114,8 @@ function textParts(textAlt) {
     const [title = '', ...rest] = body.split('\n');
     return {
         // A *bold* that already came in the text does not double
-        titulo: title.trim().replace(/^\*(.+)\*$/, '$1'),
-        corpo: rest.join('\n').trim(),
+        title: title.trim().replace(/^\*(.+)\*$/, '$1'),
+        body: rest.join('\n').trim(),
         links: [...new Set(links)]
     };
 }
@@ -125,7 +125,7 @@ function textParts(textAlt) {
  * stay at the end, under "🔗 Links". plain: without the *bold* (``` block and email).
  */
 function formatText(textAlt, plan = false) {
-    const { titulo: title, corpo: body, links } = textParts(textAlt);
+    const { title, body, links } = textParts(textAlt);
     return [title && (plan ? title : `*${title}*`), body, links.length && `🔗 Links\n${links.map(l => `• ${l}`).join('\n')}`]
         .filter(Boolean).join('\n\n');
 }
@@ -147,16 +147,16 @@ function noteLine(n, plan = false, position = 0) {
     const body = [formatText(n.text, plan), n.media_path && mediaLabel(n, plan)].filter(Boolean).join('\n');
     // plain: inside the ``` block the *bold* and _italic_ appear as they are
     // With position (list): "1. ..." at the start and the id in the footer, "🕐 date, #id"
-    const ini = position ? `${position}.` : `#${n.id}`;
+    const marker = position ? `${position}.` : `#${n.id}`;
     const end = position ? `${dateShort(n.created_at)}, #${n.id}` : dateShort(n.created_at);
-    return plan ? `${ini} ${indent(body)}${alert}\n   🕐 ${end}`
-        : `${ini} ${body}${alert.replace(/\n {3}/, '\n')}\n🕐 _${end}_`;
+    return plan ? `${marker} ${indent(body)}${alert}\n   🕐 ${end}`
+        : `${marker} ${body}${alert.replace(/\n {3}/, '\n')}\n🕐 _${end}_`;
 }
 
 // The ids of -rm / -alert -rm: 1 2 3, 1,2,3 or all. Does any not exist? None is touched
 function readIds(textAlt, notes) {
     const partsAlt = textAlt.toLowerCase().split(/[\s,]+/).filter(Boolean);
-    if (partsAlt.includes('all')) return { todos: true, ids: notes.map(n => n.id) };
+    if (partsAlt.includes('all')) return { all: true, ids: notes.map(n => n.id) };
 
     const tags = partsAlt.filter(p => p.startsWith('#')).map(readTag);
     const other = [...new Set(partsAlt.filter(p => !p.startsWith('#')))].sort((a, b) => a - b);
@@ -166,12 +166,12 @@ function readIds(textAlt, notes) {
     ];
     const ids = new Set([...other.filter(i => /^\d+$/.test(i)).map(Number),
         ...notes.filter(n => tags.includes(n.tag)).map(n => n.id)]);
-    return { ids: [...ids].sort((a, b) => a - b), faltando: missing };
+    return { ids: [...ids].sort((a, b) => a - b), missing };
 }
 
 async function removeNotes(msg, textIds, soAlert) {
     const notes = await listNotes();
-    const { ids, faltando: missing, todos: allAlt2 } = readIds(textIds, notes);
+    const { ids, missing, all: allAlt2 } = readIds(textIds, notes);
     const cmd = soAlert ? '/notes -alert -rm' : '/notes -rm';
 
     if (!allAlt2 && (!ids.length || missing.length)) {
@@ -202,17 +202,17 @@ function alertReadData(textAlt) {
     const q = words.length ? readWhen(words) : null;
     const nowAlt = Date.now();
 
-    if (!q || q.usadas !== words.length) {
-        return { erro: t('notes.when.invalid', { text: textAlt }) };
+    if (!q || q.used !== words.length) {
+        return { error: t('notes.when.invalid', { text: textAlt }) };
     }
-    if (q.ms <= nowAlt) return { erro: t('notes.when.past', { when: fmtWhen(q.ms) }) };
-    if (q.ms > nowAlt + MAX_DAYS * 86400_000) return { erro: t('notes.when.tooFar', { days: MAX_DAYS }) };
+    if (q.ms <= nowAlt) return { error: t('notes.when.past', { when: fmtWhen(q.ms) }) };
+    if (q.ms > nowAlt + MAX_DAYS * 86400_000) return { error: t('notes.when.tooFar', { days: MAX_DAYS }) };
     return { ms: q.ms };
 }
 
 async function commandDestinations(msg, destinationsText, withDestination) {
     if (!withDestination) return [];
-    return resolverDestinations(msg, destinationsText, { aceitaEmail: true });
+    return resolverDestinations(msg, destinationsText, { acceptsEmail: true });
 }
 
 const MARK_REPLY = '↩️';
@@ -245,10 +245,10 @@ function mediaLabel(n, plan = false) {
 // Downloads and stores the media in NOTES_DIR: { path, mime }, or { error } to reply with
 async function saveMedia(origin) {
     const media = await origin.downloadMedia().catch(() => null);
-    if (!media?.data) return { erro: t('notes.media.downloadFail') };
+    if (!media?.data) return { error: t('notes.media.downloadFail') };
 
     const mime = String(media.mimetype ?? 'application/octet-stream').split(';')[0].trim().toLowerCase();
-    // The document name, if it came (without a path and without odd characters); otherwise, "arquivo.<ext>"
+    // The document name, if it came (without a path and without odd characters); otherwise, "file.<ext>"
     const ext = EXTENSIONS[mime] ?? ((mime.split('/')[1] ?? '').replace(/[^a-z0-9]/g, '') || 'bin');
     const nameAlt = path.basename(String(media.filename ?? '')).replace(/[^\p{L}\p{N}._ -]/gu, '_').trim();
     const fileAlt = path.join(NOTES_DIR,
@@ -262,11 +262,11 @@ const withBreaks = (t) => t.replace(/(?<!\\)\\n/g, '\n').replace(/\\\\n/g, '\\n'
 
 async function addAlt(msg, textTyped, quotedMsg) {
     const rest = withBreaks(textTyped);
-    const { destinos: destinationsText, informado: withDestination, resto: withoutDestination } = extractDestinations(rest);
+    const { destinations: destinationsText, given: withDestination, rest: withoutDestination } = extractDestinations(rest);
     const m = withoutDestination.match(ALERT);
     const separated = separateTag((m ? withoutDestination.slice(0, m.index) : withoutDestination).trim());
     const { tag } = separated;
-    let textAlt = unescape(separated.texto);
+    let textAlt = unescape(separated.text);
 
     // The syntax is always /notes #tag <text>: without a tag it does not save
     if (!tag) {
@@ -300,8 +300,8 @@ async function addAlt(msg, textTyped, quotedMsg) {
 
     if (m) {
         const when = alertReadData(m[2].trim());
-        if (when.erro) {
-            await msg.reply(when.erro);
+        if (when.error) {
+            await msg.reply(when.error);
             return;
         }
         alert = when.ms;
@@ -312,8 +312,8 @@ async function addAlt(msg, textTyped, quotedMsg) {
     let image = null;
     if (origin) {
         image = await saveMedia(origin);
-        if (image.erro) {
-            await msg.reply(image.erro);
+        if (image.error) {
+            await msg.reply(image.error);
             return;
         }
     }
@@ -347,7 +347,7 @@ async function update(msg, rest, quotedMsg) {
         return;
     }
 
-    let { tag, texto: textAlt } = separateTag(withBreaks(m[2] ?? '').trim());
+    let { tag, text: textAlt } = separateTag(withBreaks(m[2] ?? '').trim());
     textAlt = unescape(textAlt);
     if (!textAlt && quotedMsg?.body?.trim()) textAlt = `${MARK_REPLY} ${quotedMsg.body.trim()}`;
     if (!textAlt) {
@@ -361,7 +361,7 @@ async function update(msg, rest, quotedMsg) {
 }
 
 async function alertAlt(msg, rest) {
-    const { destinos: destinationsText, informado: withDestination, resto: withoutDestination } = extractDestinations(rest);
+    const { destinations: destinationsText, given: withDestination, rest: withoutDestination } = extractDestinations(rest);
     const textAlt = withoutDestination.trim();
 
     if (/^-(rm|r)(\s|$)/.test(textAlt)) {
@@ -416,8 +416,8 @@ async function alertAlt(msg, rest) {
     }
 
     const when = alertReadData((byTag ? whenText : m[2]).trim());
-    if (when.erro) {
-        await msg.reply(when.erro);
+    if (when.error) {
+        await msg.reply(when.error);
         return;
     }
 
@@ -448,8 +448,8 @@ const tagsDescriptions = async () => new Map((await dbAll('SELECT tag, descripti
 // How many have 🖼️ media, ⏰ alert and 🔗 link: "· 🖼️ 2 · ⏰ 1 · 🔗 98" (only what has)
 function notesSummary(notes) {
     const account = [['🖼️', n => n.media_path], ['⏰', n => n.alert_at], ['🔗', n => textParts(n.text).links.length]]
-        .map(([iconAlt, has]) => [iconAlt, notes.filter(has).length]).filter(([, qtd]) => qtd);
-    return account.map(([iconAlt, qtd]) => ` · ${iconAlt} ${qtd}`).join('');
+        .map(([iconAlt, has]) => [iconAlt, notes.filter(has).length]).filter(([, qty]) => qty);
+    return account.map(([iconAlt, qty]) => ` · ${iconAlt} ${qty}`).join('');
 }
 
 // One line per note, per day: "#5 Title 🔗 · 19:15" (the media, the alert and the links become icons)
@@ -462,7 +462,7 @@ function linesCompact(notes) {
             dayCurrent = data;
             outputAlt.push(`${outputAlt.length ? '\n' : ''}📆 ${data}`);
         }
-        const { titulo: title, links } = textParts(n.text);
+        const { title, links } = textParts(n.text);
         const base = title || links[0]?.replace(/^https?:\/\/(www\.)?/, '') || (n.media_path ? mediaLabel(n, true).replace(/^\S+ /, '') : '');
         const marks = [n.media_path && '🖼️', n.alert_at && '⏰', links.length && '🔗'].filter(Boolean).join(' ');
         outputAlt.push(`#${n.id} ${summarizeText(base, 60)}${marks && ` ${marks}`} · ${hour}`);
@@ -474,7 +474,7 @@ function linesCompact(notes) {
  * One text per tag (each goes in a message). plain: inside the ``` block; clean: without the block,
  * with the summary (🖼️ ⏰ 🔗) in the tag header; compact: one line per note, grouped by day.
  */
-function groupPerTag(notes, descriptions = new Map(), { plano: plan = true, limpo: cleanAlt = false, compacto: compact = false } = {}) {
+function groupPerTag(notes, descriptions = new Map(), { plain: plan = true, clean: cleanAlt = false, compact = false } = {}) {
     const groups = new Map();
     for (const n of notes) groups.set(n.tag ?? '', [...(groups.get(n.tag ?? '') ?? []), n]);
 
@@ -494,12 +494,12 @@ function groupPerTag(notes, descriptions = new Map(), { plano: plan = true, limp
 // The -to destinations of a list/export: undefined without -to, null if it did not resolve (already replied)
 async function sendingDestinations(msg, destinationsText, withDestination) {
     if (!withDestination) return undefined;
-    return resolverDestinations(msg, destinationsText, { aceitaEmail: true });
+    return resolverDestinations(msg, destinationsText, { acceptsEmail: true });
 }
 
 
 // Replies in the chat or, with -to, sends to the destinations (and replies that it sent).
-// `texto` may be a list: each item goes in a message, and the tip only after the last
+// `text` may be a list: each item goes in a message, and the tip only after the last
 async function deliverText(msg, destinations, textAlt, subject, tip = '', withoutBlock = false) {
     // Each listing goes in a ``` block (monospaced), except the clean one; the tip stays outside
     const partsAlt = [].concat(textAlt).map(t => (withoutBlock ? t : '```\n' + t + '\n```'));
@@ -510,7 +510,7 @@ async function deliverText(msg, destinations, textAlt, subject, tip = '', withou
         return;
     }
     try {
-        for (const part of partsAlt) await sendToDestinations(destinations, part, { assunto: subject, opcoes: WITHOUT_PREVIEW });
+        for (const part of partsAlt) await sendToDestinations(destinations, part, { subject, options: WITHOUT_PREVIEW });
         await msg.reply(t('notes.sentTo', { where: describeDestinations(destinations) }));
     } catch (err) {
         await msg.reply(t('notes.sendFail', { error: err.message }));
@@ -522,27 +522,27 @@ function readSearch(textAlt) {
     const m = textAlt.trim().match(/^((?:#[^\s#]+\s+)*)([\s\S]*)$/);
     return {
         tags: m[1].split(/\s+/).filter(Boolean).map(readTag),
-        busca: m[2].trim().replace(/^"([\s\S]*)"$/, '$1')
+        search: m[2].trim().replace(/^"([\s\S]*)"$/, '$1')
     };
 }
 
-// "#pt -c" → { texto: '#pt', compacto: true }
+// "#pt -c" → { text: '#pt', compact: true }
 function removeCompact(textAlt) {
     const m = String(textAlt).match(/^([\s\S]*?)\s*-(?:c|compact)\s*$/i);
-    return m ? { texto: m[1], compacto: true } : { texto: textAlt, compacto: false };
+    return m ? { text: m[1], compact: true } : { text: textAlt, compact: false };
 }
 
 async function listAlt(msg, filter = '', withSearch = false, compact = false) {
-    const { destinos: destinationsText, informado: withDestination, resto: restWithC } = extractDestinations(filter);
+    const { destinations: destinationsText, given: withDestination, rest: restWithC } = extractDestinations(filter);
     // -c|-compact at the end: one line per note
-    const { texto: rest, compacto: askedCompact } = removeCompact(restWithC);
+    const { text: rest, compact: askedCompact } = removeCompact(restWithC);
     compact ||= askedCompact;
     let tags = rest.trim() ? soTags(rest) : [];
     let search = '';
     let test = null;
 
     if (withSearch) {
-        ({ tags, busca: search } = readSearch(rest));
+        ({ tags, search } = readSearch(rest));
         if (!search) {
             await msg.reply(t('notes.list.searchUsage'));
             return;
@@ -582,7 +582,7 @@ async function listAlt(msg, filter = '', withSearch = false, compact = false) {
     // One message per tag; the title (with the total) goes at the start of the first
     const clean = tags.length === 1 || compact;
     const partsAlt = groupPerTag(notes, await tagsDescriptions(),
-        { plano: !clean, limpo: tags.length === 1, compacto: compact });
+        { plain: !clean, clean: tags.length === 1, compact });
     partsAlt[0] = clean ? `${t('notes.list.titleClean', { found: foundAlt2, count: tags.length === 1 ? '' : ` (${notes.length})` })}\n\n${partsAlt[0]}`
         : `${t('notes.list.titleFull', { tags: label, found: foundAlt2, total: notes.length })}\n\n${partsAlt[0]}`;
     await deliverText(msg, destinations, partsAlt, t('notes.subject.list', { tags: label, found: foundAlt2 }),
@@ -590,7 +590,7 @@ async function listAlt(msg, filter = '', withSearch = false, compact = false) {
 }
 
 // -move: renames the tag in all notes (if the new one already exists, they merge)
-async function moverTag(msg, textAlt) {
+async function moveTag(msg, textAlt) {
     const m = textAlt.trim().match(/^#([^\s#]+)\s+#([^\s#]+)$/);
     if (!m) {
         await msg.reply(t('notes.move.usage'));
@@ -654,7 +654,7 @@ async function describeTag(msg, textAlt) {
 
 // -view: sends each note (the image with the text as the caption; without an image, just the text)
 async function seeNotes(msg, filter) {
-    const { destinos: destinationsText, informado: withDestination, resto: rest } = extractDestinations(filter);
+    const { destinations: destinationsText, given: withDestination, rest } = extractDestinations(filter);
     if (!rest.trim()) {
         await msg.reply(t('notes.view.usage'));
         return;
@@ -713,9 +713,9 @@ async function seeNotes(msg, filter) {
         const emails = [...new Set(destinations.filter(d => d.email).flatMap(d => d.email.split(/\s*,\s*/)))];
         if (emails.length) {
             await sendEmail({
-                para: emails, assunto: t('notes.subject.note', { id: n.id }),
-                texto: [withoutMarks(header(n)), n.text && formatText(n.text, true)].filter(Boolean).join('\n'),
-                anexos: media ? [{ filename: nameOriginal(n.media_path), contentType: n.media_mime,
+                para: emails, subject: t('notes.subject.note', { id: n.id }),
+                text: [withoutMarks(header(n)), n.text && formatText(n.text, true)].filter(Boolean).join('\n'),
+                attachments: media ? [{ filename: nameOriginal(n.media_path), contentType: n.media_mime,
                     ...(withBorder ? { content: withBorder } : { path: n.media_path }) }] : []
             }).catch(err => failures.push(t('notes.failEmail', { error: err.message })));
         }
@@ -779,15 +779,15 @@ async function imageForPdf(fileAlt) {
             .flatten({ background: '#ffffff' }).extend({ top: 2, bottom: 2, left: 2, right: 2, background: '#000000' })
             .toColourspace('srgb').jpeg({ quality: 80 })
             .toBuffer({ resolveWithObject: true });
-        return { jpeg: data, largura: info.width, altura: info.height };
+        return { jpeg: data, width: info.width, height: info.height };
     } catch (err) {
         printError('/notes: image left out of the PDF:', err.message);
         return null;
     }
 }
 
-async function exportar(msg, filter = '') {
-    const { destinos: destinationsText, informado: withDestination, resto: rest } = extractDestinations(filter);
+async function exportNotes(msg, filter = '') {
+    const { destinations: destinationsText, given: withDestination, rest } = extractDestinations(filter);
     let tags = rest.trim() ? soTags(rest) : [];
     if (!tags) {
         await msg.reply(t('notes.export.usage'));
@@ -813,8 +813,8 @@ async function exportar(msg, filter = '') {
     const keys = [...groups.keys()].sort((a, b) => (a === '') - (b === '') || a.localeCompare(b));
 
     const blocks = [{
-        tipo: 'texto', icone: 'nota',
-        texto: `${countAlt('notes.countNotes', notes.length)}${label ? t('notes.inTags', { tags: label }) : ''}`
+        type: 'text', icon: 'note',
+        text: `${countAlt('notes.countNotes', notes.length)}${label ? t('notes.inTags', { tags: label }) : ''}`
     }];
 
     const descriptions = await tagsDescriptions();
@@ -825,43 +825,43 @@ async function exportar(msg, filter = '') {
             // "#tag (n)" with the summary as text (the PDF has no emoji) and the tag description below
             const summary = [[items.filter(n => n.media_path).length, t('notes.pdf.withMedia')], [items.filter(n => n.alert_at).length, t('notes.pdf.withAlert')],
                 [items.filter(n => textParts(n.text).links.length).length, t('notes.pdf.withLink')]]
-                .filter(([qtd]) => qtd).map(([qtd, labelItem]) => `${qtd} ${labelItem}`).join(', ');
-            blocks.push({ tipo: 'titulo', icone: 'tag', texto: `${k ? `#${k}` : withoutTag()} (${items.length})${summary ? ` · ${summary}` : ''}` });
-            if (descriptions.get(k)) blocks.push({ tipo: 'texto', texto: descriptions.get(k) });
-            blocks.push({ tipo: 'espaco', altura: 6 });
+                .filter(([qty]) => qty).map(([qty, labelItem]) => `${qty} ${labelItem}`).join(', ');
+            blocks.push({ type: 'title', icon: 'tag', text: `${k ? `#${k}` : withoutTag()} (${items.length})${summary ? ` · ${summary}` : ''}` });
+            if (descriptions.get(k)) blocks.push({ type: 'text', text: descriptions.get(k) });
+            blocks.push({ type: 'space', height: 6 });
         }
         for (const [pos, n] of items.entries()) {
             const image = n.media_path && isImage(n.media_mime) ? await imageForPdf(n.media_path) : null;
             const alert = (n.media_path && !image
                 ? (isImage(n.media_mime) ? t('notes.pdf.imageNotIncluded') : t('notes.pdf.fileNotIncluded', { name: nameOriginal(n.media_path) })) : '') +
                 (n.alert_at ? t('notes.pdf.alert', { when: fmtWhen(n.alert_at) }) : '');
-            const { titulo: title, corpo: body, links } = textParts(n.text.replace(MARK_REPLY, t('notes.pdf.replyMark')));
-            blocks.push({ tipo: title ? 'negrito' : 'texto', texto: `${pos + 1}.  ${title}`, recuo: 0 });
+            const { title, body, links } = textParts(n.text.replace(MARK_REPLY, t('notes.pdf.replyMark')));
+            blocks.push({ type: title ? 'bold' : 'text', text: `${pos + 1}.  ${title}`, indent: 0 });
             // The title comes first and the image after it, with a line break before
             if (image) {
-                blocks.push({ tipo: 'espaco', altura: 6 });
-                blocks.push({ tipo: 'imagem', ...image });
+                blocks.push({ type: 'space', height: 6 });
+                blocks.push({ type: 'image', ...image });
             }
             if (body) {
-                blocks.push({ tipo: 'espaco', altura: 6 });
-                blocks.push({ tipo: 'texto', texto: body });
+                blocks.push({ type: 'space', height: 6 });
+                blocks.push({ type: 'text', text: body });
             }
             if (links.length) {
-                blocks.push({ tipo: 'espaco', altura: 6 });
-                blocks.push({ tipo: 'negrito', icone: 'link', texto: 'Links' });
-                blocks.push({ tipo: 'texto', texto: links.map(l => `• ${l}`).join('\n') });
+                blocks.push({ type: 'space', height: 6 });
+                blocks.push({ type: 'bold', icon: 'link', text: 'Links' });
+                blocks.push({ type: 'text', text: links.map(l => `• ${l}`).join('\n') });
             }
-            blocks.push({ tipo: 'espaco', altura: 3 });
-            blocks.push({ tipo: 'meta', icone: 'relogio', texto: `${dateShort(n.created_at)}, #${n.id}${alert}` });
-            blocks.push({ tipo: 'espaco', altura: 8 });
+            blocks.push({ type: 'space', height: 3 });
+            blocks.push({ type: 'meta', icon: 'clock', text: `${dateShort(n.created_at)}, #${n.id}${alert}` });
+            blocks.push({ type: 'space', height: 8 });
         }
     }
 
     const pdf = generatePdf({
-        titulo: t('notes.pdf.title', { tags: label }),
-        direita: formatData(nowAlt),
-        rodape: t('notes.pdf.footer', { version: packageJson.version, host: os.hostname(), date: formatData(nowAlt) }),
-        blocos: blocks
+        title: t('notes.pdf.title', { tags: label }),
+        right: formatData(nowAlt),
+        footer: t('notes.pdf.footer', { version: packageJson.version, host: os.hostname(), date: formatData(nowAlt) }),
+        blocks
     });
     const suffix = tags.length ? `tag-${tags.map(t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9_-]/gi, '_')).join('-')}_` : '';
@@ -882,8 +882,8 @@ async function exportar(msg, filter = '') {
 
     if (emails.length) {
         await sendEmail({
-            para: emails, assunto: t('notes.subject.export', { tags: label }), texto: caption.replace(/\*/g, ''),
-            anexos: [{ filename: nameAlt, content: pdf, contentType: 'application/pdf' }]
+            para: emails, subject: t('notes.subject.export', { tags: label }), text: caption.replace(/\*/g, ''),
+            attachments: [{ filename: nameAlt, content: pdf, contentType: 'application/pdf' }]
         }).then(() => sentAlt3.push(...destinations.filter(d => d.email)))
             .catch(err => failures.push(t('notes.failEmail', { error: err.message })));
     }
@@ -905,8 +905,8 @@ async function cmdNote({ msg, args, quotedMsg }) {
     const nameAlt = optionAlt.toLowerCase();
 
     // The -to of the lists/PDF: "/notes -to X", "/notes #casa -to X", "-l ... -to X", "-e ... -to X"
-    const { informado: withDestination, resto: withoutDestination } = extractDestinations(textAlt);
-    const textTags = soTags(removeCompact(withoutDestination).texto);
+    const { given: withDestination, rest: withoutDestination } = extractDestinations(textAlt);
+    const textTags = soTags(removeCompact(withoutDestination).text);
 
     // With nothing: the tags (in a reply or with media, it is a note with no tag: error)
     if (!textAlt) return quotedMsg || msg.hasMedia ? addAlt(msg, '', quotedMsg) : listTags(msg);
@@ -916,10 +916,10 @@ async function cmdNote({ msg, args, quotedMsg }) {
     if (nameAlt === '-search' || nameAlt === '-s') return listAlt(msg, rest, true);
     if (nameAlt === '-view' || nameAlt === '-v') return seeNotes(msg, rest);
     if (nameAlt === '-desc' || nameAlt === '-d') return describeTag(msg, rest);
-    if (nameAlt === '-move' || nameAlt === '-m') return moverTag(msg, rest);
-    if (nameAlt === '-export' || nameAlt === '-e') return exportar(msg, rest);
+    if (nameAlt === '-move' || nameAlt === '-m') return moveTag(msg, rest);
+    if (nameAlt === '-export' || nameAlt === '-e') return exportNotes(msg, rest);
     if (withDestination && !withoutDestination.trim()) return listAlt(msg, textAlt);
-    if (textTags && removeCompact(withoutDestination).compacto) return listAlt(msg, textAlt);
+    if (textTags && removeCompact(withoutDestination).compact) return listAlt(msg, textAlt);
     // Just #tag, without text: lists its own. In a reply or with media, saves what came under that tag
     if (textTags) return (quotedMsg || msg.hasMedia) && textTags.length === 1 ? addAlt(msg, textAlt, quotedMsg) : listAlt(msg, textAlt);
     if (nameAlt === '-add' || nameAlt === '-a') return addAlt(msg, rest, quotedMsg);
@@ -944,7 +944,7 @@ async function cmdNote({ msg, args, quotedMsg }) {
 let checking = false;
 
 async function checkNotes() {
-    if (checking || !stateAlt.pronto) return;
+    if (checking || !stateAlt.ready) return;
     checking = true;
 
     try {
@@ -958,7 +958,7 @@ async function checkNotes() {
             const destinations = noteDestinations(n);
             await sendToDestinations(destinations,
                 t('notes.alert.fired', { id: n.id, text: n.text, date: formatData(n.created_at) }),
-                { assunto: t('notes.subject.alert', { id: n.id, text: summarizeText(n.text, 60) }), opcoes: WITHOUT_PREVIEW }
+                { subject: t('notes.subject.alert', { id: n.id, text: summarizeText(n.text, 60) }), options: WITHOUT_PREVIEW }
             ).catch(err => printError('/notes -alert: failed to notify:', err.message));
 
             printInfo(`/notes -alert triggered: #${n.id}` +

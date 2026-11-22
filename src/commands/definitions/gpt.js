@@ -81,8 +81,8 @@ module.exports = {
             ex: ['/gpt explain SSRF in 3 lines', '/gpt what breed is this dog? (replying to the photo)', '/gpt now transcribe this (replying to an audio)', '/gpt summarize this audio']
         }
     ],
-    estrito: 'primeira',
-    delegavel: true,
+    strict: 'primeira',
+    isDelegable: true,
     usageFree: ['prices', 'usage', 'u'], // queries: they do not spend the usage limit (/bot +limit)
     role: ADMIN // delegable: spends the owner's API (-model and -usage are owner and admins only)
 };

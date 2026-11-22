@@ -35,6 +35,6 @@ module.exports = {
             desc: 'Changes it. Lists: items separated by comma or space (watch.rules: one rule per line; bot.users.cmds: separated by space, since each item has commas).'
         }
     ],
-    digitando: true, // replies right away: without the "typing..."
+    typing: true, // replies right away: without the "typing..."
     role: ADMIN // changes the settings
 };

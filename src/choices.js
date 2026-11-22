@@ -28,13 +28,13 @@ function close(chatId, chosen) {
 /**
  * Waits for the no. of one of the options in this chat.
  * @param {string} chatId
- * @param {Array} opcoes
+ * @param {Array} options
  * @param {object} [o]
  * @param {() => Promise<void>} [o.onExpire]  notifies the chat that the time is up
- * @param {string} [o.autor]  who can reply (the command message's authorAlt; default: you)
+ * @param {string} [o.author]  who can reply (the command message's authorAlt; default: you)
  * @returns {Promise<any|null>} the chosen option; null if the time ran out or if another choice started in the chat
  */
-function waitChoice(chatId, optionsAlt, { aoExpirar: onExpire, autor: author = 'dono' } = {}) {
+function waitChoice(chatId, optionsAlt, { onExpire, author = 'dono' } = {}) {
     // A new choice in the same chat cancels the previous one
     close(chatId, null);
 
@@ -45,7 +45,7 @@ function waitChoice(chatId, optionsAlt, { aoExpirar: onExpire, autor: author = '
         }, CHOICE_MS);
         timer.unref?.();
 
-        pending.set(chatId, { opcoes: optionsAlt, resolver, timer, autor: author });
+        pending.set(chatId, { options: optionsAlt, resolver, timer, author });
     });
 }
 
@@ -55,10 +55,10 @@ function waitChoice(chatId, optionsAlt, { aoExpirar: onExpire, autor: author = '
  * @param {object} [o]
  * @param {number} [o.ms]  o prazo
  * @param {() => Promise<void>} [o.onExpire]  notifies the chat that the time is up
- * @param {string} [o.autor]  who can reply (default: you)
+ * @param {string} [o.author]  who can reply (default: you)
  * @returns {Promise<boolean|null>} null if the time ran out or if another pending started in the chat
  */
-function waitConfirmation(chatId, { ms = 10_000, aoExpirar: onExpire, autor: author = 'dono' } = {}) {
+function waitConfirmation(chatId, { ms = 10_000, onExpire, author = 'dono' } = {}) {
     close(chatId, null);
 
     return new Promise((resolver) => {
@@ -68,7 +68,7 @@ function waitConfirmation(chatId, { ms = 10_000, aoExpirar: onExpire, autor: aut
         }, ms);
         timer.unref?.();
 
-        pending.set(chatId, { confirmacao: true, resolver, timer, autor: author });
+        pending.set(chatId, { confirmation: true, resolver, timer, author });
     });
 }
 
@@ -79,9 +79,9 @@ function waitConfirmation(chatId, { ms = 10_000, aoExpirar: onExpire, autor: aut
  */
 async function replyChoice(msg, chatId, textAlt) {
     const p = pending.get(chatId);
-    if (!p || authorAlt(msg) !== p.autor) return false;
+    if (!p || authorAlt(msg) !== p.author) return false;
 
-    if (p.confirmacao) {
+    if (p.confirmation) {
         const reply = /^(sim|yes)$/i.test(textAlt) ? true : /^(n[aã]o|no|cancelar|cancel)$/i.test(textAlt) ? false : null;
         if (reply === null) return false;
         printInfo(`Confirmation in ${chatId}: ${textAlt}`);
@@ -100,13 +100,13 @@ async function replyChoice(msg, chatId, textAlt) {
     if (!/^\d{1,2}$/.test(textAlt)) return false;
 
     const n = Number(textAlt);
-    if (n < 1 || n > p.opcoes.length) {
-        await msg.reply(t('escolhas.invalida', { max: p.opcoes.length }));
+    if (n < 1 || n > p.options.length) {
+        await msg.reply(t('escolhas.invalida', { max: p.options.length }));
         return true;
     }
 
-    printInfo(`Choice #${n} of ${p.opcoes.length} in ${chatId}`);
-    close(chatId, p.opcoes[n - 1]);
+    printInfo(`Choice #${n} of ${p.options.length} in ${chatId}`);
+    close(chatId, p.options[n - 1]);
     return true;
 }
 

@@ -1,25 +1,25 @@
 /*
- * API HTTP local e servidor MCP (experimental): src/api.js
+ * API HTTP local e server MCP (experimental): src/api.js
  */
 const bot = require('./helpers/bot');
 
 const { test, before, after, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { createServidor, TOOLS, restartSendings } = bot.src('api');
+const { createServer, TOOLS, restartSendings } = bot.src('api');
 const { OTHERAlt } = bot;
 const KEY = 'chave-de-teste-bem-longa-0123456789';
 
-let servidor;
+let server;
 let base;
 
 before(async () => {
-    servidor = createServidor();
-    await new Promise(r => servidor.listen(0, '127.0.0.1', r));
-    base = 'http://127.0.0.1:' + servidor.address().port;
+    server = createServer();
+    await new Promise(r => server.listen(0, '127.0.0.1', r));
+    base = 'http://127.0.0.1:' + server.address().port;
 });
 
-after(() => new Promise(r => servidor.close(r)));
+after(() => new Promise(r => server.close(r)));
 
 beforeEach(async () => {
     await bot.restart();
@@ -69,7 +69,7 @@ test('/send: só para o seu chat e para o api.sendTo; erros de entrada', async (
     const ok = await post('/send', { to: my, text: 'oi' });
     assert.equal(ok.status, 200);
     assert.deepEqual(await ok.json(), { ok: true, to: my + '@c.us' });
-    assert.equal(bot.client.enviadas.at(-1).content, 'oi');
+    assert.equal(bot.client.sent.at(-1).content, 'oi');
 
     const denied = await post('/send', { to: OTHERAlt.user, text: 'oi' });
     assert.equal(denied.status, 403);
@@ -94,10 +94,10 @@ test('/send: "all" libera qualquer destino; número fora do WhatsApp dá 404; de
     bot.client.getNumberId = async () => null;
     assert.equal((await post('/send', { to: '5511900000000', text: 'x' })).status, 404);
 
-    bot.estado = bot.src('state').estado;
-    bot.estado.pronto = false;
+    bot.state = bot.src('state').state;
+    bot.state.ready = false;
     assert.equal((await post('/send', { to: bot.OWNER.user, text: 'x' })).status, 503);
-    bot.estado.pronto = true;
+    bot.state.ready = true;
 });
 
 test('/send: no máximo 10 por minuto', async () => {

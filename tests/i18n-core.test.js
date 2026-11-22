@@ -38,14 +38,14 @@ describe('en_US: núcleo', () => {
     });
 
     test('aviso de mensagem apagada e de editada', async () => {
-        const deleted = bot.createMessage({ texto: 'segredo', de: OTHERAlt.jid });
+        const deleted = bot.createMessage({ text: 'segredo', de: OTHERAlt.jid });
         await bot.deliver(deleted);
-        const [alert] = await bot.apagar(deleted);
+        const [alert] = await bot.erase(deleted);
         assert.match(alert.content, /^❌ \*DELETED MESSAGE DETECTED\*\n\n/);
         assert.match(alert.content, /\*Sent at:\*/);
         assert.match(alert.content, /💬 \*Text:\* "segredo"$/);
 
-        const edited = bot.createMessage({ texto: 'antes', de: OTHERAlt.jid });
+        const edited = bot.createMessage({ text: 'antes', de: OTHERAlt.jid });
         await bot.deliver(edited);
         const [notice] = await bot.edit(edited, 'depois');
         assert.match(notice.content, /^✏️ \*EDITED MESSAGE DETECTED\*/);
@@ -57,6 +57,6 @@ describe('en_US: núcleo', () => {
         assert.equal(getBotUptime(nowAlt - (2 * 86400 + 3 * 3600 + 60) * 1000), '2 days, 3 hours, 1 minute');
         assert.equal(getBotUptime(nowAlt - 1000), '1 second');
         assert.ok(readWhen(['tomorrow', '9h'], nowAlt)?.ms > nowAlt);
-        assert.equal(readWhen(['at', '18h'], nowAlt)?.usadas, 2);
+        assert.equal(readWhen(['at', '18h'], nowAlt)?.used, 2);
     });
 });

@@ -52,7 +52,7 @@ describe('/cve', () => {
         for (const inputAlt of ['CVE-2026-109618', '2026-109618', 'cve-2026-109618']) {
             const [r] = await bot.replyAlt(`/cve ${inputAlt}`);
             assert.match(r, /^🛡️ \*CVE-2026-109618\* — 9\.8 CRITICAL\n.*\nhttps:\/\/nvd\.nist\.gov\/vuln\/detail\/CVE-2026-109618$/);
-            assert.equal(network.chamadas.at(-1).cfg.params.cveId, 'CVE-2026-109618');
+            assert.equal(network.calls.at(-1).cfg.params.cveId, 'CVE-2026-109618');
         }
 
         assert.equal((await bot.replyAlt('/cve 2026-1111'))[0], '🛡️ CVE-2026-1111 não encontrada no NVD.');
@@ -65,7 +65,7 @@ describe('/cve', () => {
         simulateNvd([cve('CVE-9', 9.9, 'CRITICAL')]);
         const [r] = await bot.replyAlt('/cve -high 1');
         assert.match(r, /🔥 \*1 CVEs críticas mais recentes\* _\(CVSS ≥ 9, últimos 7 dias\)_/);
-        const params = network.chamadas.at(-1).cfg.params;
+        const params = network.calls.at(-1).cfg.params;
         assert.equal(params.cvssV3Severity, 'CRITICAL');
         assert.equal(params.resultsPerPage, 1);
     });
@@ -79,7 +79,7 @@ describe('/cve', () => {
         await bot.setSetting('cve.max', 2);
 
         const [r] = await bot.replyAlt('/cve PHP uses longjmp()');
-        assert.equal(network.chamadas.at(-1).cfg.params.keywordSearch, 'PHP uses longjmp()');
+        assert.equal(network.calls.at(-1).cfg.params.keywordSearch, 'PHP uses longjmp()');
         assert.match(r, /^🔎 \*2 de 3 CVEs com\* "PHP uses longjmp\(\)"\n\n🔴 \*CVE-C\*\n🗓️ Oct 21, 2026\n🔎 .*\n\n⚪ \*CVE-B\*\n🗓️ Oct 20, 2026\n/);
         assert.match(r, /\n\n💡 _Há mais 1 /);
 
@@ -91,7 +91,7 @@ describe('/cve', () => {
         simulateNvd([]);
         assert.deepEqual(await bot.replyAlt('/cve'), ['🛡️ Nenhuma CVE publicada no últimos 2 dias.']);
         network.responder('get', /services\.nvd\.nist\.gov\/rest\/json\/cves\/2\.0$/, errorHttp(503));
-        assert.match((await bot.replyAlt('/cve', { erroEsperado: true }))[0], /❌ Não consegui consultar o NVD agora/);
+        assert.match((await bot.replyAlt('/cve', { expectedError: true }))[0], /❌ Não consegui consultar o NVD agora/);
     });
 });
 
@@ -107,11 +107,11 @@ describe('/weather', () => {
     });
 
     test('sem cidade usa o weather.city; mostra agora, máx/mín, umidade, vento e chuva', async () => {
-        network.responder('get', 'geocoding-api.open-meteo.com', (url, cfg) => ({ results: [{ ...local, pedido: cfg.params.name }] }));
+        network.responder('get', 'geocoding-api.open-meteo.com', (url, cfg) => ({ results: [{ ...local, request: cfg.params.name }] }));
         network.responder('get', 'api.open-meteo.com/v1/forecast', forecast(24, 2));
 
         const [r] = await bot.replyAlt('/weather');
-        assert.equal(network.chamadas[0].cfg.params.name, 'Niteroi, Rio de Janeiro, Brazil');
+        assert.equal(network.calls[0].cfg.params.name, 'Niteroi, Rio de Janeiro, Brazil');
         assert.match(r, /^⛅ \*Niterói, Rio de Janeiro\* · Parcialmente nublado\n🌡️ \*24°C\* _\(sensação 25°C\)_ · 📈 27° 📉 21°\n/);
         assert.match(r, /\n💧 70%  🌬️ 12 km\/h\n☔ 40%\n\n_fonte: Open-Meteo_$/, 'sem os dados extras, só as linhas básicas e a fonte');
     });
@@ -141,17 +141,17 @@ describe('/weather', () => {
         network.responder('get', 'api.open-meteo.com/v1/forecast', { ...forecast(24, 2), current: { ...forecast(24, 2).current, time: '2026-11-15T14:00' } });
         network.responder('get', 'api.met.no', { properties: { timeseries: [{ data: { instant: { details: {
             air_temperature: 25.2, relative_humidity: 80, wind_speed: 4, wind_from_direction: 135 } } } }] } });
-        network.responder('get', 'brasilapi.com.br/api/cptec/v1/cidade/', [{ nome: 'Niterói', id: 3464, estado: 'RJ' }, { nome: 'Niterói', id: 1, estado: 'RS' }]);
-        network.responder('get', 'brasilapi.com.br/api/cptec/v1/clima/previsao/3464/1', { clima: [{ data: '2026-11-15', condicao_desc: 'Chuva', min: 22, max: 26 }] });
+        network.responder('get', 'brasilapi.com.br/api/cptec/v1/cidade/', [{ name: 'Niterói', id: 3464, state: 'RJ' }, { name: 'Niterói', id: 1, state: 'RS' }]);
+        network.responder('get', 'brasilapi.com.br/api/cptec/v1/clima/previsao/3464/1', { clima: [{ data: '2026-11-15', condition_desc: 'Chuva', min: 22, max: 26 }] });
 
         const [r] = await bot.replyAlt('/weather Niteroi');
         assert.match(r, /\n\n🔎 \*Outras fontes\*\n• MET Norway: 25°C · 💧 80% · 🌬️ 14 km\/h SE\n• CPTEC\/INPE: 📈 26° 📉 22° · Chuva\n/);
         assert.doesNotMatch(r, /⚠️/, 'dentro de 3°C: sem aviso');
         assert.match(r, /_atualizado às 14:00 · fonte: Open-Meteo, MET Norway, CPTEC\/INPE_$/);
-        const met = network.chamadas.find(c => c.url.includes('api.met.no'));
+        const met = network.calls.find(c => c.url.includes('api.met.no'));
         assert.equal(met.cfg.headers['User-Agent'], 'weather-bot/1.0');
         assert.deepEqual(met.cfg.params, { lat: '-22.9000', lon: '-43.1000' });
-        assert.ok(network.chamadas.some(c => c.url.endsWith('/clima/previsao/3464/1')), 'a cidade certa pela UF');
+        assert.ok(network.calls.some(c => c.url.endsWith('/clima/previsao/3464/1')), 'a cidade certa pela UF');
     });
 
     test('fontes extras: divergência de 3°C ou mais é avisada; fonte que cai some sem derrubar o resto', async () => {
@@ -173,10 +173,10 @@ describe('/weather', () => {
         network.responder('get', 'api.open-meteo.com/v1/forecast', forecast(20));
         const [outside] = await bot.replyAlt('/weather Lisboa');
         assert.doesNotMatch(outside, /Outras fontes/);
-        assert.ok(!network.chamadas.some(c => c.url.includes('brasilapi')), 'nem consulta');
+        assert.ok(!network.calls.some(c => c.url.includes('brasilapi')), 'nem consulta');
 
         network.responder('get', 'geocoding-api.open-meteo.com', { results: [{ ...local, name: 'Cidade Nova' }] });
-        network.responder('get', 'brasilapi.com.br/api/cptec/v1/cidade/', [{ nome: 'Cidade Nova', id: 9, estado: 'MG' }]);
+        network.responder('get', 'brasilapi.com.br/api/cptec/v1/cidade/', [{ name: 'Cidade Nova', id: 9, state: 'MG' }]);
         const [other] = await bot.replyAlt('/weather Cidade Nova');
         assert.doesNotMatch(other, /Outras fontes|CPTEC/, 'a cidade da UF errada não serve');
     });
@@ -190,14 +190,14 @@ describe('/weather', () => {
         network.responder('get', 'api.open-meteo.com/v1/forecast', forecast(24));
         network.responder('get', 'api.met.no', { properties: { timeseries: [{ data: { instant: { details: { air_temperature: 24 } } } }] } });
         await bot.replyAlt('/weather Rio Bonito');
-        assert.equal(network.chamadas.find(c => c.url.includes('api.met.no')).cfg.headers['User-Agent'], 'meubot/2.0 contato@exemplo.com');
+        assert.equal(network.calls.find(c => c.url.includes('api.met.no')).cfg.headers['User-Agent'], 'meubot/2.0 contato@exemplo.com');
     });
 
     test('cidade informada; calor e frio; valor ausente vira "-"', async () => {
         network.responder('get', 'geocoding-api.open-meteo.com', { results: [local] });
         network.responder('get', 'api.open-meteo.com/v1/forecast', forecast(35));
         assert.match((await bot.replyAlt('/weather Recife'))[0], /🔥 Que calor/);
-        assert.equal(network.chamadas[0].cfg.params.name, 'Recife');
+        assert.equal(network.calls[0].cfg.params.name, 'Recife');
 
         network.responder('get', 'api.open-meteo.com/v1/forecast', { ...forecast(2), daily: { temperature_2m_max: [null], temperature_2m_min: [null], precipitation_probability_max: [null] } });
         const [cold] = await bot.replyAlt('/weather Curitiba');
@@ -223,15 +223,15 @@ describe('/weather', () => {
 
         // New city (/weather caches the geocoding between tests)
         const [r] = await bot.replyAlt('/weather 3d Olinda');
-        assert.equal(network.chamadas.at(-1).cfg.params.forecast_days, 3);
-        assert.equal(network.chamadas.find(c => c.url.includes('geocoding')).cfg.params.name, 'Olinda', 'o "3d" não entra no nome');
+        assert.equal(network.calls.at(-1).cfg.params.forecast_days, 3);
+        assert.equal(network.calls.find(c => c.url.includes('geocoding')).cfg.params.name, 'Olinda', 'o "3d" não entra no nome');
         assert.match(r, /🌡️ \*24°C\*/, 'mantém o tempo de agora');
         assert.match(r, /📅 \*Próximos 3 dias\*\n☀️ \*Hoje \(qui 01\/10\):\* 30°\/20° · ☔ 0% · Céu limpo\n🌧️ \*sex 02\/10:\* 31°\/21° · ☔ 10% · Chuva\n⛈️ \*sáb 03\/10:\* 32°\/22° · ☔ 20% · Trovoada\n📊 Mín 20° · Máx 32° · chuva provável em 0 dias/);
 
         await bot.setSetting('weather.city', 'Maricá');
         await bot.replyAlt('/weather 5');
-        assert.equal(network.chamadas.at(-1).cfg.params.forecast_days, 5);
-        assert.equal(network.chamadas.at(-2).cfg.params.name, 'Maricá', 'sem cidade: weather.city');
+        assert.equal(network.calls.at(-1).cfg.params.forecast_days, 5);
+        assert.equal(network.calls.at(-2).cfg.params.name, 'Maricá', 'sem cidade: weather.city');
 
         assert.match((await bot.replyAlt('/weather 1d'))[0], /📅 \*Previsão de hoje\*\n/);
         assert.match((await bot.replyAlt('/weather 7D Recife'))[0], /Próximos 7 dias/);
@@ -241,7 +241,7 @@ describe('/weather', () => {
         network.responder('get', 'geocoding-api.open-meteo.com', { results: [local] });
         network.responder('get', 'api.open-meteo.com/v1/forecast', (url, cfg) => forecastDays(cfg.params.forecast_days));
         const [r] = await bot.replyAlt('/weather Niteroi');
-        assert.equal(network.chamadas.at(-1).cfg.params.forecast_days, 1);
+        assert.equal(network.calls.at(-1).cfg.params.forecast_days, 1);
         assert.doesNotMatch(r, /Próximos|Previsão de hoje/);
     });
 
@@ -249,7 +249,7 @@ describe('/weather', () => {
         await bot.setSetting('weather.maxDays', 7);
         assert.match((await bot.replyAlt('/weather 8d Recife'))[0], /❌ Quantidade de dias inválida: 8\. Use de 1 a 7\./);
         assert.match((await bot.replyAlt('/weather 0'))[0], /Quantidade de dias inválida: 0/);
-        assert.deepEqual(network.chamadas, [], 'nem consulta a API');
+        assert.deepEqual(network.calls, [], 'nem consulta a API');
 
         await bot.setSetting('weather.maxDays', 16);
         network.responder('get', 'geocoding-api.open-meteo.com', { results: [local] });
@@ -264,14 +264,14 @@ describe('/weather', () => {
         network.responder('get', 'api.open-meteo.com/v1/forecast',
             (url, cfg) => forecastDays(cfg.params.forecast_days));
         const [r] = await bot.replyAlt('/weather 16d Recife');
-        assert.equal(network.chamadas.at(-1).cfg.params.forecast_days, 16);
+        assert.equal(network.calls.at(-1).cfg.params.forecast_days, 16);
         assert.match(r, /Próximos 16 dias/);
         assert.match(r, /sex 16\/10/);
         assert.doesNotMatch(r, /Invalid Date/);
         assert.equal(r.split('\n').filter(l => l.includes(' · ☔ ')).length, 16);
-        network.chamadas.length = 0;
+        network.calls.length = 0;
         assert.match((await bot.replyAlt('/weather 17d Recife'))[0], /Use de 1 a 16/);
-        assert.deepEqual(network.chamadas, []);
+        assert.deepEqual(network.calls, []);
     });
 
     test('cidade não encontrada; serviço fora do ar', async () => {
@@ -279,7 +279,7 @@ describe('/weather', () => {
         assert.match((await bot.replyAlt('/weather Xyzabc'))[0], /❌ Cidade não encontrada: Xyzabc/);
 
         network.responder('get', 'geocoding-api.open-meteo.com', errorHttp(500));
-        assert.deepEqual(await bot.replyAlt('/weather Lugar', { erroEsperado: true }), ['❌ Não consegui consultar o tempo agora.']);
+        assert.deepEqual(await bot.replyAlt('/weather Lugar', { expectedError: true }), ['❌ Não consegui consultar o tempo agora.']);
     });
 });
 
@@ -316,7 +316,7 @@ describe('/news', () => {
         assert.match((await bot.replyAlt('/news -hack'))[0], /ℹ️ Nenhum feed configurado\.\n💡 _Adicione com \/set news\.hack/);
 
         network.responder('get', 'g1.globo.com', errorHttp(403));
-        assert.deepEqual(await bot.replyAlt('/news -g1', { erroEsperado: true }), ['❌ Não consegui buscar as manchetes agora.']);
+        assert.deepEqual(await bot.replyAlt('/news -g1', { expectedError: true }), ['❌ Não consegui buscar as manchetes agora.']);
     });
 });
 
@@ -332,60 +332,60 @@ describe('/gpt', () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com', { choices: [{ message: { content: ' Resposta! ' } }] });
 
-        const quoted = bot.createMessage({ texto: 'texto citado', de: bot.OTHERAlt.jid });
-        assert.deepEqual(await bot.replyAlt('/gpt resuma', { citada: quoted }), ['🤖 Resposta!']);
+        const quoted = bot.createMessage({ text: 'texto citado', de: bot.OTHERAlt.jid });
+        assert.deepEqual(await bot.replyAlt('/gpt resuma', { quoted }), ['🤖 Resposta!']);
 
-        const { cfg } = network.chamadas.at(-1);
+        const { cfg } = network.calls.at(-1);
         assert.equal(cfg.headers.Authorization, 'Bearer sk-teste');
         assert.equal(cfg.body.messages[1].content, 'texto citado\n\nresuma');
         assert.equal(cfg.timeout, 60000);
-        assert.equal(bot.client.chats.get(bot.GROUP).digitando, 1);
+        assert.equal(bot.client.chats.get(bot.GROUP).typing, 1);
     });
 
     test('respondendo uma foto: ela vai junto da pergunta (legenda + pergunta + imagem em base64)', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com', { choices: [{ message: { content: 'É um labrador.' } }] });
 
-        const photo = bot.createMessage({ texto: 'meu cachorro', de: bot.OTHERAlt.jid, tipo: 'image',
-            midia: { mimetype: 'image/jpeg', data: 'QUJD' } });
-        assert.deepEqual(await bot.replyAlt('/gpt qual a raça desse cachorro?', { citada: photo }), ['🤖 É um labrador.']);
+        const photo = bot.createMessage({ text: 'meu cachorro', de: bot.OTHERAlt.jid, type: 'image',
+            media: { mimetype: 'image/jpeg', data: 'QUJD' } });
+        assert.deepEqual(await bot.replyAlt('/gpt qual a raça desse cachorro?', { quoted: photo }), ['🤖 É um labrador.']);
 
-        const { body } = network.chamadas.at(-1).cfg;
+        const { body } = network.calls.at(-1).cfg;
         assert.deepEqual(body.messages[1].content, [
             { type: 'text', text: 'meu cachorro\n\nqual a raça desse cachorro?' },
             { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,QUJD' } }
         ]);
 
         // Without a question: describes; text alone continues a string
-        const withoutCaption = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/png', data: 'QUJD' } });
-        await bot.replyAlt('/gpt', { citada: withoutCaption });
-        assert.equal(network.chamadas.at(-1).cfg.body.messages[1].content[0].text, 'Descreva esta imagem.');
+        const withoutCaption = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'image', media: { mimetype: 'image/png', data: 'QUJD' } });
+        await bot.replyAlt('/gpt', { quoted: withoutCaption });
+        assert.equal(network.calls.at(-1).cfg.body.messages[1].content[0].text, 'Descreva esta imagem.');
 
-        const textAlt = bot.createMessage({ texto: 'um texto', de: bot.OTHERAlt.jid });
-        await bot.replyAlt('/gpt resuma', { citada: textAlt });
-        assert.equal(network.chamadas.at(-1).cfg.body.messages[1].content, 'um texto\n\nresuma');
+        const textAlt = bot.createMessage({ text: 'um texto', de: bot.OTHERAlt.jid });
+        await bot.replyAlt('/gpt resuma', { quoted: textAlt });
+        assert.equal(network.calls.at(-1).cfg.body.messages[1].content, 'um texto\n\nresuma');
     });
 
     test('foto que não dá: não baixa, formato que a OpenAI não lê, grande demais; vídeo não é foto', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com', { choices: [{ message: { content: 'ok' } }] });
-        const calls = () => network.chamadas.length;
+        const calls = () => network.calls.length;
         const beforeAlt = calls();
 
-        const expiredAlt = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', extras: { hasMedia: true, downloadMedia: async () => null } });
-        assert.match((await bot.replyAlt('/gpt o que é?', { citada: expiredAlt }))[0], /❌ Não consegui baixar a imagem/);
+        const expiredAlt = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'image', extras: { hasMedia: true, downloadMedia: async () => null } });
+        assert.match((await bot.replyAlt('/gpt o que é?', { quoted: expiredAlt }))[0], /❌ Não consegui baixar a imagem/);
 
-        const heic = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/heic', data: 'QUJD' } });
-        assert.match((await bot.replyAlt('/gpt o que é?', { citada: heic }))[0], /❌ A OpenAI não lê imagem image\/heic: só jpeg, png, webp, gif\./);
+        const heic = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'image', media: { mimetype: 'image/heic', data: 'QUJD' } });
+        assert.match((await bot.replyAlt('/gpt o que é?', { quoted: heic }))[0], /❌ A OpenAI não lê imagem image\/heic: só jpeg, png, webp, gif\./);
 
-        const huge = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/jpeg', data: 'A'.repeat(21 * 1024 * 1024) } });
-        assert.match((await bot.replyAlt('/gpt o que é?', { citada: huge }))[0], /❌ A imagem tem mais de 15 MB/);
+        const huge = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'image', media: { mimetype: 'image/jpeg', data: 'A'.repeat(21 * 1024 * 1024) } });
+        assert.match((await bot.replyAlt('/gpt o que é?', { quoted: huge }))[0], /❌ A imagem tem mais de 15 MB/);
         assert.equal(calls(), beforeAlt, 'nada foi para a OpenAI');
 
         // Video: only the text (the caption) follows, without downloading anything
-        const video = bot.createMessage({ texto: 'legenda do vídeo', de: bot.OTHERAlt.jid, tipo: 'video', midia: { mimetype: 'video/mp4', data: 'QUJD' } });
-        await bot.replyAlt('/gpt resuma', { citada: video });
-        assert.equal(network.chamadas.at(-1).cfg.body.messages[1].content, 'legenda do vídeo\n\nresuma');
+        const video = bot.createMessage({ text: 'legenda do vídeo', de: bot.OTHERAlt.jid, type: 'video', media: { mimetype: 'video/mp4', data: 'QUJD' } });
+        await bot.replyAlt('/gpt resuma', { quoted: video });
+        assert.equal(network.calls.at(-1).cfg.body.messages[1].content, 'legenda do vídeo\n\nresuma');
     });
 
     test('1ª palavra que parece opção e não existe (/gpt -price): erro com a dica do -h, sem chamar a OpenAI', async () => {
@@ -394,7 +394,7 @@ describe('/gpt', () => {
 
         assert.deepEqual(await bot.replyAlt('/gpt -price'), ['❌ Opção desconhecida: -price\n💡 _Veja as opções com /gpt -h|-help_']);
         assert.deepEqual(await bot.replyAlt('/gpt -x oi'), ['❌ Opção desconhecida: -x\n💡 _Veja as opções com /gpt -h|-help_']);
-        assert.equal(network.chamadas.length, 0);
+        assert.equal(network.calls.length, 0);
 
         // Only the 1st word: in the middle of the text, "-price" is a question; "-1" and "- item" too
         assert.equal((await bot.replyAlt('/gpt o que faz o -price?'))[0], '🤖 Oi.');
@@ -436,48 +436,48 @@ describe('/gpt', () => {
         network.responder('post', 'api.openai.com/v1/audio/transcriptions', { text: ' olá, tudo bem? ' });
         network.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: 'Um cumprimento.' } }] });
 
-        const voice = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'ptt', midia: { mimetype: 'audio/ogg; codecs=opus', data: 'QUJD' } });
-        assert.deepEqual(await bot.replyAlt('/gpt agora transcreva isso', { citada: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?']);
-        assert.deepEqual(await bot.replyAlt('/gpt now transcribe this', { citada: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?'], 'em inglês também');
+        const voice = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'ptt', media: { mimetype: 'audio/ogg; codecs=opus', data: 'QUJD' } });
+        assert.deepEqual(await bot.replyAlt('/gpt agora transcreva isso', { quoted: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?']);
+        assert.deepEqual(await bot.replyAlt('/gpt now transcribe this', { quoted: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?'], 'em inglês também');
 
-        const { cfg } = network.chamadas.at(-1);
-        assert.equal(network.chamadas.at(-1).url, 'https://api.openai.com/v1/audio/transcriptions');
+        const { cfg } = network.calls.at(-1);
+        assert.equal(network.calls.at(-1).url, 'https://api.openai.com/v1/audio/transcriptions');
         assert.equal(cfg.headers.Authorization, 'Bearer sk-teste');
         assert.equal(cfg.body.get('model'), 'gpt-transcribe');
         assert.equal(cfg.body.get('file').name, 'audio.ogg');
-        assert.equal(network.chamadas.filter(c => c.url.endsWith('/chat/completions')).length, 0, 'só transcrever não chama o chat');
+        assert.equal(network.calls.filter(c => c.url.endsWith('/chat/completions')).length, 0, 'só transcrever não chama o chat');
 
         // Without a question it also only transcribes; the model comes from the setting
         await bot.setSetting('gpt.transcribe.model', 'gpt-4o-mini-transcribe');
-        assert.deepEqual(await bot.replyAlt('/gpt', { citada: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?']);
-        assert.equal(network.chamadas.at(-1).cfg.body.get('model'), 'gpt-4o-mini-transcribe');
+        assert.deepEqual(await bot.replyAlt('/gpt', { quoted: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?']);
+        assert.equal(network.calls.at(-1).cfg.body.get('model'), 'gpt-4o-mini-transcribe');
 
         // Another question: the transcription goes along to the chat
-        assert.deepEqual(await bot.replyAlt('/gpt resuma esse áudio', { citada: voice }), ['🤖 Um cumprimento.']);
-        assert.equal(network.chamadas.at(-1).cfg.body.messages[1].content,
+        assert.deepEqual(await bot.replyAlt('/gpt resuma esse áudio', { quoted: voice }), ['🤖 Um cumprimento.']);
+        assert.equal(network.calls.at(-1).cfg.body.messages[1].content,
             'resuma esse áudio\n\nTranscrição do áudio:\nolá, tudo bem?');
     });
 
     test('áudio que não dá: não baixa, formato que a OpenAI não lê, grande demais, sem fala e erro da OpenAI', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        const beforeAlt = network.chamadas.length;
+        const beforeAlt = network.calls.length;
 
-        const expiredAlt2 = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'audio', extras: { hasMedia: true, downloadMedia: async () => null } });
-        assert.match((await bot.replyAlt('/gpt', { citada: expiredAlt2 }))[0], /❌ Não consegui baixar o áudio/);
+        const expiredAlt2 = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'audio', extras: { hasMedia: true, downloadMedia: async () => null } });
+        assert.match((await bot.replyAlt('/gpt', { quoted: expiredAlt2 }))[0], /❌ Não consegui baixar o áudio/);
 
-        const aac = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'audio', midia: { mimetype: 'audio/aac', data: 'QUJD' } });
-        assert.match((await bot.replyAlt('/gpt', { citada: aac }))[0], /❌ A OpenAI não transcreve áudio audio\/aac: só ogg, mp3, m4a, wav, webm, flac\./);
+        const aac = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'audio', media: { mimetype: 'audio/aac', data: 'QUJD' } });
+        assert.match((await bot.replyAlt('/gpt', { quoted: aac }))[0], /❌ A OpenAI não transcreve áudio audio\/aac: só ogg, mp3, m4a, wav, webm, flac\./);
 
-        const huge = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'audio', midia: { mimetype: 'audio/mpeg', data: 'A'.repeat(35 * 1024 * 1024) } });
-        assert.match((await bot.replyAlt('/gpt', { citada: huge }))[0], /❌ O áudio tem mais de 25 MB/);
-        assert.equal(network.chamadas.length, beforeAlt, 'nada foi para a OpenAI');
+        const huge = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'audio', media: { mimetype: 'audio/mpeg', data: 'A'.repeat(35 * 1024 * 1024) } });
+        assert.match((await bot.replyAlt('/gpt', { quoted: huge }))[0], /❌ O áudio tem mais de 25 MB/);
+        assert.equal(network.calls.length, beforeAlt, 'nada foi para a OpenAI');
 
-        const muted = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'ptt', midia: { mimetype: 'audio/ogg; codecs=opus', data: 'QUJD' } });
+        const muted = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'ptt', media: { mimetype: 'audio/ogg; codecs=opus', data: 'QUJD' } });
         network.responder('post', 'api.openai.com/v1/audio/transcriptions', { text: '' });
-        assert.deepEqual(await bot.replyAlt('/gpt', { citada: muted }), ['🤖 Não ouvi fala nenhuma nesse áudio.']);
+        assert.deepEqual(await bot.replyAlt('/gpt', { quoted: muted }), ['🤖 Não ouvi fala nenhuma nesse áudio.']);
 
         network.responder('post', 'api.openai.com/v1/audio/transcriptions', errorHttp(401));
-        assert.match((await bot.replyAlt('/gpt', { citada: muted, erroEsperado: true }))[0], /🔑 API key da OpenAI inválida/);
+        assert.match((await bot.replyAlt('/gpt', { quoted: muted, expectedError: true }))[0], /🔑 API key da OpenAI inválida/);
     });
 
     test('-voice: o texto digitado (ou o da mensagem respondida) vira uma nota de voz de robô (v1/audio/speech)', async () => {
@@ -486,13 +486,13 @@ describe('/gpt', () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
 
-        const r = (await bot.executar('/gpt -voice exterminar todos os humanos')).at(-1);
+        const r = (await bot.execute('/gpt -voice exterminar todos os humanos')).at(-1);
         assert.ok(r.content instanceof MessageMedia);
         assert.equal(r.content.mimetype, 'audio/ogg; codecs=opus');
         assert.equal(r.content.data, Buffer.from('OGGDATA').toString('base64'));
         assert.equal(r.options.sendAudioAsVoice, true);
 
-        const { url, cfg } = network.chamadas.at(-1);
+        const { url, cfg } = network.calls.at(-1);
         assert.equal(url, 'https://api.openai.com/v1/audio/speech');
         assert.equal(cfg.headers.Authorization, 'Bearer sk-teste');
         assert.equal(cfg.responseType, 'arraybuffer');
@@ -502,35 +502,35 @@ describe('/gpt', () => {
         });
 
         // Without typed text, speaks the replied message's; -voice can come in the middle
-        const quoted = bot.createMessage({ texto: 'bom dia, humano', de: bot.OTHERAlt.jid });
-        await bot.executar('/gpt -voice', { citada: quoted });
-        assert.equal(network.chamadas.at(-1).cfg.body.input, 'bom dia, humano');
+        const quoted = bot.createMessage({ text: 'bom dia, humano', de: bot.OTHERAlt.jid });
+        await bot.execute('/gpt -voice', { quoted });
+        assert.equal(network.calls.at(-1).cfg.body.input, 'bom dia, humano');
         // With typed text and a replied message: speaks the replied one, in the typed style
-        await bot.executar('/gpt -voice fale como um robô meio metálico', { citada: quoted });
-        assert.equal(network.chamadas.at(-1).cfg.body.input, 'bom dia, humano');
-        assert.equal(network.chamadas.at(-1).cfg.body.instructions, 'fale como um robô meio metálico');
-        await bot.executar('/gpt fale -v isso aqui');
-        assert.equal(network.chamadas.at(-1).cfg.body.input, 'fale isso aqui');
+        await bot.execute('/gpt -voice fale como um robô meio metálico', { quoted });
+        assert.equal(network.calls.at(-1).cfg.body.input, 'bom dia, humano');
+        assert.equal(network.calls.at(-1).cfg.body.instructions, 'fale como um robô meio metálico');
+        await bot.execute('/gpt fale -v isso aqui');
+        assert.equal(network.calls.at(-1).cfg.body.input, 'fale isso aqui');
 
         // The model, voice and style come from the settings; tts-1 does not take the style
         await bot.setSetting('gpt.tts.voice', 'nova');
         await bot.setSetting('gpt.tts.model', 'tts-1');
-        await bot.executar('/gpt -voice oi');
-        assert.deepEqual(network.chamadas.at(-1).cfg.body, { model: 'tts-1', voice: 'nova', input: 'oi', response_format: 'opus' });
+        await bot.execute('/gpt -voice oi');
+        assert.deepEqual(network.calls.at(-1).cfg.body, { model: 'tts-1', voice: 'nova', input: 'oi', response_format: 'opus' });
     });
 
     test('-voice: sem texto, grande demais e erro da OpenAI (o corpo do erro vem em bytes)', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        const beforeAlt = network.chamadas.length;
+        const beforeAlt = network.calls.length;
 
         assert.deepEqual(await bot.replyAlt('/gpt -v'), ['Usage: /gpt -v <texto> (ou responda uma mensagem de texto)\n💡 _/gpt -h para ajuda_']);
         assert.match((await bot.replyAlt(`/gpt -v ${'a'.repeat(4097)}`))[0], /❌ O texto tem 4097 caracteres: a voz aceita até 4096\./);
-        assert.equal(network.chamadas.length, beforeAlt, 'nada foi para a OpenAI');
+        assert.equal(network.calls.length, beforeAlt, 'nada foi para a OpenAI');
 
         network.responder('post', 'api.openai.com/v1/audio/speech', Object.assign(new Error('Request failed with status code 400'), {
             response: { status: 400, data: Buffer.from(JSON.stringify({ error: { message: 'voz inválida' } })) }
         }));
-        assert.deepEqual(await bot.replyAlt('/gpt -v oi', { erroEsperado: true }), ['❌ Erro no /gpt: voz inválida']);
+        assert.deepEqual(await bot.replyAlt('/gpt -v oi', { expectedError: true }), ['❌ Erro no /gpt: voz inválida']);
     });
 
     // The tests' sharp reads the dimensions from "png:WxH" (see sharpFake in tests/helpers/environment.js)
@@ -541,20 +541,20 @@ describe('/gpt', () => {
         assert.deepEqual(await bot.replyAlt('/gpt -img'), ['Usage: /gpt -img <o que criar> (respondendo uma foto, ela é editada)\n💡 _/gpt -h para ajuda_']);
 
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'UE5H' }] });
-        const r = (await bot.executar('/gpt -img um robô nadando em aquarela')).at(-1);
+        const r = (await bot.execute('/gpt -img um robô nadando em aquarela')).at(-1);
         assert.ok(r.content instanceof MessageMedia);
         assert.equal(r.content.mimetype, 'image/png');
         assert.equal(r.content.data, 'UE5H');
-        const generate = network.chamadas.at(-1);
+        const generate = network.calls.at(-1);
         assert.equal(generate.url, 'https://api.openai.com/v1/images/generations');
         assert.deepEqual(generate.cfg.body, { model: 'gpt-image-2', prompt: 'um robô nadando em aquarela', n: 1 });
 
         // Replying to a photo: the edit (multipart), with the photo as PNG
         network.responder('post', 'api.openai.com/v1/images/edits', { data: [{ b64_json: 'RURJVA==' }] });
-        const photo = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/jpeg', data: PNG_4X2 } });
-        const edited = (await bot.executar('/gpt -img coloque um chapéu nele', { citada: photo })).at(-1);
+        const photo = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'image', media: { mimetype: 'image/jpeg', data: PNG_4X2 } });
+        const edited = (await bot.execute('/gpt -img coloque um chapéu nele', { quoted: photo })).at(-1);
         assert.equal(edited.content.data, 'RURJVA==');
-        const edit = network.chamadas.at(-1);
+        const edit = network.calls.at(-1);
         assert.equal(edit.url, 'https://api.openai.com/v1/images/edits');
         assert.equal(edit.cfg.body.get('prompt'), 'coloque um chapéu nele');
         assert.equal(edit.cfg.body.get('model'), 'gpt-image-2');
@@ -562,7 +562,7 @@ describe('/gpt', () => {
 
         // OpenAI without the image in the reply: readable error
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [] });
-        assert.deepEqual(await bot.replyAlt('/gpt -img x', { erroEsperado: true }), ['❌ Erro no /gpt: a OpenAI não devolveu a imagem']);
+        assert.deepEqual(await bot.replyAlt('/gpt -img x', { expectedError: true }), ['❌ Erro no /gpt: a OpenAI não devolveu a imagem']);
     });
 
     test('modelo que a conta não tem: o erro lista os que a chave vê (GET /v1/models) e diz como trocar', async () => {
@@ -572,7 +572,7 @@ describe('/gpt', () => {
 
         // Imagem
         network.responder('post', 'api.openai.com/v1/images/generations', withoutModel('gpt-image-2'));
-        assert.deepEqual(await bot.replyAlt('/gpt -img um robô', { erroEsperado: true }), [
+        assert.deepEqual(await bot.replyAlt('/gpt -img um robô', { expectedError: true }), [
             '❌ O modelo gpt-image-2 não existe na sua conta da OpenAI (imagem).\n' +
             '💡 _A sua chave vê: dall-e-3, gpt-image-2_\n' +
             '💡 _Troque com /set gpt.image.model <modelo>_'
@@ -581,26 +581,26 @@ describe('/gpt', () => {
         // The model is free: switch to whichever the account has and works
         await bot.setSetting('gpt.image.model', 'dall-e-3');
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'UE5H' }] });
-        const ok = (await bot.executar('/gpt -img um robô')).at(-1);
+        const ok = (await bot.execute('/gpt -img um robô')).at(-1);
         assert.equal(ok.content.data, 'UE5H');
-        assert.equal(network.chamadas.filter(c => c.url.endsWith('/images/generations')).at(-1).cfg.body.model, 'dall-e-3');
+        assert.equal(network.calls.filter(c => c.url.endsWith('/images/generations')).at(-1).cfg.body.model, 'dall-e-3');
 
         // Voice, transcription and video follow the same notice
         network.responder('post', 'api.openai.com/v1/audio/speech', withoutModel('gpt-4o-mini-tts'));
-        assert.match((await bot.replyAlt('/gpt -v oi', { erroEsperado: true }))[0], /^❌ O modelo gpt-4o-mini-tts não existe na sua conta da OpenAI \(voz\)\.\n💡 _A sua chave vê: tts-1_\n/);
+        assert.match((await bot.replyAlt('/gpt -v oi', { expectedError: true }))[0], /^❌ O modelo gpt-4o-mini-tts não existe na sua conta da OpenAI \(voz\)\.\n💡 _A sua chave vê: tts-1_\n/);
 
         network.responder('post', 'api.openai.com/v1/audio/transcriptions', withoutModel('gpt-transcribe'));
-        const voice = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'ptt', midia: { mimetype: 'audio/ogg; codecs=opus', data: 'QUJD' } });
-        assert.match((await bot.replyAlt('/gpt', { citada: voice, erroEsperado: true }))[0], /^❌ O modelo gpt-transcribe não existe .*\(transcrição\)\.\n💡 _A sua chave vê: whisper-1_\n💡 _Troque com \/set gpt\.transcribe\.model/s);
+        const voice = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'ptt', media: { mimetype: 'audio/ogg; codecs=opus', data: 'QUJD' } });
+        assert.match((await bot.replyAlt('/gpt', { quoted: voice, expectedError: true }))[0], /^❌ O modelo gpt-transcribe não existe .*\(transcrição\)\.\n💡 _A sua chave vê: whisper-1_\n💡 _Troque com \/set gpt\.transcribe\.model/s);
 
         await bot.setSetting('gpt.image.gifModel', 'gpt-image-1');
         network.responder('post', 'api.openai.com/v1/images/generations', withoutModel('gpt-image-1'));
-        assert.match((await bot.replyAlt('/draw -g um gato', { erroEsperado: true })).at(-1), /^❌ O modelo gpt-image-1 não existe .*\(GIF\)\.\n💡 _A sua chave vê: gpt-image-2_\n💡 _Troque com \/set gpt\.image\.gifModel/s);
+        assert.match((await bot.replyAlt('/draw -g um gato', { expectedError: true })).at(-1), /^❌ O modelo gpt-image-1 não existe .*\(GIF\)\.\n💡 _A sua chave vê: gpt-image-2_\n💡 _Troque com \/set gpt\.image\.gifModel/s);
 
         // Without the list (/v1/models fails too): only the warning
         network.responder('get', 'api.openai.com/v1/models', errorHttp(500));
         network.responder('post', 'api.openai.com/v1/images/generations', withoutModel('gpt-image-2'));
-        assert.match((await bot.replyAlt('/gpt -img x', { erroEsperado: true }))[0], /💡 _Não achei na lista da sua chave nenhum modelo parecido\._/);
+        assert.match((await bot.replyAlt('/gpt -img x', { expectedError: true }))[0], /💡 _Não achei na lista da sua chave nenhum modelo parecido\._/);
     });
 
     test('-gif: o GIF animado da API de imagens (output_format gif) vira um MP4 mandado como GIF; respondendo uma foto, ela é a base', async () => {
@@ -611,18 +611,18 @@ describe('/gpt', () => {
         network.responder('post', 'api.openai.com/v1/images/edits', { data: [{ b64_json: Buffer.from('GIF89a').toString('base64') }] });
 
         // Without a photo: only the text
-        const gif = (await bot.executar('/gpt -gif um gato de óculos escuros')).at(-1);
+        const gif = (await bot.execute('/gpt -gif um gato de óculos escuros')).at(-1);
         assert.ok(gif.content instanceof MessageMedia);
         assert.equal(gif.content.mimetype, 'video/mp4');
         assert.equal(gif.options.sendVideoAsGif, true);
-        const generation = network.chamadas.at(-1);
+        const generation = network.calls.at(-1);
         assert.equal(generation.url, 'https://api.openai.com/v1/images/generations');
         assert.deepEqual(generation.cfg.body, {
             model: 'gpt-image-2.6-flare', prompt: 'um gato de óculos escuros', n: 1, size: '512x512',
             output_format: 'gif', frame_count: 9, frame_duration_ms: 200
         });
         // The GIF went through ffmpeg: .gif input, .mp4 output with no audio
-        const ffmpeg = processes.chamadas.at(-1);
+        const ffmpeg = processes.calls.at(-1);
         assert.match(ffmpeg.bin, /ffmpeg$/);
         assert.ok(ffmpeg.args.includes('-an') && ffmpeg.args.at(-1).endsWith('saida.mp4'));
         assert.ok(ffmpeg.args[ffmpeg.args.indexOf('-i') + 1].endsWith('entrada.gif'));
@@ -630,15 +630,15 @@ describe('/gpt', () => {
         // The frames and the time come from the settings
         await bot.setSetting('gpt.gif.frames', 12);
         await bot.setSetting('gpt.gif.frameMs', 150);
-        await bot.executar('/gpt -gif um gato');
-        assert.equal(network.chamadas.at(-1).cfg.body.frame_count, 12);
-        assert.equal(network.chamadas.at(-1).cfg.body.frame_duration_ms, 150);
+        await bot.execute('/gpt -gif um gato');
+        assert.equal(network.calls.at(-1).cfg.body.frame_count, 12);
+        assert.equal(network.calls.at(-1).cfg.body.frame_duration_ms, 150);
 
         // "gere um gif animado..." replying to a photo, without -gif: the edit (multipart) with the photo as PNG
-        const photo = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/jpeg', data: PNG_4X2 } });
-        const animated = (await bot.executar('/gpt gere um gif animado de como se estivesse nadando', { citada: photo })).at(-1);
+        const photo = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'image', media: { mimetype: 'image/jpeg', data: PNG_4X2 } });
+        const animated = (await bot.execute('/gpt gere um gif animado de como se estivesse nadando', { quoted: photo })).at(-1);
         assert.equal(animated.options.sendVideoAsGif, true);
-        const edit = network.chamadas.at(-1);
+        const edit = network.calls.at(-1);
         assert.equal(edit.url, 'https://api.openai.com/v1/images/edits');
         assert.equal(edit.cfg.body.get('output_format'), 'gif');
         assert.equal(edit.cfg.body.get('frame_count'), '12');
@@ -653,22 +653,22 @@ describe('/gpt', () => {
 
         network.responder('post', 'api.openai.com/v1/images/generations',
             errorHttp(400, 'HTTP 400', { data: { error: { message: 'output_format gif requires access to the GIF preview' } } }));
-        const [withoutPreview] = await bot.replyAlt('/gpt -gif x', { erroEsperado: true });
+        const [withoutPreview] = await bot.replyAlt('/gpt -gif x', { expectedError: true });
         assert.match(withoutPreview, /^🔒 A sua conta\/modelo não faz GIF animado: output_format gif requires access to the GIF preview\n/);
         assert.match(withoutPreview, /Só os gpt-image-2\.6-\* fazem GIF/);
 
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [] });
-        assert.deepEqual(await bot.replyAlt('/gpt -gif x', { erroEsperado: true }), ['❌ Erro no /gpt: a OpenAI não devolveu a imagem']);
+        assert.deepEqual(await bot.replyAlt('/gpt -gif x', { expectedError: true }), ['❌ Erro no /gpt: a OpenAI não devolveu a imagem']);
 
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'R0lG' }] });
-        processes.falhar = 'ffmpeg';
+        processes.fail = 'ffmpeg';
         try {
             // Without the conversion, the .gif still arrives, as a document
-            const document = (await bot.executar('/gpt -gif x', { erroEsperado: true })).at(-1);
+            const document = (await bot.execute('/gpt -gif x', { expectedError: true })).at(-1);
             assert.equal(document.content.mimetype, 'image/gif');
             assert.equal(document.options.sendMediaAsDocument, true);
         } finally {
-            processes.falhar = null;
+            processes.fail = null;
         }
     });
 
@@ -676,17 +676,17 @@ describe('/gpt', () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         await bot.setSetting('bot.users', [bot.OTHERAlt.user]);
         await bot.setSetting('bot.users.cmds', [`${bot.OTHERAlt.user}=/gpt`]);
-        const beforeAlt = network.chamadas.length;
+        const beforeAlt = network.calls.length;
 
         assert.deepEqual(await bot.replyAlt('/gpt -img um robô', { de: bot.OTHERAlt.jid }),
             ['⛔ Apenas o dono do bot (ou um admin) pode usar o -img do /gpt.']);
         assert.deepEqual(await bot.replyAlt('/gpt -gif um gato', { de: bot.OTHERAlt.jid }),
             ['⛔ Apenas o dono do bot (ou um admin) pode usar o -gif do /gpt.']);
 
-        const photo = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/png', data: PNG_4X2 } });
-        assert.deepEqual(await bot.replyAlt('/gpt gere um gif animado dele nadando', { de: bot.OTHERAlt.jid, citada: photo }),
+        const photo = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'image', media: { mimetype: 'image/png', data: PNG_4X2 } });
+        assert.deepEqual(await bot.replyAlt('/gpt gere um gif animado dele nadando', { de: bot.OTHERAlt.jid, quoted: photo }),
             ['⛔ Apenas o dono do bot (ou um admin) pode gerar GIF.']);
-        assert.equal(network.chamadas.length, beforeAlt, 'nada foi para a OpenAI');
+        assert.equal(network.calls.length, beforeAlt, 'nada foi para a OpenAI');
     });
 
     test('a resposta em Markdown chega na formatação do WhatsApp (títulos, negrito duplo, tabela)', async () => {
@@ -699,7 +699,7 @@ describe('/gpt', () => {
         ]);
 
         // And the model is instructed to write for WhatsApp
-        const system = network.chamadas.at(-1).cfg.body.messages[0].content;
+        const system = network.calls.at(-1).cfg.body.messages[0].content;
         assert.match(system, /Formate para o WhatsApp.*\*negrito\* com um asterisco só.*Não use títulos com #, tabelas/s);
     });
 
@@ -708,7 +708,7 @@ describe('/gpt', () => {
         try {
             network.responder('post', 'api.openai.com', { choices: [{ message: { content: '/cache -a' } }] });
             assert.deepEqual(await bot.replyAlt('/gpt diga um comando'), ['🤖 /cache -a']);
-            assert.equal(network.chamadas.at(-1).cfg.headers.Authorization, 'Bearer sk-env');
+            assert.equal(network.calls.at(-1).cfg.headers.Authorization, 'Bearer sk-env');
         } finally {
             delete process.env.OPENAI_API_KEY;
         }
@@ -719,16 +719,16 @@ describe('/gpt', () => {
         network.responder('post', 'api.openai.com', { choices: [{ message: { content: 'ok' } }] });
 
         await bot.replyAlt('/gpt oi');
-        assert.equal(network.chamadas.at(-1).cfg.body.model, 'gpt-4o-mini');
+        assert.equal(network.calls.at(-1).cfg.body.model, 'gpt-4o-mini');
 
         await bot.setSetting('gpt.api.model', 'gpt-6-luna');
         await bot.replyAlt('/gpt oi');
-        assert.equal(network.chamadas.at(-1).cfg.body.model, 'gpt-6-luna');
+        assert.equal(network.calls.at(-1).cfg.body.model, 'gpt-6-luna');
 
         process.env.OPENAI_MODEL = 'gpt-4.1';
         try {
             await bot.replyAlt('/gpt oi');
-            assert.equal(network.chamadas.at(-1).cfg.body.model, 'gpt-4.1');
+            assert.equal(network.calls.at(-1).cfg.body.model, 'gpt-4.1');
         } finally {
             delete process.env.OPENAI_MODEL;
         }
@@ -737,13 +737,13 @@ describe('/gpt', () => {
     test('-prices: lê a tabela Standard do site da OpenAI e atualiza o gpt.pricing, sem tocar no que a página não tem', async () => {
         const line = (nameAlt, ...v) => `[1,[[0,&quot;${nameAlt}&quot;]${v.map(x => `,[0,${typeof x === 'string' ? `&quot;${x}&quot;` : x}]`).join('')}]]`;
         const page = '<astro-island props="' + [
-            line('gpt-4o-mini', 0.2, 0.075, 0.7),                 // mudou
+            line('gpt-4o-mini', 0.2, 0.075, 0.7),                 // didChange
             line('gpt-9-novo (&lt;272K context length)', 3, 0.3, '-', 12), // new, and the range leaves the name
-            line('gpt-9-novo (&gt;272K context length)', 6, '-', '-', 24),  // a primeira linha vale
-            line('gpt-9-pro', 30, '-', '-', 180),                 // pro: fora
-            line('gpt-4o-mini-2024-07-18', 3, 0.15),              // fine-tuning (data): fora
-            line('gpt-4o-mini-tts', 0.6, '-', 12),                // voz: fora
-            line('gpt-4o-mini', 0.075, '-', 0.3)                  // Batch: a primeira linha vale
+            line('gpt-9-novo (&gt;272K context length)', 6, '-', '-', 24),  // a primeira line vale
+            line('gpt-9-pro', 30, '-', '-', 180),                 // pro: out
+            line('gpt-4o-mini-2024-07-18', 3, 0.15),              // fine-tuning (data): out
+            line('gpt-4o-mini-tts', 0.6, '-', 12),                // voice: out
+            line('gpt-4o-mini', 0.075, '-', 0.3)                  // Batch: a primeira line vale
         ].join(',') + '"></astro-island>';
         network.responder('get', 'developers.openai.com/api/docs/pricing', page);
         await bot.setSetting('gpt.pricing', ['gpt-4o-mini=0.15/0.6', 'meu-modelo=1/2']);
@@ -764,47 +764,47 @@ describe('/gpt', () => {
     });
 
     test('atualização automática dos preços: a cada 15 dias, só com a chave e o gpt.pricing.auto; aviso no rodapé com 30+', async () => {
-        const { updatePricesSeExpired } = bot.src('openaiChat');
+        const { updatePricesIfExpired } = bot.src('openaiChat');
         const page = '<x props="[1,[[0,&quot;gpt-4o-mini&quot;],[0,0.3],[0,0.1],[0,0.9]]]"></x>';
         network.responder('get', 'developers.openai.com/api/docs/pricing', page);
         const day = 86400000;
         const today = Date.now();
 
         // Without the key: nothing
-        assert.equal(await updatePricesSeExpired(today + 40 * day), null);
+        assert.equal(await updatePricesIfExpired(today + 40 * day), null);
         await bot.setSetting('gpt.api.key', 'sk-teste');
 
         // Never updated (prices and date empty, the default): updates now, without waiting for the 15 days
-        const first = await updatePricesSeExpired(today);
-        assert.deepEqual(first.novos, ['gpt-4o-mini']);
+        const first = await updatePricesIfExpired(today);
+        assert.deepEqual(first.added, ['gpt-4o-mini']);
         assert.deepEqual(bot.getSetting('gpt.pricing'), ['gpt-4o-mini=0.3/0.9']);
         await bot.setSetting('gpt.pricing', ['gpt-4o-mini=0.15/0.6']);
 
         // Just updated: not expired yet
         await bot.setSetting('gpt.pricing.updated', new Date(today).toISOString().slice(0, 10));
-        assert.equal(await updatePricesSeExpired(today + 10 * day), null);
+        assert.equal(await updatePricesIfExpired(today + 10 * day), null);
 
         // Turned off by gpt.pricing.auto: nothing, even if expired
-        const queries = () => network.chamadas.filter(c => c.url.includes('/pricing')).length;
+        const queries = () => network.calls.filter(c => c.url.includes('/pricing')).length;
         const beforeAlt = queries();
         await bot.setSetting('gpt.pricing.auto', false);
-        assert.equal(await updatePricesSeExpired(today + 40 * day), null);
+        assert.equal(await updatePricesIfExpired(today + 40 * day), null);
         assert.equal(queries(), beforeAlt);
 
-        // Vencido (16 dias) e ligado: atualiza e grava a data
+        // Vencido (16 days) e on: atualiza e grava a data
         await bot.setSetting('gpt.pricing.auto', true);
-        const r = await updatePricesSeExpired(today + 16 * day);
-        assert.equal(r.mudados.length, 1);
+        const r = await updatePricesIfExpired(today + 16 * day);
+        assert.equal(r.changed.length, 1);
         assert.ok(bot.getSetting('gpt.pricing').includes('gpt-4o-mini=0.3/0.9'));
         assert.equal(bot.getSetting('gpt.pricing.updated'), new Date().toISOString().slice(0, 10));
 
         // Failure (site down): touches nothing and waits before trying again
         await bot.setSetting('gpt.pricing.updated', '2026-01-01');
         network.responder('get', 'developers.openai.com/api/docs/pricing', '<html></html>');
-        assert.equal(await updatePricesSeExpired(today), null);
-        const n = network.chamadas.length;
-        assert.equal(await updatePricesSeExpired(today + 1000), null);
-        assert.equal(network.chamadas.length, n, 'não tenta de novo antes do intervalo');
+        assert.equal(await updatePricesIfExpired(today), null);
+        const n = network.calls.length;
+        assert.equal(await updatePricesIfExpired(today + 1000), null);
+        assert.equal(network.calls.length, n, 'não tenta de novo antes do intervalo');
 
         // Old prices (30+ days): the -status footer warns
         network.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: 'Oi.' } }], usage: { prompt_tokens: 1, completion_tokens: 1 } });
@@ -887,12 +887,12 @@ describe('/gpt', () => {
         ].join('\n'));
         assert.doesNotMatch(r, /sk-/);
 
-        const consumption = network.chamadas.find(c => c.url.includes('/organization/usage/completions'));
+        const consumption = network.calls.find(c => c.url.includes('/organization/usage/completions'));
         assert.equal(consumption.cfg.headers.Authorization, 'Bearer sk-admin-teste');
         assert.equal(consumption.cfg.params.bucket_width, '1d');
         assert.equal(consumption.cfg.params.limit, 3);
         assert.deepEqual(consumption.cfg.params.group_by, ['model']);
-        const limits = network.chamadas.find(c => c.url.endsWith('/chat/completions'));
+        const limits = network.calls.find(c => c.url.endsWith('/chat/completions'));
         assert.equal(limits.cfg.headers.Authorization, 'Bearer sk-teste');
         assert.equal(limits.cfg.body.max_completion_tokens, 16);
     });
@@ -915,7 +915,7 @@ describe('/gpt', () => {
 
         await bot.setSetting('gpt.admin.key', 'sk-admin-teste');
         network.responder('get', 'api.openai.com/v1/organization/usage/completions', errorHttp(403));
-        const [rejected] = await bot.replyAlt('/gpt -usage', { erroEsperado: true });
+        const [rejected] = await bot.replyAlt('/gpt -usage', { expectedError: true });
         assert.match(rejected, /^🔑 A chave de admin foi recusada\.\n💡 _A Usage API pede uma Admin key/);
         assert.match(rejected, /⏱️ \*Limites agora\*/);
     });
@@ -1031,7 +1031,7 @@ describe('/gpt', () => {
         for (const [errorAlt, expected] of cases) {
             network.responder('post', 'api.openai.com', errorAlt);
             const logBefore = bot.logs.length;
-            assert.match((await bot.replyAlt('/gpt oi', { erroEsperado: true }))[0], expected);
+            assert.match((await bot.replyAlt('/gpt oi', { expectedError: true }))[0], expected);
             assert.ok(!bot.logs.slice(logBefore).some(l => l.includes('sk-tes')), 'a chave apareceu no log');
         }
     });
@@ -1040,7 +1040,7 @@ describe('/gpt', () => {
 describe('/draw', () => {
     const PNG_4X2 = Buffer.from('png:4x2').toString('base64');
     const GIF = Buffer.from('GIF89a').toString('base64');
-    const imageCalls = () => network.chamadas.filter(c => /\/images\/(generations|edits)$/.test(c.url));
+    const imageCalls = () => network.calls.filter(c => /\/images\/(generations|edits)$/.test(c.url));
 
     beforeEach(async () => {
         await bot.setSetting('gpt.status', false);
@@ -1059,7 +1059,7 @@ describe('/draw', () => {
     });
 
     test('desenha a imagem (modelo gpt.image.model) com o pedido na legenda; os aliases valem', async () => {
-        const r = (await bot.executar('/draw um gato astronauta')).at(-1);
+        const r = (await bot.execute('/draw um gato astronauta')).at(-1);
         assert.ok(r.content instanceof MessageMedia);
         assert.equal(r.content.mimetype, 'image/png');
         assert.equal(r.content.data, 'UE5H');
@@ -1071,17 +1071,17 @@ describe('/draw', () => {
         assert.ok(cfg.timeout >= 180000, 'imagem leva mais que 1 minuto: no mínimo 3');
 
         for (const alias of ['/draw', '/draw', '/draw']) {
-            assert.equal((await bot.executar(`${alias} um cachorro`)).at(-1).content.data, 'UE5H');
+            assert.equal((await bot.execute(`${alias} um cachorro`)).at(-1).content.data, 'UE5H');
         }
         // Replying to a message, its text goes before the request
-        const quoted = bot.createMessage({ texto: 'um castelo', de: bot.OTHERAlt.jid });
-        await bot.executar('/draw na neve', { citada: quoted });
+        const quoted = bot.createMessage({ text: 'um castelo', de: bot.OTHERAlt.jid });
+        await bot.execute('/draw na neve', { quoted });
         assert.equal(imageCalls().at(-1).cfg.body.prompt, 'um castelo\n\nna neve');
     });
 
     test('numa foto (respondida ou na legenda): edita a foto', async () => {
-        const photo = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/jpeg', data: PNG_4X2 } });
-        const r = (await bot.executar('/draw coloque um chapéu nele', { citada: photo })).at(-1);
+        const photo = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'image', media: { mimetype: 'image/jpeg', data: PNG_4X2 } });
+        const r = (await bot.execute('/draw coloque um chapéu nele', { quoted: photo })).at(-1);
         assert.equal(r.content.data, 'RURJVA==');
         const edit = imageCalls().at(-1);
         assert.equal(edit.url, 'https://api.openai.com/v1/images/edits');
@@ -1089,7 +1089,7 @@ describe('/draw', () => {
         assert.equal(edit.cfg.body.get('image').type, 'image/png');
 
         // The photo with the command caption
-        const captionAlt = bot.createMessage({ texto: '/draw vire um desenho a lápis', tipo: 'image', midia: { mimetype: 'image/png', data: PNG_4X2 } });
+        const captionAlt = bot.createMessage({ text: '/draw vire um desenho a lápis', type: 'image', media: { mimetype: 'image/png', data: PNG_4X2 } });
         await bot.deliver(captionAlt);
         assert.equal(imageCalls().at(-1).url, 'https://api.openai.com/v1/images/edits');
         assert.equal(imageCalls().at(-1).cfg.body.get('prompt'), 'vire um desenho a lápis');
@@ -1098,7 +1098,7 @@ describe('/draw', () => {
     test('-gif: GIF 512x512 de 9 quadros (settings), -frames e -ms sobrepõem e valem como -gif; vira MP4 em loop', async () => {
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: GIF }] });
 
-        const gif = (await bot.executar('/draw -gif um gato dançando')).at(-1);
+        const gif = (await bot.execute('/draw -gif um gato dançando')).at(-1);
         assert.equal(gif.content.mimetype, 'video/mp4');
         assert.equal(gif.options.sendVideoAsGif, true);
         assert.equal(gif.options.caption, '🎞️ um gato dançando');
@@ -1110,9 +1110,9 @@ describe('/draw', () => {
         assert.ok(cfg.timeout >= 300000, 'o GIF leva mais: no mínimo 5 minutos');
 
         // -frames and -ms (and the short -g, -f) count as -gif
-        await bot.executar('/draw -f 6 -ms 300 uma bandeira ao vento');
+        await bot.execute('/draw -f 6 -ms 300 uma bandeira ao vento');
         assert.deepEqual([imageCalls().at(-1).cfg.body.frame_count, imageCalls().at(-1).cfg.body.frame_duration_ms], [6, 300]);
-        await bot.executar('/draw -g -f 4 uma bandeira');
+        await bot.execute('/draw -g -f 4 uma bandeira');
         assert.deepEqual([imageCalls().at(-1).cfg.body.frame_count, imageCalls().at(-1).cfg.body.frame_duration_ms], [4, 200]);
         assert.equal(imageCalls().at(-1).cfg.body.prompt, 'uma bandeira');
 
@@ -1126,9 +1126,9 @@ describe('/draw', () => {
 
     test('-gif numa foto (respondida ou na legenda): edita e anima; o GIF vem como documento se o ffmpeg falhar', async () => {
         network.responder('post', 'api.openai.com/v1/images/edits', { data: [{ b64_json: GIF }] });
-        const photo = bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/jpeg', data: PNG_4X2 } });
+        const photo = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'image', media: { mimetype: 'image/jpeg', data: PNG_4X2 } });
 
-        const animated = (await bot.executar('/draw -gif', { citada: photo })).at(-1);
+        const animated = (await bot.execute('/draw -gif', { quoted: photo })).at(-1);
         assert.equal(animated.options.sendVideoAsGif, true);
         const edit = imageCalls().at(-1);
         assert.equal(edit.url, 'https://api.openai.com/v1/images/edits');
@@ -1136,17 +1136,17 @@ describe('/draw', () => {
         assert.equal(edit.cfg.body.get('size'), '512x512');
         assert.equal(edit.cfg.body.get('prompt'), 'Anime esta imagem em um GIF. Com um movimento sutil e natural.');
 
-        const captionAlt = bot.createMessage({ texto: '/draw -gif nadando', tipo: 'image', midia: { mimetype: 'image/png', data: PNG_4X2 } });
+        const captionAlt = bot.createMessage({ text: '/draw -gif nadando', type: 'image', media: { mimetype: 'image/png', data: PNG_4X2 } });
         await bot.deliver(captionAlt);
         assert.equal(imageCalls().at(-1).cfg.body.get('prompt'), 'Anime esta imagem em um GIF. nadando');
 
-        processes.falhar = 'ffmpeg';
+        processes.fail = 'ffmpeg';
         try {
-            const document = (await bot.executar('/draw -gif nadando', { citada: photo, erroEsperado: true })).at(-1);
+            const document = (await bot.execute('/draw -gif nadando', { quoted: photo, expectedError: true })).at(-1);
             assert.equal(document.content.mimetype, 'image/gif');
             assert.equal(document.options.sendMediaAsDocument, true);
         } finally {
-            processes.falhar = null;
+            processes.fail = null;
         }
     });
 
@@ -1183,7 +1183,7 @@ describe('/draw', () => {
         assert.equal(bot.getSetting('gpt.image.model'), 'dall-e-3');
 
         // Each command uses the model of its use
-        await bot.executar('/draw um gato');
+        await bot.execute('/draw um gato');
         assert.equal(imageCalls().at(-1).cfg.body.model, 'dall-e-3');
     });
 
@@ -1197,13 +1197,13 @@ describe('/draw', () => {
         assert.deepEqual(await bot.replyAlt('/draw um gato', { de: bot.OTHERAlt.jid }), []);
 
         await bot.setSetting('bot.users.cmds', [`${bot.OTHERAlt.user}=/draw`]);
-        assert.equal((await bot.executar('/draw um gato', { de: bot.OTHERAlt.jid })).at(-1).content.data, 'UE5H');
+        assert.equal((await bot.execute('/draw um gato', { de: bot.OTHERAlt.jid })).at(-1).content.data, 'UE5H');
         assert.deepEqual(await bot.replyAlt('/draw -m gpt-image-2', { de: bot.OTHERAlt.jid }),
             ['⛔ Apenas o dono do bot (ou um admin) pode usar o -model do /draw.']);
     });
 
     test('-status: o consumo no rodapé, numa mensagem à parte (a mídia não tem rodapé)', async () => {
-        const replies = await bot.executar('/draw -s um gato');
+        const replies = await bot.execute('/draw -s um gato');
         assert.equal(replies.at(-2).content.data, 'UE5H');
         assert.match(replies.at(-1).content ?? replies.at(-1), /^_📡 ⬆️ \d+ B TX · ⬇️ \d+ B RX/);
     });
@@ -1216,7 +1216,7 @@ describe('/tldr', () => {
     // Messages received in the group, saved `minutos` minutes ago
     async function chat(linesAlt, minutes = 10) {
         for (const [i, [textAlt, de = bot.OTHERAlt.jid]] of linesAlt.entries()) {
-            const msg = bot.createMessage({ texto: textAlt, de });
+            const msg = bot.createMessage({ text: textAlt, de });
             await bot.deliver(msg);
             await bot.dbRun('UPDATE messages SET timestamp = ? WHERE id = ?', [Date.now() - minutes * 60_000 + i * 1000, msg.id.id]);
         }
@@ -1247,11 +1247,11 @@ describe('/tldr', () => {
         // The notice becomes the summary (WhatsApp edits the message): its text is read when the OpenAI call goes out
         let visto = null;
         network.responder('post', 'api.openai.com', () => {
-            visto = bot.client.enviadas.at(-1).content;
+            visto = bot.client.sent.at(-1).content;
             return { choices: [{ message: { content: '• Resumo.' } }] };
         });
         const notice = async (commandAlt) => {
-            await bot.executar(commandAlt);
+            await bot.execute(commandAlt);
             return visto;
         };
 
@@ -1266,22 +1266,22 @@ describe('/tldr', () => {
     test('opção desconhecida na 1ª palavra (/tldr -price): erro com a dica do -h, sem chamar a OpenAI; -2h continua valendo', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         assert.deepEqual(await bot.replyAlt('/tldr -price'), ['❌ Opção desconhecida: -price\n💡 _Veja as opções com /tldr -h|-help_']);
-        assert.equal(network.chamadas.length, 0);
+        assert.equal(network.calls.length, 0);
         assert.doesNotMatch((await bot.replyAlt('/tldr -2h'))[0], /Opção desconhecida/);
     });
 
     test('resume as mensagens do chat; comandos, apagadas e mídias sem legenda ficam de fora', async () => {
         await chat([['almoço domingo?'], ['bora', bot.OWNER.jid], ['eu levo a sobremesa']]);
         await chat([['/ping']]);
-        const deleted = bot.createMessage({ texto: 'segredo', de: bot.OTHERAlt.jid });
+        const deleted = bot.createMessage({ text: 'segredo', de: bot.OTHERAlt.jid });
         await bot.deliver(deleted);
-        await bot.apagar(deleted);
-        await bot.deliver(bot.createMessage({ de: bot.OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/png', data: 'AA==' } }));
+        await bot.erase(deleted);
+        await bot.deliver(bot.createMessage({ de: bot.OTHERAlt.jid, type: 'image', media: { mimetype: 'image/png', data: 'AA==' } }));
 
         const [r] = await bot.replyAlt('/tldr');
         assert.match(r, /^🤖 \*Resumo de Família\*\n_3 mensagens · \d\d\/\d\d, \d\d:\d\d a \d\d\/\d\d, \d\d:\d\d_\n\n• Combinaram o almoço de domingo\.$/);
 
-        const { cfg } = network.chamadas.at(-1);
+        const { cfg } = network.calls.at(-1);
         assert.equal(cfg.headers.Authorization, 'Bearer sk-teste');
         assert.match(cfg.body.messages[0].content, /resume conversas de WhatsApp/);
         const textAlt = cfg.body.messages[1].content;
@@ -1292,17 +1292,17 @@ describe('/tldr', () => {
     test('respondendo uma mensagem: resume dela até agora; o período digitado ou o -c ganham', async () => {
         await chat([['velha 1'], ['velha 2'], ['velha 3']], 300);
         await chat([['nova 1'], ['nova 2'], ['nova 3']], 30);
-        const quoted = bot.createMessage({ texto: 'onde parei', de: bot.OTHERAlt.jid, timestamp: Math.floor((Date.now() - 60 * 60_000) / 1000) });
+        const quoted = bot.createMessage({ text: 'onde parei', de: bot.OTHERAlt.jid, timestamp: Math.floor((Date.now() - 60 * 60_000) / 1000) });
 
-        const [r] = await bot.replyAlt('/tldr', { citada: quoted });
+        const [r] = await bot.replyAlt('/tldr', { quoted });
         assert.match(r, /\(a partir da mensagem respondida\)/);
-        const textAlt = network.chamadas.at(-1).cfg.body.messages[1].content;
+        const textAlt = network.calls.at(-1).cfg.body.messages[1].content;
         assert.doesNotMatch(textAlt, /velha/);
         assert.match(textAlt, /nova 1[\s\S]*nova 3/);
 
         // With a typed period, the replied one does not count
-        await bot.replyAlt('/tldr 400m', { citada: quoted });
-        assert.match(network.chamadas.at(-1).cfg.body.messages[1].content, /velha 1/);
+        await bot.replyAlt('/tldr 400m', { quoted });
+        assert.match(network.calls.at(-1).cfg.body.messages[1].content, /velha 1/);
     });
 
     test('período: 2h pega só as recentes; N limita a quantidade', async () => {
@@ -1310,10 +1310,10 @@ describe('/tldr', () => {
         await chat([['nova 1'], ['nova 2'], ['nova 3']], 30);
 
         await bot.replyAlt('/tldr 2h');
-        assert.doesNotMatch(network.chamadas.at(-1).cfg.body.messages[1].content, /velha/);
+        assert.doesNotMatch(network.calls.at(-1).cfg.body.messages[1].content, /velha/);
 
         await bot.replyAlt('/tldr -4');
-        const textAlt = network.chamadas.at(-1).cfg.body.messages[1].content;
+        const textAlt = network.calls.at(-1).cfg.body.messages[1].content;
         assert.match(textAlt, /\(4 mensagens\)/);
         assert.match(textAlt, /velha 3[\s\S]*nova 3/);
     });
@@ -1335,7 +1335,7 @@ describe('/tldr', () => {
         await bot.setSetting('cache.messageRetentionHours', 720);
         const [r] = await bot.replyAlt('/tldr 30d');
         assert.doesNotMatch(r, /ficam só/);
-        assert.match(network.chamadas.at(-1).cfg.body.messages[1].content, /de ontem 1[\s\S]*agora 3/);
+        assert.match(network.calls.at(-1).cfg.body.messages[1].content, /de ontem 1[\s\S]*agora 3/);
 
         // And the new limit cuts what goes over it
         assert.match((await bot.replyAlt('/tldr 40d'))[0], /ficam só 30 dias \(720 h\)/);
@@ -1347,31 +1347,31 @@ describe('/tldr', () => {
         const WORK = '120363000000000002@g.us';
         bot.createGroup(WORK, 'Trabalho Rio', [bot.OWNER.jid, bot.OTHERAlt.jid]);
         for (const textAlt of ['reunião às 15h', 'ok', 'levo o projetor']) {
-            await bot.deliver(bot.createMessage({ texto: textAlt, de: bot.OTHERAlt.jid, chat: WORK }));
+            await bot.deliver(bot.createMessage({ text: textAlt, de: bot.OTHERAlt.jid, chat: WORK }));
         }
 
         // In private, your messages have the other participant as the sender: from_me tells them apart
         for (const [textAlt, de] of [['oi', bot.OTHERAlt.jid], ['tudo bem?', bot.OWNER.jid], ['tudo', bot.OTHERAlt.jid]]) {
-            await bot.deliver(bot.createMessage({ texto: textAlt, de, chat: bot.OTHERAlt.jid }));
+            await bot.deliver(bot.createMessage({ text: textAlt, de, chat: bot.OTHERAlt.jid }));
         }
         await bot.replyAlt('/tldr', { chat: bot.OTHERAlt.jid });
-        assert.match(network.chamadas.at(-1).cfg.body.messages[1].content, /Fulano: oi\n.*Dono: tudo bem\?\n.*Fulano: tudo$/);
+        assert.match(network.calls.at(-1).cfg.body.messages[1].content, /Fulano: oi\n.*Dono: tudo bem\?\n.*Fulano: tudo$/);
 
-        const r = await bot.executar('/tldr -c "rio trabalho" -private');
-        assert.equal(r[0].texto, '🤖 Resumo enviado no seu privado.');
+        const r = await bot.execute('/tldr -c "rio trabalho" -private');
+        assert.equal(r[0].text, '🤖 Resumo enviado no seu privado.');
         assert.equal(r[1].chatId, bot.OWNER.jid);
-        assert.match(r[1].texto, /🤖 \*Resumo de Trabalho Rio\*/);
+        assert.match(r[1].text, /🤖 \*Resumo de Trabalho Rio\*/);
 
         assert.match((await bot.replyAlt('/tldr -c xyz'))[0], /❌ Nenhum chat no cache casa com "xyz"/);
 
         // Like /show: /regex/ and @mention; more than one chat matches: lists and waits for the no.
-        const r2 = await bot.executar('/tldr -c /rio$/ -private');
-        assert.match(r2[1].texto, /🤖 \*Resumo de Trabalho Rio\*/);
+        const r2 = await bot.execute('/tldr -c /rio$/ -private');
+        assert.match(r2[1].text, /🤖 \*Resumo de Trabalho Rio\*/);
 
         const OTHER_GROUP = '120363000000000003@g.us';
         bot.createGroup(OTHER_GROUP, 'Trabalho SP', [bot.OWNER.jid, bot.OTHERAlt.jid]);
         for (const textAlt of ['bom dia', 'oi', 'ok']) {
-            await bot.deliver(bot.createMessage({ texto: textAlt, de: bot.OTHERAlt.jid, chat: OTHER_GROUP }));
+            await bot.deliver(bot.createMessage({ text: textAlt, de: bot.OTHERAlt.jid, chat: OTHER_GROUP }));
         }
         const choosing = await bot.replyChoosing('/tldr -c trabalho -private', '2');
         assert.match(choosing[0], /🔎 "trabalho" corresponde a 2 chats/);
@@ -1384,7 +1384,7 @@ describe('/tldr', () => {
 
         await chat([['a'], ['b'], ['c']]);
         network.responder('post', 'api.openai.com', errorHttp(429));
-        assert.deepEqual(await bot.replyAlt('/tldr', { erroEsperado: true }), ['💸 Limite ou créditos da OpenAI esgotados. Tente mais tarde.']);
+        assert.deepEqual(await bot.replyAlt('/tldr', { expectedError: true }), ['💸 Limite ou créditos da OpenAI esgotados. Tente mais tarde.']);
 
         await bot.setSetting('gpt.api.key', '');
         assert.match((await bot.replyAlt('/tldr'))[0], /⚠️ API key da OpenAI não encontrada: o \/tldr está desativado/);
@@ -1403,14 +1403,14 @@ describe('/translate', () => {
         network.responder('post', 'google-translate-api-x', translation('Olá, mundo!\nTudo bem?'));
 
         assert.deepEqual(await bot.replyAlt('/translate Hello, world!\nHow are you?'), ['🌐 *Tradução* _(en → pt)_\n\nOlá, mundo!\nTudo bem?']);
-        const { texto: textAlt, to } = network.chamadas.at(-1).cfg.body;
-        assert.deepEqual({ texto: textAlt, to }, { texto: 'Hello, world!\nHow are you?', to: 'pt' });
+        const { text: textAlt, to } = network.calls.at(-1).cfg.body;
+        assert.deepEqual({ text: textAlt, to }, { text: 'Hello, world!\nHow are you?', to: 'pt' });
     });
 
     test('o pedido tem tempo limite (o fetch do pacote não tem)', async t => {
         network.responder('post', 'google-translate-api-x', translation('olá'));
         await bot.replyAlt('/translate hello');
-        const { requestFunction } = network.chamadas.at(-1).cfg.body;
+        const { requestFunction } = network.calls.at(-1).cfg.body;
 
         const fetchFake = t.mock.method(globalThis, 'fetch', async () => ({ ok: true }));
         await requestFunction('https://translate.google.com/x', { method: 'POST' });
@@ -1423,20 +1423,20 @@ describe('/translate', () => {
         network.responder('post', 'google-translate-api-x', translation('Good morning', 'pt'));
 
         await bot.replyAlt('/translate -to en bom dia');
-        assert.equal(network.chamadas.at(-1).cfg.body.to, 'en');
-        assert.equal(network.chamadas.at(-1).cfg.body.texto, 'bom dia');
+        assert.equal(network.calls.at(-1).cfg.body.to, 'en');
+        assert.equal(network.calls.at(-1).cfg.body.text, 'bom dia');
 
         await bot.replyAlt('/translate -p ZH-cn bom dia');
-        assert.equal(network.chamadas.at(-1).cfg.body.to, 'zh-CN');
+        assert.equal(network.calls.at(-1).cfg.body.to, 'zh-CN');
 
-        const quoted = bot.createMessage({ texto: 'buenos días', de: bot.OTHERAlt.jid });
-        await bot.replyAlt('/translate -p fr', { citada: quoted });
-        assert.equal(network.chamadas.at(-1).cfg.body.to, 'fr');
-        assert.equal(network.chamadas.at(-1).cfg.body.texto, 'buenos días');
+        const quoted = bot.createMessage({ text: 'buenos días', de: bot.OTHERAlt.jid });
+        await bot.replyAlt('/translate -p fr', { quoted });
+        assert.equal(network.calls.at(-1).cfg.body.to, 'fr');
+        assert.equal(network.calls.at(-1).cfg.body.text, 'buenos días');
 
         await bot.setSetting('translate.lang', 'es');
         await bot.replyAlt('/translate oi');
-        assert.equal(network.chamadas.at(-1).cfg.body.to, 'es');
+        assert.equal(network.calls.at(-1).cfg.body.to, 'es');
     });
 
     test('texto já no idioma de destino ganha uma dica', async () => {
@@ -1445,10 +1445,10 @@ describe('/translate', () => {
     });
 
     test('-l lista os idiomas (sem o auto), sem chamar a rede', async () => {
-        const beforeAlt = network.chamadas.length;
+        const beforeAlt = network.calls.length;
         const [r] = await bot.replyAlt('/translate -l');
         assert.match(r, /🌐 \*Idiomas do \/translate\* \(5\)\n\n```en English\nes Spanish\nfr French\npt Portuguese\nzh-CN Chinese \(Simplified\)```/);
-        assert.equal(network.chamadas.length, beforeAlt);
+        assert.equal(network.calls.length, beforeAlt);
     });
 
     test('validações e erros do Google', async () => {
@@ -1465,7 +1465,7 @@ describe('/translate', () => {
         ];
         for (const [errorAlt, expected] of cases) {
             network.responder('post', 'google-translate-api-x', errorAlt);
-            assert.match((await bot.replyAlt('/translate hi', { erroEsperado: true }))[0], expected);
+            assert.match((await bot.replyAlt('/translate hi', { expectedError: true }))[0], expected);
         }
     });
 
@@ -1485,14 +1485,14 @@ describe('/giphy', () => {
         network.responder('get', 'api.giphy.com', { data: { images: { original: { mp4: 'https://media.giphy.com/x.mp4' } } } });
         network.responder('get', 'https://media.giphy.com/', Buffer.from('mp4'));
 
-        const [r] = await bot.executar('/giphy');
-        assert.equal(network.chamadas[0].cfg.params.tag, 'fail');
+        const [r] = await bot.execute('/giphy');
+        assert.equal(network.calls[0].cfg.params.tag, 'fail');
         assert.ok(r.content instanceof MessageMedia);
         assert.equal(r.content.mimetype, 'video/mp4');
         assert.equal(r.options.sendVideoAsGif, true);
 
-        await bot.executar('/giphy gatos');
-        assert.equal(network.chamadas.at(-2).cfg.params.tag, 'gatos');
+        await bot.execute('/giphy gatos');
+        assert.equal(network.calls.at(-2).cfg.params.tag, 'gatos');
     });
 
     test('ID ou URL: busca o GIF escolhido e aceita o MP4 alternativo', async () => {
@@ -1506,12 +1506,12 @@ describe('/giphy', () => {
         network.responder('get', mp4, Buffer.from('gif escolhido'));
 
         for (const inputAlt of [id, `https://giphy.com/gifs/reaction-${id}?origem=chat`]) {
-            const beforeAlt = network.chamadas.length;
-            const [r] = await bot.executar(`/giphy ${inputAlt}`);
-            const query = network.chamadas[beforeAlt];
+            const beforeAlt = network.calls.length;
+            const [r] = await bot.execute(`/giphy ${inputAlt}`);
+            const query = network.calls[beforeAlt];
             assert.equal(query.url, endpoint);
             assert.deepEqual(query.cfg.params, { api_key: 'giphy' });
-            assert.equal(network.chamadas[beforeAlt + 1].url, mp4);
+            assert.equal(network.calls[beforeAlt + 1].url, mp4);
             assert.ok(r.content instanceof MessageMedia);
             assert.equal(r.content.mimetype, 'video/mp4');
             assert.equal(r.content.data, Buffer.from('gif escolhido').toString('base64'));
@@ -1524,7 +1524,7 @@ describe('/giphy', () => {
         network.responder('get', 'api.giphy.com', { data: {} });
         assert.deepEqual(await bot.replyAlt('/giphy'), ['❌ Nenhum GIF encontrado.']);
         network.responder('get', 'api.giphy.com', errorHttp(500));
-        assert.deepEqual(await bot.replyAlt('/giphy', { erroEsperado: true }),
+        assert.deepEqual(await bot.replyAlt('/giphy', { expectedError: true }),
             ['❌ Não consegui buscar esse GIF.']);
     });
 });
@@ -1536,7 +1536,7 @@ describe('/meme', () => {
         network.responder('get', 'api.imgflip.com', memes);
         network.responder('get', 'https://i.imgflip.com/', network.http({ data: Buffer.from('jpg'), headers: { 'content-type': 'image/png' } }));
 
-        const [r] = await bot.executar('/meme drake');
+        const [r] = await bot.execute('/meme drake');
         assert.equal(r.options.caption, '🖼️ Drake Hotline Bling');
         assert.equal(r.content.mimetype, 'image/png');
     });
@@ -1545,7 +1545,7 @@ describe('/meme', () => {
         network.responder('get', 'api.imgflip.com', memes);
         assert.deepEqual(await bot.replyAlt('/meme xyz'), ['❌ Nenhum meme com "xyz".']);
         network.responder('get', 'api.imgflip.com', errorHttp(500));
-        assert.deepEqual(await bot.replyAlt('/meme', { erroEsperado: true }), ['❌ Não consegui buscar um meme agora.']);
+        assert.deepEqual(await bot.replyAlt('/meme', { expectedError: true }), ['❌ Não consegui buscar um meme agora.']);
     });
 });
 
@@ -1558,7 +1558,7 @@ describe('/pixelart', () => {
     const png = (widthAlt, heightAlt) => Buffer.from(`png:${widthAlt}x${heightAlt}`);
 
     // File with the 128-byte SAUCE record at the end
-    function withSauce({ titulo: title = '', autor: author = '', grupo: group = '', data = '' }) {
+    function withSauce({ title = '', author = '', group = '', data = '' }) {
         const sauce = Buffer.alloc(128, 0);
         sauce.write('SAUCE00', 0, 'latin1');
         sauce.write(title, 7, 35, 'latin1');
@@ -1568,22 +1568,22 @@ describe('/pixelart', () => {
         return Buffer.concat([Buffer.from('\x1b[0marte'), sauce]);
     }
 
-    function simulatePack(nameAlt, { arquivos: files = ['CHUCK.ANS'], altura: heightAlt = 100, sauce } = {}) {
+    function simulatePack(nameAlt, { files = ['CHUCK.ANS'], height: heightAlt = 100, sauce } = {}) {
         network.responder('get', `api.16colo.rs/v0/pack/${nameAlt}`, { name: nameAlt, year: 2021, files: files.map(filename => ({ filename })) });
         network.responder('get', `16colo.rs/pack/${nameAlt}/x1/`, png(80, heightAlt));
         network.responder('get', `16colo.rs/pack/${nameAlt}/raw/`, sauce ? withSauce(sauce) : errorHttp(404));
     }
 
     test('SAUCE: título, autor, grupo e data; sem registro é null', () => {
-        assert.deepEqual(readSauce(withSauce({ titulo: 'Chuck', autor: 'lord jazz', grupo: 'ACiD', data: '20210401' })),
-            { titulo: 'Chuck', autor: 'lord jazz', grupo: 'ACiD', data: '01/04/2021' });
+        assert.deepEqual(readSauce(withSauce({ title: 'Chuck', author: 'lord jazz', group: 'ACiD', data: '20210401' })),
+            { title: 'Chuck', author: 'lord jazz', group: 'ACiD', data: '01/04/2021' });
         assert.equal(readSauce(Buffer.from('sem sauce')), null);
     });
 
     test('pack padrão do setting, com a autoria do SAUCE na legenda e em HD', async () => {
-        simulatePack('chuck-norris-lvl', { arquivos: ['FILE_ID.DIZ', 'LEIAME.TXT', 'CHUCK.ANS'], sauce: { titulo: 'Chuck', autor: 'lord jazz', grupo: 'ACiD', data: '20210401' } });
+        simulatePack('chuck-norris-lvl', { files: ['FILE_ID.DIZ', 'LEIAME.TXT', 'CHUCK.ANS'], sauce: { title: 'Chuck', author: 'lord jazz', group: 'ACiD', data: '20210401' } });
 
-        const [r] = await bot.executar('/pixelart');
+        const [r] = await bot.execute('/pixelart');
         assert.equal(r.content.mimetype, 'image/png');
         assert.equal(r.options.caption, '🎨 *Chuck*\n👤 lord jazz / ACiD\n📦 chuck-norris-lvl (01/04/2021)\n🔗 https://16colo.rs/pack/chuck-norris-lvl/CHUCK.ANS');
         assert.equal(r.options.sendMediaAsHd, true);
@@ -1591,15 +1591,15 @@ describe('/pixelart', () => {
 
     test('sem SAUCE: nome do arquivo e ano do pack', async () => {
         simulatePack('mimic100');
-        const [r] = await bot.executar('/pixelart mimic100');
+        const [r] = await bot.execute('/pixelart mimic100');
         assert.equal(r.options.caption, '🎨 *CHUCK.ANS*\n📦 mimic100 (2021)\n🔗 https://16colo.rs/pack/mimic100/CHUCK.ANS');
     });
 
     test('arte alta vai em partes, até o pixelart.maxParts', async () => {
         await bot.setSetting('pixelart.maxParts', 2);
-        simulatePack('alta', { altura: 10000 });
+        simulatePack('alta', { height: 10000 });
 
-        const sentAlt3 = await bot.executar('/pixelart alta');
+        const sentAlt3 = await bot.execute('/pixelart alta');
         assert.equal(sentAlt3.length, 2);
         assert.match(sentAlt3[0].options.caption, /🧩 Parte 1\/2 _\(arte cortada: veja inteira no link\)_$/);
         assert.equal(sentAlt3[1].options.caption, '🧩 Parte 2/2');
@@ -1608,11 +1608,11 @@ describe('/pixelart', () => {
     test('-y e -r sorteiam entre os packs do ano ou do arquivo', async () => {
         network.responder('get', 'api.16colo.rs/v0/year/1996', [{ name: 'acid-1096' }]);
         simulatePack('acid-1096');
-        assert.match((await bot.executar('/pixelart -y 1996'))[0].options.caption, /📦 acid-1096/);
+        assert.match((await bot.execute('/pixelart -y 1996'))[0].options.caption, /📦 acid-1096/);
 
         network.responder('get', /api\.16colo\.rs\/v0\/pack$/, [{ name: 'blocktronics' }]);
         simulatePack('blocktronics');
-        assert.match((await bot.executar('/pixelart -r'))[0].options.caption, /📦 blocktronics/);
+        assert.match((await bot.execute('/pixelart -r'))[0].options.caption, /📦 blocktronics/);
     });
 
     test('ano ou pack inválidos, pack inexistente ou sem artes, 16colo.rs fora do ar', async () => {
@@ -1626,7 +1626,7 @@ describe('/pixelart', () => {
         assert.deepEqual(await bot.replyAlt('/pixelart so-txt'), ['❌ O pack so-txt não tem artes ANSI/ASCII.']);
 
         network.responder('get', 'api.16colo.rs', errorHttp(500));
-        assert.deepEqual(await bot.replyAlt('/pixelart', { erroEsperado: true }), ['❌ Não consegui buscar a arte no 16colo.rs agora.']);
+        assert.deepEqual(await bot.replyAlt('/pixelart', { expectedError: true }), ['❌ Não consegui buscar a arte no 16colo.rs agora.']);
     });
 });
 
@@ -1636,8 +1636,8 @@ describe('/joke', () => {
     test('pergunta e resposta, sem rede', async () => {
         const [r] = await bot.replyAlt('/joke');
         assert.match(r, /^.+\?\n\n\.\.\. .+ 🥁$/);
-        assert.ok(JOKES.some(p => r === `${p.pergunta}\n\n... ${p.resposta} 🥁`));
-        assert.equal(network.chamadas.length, 0);
+        assert.ok(JOKES.some(p => r === `${p.question}\n\n... ${p.answer} 🥁`));
+        assert.equal(network.calls.length, 0);
     });
 
     test('nenhuma se repete até todas saírem, nem na virada de uma rodada para a outra', async () => {
@@ -1654,8 +1654,8 @@ describe('/joke', () => {
 
     test('a lista: perguntas únicas, todas com resposta', () => {
         assert.ok(JOKES.length >= 40);
-        assert.equal(new Set(JOKES.map(p => p.pergunta)).size, JOKES.length);
-        assert.ok(JOKES.every(p => p.pergunta.trim() && p.resposta.trim()));
+        assert.equal(new Set(JOKES.map(p => p.question)).size, JOKES.length);
+        assert.ok(JOKES.every(p => p.question.trim() && p.answer.trim()));
     });
 });
 
@@ -1678,6 +1678,6 @@ describe('/kernel', () => {
 
     test('kernel.org fora do ar', async () => {
         network.responder('get', 'kernel.org', errorHttp(500));
-        assert.deepEqual(await bot.replyAlt('/kernel', { erroEsperado: true }), ['❌ Não consegui consultar o kernel.org agora.']);
+        assert.deepEqual(await bot.replyAlt('/kernel', { expectedError: true }), ['❌ Não consegui consultar o kernel.org agora.']);
     });
 });

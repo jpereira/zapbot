@@ -1,5 +1,5 @@
 /*
- * /me: Envia a mensagem digitada
+ * /me: Envia a message digitada
  */
 
 const { USER } = require('../../roles').ROLES;

@@ -25,15 +25,15 @@ async function extract({ msg, quotedMsg }) {
     }
 
     const photo = await messageImage(origin, '/ocr');
-    if (photo.erro) {
-        await msg.reply(photo.erro);
+    if (photo.error) {
+        await msg.reply(photo.error);
         return;
     }
 
     const notice = await notifyProcessing(msg, '/ocr');
     try {
         const textAlt = await askOnChat({
-            cmd: '/ocr', sistema: t('ocr.instructions', { vazio: WITHOUT_TEXT }), texto: t('ocr.prompt'), imagem: photo.imagem
+            cmd: '/ocr', system: t('ocr.instructions', { empty: WITHOUT_TEXT }), text: t('ocr.prompt'), image: photo.image
         });
         // The 📝 in front also guarantees the reply never starts with "/" (see markSentByBot)
         const reply = textAlt.trim() === WITHOUT_TEXT ? t('ocr.noText') : `📝 ${textAlt}`;

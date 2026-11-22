@@ -10,7 +10,7 @@ module.exports = {
     aliases: ['/math', '/sum'],
     summary: 'Calculates and sums the numbers of a list',
     help: 'Does a calculation (+ - * / % x ^ and parentheses, like 100/2*6 or ((1+7)*8)/2) or sums the numbers of a list, from the text or the message you reply to. In a list it takes the first number of each line ("437 gym" and "351 running" give 788); a number with a sign stuck to it counts as positive or negative (-50, +30, R$ -20). It understands 1.234,56 and 1,234.56, ignores dates, times and phone numbers, and shows the total, a tape with all the numbers it found (sign, amount and name, aligned) and the average (or, with positives and negatives, the balance, what came in, what went out and the biggest expense). A + or - at the start of a line counts as the sign of its number.',
-    digitando: false, // replies right away: without the "typing..."
+    typing: false, // replies right away: without the "typing..."
     ex: [
         '/calc 100/2*6',
         '/calc ((1+7)*8)/2',

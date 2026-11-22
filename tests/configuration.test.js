@@ -59,11 +59,11 @@ describe('commands.js', () => {
         assert.equal(roleMoreRestricted([ROLES.USER, ROLES.OWNER, ROLES.ADMIN]), ROLES.OWNER);
 
         const commandAlt = { cmd: '/x', cmd_opts: [{ opts: ['dono'], role: ROLES.OWNER }, { opts: ['adm'], role: ROLES.ADMIN }] };
-        const dado = (...names) => ({ given: new Set(names), argv: [] });
-        assert.equal(denial(commandAlt, dado('dono'), ROLES.OWNER), null);
-        assert.match(denial(commandAlt, dado('dono'), ROLES.ADMIN), /Apenas o dono do bot pode usar o -dono do \/x/);
-        assert.equal(denial(commandAlt, dado('adm'), ROLES.ADMIN), null);
-        assert.match(denial(commandAlt, dado('adm'), ROLES.USER), /Apenas o dono do bot \(ou um admin\)/);
+        const given = (...names) => ({ given: new Set(names), argv: [] });
+        assert.equal(denial(commandAlt, given('dono'), ROLES.OWNER), null);
+        assert.match(denial(commandAlt, given('dono'), ROLES.ADMIN), /Apenas o dono do bot pode usar o -dono do \/x/);
+        assert.equal(denial(commandAlt, given('adm'), ROLES.ADMIN), null);
+        assert.match(denial(commandAlt, given('adm'), ROLES.USER), /Apenas o dono do bot \(ou um admin\)/);
     });
 
     test('toda opção tem desc; valores são listas', () => {
@@ -89,7 +89,7 @@ describe('commands.js', () => {
 
     test('comando "disabled" não é carregado', () => {
         const { withoutDisabled } = bot.src('botConfig');
-        const { ativos: assets, desativados: disabled } = withoutDisabled([{ cmd: '/a' }, { cmd: '/b', disabled: true }, { cmd: '/c', disabled: false }]);
+        const { active: assets, disabled } = withoutDisabled([{ cmd: '/a' }, { cmd: '/b', disabled: true }, { cmd: '/c', disabled: false }]);
         assert.deepEqual([assets.map(c => c.cmd), disabled], [['/a', '/c'], ['/b']]);
         assert.ok(CONFIG.commands.filter(c => c.disabled).every(c => !findCommand(c.cmd)), 'nenhum desativado do config carrega');
     });
@@ -113,35 +113,35 @@ const pagesDocs = (dir = DOCS) => fs.readdirSync(dir, { withFileTypes: true }).f
 // The documentation is bilingual: docs/pagina.md is English (en_US, the default) and docs/pagina.pt-BR.md, Portuguese
 const isPt = (fileAlt) => fileAlt.endsWith('.pt-BR.md');
 const pagesEn = () => pagesDocs().filter(f => !isPt(f));
-const gemeaPt = (fileAlt) => fileAlt.replace(/\.md$/, '.pt-BR.md');
+const ptTwin = (fileAlt) => fileAlt.replace(/\.md$/, '.pt-BR.md');
 // Each page's language text: what changes between the two versions
 const LANGUAGES = [
-    { nome: 'en', sufixo: '.md', delegavel: 'delegable', resumo: '## Summary', data: /`v(\d+\.\d+\.\d+)` \(from (\d{4})-(\d{2})-(\d{2})\)/ },
-    { nome: 'pt-BR', sufixo: '.pt-BR.md', delegavel: 'delegável', resumo: '## Resumo', data: /`v(\d+\.\d+\.\d+)` \(de (\d{2})\/(\d{2})\/(\d{4})\)/ }
+    { name: 'en', suffix: '.md', isDelegable: 'delegable', summary: '## Summary', data: /`v(\d+\.\d+\.\d+)` \(from (\d{4})-(\d{2})-(\d{2})\)/ },
+    { name: 'pt-BR', suffix: '.pt-BR.md', isDelegable: 'delegável', summary: '## Resumo', data: /`v(\d+\.\d+\.\d+)` \(de (\d{2})\/(\d{2})\/(\d{4})\)/ }
 ];
-const doc = (language, rel) => readDoc(rel.replace(/\.md$/, language.sufixo));
+const doc = (language, rel) => readDoc(rel.replace(/\.md$/, language.suffix));
 
 // Without the code blocks: a bash "# comment" is not a heading
 const withoutCode = (md) => md.replace(/^```[\s\S]*?^```/gm, '');
 
 // Anchor as GitHub (and the pymdownx.slugs of mkdocs.yml) generates it: lowercase, no punctuation/emoji, space becomes a hyphen
-const ancora = (title) => title.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').replace(/\s/g, '-');
-const anchors = (md) => new Set([...withoutCode(md).matchAll(/^#{1,6} (.+)$/gm)].map(m => ancora(m[1])));
+const anchor = (title) => title.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').replace(/\s/g, '-');
+const anchors = (md) => new Set([...withoutCode(md).matchAll(/^#{1,6} (.+)$/gm)].map(m => anchor(m[1])));
 
-// Rows "| `/cmd` ..." or "| [`/cmd`](cmd.md) ..." of the table that comes after `titulo`
+// Rows "| `/cmd` ..." or "| [`/cmd`](cmd.md) ..." of the table that comes after `title`
 function commandsTable(md, title) {
-    const ini = md.indexOf(title);
-    assert.ok(ini >= 0, `sem a seção ${title}`);
-    const linesAlt = md.slice(ini).split('\n').slice(1);
+    const marker = md.indexOf(title);
+    assert.ok(marker >= 0, `sem a seção ${title}`);
+    const linesAlt = md.slice(marker).split('\n').slice(1);
     const table = [];
     for (const l of linesAlt) {
         if (/^\| (\[)?`\//.test(l)) table.push(l);
         else if (table.length) break;
     }
-    return table.map(l => ({ linha: l, cmd: l.match(/`(\/[a-z]+)`/)[1], colunas: l.split('|') }));
+    return table.map(l => ({ line: l, cmd: l.match(/`(\/[a-z]+)`/)[1], columns: l.split('|') }));
 }
 
-function checkSummary(md, title, whereAlt, { comLinks: withLinks, delegavel = 'delegável' }) {
+function checkSummary(md, title, whereAlt, { withLinks, isDelegable = 'delegável' }) {
     const linesAlt = commandsTable(md, title);
     const names = linesAlt.map(l => l.cmd);
 
@@ -150,10 +150,10 @@ function checkSummary(md, title, whereAlt, { comLinks: withLinks, delegavel = 'd
     assert.deepEqual(sorted(names), sorted(CONFIG.commands.map(c => c.cmd)), `${whereAlt}: Resumo diferente do config`);
 
     for (const c of CONFIG.commands) {
-        const { linha: line, colunas: columns } = linesAlt.find(l => l.cmd === c.cmd);
+        const { line, columns } = linesAlt.find(l => l.cmd === c.cmd);
         const aliases = [...columns[2].matchAll(/`([^`]+)`/g)].map(m => m[1]);
         assert.deepEqual(aliases, c.aliases ?? [], `${whereAlt}: aliases de ${c.cmd} no Resumo`);
-        assert.equal(columns[3].trim(), `\`${c.role}\`${c.delegavel ? ` · ${delegavel}` : ''}`, `${whereAlt}: coluna Role de ${c.cmd}`);
+        assert.equal(columns[3].trim(), `\`${c.role}\`${c.isDelegable ? ` · ${isDelegable}` : ''}`, `${whereAlt}: coluna Role de ${c.cmd}`);
         if (withLinks) assert.ok(line.includes(`](${c.cmd.slice(1)}.md)`), `${whereAlt}: ${c.cmd} sem link para a página`);
     }
 }
@@ -183,8 +183,8 @@ describe('documentação', () => {
                 if (schema.type !== 'number') continue;
                 const line = linesAlt.find(l => l.startsWith(`| \`${keyAlt}\` |`));
                 const columns = line.split('|').map(c => c.trim());
-                assert.equal(columns[2], `${schema.min}–${schema.max}`, `${language.nome} ${keyAlt}: intervalo`);
-                assert.equal(columns[3], `\`${schema.default}\``, `${language.nome} ${keyAlt}: padrão`);
+                assert.equal(columns[2], `${schema.min}–${schema.max}`, `${language.name} ${keyAlt}: intervalo`);
+                assert.equal(columns[3], `\`${schema.default}\``, `${language.name} ${keyAlt}: padrão`);
             }
         }
     });
@@ -193,14 +193,14 @@ describe('documentação', () => {
         const { generate } = require(path.join(bot.ROOT, 'scripts/generate-docs.js'));
         for (const language of LANGUAGES) {
             const current = doc(language, 'commands/index.md');
-            assert.equal(generate(current, language.nome), current, `${language.nome}: rode node scripts/generate-docs.js`);
+            assert.equal(generate(current, language.name), current, `${language.name}: rode node scripts/generate-docs.js`);
         }
     });
 
     test('uma página por comando, com o título igual ao config (aliases e "· owner"/"· admin")', () => {
         for (const c of CONFIG.commands) {
             for (const language of LANGUAGES) {
-                const fileAlt = `commands/${c.cmd.slice(1)}${language.sufixo}`;
+                const fileAlt = `commands/${c.cmd.slice(1)}${language.suffix}`;
                 assert.ok(fs.existsSync(path.join(DOCS, fileAlt)), `sem a página docs/${fileAlt}`);
 
                 const title = readDoc(fileAlt).split('\n')[0];
@@ -219,7 +219,7 @@ describe('documentação', () => {
 
     test('a tabela de opções de cada página tem as mesmas opções do commands.js', () => {
         for (const c of CONFIG.commands) for (const language of LANGUAGES) {
-            const fileAlt = `commands/${c.cmd.slice(1)}${language.sufixo}`;
+            const fileAlt = `commands/${c.cmd.slice(1)}${language.suffix}`;
             const doConfig = new Set((c.cmd_opts ?? []).flatMap(o => o.opts ?? []));
 
             // 1st column of the tables: "| `-name`, `-n` |" (the argument rows, like `<url>` or `-N`, are left out)
@@ -236,25 +236,25 @@ describe('documentação', () => {
 
     test('tabela Resumo do site e do README: todos os comandos, em ordem, iguais ao config', () => {
         for (const language of LANGUAGES) {
-            checkSummary(doc(language, 'commands/index.md'), language.resumo, `docs/commands/index${language.sufixo.slice(0, -3)}.md`,
-                { comLinks: true, delegavel: language.delegavel });
+            checkSummary(doc(language, 'commands/index.md'), language.summary, `docs/commands/index${language.suffix.slice(0, -3)}.md`,
+                { withLinks: true, isDelegable: language.isDelegable });
         }
-        checkSummary(README_PT, '## Comandos', 'README.pt-BR.md', { comLinks: false });
-        checkSummary(README, '## Commands', 'README.md', { comLinks: false, delegavel: 'delegable' });
+        checkSummary(README_PT, '## Comandos', 'README.pt-BR.md', { withLinks: false });
+        checkSummary(README, '## Commands', 'README.md', { withLinks: false, isDelegable: 'delegable' });
     });
 
     test('cada página em inglês tem a versão pt-BR com a mesma estrutura (títulos, tabelas, blocos de código e links)', () => {
         const structure = (md) => {
             const linesAlt = withoutCode(md).split('\n');
             return {
-                titulos: linesAlt.filter(l => /^#{1,6} /.test(l)).map(l => l.match(/^#+/)[0].length),
-                tabelas: linesAlt.filter(l => l.startsWith('|')).length,
-                blocos: [...md.matchAll(/^```(\w*)/gm)].map(m => m[1]),
+                titles: linesAlt.filter(l => /^#{1,6} /.test(l)).map(l => l.match(/^#+/)[0].length),
+                tables: linesAlt.filter(l => l.startsWith('|')).length,
+                blocks: [...md.matchAll(/^```(\w*)/gm)].map(m => m[1]),
                 links: [...linesAlt.join('\n').matchAll(/\]\(([^)\s#]+)(?:#[^)\s]*)?\)/g)].map(m => m[1].replace('/zapbot/pt-BR/', '/zapbot/')).sort()
             };
         };
         for (const f of pagesEn()) {
-            const pt = gemeaPt(f);
+            const pt = ptTwin(f);
             assert.ok(fs.existsSync(path.join(DOCS, pt)), `sem docs/${pt}`);
             assert.deepEqual(structure(readDoc(f)), structure(readDoc(pt)), `docs/${f} e docs/${pt} têm estruturas diferentes`);
         }
@@ -281,7 +281,7 @@ describe('documentação', () => {
         const inMenu = [...yml.slice(yml.indexOf('\nnav:')).matchAll(/([\w/-]+\.md)\s*$/gm)].map(m => m[1]);
 
         assert.deepEqual(sorted(inMenu), sorted(pagesEn()), 'página fora do menu (ou menu com página inexistente)');
-        for (const f of pagesEn()) assert.ok(pagesDocs().includes(gemeaPt(f)), `sem a versão pt-BR de ${f}`);
+        for (const f of pagesEn()) assert.ok(pagesDocs().includes(ptTwin(f)), `sem a versão pt-BR de ${f}`);
         const commands = inMenu.filter(p => p.startsWith('commands/') && p !== 'commands/index.md');
         assert.deepEqual(commands, sorted(commands), 'comandos fora de ordem no menu');
     });
@@ -319,8 +319,8 @@ describe('documentação', () => {
             for (const [keyAlt, schema] of Object.entries(SETTINGS_SCHEMA)) {
                 const line = linesAlt.find(l => l.startsWith(`| \`${keyAlt}\` |`));
                 const defaults = line.split('|')[3].trim();
-                if (schema.type === 'boolean') assert.equal(defaults, `\`${schema.default ? 'on' : 'off'}\``, `${language.nome} ${keyAlt}`);
-                if (schema.type === 'string' && schema.default !== '') assert.equal(defaults, `\`${schema.default}\``, `${language.nome} ${keyAlt}`);
+                if (schema.type === 'boolean') assert.equal(defaults, `\`${schema.default ? 'on' : 'off'}\``, `${language.name} ${keyAlt}`);
+                if (schema.type === 'string' && schema.default !== '') assert.equal(defaults, `\`${schema.default}\``, `${language.name} ${keyAlt}`);
             }
         }
     });
@@ -329,7 +329,7 @@ describe('documentação', () => {
         for (const language of LANGUAGES) {
             const keys = withoutCode(doc(language, 'settings.md')).split('\n')
                 .filter(l => /^\| `[a-z]/.test(l)).map(l => l.split('`')[1]);
-            assert.deepEqual(keys, Object.keys(SETTINGS_SCHEMA), language.nome);
+            assert.deepEqual(keys, Object.keys(SETTINGS_SCHEMA), language.name);
         }
     });
 
@@ -343,16 +343,16 @@ describe('documentação', () => {
                 if (/^(https?:|mailto:)/.test(target)) continue;
                 total++;
 
-                const [pathAlt, anc] = target.split('#');
+                const [pathAlt, anchor] = target.split('#');
                 let destination = pathAlt ? path.resolve(path.dirname(fileAlt), pathAlt) : fileAlt;
                 const whereAlt = `${path.relative(bot.ROOT, fileAlt)} → ${target}`;
 
                 assert.ok(fs.existsSync(destination), `link quebrado (arquivo): ${whereAlt}`);
                 // A Portuguese page points to the other's Portuguese version (the site resolves it like this)
-                if (isPt(fileAlt) && destination.endsWith('.md') && !isPt(destination)) destination = gemeaPt(destination);
+                if (isPt(fileAlt) && destination.endsWith('.md') && !isPt(destination)) destination = ptTwin(destination);
                 if (isPt(fileAlt) && destination.endsWith('.md')) assert.ok(fs.existsSync(destination), `sem a versão pt-BR: ${whereAlt}`);
-                if (anc && destination.endsWith('.md')) {
-                    assert.ok(anchors(fs.readFileSync(destination, 'utf8')).has(decodeURIComponent(anc)), `link quebrado (âncora): ${whereAlt}`);
+                if (anchor && destination.endsWith('.md')) {
+                    assert.ok(anchors(fs.readFileSync(destination, 'utf8')).has(decodeURIComponent(anchor)), `link quebrado (âncora): ${whereAlt}`);
                 }
             }
         }
@@ -383,7 +383,7 @@ describe('documentação', () => {
         const files = [...pagesDocs().map(f => `docs/${f}`), ...READMES];
         for (const fileAlt of files) {
             const titles = [...withoutCode(fs.readFileSync(path.join(bot.ROOT, fileAlt), 'utf8')).matchAll(/^#{1,6} (.+)$/gm)]
-                .map(m => ancora(m[1]));
+                .map(m => anchor(m[1]));
             const repeated = titles.filter((t, i) => titles.indexOf(t) !== i);
             assert.deepEqual(repeated, [], `${fileAlt}: título repetido`);
         }
@@ -408,14 +408,14 @@ describe('documentação', () => {
                 total++;
                 // "commands/show/" → docs/commands/show.md; "commands/" → docs/commands/index.md; "" → docs/index.md
                 // "pt-BR/commands/show/" → the Portuguese version (docs/commands/show.pt-BR.md)
-                const [pathAlt, anc] = url.split('#');
+                const [pathAlt, anchor] = url.split('#');
                 const pt = /^pt-BR(\/|$)/.test(pathAlt);
                 const page = pathAlt.replace(/^pt-BR\/?/, '').replace(/\/$/, '');
                 const suffix = pt ? '.pt-BR.md' : '.md';
                 const md = [`${page}${suffix}`, `${page ? `${page}/` : ''}index${suffix}`].find(f => fs.existsSync(path.join(DOCS, f)));
 
                 assert.ok(md, `${fileAlt}: página do site não existe: ${url}`);
-                if (anc) assert.ok(anchors(readDoc(md)).has(decodeURIComponent(anc)), `${fileAlt}: âncora não existe: ${url}`);
+                if (anchor) assert.ok(anchors(readDoc(md)).has(decodeURIComponent(anchor)), `${fileAlt}: âncora não existe: ${url}`);
             }
         }
         assert.ok(total > 40, `poucos links para o site (${total})`);
@@ -566,11 +566,11 @@ describe('parser de opções', () => {
     test('opção desconhecida vai para argv; no comando estrito, e o 2º número, para desconhecidas', () => {
         assert.deepEqual(GetOptFromCommand('-3 -xyz', cmd('/noffa')).argv, ['-3', '-xyz']);
         const o = GetOptFromCommand('-3 -xyz -4 chat', cmd('/show'));
-        assert.equal(o.numero, 3);
-        assert.deepEqual(o.desconhecidas, ['-xyz', '-4']);
+        assert.equal(o.number, 3);
+        assert.deepEqual(o.unknown, ['-xyz', '-4']);
         assert.deepEqual(o.argv, ['chat']);
-        assert.equal(GetOptFromCommand('chat', cmd('/show')).numero, null);
-        assert.equal(GetOptFromCommand('-3', cmd('/noffa')).numero, null);
+        assert.equal(GetOptFromCommand('chat', cmd('/show')).number, null);
+        assert.equal(GetOptFromCommand('-3', cmd('/noffa')).number, null);
     });
 
     test('aspas agrupam', () => {
@@ -584,7 +584,7 @@ describe('parser de opções', () => {
         assert.deepEqual(GetOptFromCommand(args, cmd('/show')).argv, [
             '/Jorge Pereira/', '/foo -h bar/i', '/[ /] caminho\\/arquivo/gi'
         ]);
-        assert.equal(GetOptFromCommand(args, cmd('/show')).numero, 3);
+        assert.equal(GetOptFromCommand(args, cmd('/show')).number, 3);
         assert.equal(GetOptFromCommand(args, cmd('/show')).opt.help, false);
         assert.deepEqual(GetOptFromCommand('/tmp/arquivo https://x.com/a/b', cmd('/get')).argv,
             ['/tmp/arquivo', 'https://x.com/a/b']);
@@ -671,23 +671,23 @@ describe('ajuda', () => {
         assert.deepEqual(groups, [' > Orca', ' > Aave', ' > Orca e Project X', ' > Project X, Liquidswap, Morpho e Aave', ' > Todos']);
         assert.match(general, / > Orca\n {2}-address <endereço>\n {4}Cadastra a posição da Orca/);
 
-        const morpho = formatCommandHelp(findCommand('/defi'), { protocolo: 'morpho' });
+        const morpho = formatCommandHelp(findCommand('/defi'), { protocol: 'morpho' });
         assert.match(morpho, /^Usage: \/defi morpho \[-mask\]\n {7}\/defi morpho -wallet <0x\.\.\.> \[-name <nome>\]\nPosição, empréstimos e risco no Morpho/);
         const optionsAlt = morpho.match(/^ {2}-\S+/gm);
         assert.deepEqual(optionsAlt, ['  -list,', '  -mask,', '  -name,', '  -rm', '  -wallet,']);
         assert.doesNotMatch(morpho, / > |Argumentos:/);
 
-        const orca = formatCommandHelp(findCommand('/defi'), { protocolo: 'orca' });
+        const orca = formatCommandHelp(findCommand('/defi'), { protocol: 'orca' });
         assert.match(orca, /-address <endereço>/);
         assert.doesNotMatch(orca, /^ {2}-wallet/m);
 
         // By the command's -help and by /help
-        assert.equal((await bot.replyAlt('/defi prjx -help'))[0], '```' + formatCommandHelp(findCommand('/defi'), { protocolo: 'prjx' }) + '```');
+        assert.equal((await bot.replyAlt('/defi prjx -help'))[0], '```' + formatCommandHelp(findCommand('/defi'), { protocol: 'prjx' }) + '```');
         assert.match((await bot.replyAlt('/help defi orca'))[0], /^🤖 \*AJUDA\*\n\n```Usage: \/defi orca \[-mask\]\n/);
         assert.match((await bot.replyAlt('/defi xyz -help'))[0], /^```Usage: \/defi \[protocolo\]/, 'protocolo desconhecido: a geral');
 
         // The protocol alias also finds its help
-        const liquidswap = '```' + formatCommandHelp(findCommand('/defi'), { protocolo: 'liquidswap' }) + '```';
+        const liquidswap = '```' + formatCommandHelp(findCommand('/defi'), { protocol: 'liquidswap' }) + '```';
         assert.match(liquidswap, /^```Usage: \/defi liquidswap\|liqswp \[-mask\]/);
         assert.equal((await bot.replyAlt('/defi liqswp -help'))[0], liquidswap);
         assert.match((await bot.replyAlt('/help defi liqswp'))[0], /```Usage: \/defi liquidswap\|liqswp/);
@@ -727,8 +727,8 @@ describe('ajuda', () => {
 
     test('ajuda de todos os comandos e protocolos: sem variáveis soltas, enxuta, cabe no celular e com o link do site', () => {
         for (const command of activeCommands()) {
-            for (const protocol of [undefined, ...Object.keys(command.protocolos ?? {})]) {
-                const textAlt = formatCommandHelp(command, { protocolo: protocol });
+            for (const protocol of [undefined, ...Object.keys(command.protocols ?? {})]) {
+                const textAlt = formatCommandHelp(command, { protocol });
                 const linesAlt = textAlt.split('\n');
                 const whereAlt = `${command.cmd} ${protocol ?? ''}`;
                 assert.doesNotMatch(textAlt, /\t|\$\{|[ \t]+$/m, whereAlt);
@@ -742,10 +742,10 @@ describe('ajuda', () => {
                 for (const l of optionsAltAlt) assert.ok(l.length <= 46, `${whereAlt}: "${l}" tem ${l.length} colunas`);
                 if (!protocol) continue;
                 for (const optionAlt of command.cmd_opts.filter(o => o.opts)) {
-                    const presente = !optionAlt.protocolos || optionAlt.protocolos.includes(protocol);
+                    const present = !optionAlt.protocols || optionAlt.protocols.includes(protocol);
                     const syntax = `  -${optionAlt.opts[0]}`;
                     assert.equal(linesAlt.some(l => l.startsWith(`${syntax} `)
-                        || l.startsWith(`${syntax},`)), presente, `${whereAlt}: ${syntax}`);
+                        || l.startsWith(`${syntax},`)), present, `${whereAlt}: ${syntax}`);
                 }
             }
         }
@@ -767,13 +767,13 @@ describe('banco', () => {
         const { addColumns } = bot.src('initialization');
         await bot.prepare();
         await bot.dbRun('DROP TABLE IF EXISTS teste_antiga');
-        await bot.dbRun('CREATE TABLE teste_antiga (id INTEGER PRIMARY KEY, nome TEXT)');
-        await bot.dbRun("INSERT INTO teste_antiga (nome) VALUES ('antes')");
+        await bot.dbRun('CREATE TABLE teste_antiga (id INTEGER PRIMARY KEY, name TEXT)');
+        await bot.dbRun("INSERT INTO teste_antiga (name) VALUES ('antes')");
 
-        await addColumns('teste_antiga', { nome: 'TEXT', extra: 'INTEGER DEFAULT 7' });
+        await addColumns('teste_antiga', { name: 'TEXT', extra: 'INTEGER DEFAULT 7' });
         await addColumns('teste_antiga', { extra: 'INTEGER DEFAULT 7' }); // again: does nothing
 
-        assert.deepEqual(await bot.dbAll('SELECT * FROM teste_antiga'), [{ id: 1, nome: 'antes', extra: 7 }]);
+        assert.deepEqual(await bot.dbAll('SELECT * FROM teste_antiga'), [{ id: 1, name: 'antes', extra: 7 }]);
         await bot.dbRun('DROP TABLE teste_antiga');
     });
 

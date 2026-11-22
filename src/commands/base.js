@@ -41,9 +41,9 @@ function firstPhrase(textAlt) {
     const cut = [...phrase.matchAll(/:\s|;\s|\s\(|\s[—–]\s/g)].find(m => m.index >= 12)?.index;
     if (cut != null) phrase = phrase.slice(0, cut);
     if (phrase.length > MAX_PHRASE) {
-        const ate = phrase.slice(0, MAX_PHRASE);
-        const virgula = ate.lastIndexOf(', ');
-        phrase = virgula >= 24 ? ate.slice(0, virgula) : `${ate.replace(/\s+\S*$/, '')}…`;
+        const until = phrase.slice(0, MAX_PHRASE);
+        const comma = until.lastIndexOf(', ');
+        phrase = comma >= 24 ? until.slice(0, comma) : `${until.replace(/\s+\S*$/, '')}…`;
     }
     // Without an open parenthesis or quote at the end
     const open = phrase.lastIndexOf('(');
@@ -51,7 +51,7 @@ function firstPhrase(textAlt) {
     return phrase.replace(/[.,;:]$/, '');
 }
 
-// The text broken into lines of up to `largura` characters, between words
+// The text broken into lines of up to `width` characters, between words
 function lineBreak(textAlt, widthAlt) {
     const linesAlt = [];
     let current = '';
@@ -69,9 +69,9 @@ function lineBreak(textAlt, widthAlt) {
 /*
  * An option or argument: if the name and the 1st sentence fit on a line, they stay together (names aligned); otherwise,
  * the name stays alone and the description comes below, indented.
- * @param {number} coluna  the width of the name column that fits next to the description
+ * @param {number} column  the width of the name column that fits next to the description
  */
-function optionLine({ syntax, desc, cabe: fits }, column) {
+function optionLine({ syntax, desc, fits }, column) {
     const phrase = firstPhrase(desc);
     if (!phrase) return [`  ${syntax}`];
     if (fits) return [`  ${syntax.padEnd(column)}  ${phrase}`];
@@ -94,16 +94,16 @@ function examplesAlt(command, cmdOpts) {
 const commandPage = (cmd) => `${SITE}${language() === 'pt_BR' ? '/pt-BR' : ''}/commands/${cmd.replace(/^\//, '')}/`;
 
 /*
- * Command with protocols (/defi): each option says which ones it is for ("protocolos":
+ * Command with protocols (/defi): each option says which ones it is for ("protocols":
  * ["orca"]); without the list, it applies to all. With the protocol (/defi orca -help),
  * the help is only for it: the usage, the text and the options that apply there. Without it, all of them,
  * grouped by protocol (" > Orca", " > Project X and Morpho", " > All").
  */
 function optionGroup(command, o) {
-    if (!o.protocolos?.length) return { chave: '', ordem: Infinity, titulo: t('help.groupAll') };
-    const names = o.protocolos.map(p => command.protocolos[p]?.nome ?? p);
+    if (!o.protocols?.length) return { key: '', order: Infinity, title: t('help.groupAll') };
+    const names = o.protocols.map(p => command.protocols[p]?.name ?? p);
     const title = names.length > 1 ? `${names.slice(0, -1).join(', ')}${t('help.and')}${names.at(-1)}` : names[0];
-    return { chave: o.protocolos.join(','), ordem: o.protocolos.length, titulo: title };
+    return { key: o.protocols.join(','), order: o.protocols.length, title };
 }
 
 // Each usage form ("... or ...") on a line, aligned below the first
@@ -118,13 +118,13 @@ function usageLines(command) {
  * block, and the -h tip. Without ❌: a missing parameter is not an error. The summary, the options and the examples stay
  * no -h.
  * @param {string} cmd  the command name ('/qr')
- * @param {string} [protocolo]  only this protocol's usage (/defi orca)
+ * @param {string} [protocol]  only this protocol's usage (/defi orca)
  */
 function commandUsage(cmd, protocol) {
     const command = findCommand(cmd);
     if (!command) return t('help.hint', { cmd });
     let c = locate(command);
-    const protocolAlt = protocol ? c.protocolos?.[protocol] : null;
+    const protocolAlt = protocol ? c.protocols?.[protocol] : null;
     if (protocolAlt) c = { ...c, usage: protocolAlt.usage };
     return `\`\`\`${usageLines(c).join('\n')}\`\`\`\n${t('help.hint', { cmd: command.cmd })}`;
 }
@@ -132,14 +132,14 @@ function commandUsage(cmd, protocol) {
 /**
  * @param {object} command  the commands.js entry
  * @param {object} [o]
- * @param {string} [o.protocolo]  only this protocol's help (the command.protocolos keys)
+ * @param {string} [o.protocol]  only this protocol's help (the command.protocols keys)
  */
-function formatCommandHelp(command, { protocolo: protocol } = {}) {
+function formatCommandHelp(command, { protocol } = {}) {
     const original = command;
     command = locate(command);
-    const protocolAlt = protocol ? command.protocolos?.[protocol] : null;
+    const protocolAlt = protocol ? command.protocols?.[protocol] : null;
     if (protocolAlt) command = { ...command, usage: protocolAlt.usage, summary: firstPhrase(protocolAlt.help), ex: protocolAlt.ex };
-    const isWorthHere = (o) => !protocolAlt || !o.protocolos?.length || o.protocolos.includes(protocol);
+    const isWorthHere = (o) => !protocolAlt || !o.protocols?.length || o.protocols.includes(protocol);
 
     const lines = usageLines(command);
 
@@ -155,7 +155,7 @@ function formatCommandHelp(command, { protocolo: protocol } = {}) {
         .map(o => {
             // signs: ['+', '-'] joins the pair on a single line (+o, -o), instead of one in each section
             const opts = o.opts.filter(Boolean)
-                .flatMap(opt => (o.sinais ?? ['-']).map(signalAlt => `${signalAlt}${opt}`)).join(', ');
+                .flatMap(opt => (o.signs ?? ['-']).map(signalAlt => `${signalAlt}${opt}`)).join(', ');
             const values = (o.values ?? []).filter(notEmpty).join(' ');
             return { syntax: values ? `${opts} ${values}` : opts, desc: o.desc, o };
         });
@@ -167,23 +167,23 @@ function formatCommandHelp(command, { protocolo: protocol } = {}) {
 
     // Do they fit on one line (name + 1st sentence)? Those stay aligned in a column; the others, name and description below
     const allAlt = [...options, ...positional];
-    for (const o of allAlt) o.cabe = 2 + o.syntax.length + 2 + firstPhrase(o.desc).length <= WIDTH;
-    const column = Math.max(0, ...allAlt.filter(o => o.cabe).map(o => o.syntax.length));
-    for (const o of allAlt) o.cabe = o.cabe && 2 + column + 2 + firstPhrase(o.desc).length <= WIDTH;
+    for (const o of allAlt) o.fits = 2 + o.syntax.length + 2 + firstPhrase(o.desc).length <= WIDTH;
+    const column = Math.max(0, ...allAlt.filter(o => o.fits).map(o => o.syntax.length));
+    for (const o of allAlt) o.fits = o.fits && 2 + column + 2 + firstPhrase(o.desc).length <= WIDTH;
     const line = (o) => optionLine(o, column);
 
-    if (options.length && command.protocolos && !protocolAlt) {
+    if (options.length && command.protocols && !protocolAlt) {
         // Grouped: those of a single protocol first, those that apply to all at the end
         const groups = new Map();
         for (const o of options) {
             const g = optionGroup(command, o.o);
-            if (!groups.has(g.chave)) groups.set(g.chave, { ...g, opcoes: [] });
-            groups.get(g.chave).opcoes.push(o);
+            if (!groups.has(g.key)) groups.set(g.key, { ...g, options: [] });
+            groups.get(g.key).options.push(o);
         }
         lines.push('', t('help.options'));
-        [...groups.values()].sort((a, b) => a.ordem - b.ordem).forEach((g, i) => {
-            lines.push(...(i ? [''] : []), ` > ${g.titulo}`);
-            g.opcoes.forEach(o => lines.push(...line(o)));
+        [...groups.values()].sort((a, b) => a.order - b.order).forEach((g, i) => {
+            lines.push(...(i ? [''] : []), ` > ${g.title}`);
+            g.options.forEach(o => lines.push(...line(o)));
         });
     } else if (options.length) {
         lines.push('', t('help.options'));
@@ -213,12 +213,12 @@ function formatCommandHelp(command, { protocolo: protocol } = {}) {
 // The command help (with the protocol, only its own: /defi orca -help)
 function getCommandSyntax(cmd, protocol) {
     const command = findCommand(cmd);
-    return command ? formatCommandHelp(command, { protocolo: protocol }) : null;
+    return command ? formatCommandHelp(command, { protocol }) : null;
 }
 
 // The protocol requested together with -help (/defi orca -help or, through the alias, /defi liqswp -help)
 const helpProtocol = (command, words) => {
-    const protocols = command?.protocolos ?? {};
+    const protocols = command?.protocols ?? {};
     for (const p of words.map(x => String(x ?? '').toLowerCase())) {
         const keyAlt = protocols[p] ? p : Object.keys(protocols).find(k => protocols[k].aliases?.includes(p));
         if (keyAlt) return keyAlt;

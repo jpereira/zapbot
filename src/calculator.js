@@ -1,6 +1,6 @@
 /*
  * /calc: the calculations and the sum of lists ("437 maromba / 351 corrida"). Pure functions: the command is in
- * comandos/calc.js.
+ * commands/calc.js.
  *
  * The numbers: "1.234,56" (pt) and "1,234.56" (en) both work. When there is only one separator and after it
  * exactly 3 digits come ("1.234"), the bot language decides whether it is thousands (pt: dot, en: comma) or
@@ -20,7 +20,7 @@ const INVISIBLE = /[\u200B-\u200F\u2060-\u2064\uFEFF\u00AD]/g;
 const MARKERS = /^[\s•·▪◦‣●○]+/;
 // The line that declares the text's own total ("R$664,89 = Total Divida"): does not enter the sum
 const TOTAL_LINE = /\b(?:total|soma|somat[óo]ria)\b/i;
-const DATAS = /\b\d{1,4}\/\d{1,2}(?:\/\d{1,4})?\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}:\d{2}(?::\d{2})?\b|\b\d{1,2}h(?:\d{2})?\b/gi;
+const DATES = /\b\d{1,4}\/\d{1,2}(?:\/\d{1,4})?\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}:\d{2}(?::\d{2})?\b|\b\d{1,2}h(?:\d{2})?\b/gi;
 const DIGITS_OTHERS = 11; // phones and ids: they are never values
 
 const isLess = (s) => s === '-' || s === '−' || s === '–';
@@ -49,8 +49,8 @@ function paraNumber(textAlt, pt) {
 }
 
 // The numbers of a line, in order: [{ value, start, end }]
-function findNumbers(line, pt, { sinalAEsquerda: signalALeft = false } = {}) {
-    const clean = line.replace(INVISIBLE, '').replace(/\u00A0/g, ' ').replace(MARKERS, '').replace(/[*_~`]/g, '').replace(DATAS, (m) => ' '.repeat(m.length));
+function findNumbers(line, pt, { signOnLeft: signalALeft = false } = {}) {
+    const clean = line.replace(INVISIBLE, '').replace(/\u00A0/g, ' ').replace(MARKERS, '').replace(/[*_~`]/g, '').replace(DATES, (m) => ' '.repeat(m.length));
     const foundAlt4 = [];
     for (const m of clean.matchAll(NUMBER)) {
         const digits = m[4].replace(/\D/g, '');
@@ -64,7 +64,7 @@ function findNumbers(line, pt, { sinalAEsquerda: signalALeft = false } = {}) {
             if (left && clean.slice(left[0].length, m.index).trim() === '') signalAlt = left[1];
         }
         const negative = isLess(signalAlt);
-        foundAlt4.push({ valor: negative ? -valueAlt : valueAlt, moeda: symbolAlt(m[2]) ?? null, inicio: m.index, fim: m.index + m[0].length, texto: clean });
+        foundAlt4.push({ value: negative ? -valueAlt : valueAlt, currency: symbolAlt(m[2]) ?? null, start: m.index, end: m.index + m[0].length, text: clean });
     }
     return foundAlt4;
 }
@@ -96,7 +96,7 @@ function evaluate(account, pt) {
     const look = () => tokens[i];
     const read = () => tokens[i++];
 
-    function atomo() {
+    function atom() {
         const tk = read();
         if (tk === undefined) throw new Error('bad');
         if (tk === '(') {
@@ -110,7 +110,7 @@ function evaluate(account, pt) {
     function unary() {
         if (look() === '-') { read(); return -unary(); }
         if (look() === '+') { read(); return unary(); }
-        return atomo();
+        return atom();
     }
     function power() {
         const base = unary();
@@ -141,8 +141,8 @@ function evaluate(account, pt) {
 // What is left of the line without the chosen numbers: "437 maromba" → "maromba"
 function labelAlt(chosen) {
     // The positions are those of the already cleaned line (without *_~` and with the dates and times blanked)
-    let rest = chosen[0]?.texto ?? '';
-    for (const n of [...chosen].sort((a, b) => b.inicio - a.inicio)) rest = rest.slice(0, n.inicio) + ' ' + rest.slice(n.fim);
+    let rest = chosen[0]?.text ?? '';
+    for (const n of [...chosen].sort((a, b) => b.start - a.start)) rest = rest.slice(0, n.start) + ' ' + rest.slice(n.end);
     // Only trims the ends ('= Casaco' → 'Casaco'): hyphens and dots in the middle ('TC-Pro') stay as typed
     return rest.replace(/\s+/g, ' ').replace(/^[\s\-–—:;|,.()=+]+|[\s\-–—:;|,.()=+]+$/g, '');
 }
@@ -155,21 +155,21 @@ function totalDeclared(textAlt, pt) {
     for (const line of String(textAlt).split(/\r?\n/)) {
         if (!TOTAL_LINE.test(line)) continue;
         const n = findNumbers(line, pt)[0];
-        if (n) return Math.abs(n.valor);
+        if (n) return Math.abs(n.value);
     }
     return null;
 }
 
 /**
  * The values of a text, one per chosen number of each line.
- * @param {string} texto
+ * @param {string} text
  * @param {object} o
- * @param {boolean} [o.todos]   all the numbers of each line (the default is only one per line)
- * @param {number} [o.coluna]   which number of each line: 1 is the first, -1 the last
+ * @param {boolean} [o.all]   all the numbers of each line (the default is only one per line)
+ * @param {number} [o.column]   which number of each line: 1 is the first, -1 the last
  * @param {boolean} o.pt
- * @returns {Array<{ valor: number, rotulo: string, linha: string, conta?: boolean }>}
+ * @returns {Array<{ value: number, label: string, line: string, account?: boolean }>}
  */
-function valuesAlt(textAlt, { todos: allAlt2 = false, coluna: column = 1, pt }) {
+function valuesAlt(textAlt, { all: allAlt2 = false, column = 1, pt }) {
     const values = [];
     const linesAlt = String(textAlt).split(/\r?\n/);
     // A list where every line starts with "-" is a bulleted one ("- 437 maromba"), not negative signs
@@ -182,15 +182,15 @@ function valuesAlt(textAlt, { todos: allAlt2 = false, coluna: column = 1, pt }) 
         if (looksAccount(line)) {
             // A single line of numbers and operators that does not close ("(1+2", "5 +") is a badly written calculation: error,
             // instead of summing the loose numbers
-            values.push({ valor: evaluate(line, pt), rotulo: line.trim(), linha: line.trim(), conta: true });
+            values.push({ value: evaluate(line, pt), label: line.trim(), line: line.trim(), account: true });
             continue;
         }
 
-        const numbers = findNumbers(line, pt, { sinalAEsquerda: signalALeft });
+        const numbers = findNumbers(line, pt, { signOnLeft: signalALeft });
         if (!numbers.length) continue;
         const chosen = allAlt2 ? numbers : [column > 0 ? numbers[column - 1] : numbers.at(column)].filter(Boolean);
         const label = labelAlt(chosen);
-        for (const n of chosen) values.push({ valor: n.valor, rotulo: label, linha: line.trim(), moeda: n.moeda });
+        for (const n of chosen) values.push({ value: n.value, label, line: line.trim(), currency: n.currency });
     }
     return values;
 }
@@ -210,9 +210,9 @@ function group(values) {
     const map = new Map();
     for (const v of values) {
         // Groups ignoring case ("Maromba" and "maromba"); shows the first as it was typed
-        const keyAlt = v.rotulo.toLowerCase();
-        const g = map.get(keyAlt) ?? { rotulo: v.rotulo, total: 0, n: 0 };
-        g.total += v.valor;
+        const keyAlt = v.label.toLowerCase();
+        const g = map.get(keyAlt) ?? { label: v.label, total: 0, n: 0 };
+        g.total += v.value;
         g.n++;
         map.set(keyAlt, g);
     }

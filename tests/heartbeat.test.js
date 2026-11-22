@@ -20,41 +20,41 @@ beforeEach(async () => {
     await bot.restart();
     fs.rmSync(HEARTBEAT_FILE, { force: true });
     bot.client.getState = async () => 'CONNECTED';
-    bot.estado.reiniciando = false;
+    bot.state.restarting = false;
     Object.assign(process.env, { QRCODE_EMAIL_SMTP_HOST: 'smtp', QRCODE_EMAIL_SMTP_USER: 'u', QRCODE_EMAIL_SMTP_TO: 'to' });
 });
 
 describe('heartbeat', () => {
     test('conectado e respondendo: grava o arquivo com hora, estado e versão', async () => {
         const statusAlt = await matchHeart();
-        assert.deepEqual(statusAlt, { saudavel: true, estado: 'CONNECTED' });
+        assert.deepEqual(statusAlt, { healthy: true, state: 'CONNECTED' });
 
         const hb = readHeartbeat();
         assert.ok(Date.now() - hb.epoch < 1000);
-        assert.equal(hb.estado, 'CONNECTED');
+        assert.equal(hb.state, 'CONNECTED');
         assert.equal(hb.pid, process.pid);
-        assert.equal(hb.versao, require('../package.json').version);
+        assert.equal(hb.version, require('../package.json').version);
         assert.ok(!fs.existsSync(`${HEARTBEAT_FILE}.tmp`), 'gravação atômica (tmp + rename)');
     });
 
     test('ainda não conectado (boot, QR Code): o processo vivo basta', async () => {
-        bot.estado.pronto = false;
+        bot.state.ready = false;
         bot.client.getState = async () => { throw new Error('não deveria perguntar'); };
-        assert.deepEqual(await matchHeart(), { saudavel: true, estado: 'aguardando conexão' });
-        assert.equal(readHeartbeat().estado, 'aguardando conexão');
+        assert.deepEqual(await matchHeart(), { healthy: true, state: 'aguardando conexão' });
+        assert.equal(readHeartbeat().state, 'aguardando conexão');
 
         // Between one connect attempt and another (internet down): stays alive, and says how many have failed
-        bot.estado.tentativas = 2;
-        assert.deepEqual(await matchHeart(), { saudavel: true, estado: 'reconectando (2 falhas seguidas)' });
+        bot.state.attempts = 2;
+        assert.deepEqual(await matchHeart(), { healthy: true, state: 'reconectando (2 falhas seguidas)' });
     });
 
     test('conectado sem CONNECTED: não bate; na 3ª seguida avisa e reinicia', async (t) => {
         t.mock.timers.enable({ apis: ['setTimeout'] });
         bot.client.getState = async () => 'OPENING';
-        const initializations = bot.client.inicializado;
+        const initializations = bot.client.initialized;
 
-        assert.equal((await matchHeart()).saudavel, false);
-        assert.equal((await matchHeart()).saudavel, false);
+        assert.equal((await matchHeart()).healthy, false);
+        assert.equal((await matchHeart()).healthy, false);
         assert.ok(!fs.existsSync(HEARTBEAT_FILE));
         assert.deepEqual(emails, []);
 
@@ -63,7 +63,7 @@ describe('heartbeat', () => {
         assert.equal(emails.length, 1);
         assert.equal(emails[0].subject, '[ZapBot] 🩺 WhatsApp sem resposta');
         assert.match(emails[0].text, /último estado: OPENING/);
-        assert.equal(bot.client.inicializado, initializations + 1);
+        assert.equal(bot.client.initialized, initializations + 1);
     });
 
     test('uma resposta boa zera a contagem de falhas', async () => {
@@ -82,19 +82,19 @@ describe('heartbeat', () => {
         t.mock.timers.enable({ apis: ['setTimeout'] });
         bot.client.getState = () => new Promise(() => {}); // never replies
 
-        assert.deepEqual(await bot.waitWithClock(t, matchHeart()), { saudavel: false, estado: 'sem resposta em 10s' });
+        assert.deepEqual(await bot.waitWithClock(t, matchHeart()), { healthy: false, state: 'sem resposta em 10s' });
     });
 
     test('reiniciando: bate por até 5 min; depois para', async (t) => {
         t.mock.timers.enable({ apis: ['Date'], now: Date.now() });
-        bot.estado.reiniciando = true;
+        bot.state.restarting = true;
 
-        assert.deepEqual(await matchHeart(), { saudavel: true, estado: 'reiniciando' });
+        assert.deepEqual(await matchHeart(), { healthy: true, state: 'reiniciando' });
         t.mock.timers.tick(5 * 60 * 1000 + 1);
-        assert.deepEqual(await matchHeart(), { saudavel: false, estado: 'reinício travado' });
+        assert.deepEqual(await matchHeart(), { healthy: false, state: 'reinício travado' });
         assert.deepEqual(emails, [], 'reinício travado fica para o Docker');
 
-        bot.estado.reiniciando = false;
+        bot.state.restarting = false;
     });
 });
 
@@ -105,44 +105,44 @@ describe('docker/app/healthcheck.js', () => {
             const outputAlt = execFileSync(process.execPath, [HEALTHCHECK], {
                 env: { ...process.env, ZAPBOT_HEARTBEAT_FILE: HEARTBEAT_FILE, ...env }, encoding: 'utf8'
             });
-            return { codigo: 0, saida: outputAlt };
+            return { code: 0, output: outputAlt };
         } catch (err) {
-            return { codigo: err.status, saida: err.stdout };
+            return { code: err.status, output: err.stdout };
         }
     }
 
     const record = (ageSeconds, stateAlt = 'CONNECTED') =>
-        fs.writeFileSync(HEARTBEAT_FILE, JSON.stringify({ epoch: Date.now() - ageSeconds * 1000, estado: stateAlt }));
+        fs.writeFileSync(HEARTBEAT_FILE, JSON.stringify({ epoch: Date.now() - ageSeconds * 1000, state: stateAlt }));
 
     test('heartbeat recente: healthy (exit 0)', () => {
         record(5);
         const r = healthcheck();
-        assert.equal(r.codigo, 0);
-        assert.match(r.saida, /healthy: CONNECTED, heartbeat 5s ago/);
+        assert.equal(r.code, 0);
+        assert.match(r.output, /healthy: CONNECTED, heartbeat 5s ago/);
     });
 
     test('heartbeat velho ou ausente: unhealthy (exit 1)', () => {
         record(120, 'aguardando conexão');
         const oldAlt = healthcheck();
-        assert.equal(oldAlt.codigo, 1);
-        assert.match(oldAlt.saida, /unhealthy: last heartbeat 120s ago \(aguardando conexão\); limit 90s/);
+        assert.equal(oldAlt.code, 1);
+        assert.match(oldAlt.output, /unhealthy: last heartbeat 120s ago \(aguardando conexão\); limit 90s/);
 
         fs.rmSync(HEARTBEAT_FILE);
         const absent = healthcheck();
-        assert.equal(absent.codigo, 1);
-        assert.match(absent.saida, /unhealthy: no heartbeat at .* \(ENOENT\)/);
+        assert.equal(absent.code, 1);
+        assert.match(absent.output, /unhealthy: no heartbeat at .* \(ENOENT\)/);
     });
 
     test('arquivo corrompido: unhealthy; limite configurável', () => {
         fs.writeFileSync(HEARTBEAT_FILE, '{meio arquivo');
-        assert.equal(healthcheck().codigo, 1);
+        assert.equal(healthcheck().code, 1);
 
         record(120);
-        assert.equal(healthcheck({ ZAPBOT_HEARTBEAT_MAX_AGE_S: '300' }).codigo, 0);
+        assert.equal(healthcheck({ ZAPBOT_HEARTBEAT_MAX_AGE_S: '300' }).code, 0);
     });
 
     test('o arquivo gravado pelo bot é aceito pelo healthcheck', async () => {
         await matchHeart();
-        assert.equal(healthcheck().codigo, 0);
+        assert.equal(healthcheck().code, 0);
     });
 });

@@ -93,7 +93,7 @@ test('-send admins -for 30m: fecha e reabre sozinho (a hora fica no banco)', asy
     assert.deepEqual(calls, []);
     assert.equal(await reopenExpired(Date.now() + 31 * 60 * 1000), 1);
     assert.deepEqual(calls, [['setMessagesAdminsOnly', false]]);
-    assert.ok(bot.client.enviadas.some(e => e.chatId === GROUP && /aberto de novo/.test(e.content)));
+    assert.ok(bot.client.sent.some(e => e.chatId === GROUP && /aberto de novo/.test(e.content)));
     assert.deepEqual(await dbAll('SELECT * FROM group_reopen'), []);
 });
 
@@ -104,8 +104,8 @@ test('-send all antes do prazo cancela a reabertura', async () => {
 });
 
 test('-pic: usa a imagem respondida; sem imagem, avisa; -rmpic tira a foto', async () => {
-    const quoted = bot.createMessage({ de: OTHERAlt.jid, midia: { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') } });
-    assert.match((await bot.replyAlt('/group -pic', { citada: quoted }))[0], /✅ Foto do grupo mudada\./);
+    const quoted = bot.createMessage({ de: OTHERAlt.jid, media: { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') } });
+    assert.match((await bot.replyAlt('/group -pic', { quoted }))[0], /✅ Foto do grupo mudada\./);
     assert.equal(calls[0][0], 'setPicture');
     assert.equal(calls[0][1].mimetype, 'image/jpeg');
 

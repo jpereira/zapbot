@@ -16,8 +16,8 @@ const ROLES_IN_HELP = [ROLES.OWNER, ROLES.ADMIN, ROLES.USER];
  * is not role owner; users (bot.users), only the role user ones, plus the admin ones the owner allowed with
  * /bot +cmd. Showing /backup to whoever cannot use it is like showing the kitchen menu.
  */
-async function cmdHelp({ msg, args: typed, opts, nivel: level, admin,
-    podeUsar: canUse = (cmd) => findCommand(cmd)?.role === ROLES.USER }) {
+async function cmdHelp({ msg, args: typed, opts, level, admin,
+    canUse = (cmd) => findCommand(cmd)?.role === ROLES.USER }) {
     const who = level ?? (admin ? ROLES.ADMIN : ROLES.USER);
     // Admins and the owner: by level; users: by their rule (/bot +cmd)
     const can = (command) => (answer(who, ROLES.ADMIN) ? answer(who, command.role) : canUse(command.cmd));
@@ -55,7 +55,7 @@ async function cmdHelp({ msg, args: typed, opts, nivel: level, admin,
         }
 
         const protocol = helpProtocol(command, rest);
-        await msg.reply(`${t('help.title')}\n\n\`\`\`${formatCommandHelp(command, { protocolo: protocol })}\n\`\`\``);
+        await msg.reply(`${t('help.title')}\n\n\`\`\`${formatCommandHelp(command, { protocol })}\n\`\`\``);
         return;
     }
 

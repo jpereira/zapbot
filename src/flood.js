@@ -11,20 +11,20 @@ const uses = new Map();         // who → Map(command → recent instants)
 const blockedAlt = new Map();   // who → until when the bot ignores them
 
 /**
- * @param {string} quem     the phone (or id) of who sent it
- * @param {string} comando  o nome principal (/crypto)
- * @returns {{ liberado: boolean, avisar?: boolean, segundos?: number }}
+ * @param {string} who     the phone (or id) of who sent it
+ * @param {string} command  o name principal (/crypto)
+ * @returns {{ allowed: boolean, notify?: boolean, seconds?: number }}
  * notify: just went over the limit (the notice goes out only once)
  */
 function checkFlood(who, commandAlt, nowAlt = Date.now()) {
     const max = getSetting('flood.maxCommandRepeated');
-    if (!max || !who) return { liberado: true };
+    if (!max || !who) return { allowed: true };
 
     const seconds = getSetting('flood.intervalCommand');
     const window = seconds * 1000;
 
-    const ate = blockedAlt.get(who);
-    if (ate && nowAlt < ate) return { liberado: false };
+    const until = blockedAlt.get(who);
+    if (until && nowAlt < until) return { allowed: false };
     blockedAlt.delete(who);
 
     const whoAlt = uses.get(who) ?? new Map();
@@ -34,12 +34,12 @@ function checkFlood(who, commandAlt, nowAlt = Date.now()) {
     if (recent.length >= max) {
         blockedAlt.set(who, nowAlt + window);
         uses.delete(who);
-        return { liberado: false, avisar: true, segundos: seconds };
+        return { allowed: false, notify: true, seconds };
     }
 
     recent.push(nowAlt);
     whoAlt.set(commandAlt, recent);
-    return { liberado: true };
+    return { allowed: true };
 }
 
 // Forgets everything (the tests start from zero)

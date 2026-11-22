@@ -25,6 +25,6 @@ module.exports = {
             ex: ['/help defi aave']
         }
     ],
-    digitando: false, // replies right away: without the "typing..."
+    typing: false, // replies right away: without the "typing..."
     role: USER
 };

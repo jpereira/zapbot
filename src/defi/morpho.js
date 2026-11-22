@@ -84,7 +84,7 @@ const query = (networks) => {
 class ErrorMorpho extends Error {
     constructor(reasonAlt, detail = reasonAlt) {
         super(detail);
-        this.motivo = reasonAlt;
+        this.reason = reasonAlt;
     }
 }
 
@@ -117,27 +117,27 @@ const inTokens = (raw, decimals) =>
 
 // The token: symbol (or the abbreviated address, if the API does not know), decimals and USD price
 const token = (a) => ({
-    simbolo: a?.symbol || (a?.address ? `${a.address.slice(0, 6)}…${a.address.slice(-4)}` : '?'),
+    symbol: a?.symbol || (a?.address ? `${a.address.slice(0, 6)}…${a.address.slice(-4)}` : '?'),
     decimals: a?.decimals,
-    precoUsd: numberAlt(a?.price?.usd)
+    priceUsd: numberAlt(a?.price?.usd)
 });
 
 // USD value: the API's; without it, amount × token price (also from the API); otherwise null
-const inUsd = (daApi, qtd, t) =>
-    numberAlt(daApi) ?? (qtd !== null && t.precoUsd !== null ? qtd * t.precoUsd : null);
+const inUsd = (daApi, qty, t) =>
+    numberAlt(daApi) ?? (qty !== null && t.priceUsd !== null ? qty * t.priceUsd : null);
 
 /**
  * A market's risk metrics, by the Morpho formulas (see the top).
- * @param {{ colateral: bigint, emprestado: bigint, preco: bigint|null, lltv: bigint }} p
+ * @param {{ collateral: bigint, borrowed: bigint, price: bigint|null, lltv: bigint }} p
  * everything in raw units
- * @returns {{ hf: number|null, ltv: number|null, precoLiquidacaoBruto: bigint|null }}
+ * @returns {{ hf: number|null, ltv: number|null, liquidationPriceRaw: bigint|null }}
  * hf: Infinity without debt; null without the oracle price (or debt without collateral)
  */
-function marketRisk({ colateral: collateral, emprestado: borrowed, preco: price, lltv }) {
-    if (borrowed <= 0n) return { hf: Infinity, ltv: 0, precoLiquidacaoBruto: null };
+function marketRisk({ collateral, borrowed, price, lltv }) {
+    if (borrowed <= 0n) return { hf: Infinity, ltv: 0, liquidationPriceRaw: null };
     // Debt with no collateral (or no price): dividing by zero is not an option
     if (!price || price <= 0n || collateral <= 0n) {
-        return { hf: null, ltv: null, precoLiquidacaoBruto: null };
+        return { hf: null, ltv: null, liquidationPriceRaw: null };
     }
 
     const withPlaces = (bigint) => Number(bigint) / Number(PRECISION);
@@ -152,7 +152,7 @@ function marketRisk({ colateral: collateral, emprestado: borrowed, preco: price,
         ? (borrowed * ORACLE_PRICE_SCALE * WAD) / (collateral * lltv)
         : null;
 
-    return { hf, ltv, precoLiquidacaoBruto: priceSettlementRaw };
+    return { hf, ltv, liquidationPriceRaw: priceSettlementRaw };
 }
 
 /*
@@ -187,7 +187,7 @@ function marketPosition(x, network) {
     const loan = token(m.loanAsset);
     const priceRaw = integer(m.state?.price);
     const risk = marketRisk({
-        colateral: collateralRaw, emprestado: borrowedRaw, preco: priceRaw, lltv
+        collateral: collateralRaw, borrowed: borrowedRaw, price: priceRaw, lltv
     });
 
     // Without the oracle price (a market without collateral, for example): the API's HF, if any
@@ -204,27 +204,27 @@ function marketPosition(x, network) {
         printError(`[MORPHO] HF mismatch in market ${m.marketId}: computed ${risk.hf}, API ${daApi}`);
     }
 
-    const qtdCollateral = inTokens(collateralRaw, collateral.decimals);
-    const qtdBorrowed = inTokens(borrowedRaw, loan.decimals);
-    const qtdProvided = inTokens(providedRaw, loan.decimals);
+    const collateralQty = inTokens(collateralRaw, collateral.decimals);
+    const borrowedQty = inTokens(borrowedRaw, loan.decimals);
+    const providedQty = inTokens(providedRaw, loan.decimals);
     // The side item (collateral, borrowed, supplied), with the amount and the USD value
-    const item = (raw, t, qtd, usd) => (raw ? { ...t, qtd, usd: inUsd(usd, qtd, t) } : null);
+    const item = (raw, t, qty, usd) => (raw ? { ...t, qty, usd: inUsd(usd, qty, t) } : null);
 
     return {
-        tipo: 'mercado',
-        rede: network,
+        type: 'mercado',
+        network,
         marketId: m.marketId,
-        colateral: item(collateralRaw, collateral, qtdCollateral, s.collateralUsd),
-        emprestado: item(borrowedRaw, loan, qtdBorrowed, s.borrowAssetsUsd),
-        fornecido: item(providedRaw, loan, qtdProvided, s.supplyAssetsUsd),
-        simboloColateral: collateral.simbolo,
-        simboloEmprestimo: loan.simbolo,
+        collateral: item(collateralRaw, collateral, collateralQty, s.collateralUsd),
+        borrowed: item(borrowedRaw, loan, borrowedQty, s.borrowAssetsUsd),
+        provided: item(providedRaw, loan, providedQty, s.supplyAssetsUsd),
+        collateralSymbol: collateral.symbol,
+        loanSymbol: loan.symbol,
         lltv: Number((lltv * PRECISION) / WAD) / Number(PRECISION),
         hf: risk.hf,
         ltv: risk.ltv,
-        precoOraculo: priceInTokens(priceRaw, collateral, loan),
-        precoLiquidacao: priceInTokens(risk.precoLiquidacaoBruto, collateral, loan),
-        utilizacao: numberAlt(m.state?.utilization)
+        oraclePrice: priceInTokens(priceRaw, collateral, loan),
+        liquidationPrice: priceInTokens(risk.liquidationPriceRaw, collateral, loan),
+        utilization: numberAlt(m.state?.utilization)
     };
 }
 
@@ -239,12 +239,12 @@ function vaultPosition(x, network) {
     if (!raw) return null;
 
     const active = token(v.asset);
-    const qtd = inTokens(raw, active.decimals);
+    const qty = inTokens(raw, active.decimals);
     return {
-        tipo: 'vault',
-        rede: network,
-        nome: v.name || v.symbol || '?',
-        fornecido: { ...active, qtd, usd: inUsd(x?.state?.assetsUsd ?? x?.assetsUsd, qtd, active) }
+        type: 'vault',
+        network,
+        name: v.name || v.symbol || '?',
+        provided: { ...active, qty, usd: inUsd(x?.state?.assetsUsd ?? x?.assetsUsd, qty, active) }
     };
 }
 
@@ -252,17 +252,17 @@ function vaultPosition(x, network) {
  * The USD totals. A position without a price stays out of the sum (and in the list
  * withoutPrice): no inventing a value.
  */
-function totais(positions) {
+function totals(positions) {
     let provided = 0;
     let borrowed = 0;
     const withoutPrice = new Set();
 
     for (const p of positions) {
-        for (const [side, signalAlt] of [['colateral', 1], ['fornecido', 1], ['emprestado', -1]]) {
+        for (const [side, signalAlt] of [['collateral', 1], ['provided', 1], ['borrowed', -1]]) {
             const item = p[side];
             if (!item) continue;
             if (item.usd === null) {
-                withoutPrice.add(item.simbolo);
+                withoutPrice.add(item.symbol);
                 continue;
             }
             if (signalAlt > 0) provided += item.usd;
@@ -270,7 +270,7 @@ function totais(positions) {
         }
     }
 
-    return { fornecido: provided, emprestado: borrowed, liquido: provided - borrowed, semPreco: [...withoutPrice] };
+    return { provided, borrowed, net: provided - borrowed, noPrice: [...withoutPrice] };
 }
 
 /*
@@ -308,8 +308,8 @@ function translateError(err) {
 
 /**
  * The wallet's Morpho positions, on all the networks of defi.morpho.chains.
- * @param {string} carteira  0x + 40 hexadecimais
- * @returns {Promise<{ carteira: string, posicoes: object[], totais: object, quando: number,
+ * @param {string} wallet  0x + 40 hexadecimais
+ * @returns {Promise<{ wallet: string, positions: object[], totals: object, when: number,
  *   doCache: boolean }>}
  * @throws {ErrorMorpho} with .motivo to show on WhatsApp
  */
@@ -322,7 +322,7 @@ async function positionsMorpho(wallet) {
     const keyAlt = `${wallet.toLowerCase()}|${networks.join(',')}`;
     const saved = cache.get(keyAlt);
     // The same wallet in another case (0xAb.. and 0xab..) is the same: only the display follows the request
-    if (saved && Date.now() - saved.quando < CACHE_MS) return { ...saved, carteira: wallet, doCache: true };
+    if (saved && Date.now() - saved.when < CACHE_MS) return { ...saved, wallet, doCache: true };
 
     const start = Date.now();
     printInfo(`[MORPHO] Querying wallet ${abbreviate(wallet)}`);
@@ -330,7 +330,7 @@ async function positionsMorpho(wallet) {
     let data;
     try {
         ({ data } = await axios.post(getSetting('defi.morpho.api'),
-            { query: query(networks), variables: { carteira: wallet } },
+            { query: query(networks), variables: { wallet } },
             { timeout: API_TIMEOUT_MS, headers: { 'Content-Type': 'application/json' } }));
     } catch (err) {
         const errorAlt = translateError(err);
@@ -375,15 +375,15 @@ async function positionsMorpho(wallet) {
     }
 
     const openAlt = positions.filter(Boolean);
-    const resultAlt = { carteira: wallet, posicoes: openAlt, totais: totais(openAlt), quando: Date.now() };
+    const resultAlt = { wallet, positions: openAlt, totals: totals(openAlt), when: Date.now() };
     cache.set(keyAlt, resultAlt);
 
     const usd = (v) =>
         `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const foundAlt5 = openAlt.length === 1 ? 'posição encontrada' : 'posições encontradas';
     printInfo(`[MORPHO] ${openAlt.length} ${foundAlt5}`);
-    printInfo(`[MORPHO] Total supplied: ${usd(resultAlt.totais.fornecido)}`);
-    printInfo(`[MORPHO] Total borrowed: ${usd(resultAlt.totais.emprestado)}`);
+    printInfo(`[MORPHO] Total supplied: ${usd(resultAlt.totals.provided)}`);
+    printInfo(`[MORPHO] Total borrowed: ${usd(resultAlt.totals.borrowed)}`);
     printInfo(`[MORPHO] Query finished in ${Date.now() - start}ms`);
 
     return { ...resultAlt, doCache: false };

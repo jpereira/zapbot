@@ -83,9 +83,9 @@ test('carrega chat cru e aguarda atualização após subscribeUserPresence', asy
 
 test('assinatura no modelo legado, get()/toJSON() e referência circular', async () => {
     const presence = {
-        subscribe() { this.valor = 1234567890; },
-        get(key) { return key === 'lastSeen' ? this.valor : null; },
-        toJSON() { return { isOnline: false, lastSeen: this.valor }; }
+        subscribe() { this.value = 1234567890; },
+        get(key) { return key === 'lastSeen' ? this.value : null; },
+        toJSON() { return { isOnline: false, lastSeen: this.value }; }
     };
     presence.self = presence;
     const dataAlt = await evaluate({ Store: { Chat: { get: () => ({ presence }) } } });

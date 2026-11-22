@@ -27,7 +27,7 @@ module.exports = {
             cron: false
         }
     ],
-    digitando: false, // replies right away: without the "typing..."
+    typing: false, // replies right away: without the "typing..."
     role: USER,
     cron: true
 };

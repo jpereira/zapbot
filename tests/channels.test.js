@@ -18,7 +18,7 @@ beforeEach(async () => {
 
 function publication(textAlt = 'Defesa Civil informa: alerta de chuva', optionsAlt = {}) {
     return bot.createMessage({
-        texto: textAlt, chat: CHANNEL, de: bot.OTHERAlt.jid,
+        text: textAlt, chat: CHANNEL, de: bot.OTHERAlt.jid,
         extras: { _data: { notifyName: 'Fátima', chat: { name: 'Fátima' } }, ...optionsAlt }
     });
 }
@@ -35,7 +35,7 @@ describe('canais @newsletter', () => {
         bot.createContact(CHANNEL, 'Fátima');
         const msg = publication();
         const [notice] = await bot.deliver(msg);
-        originCorrect(notice.texto);
+        originCorrect(notice.text);
         const row = await bot.dbGet('SELECT * FROM messages WHERE id = ?', [msg.id.id]);
         assert.equal(row.chat_id, CHANNEL);
         assert.equal(row.chat_name, NAME);
@@ -52,7 +52,7 @@ describe('canais @newsletter', () => {
         await bot.setSetting('watch.rules', 'chuva');
         const msg = publication();
         msg.id.remote = bot.OTHERAlt.jid;
-        originCorrect((await bot.deliver(msg))[0].texto);
+        originCorrect((await bot.deliver(msg))[0].text);
         const row = await bot.dbGet('SELECT chat_id FROM messages WHERE id = ?', [msg.id.id]);
         assert.equal(row.chat_id, CHANNEL);
     });
@@ -61,20 +61,20 @@ describe('canais @newsletter', () => {
         bot.client.chats.delete(CHANNEL);
         await bot.setSetting('watch.rules', 'chuva');
         const [notice] = await bot.deliver(publication());
-        assert.match(notice.texto, /📰 \*Canal:\* Canal 120363555000000001/);
-        assert.doesNotMatch(notice.texto, /Fátima|👤|📱/);
+        assert.match(notice.text, /📰 \*Canal:\* Canal 120363555000000001/);
+        assert.doesNotMatch(notice.text, /Fátima|👤|📱/);
     });
 
     test('autor de uma publicação não vira contato ou número do canal', async () => {
         await bot.setSetting('watch.rules', 'chuva');
         originCorrect((await bot.deliver(publication(undefined,
-            { author: bot.OTHERAlt.jid })))[0].texto);
+            { author: bot.OTHERAlt.jid })))[0].text);
     });
 
     test('apagada: aviso, /show por nome e /show -l identificam o canal', async () => {
         const msg = publication();
         await bot.deliver(msg);
-        originCorrect((await bot.apagar(msg))[0].texto);
+        originCorrect((await bot.erase(msg))[0].text);
         const [list] = await bot.replyAlt('/show -l');
         assert.match(list, /📰 Defesa Civil de Niterói/);
         const [summary, item] = await bot.replyAlt('/show Defesa Civil');
@@ -87,7 +87,7 @@ describe('canais @newsletter', () => {
     test('editada: aviso e /show -e preservam o canal e os dois textos', async () => {
         const msg = publication('alerta amarelo');
         await bot.deliver(msg);
-        originCorrect((await bot.edit(msg, 'alerta vermelho'))[0].texto);
+        originCorrect((await bot.edit(msg, 'alerta vermelho'))[0].text);
         const [, item] = await bot.replyAlt('/show -e Defesa Civil');
         originCorrect(item);
         assert.match(item, /Antes:\* "alerta amarelo"/);
@@ -98,7 +98,7 @@ describe('canais @newsletter', () => {
         await bot.setSetting('watch.rules', 'chuva');
         const msg = publication();
         await bot.deliver(msg);
-        await bot.apagar(msg);
+        await bot.erase(msg);
         bot.client.chats.delete(CHANNEL);
         originCorrect((await bot.replyAlt('/show Defesa Civil'))[1]);
         assert.match((await bot.replyAlt('/watch -s'))[0], /📰 Defesa Civil de Niterói/);
@@ -106,11 +106,11 @@ describe('canais @newsletter', () => {
 
     test('mídia apagada também identifica o canal na legenda', async () => {
         const msg = bot.createMessage({
-            texto: 'mapa da chuva', chat: CHANNEL, de: bot.OTHERAlt.jid, tipo: 'image',
-            midia: { mimetype: 'image/png', data: Buffer.from('png').toString('base64') }
+            text: 'mapa da chuva', chat: CHANNEL, de: bot.OTHERAlt.jid, type: 'image',
+            media: { mimetype: 'image/png', data: Buffer.from('png').toString('base64') }
         });
         await bot.deliver(msg);
-        originCorrect((await bot.apagar(msg))[0].texto);
+        originCorrect((await bot.erase(msg))[0].text);
         originCorrect((await bot.replyAlt('/show Defesa Civil'))[1]);
     });
 });

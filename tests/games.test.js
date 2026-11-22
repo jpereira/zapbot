@@ -1,5 +1,5 @@
 /*
- * /games: bola 8, verdade, desafio e trivia.
+ * /games: ball 8, verdade, desafio e trivia.
  */
 const bot = require('./helpers/bot');
 
@@ -56,9 +56,9 @@ test('-trivia: pergunta com A-D, a resposta certa fecha, a errada mostra a certa
 
     await bot.replyAlt('/games -trivia');
     const open = [...openAlt.values()][0];
-    const wrong = 'ABCD'[(open.certa + 1) % 4];
+    const wrong = 'ABCD'[(open.correct + 1) % 4];
     const [e] = await bot.replyAlt(`/games -trivia ${wrong}`);
-    assert.match(e, new RegExp(`^❌ Dessa vez não. A resposta era ${'ABCD'[open.certa]}\\) `));
+    assert.match(e, new RegExp(`^❌ Dessa vez não. A resposta era ${'ABCD'[open.correct]}\\) `));
 });
 
 test('-trivia: letra inválida não fecha a pergunta; passados 5 minutos ela expira', async () => {
@@ -66,7 +66,7 @@ test('-trivia: letra inválida não fecha a pergunta; passados 5 minutos ela exp
     assert.match((await bot.replyAlt('/games -trivia X'))[0], /Responda com A, B, C ou D/);
     assert.equal(openAlt.size, 1);
 
-    for (const a of openAlt.values()) a.expira = Date.now() - 1;
+    for (const a of openAlt.values()) a.expires = Date.now() - 1;
     assert.match((await bot.replyAlt('/games -trivia A'))[0], /Não há pergunta aberta/);
 });
 
@@ -77,13 +77,13 @@ test('-trivia não vai no /cron; os outros jogos vão', async () => {
 });
 
 describe('jogar só respondendo (reply) a mensagem do bot, sem o comando', () => {
-    const lastId = () => bot.client.enviadas.at(-1).id._serialized;
-    const reply = (textAlt, id, extra = {}) => bot.replyAlt(textAlt, { citada: { id: { _serialized: id } }, ...extra });
+    const lastId = () => bot.client.sent.at(-1).id._serialized;
+    const reply = (textAlt, id, extra = {}) => bot.replyAlt(textAlt, { quoted: { id: { _serialized: id } }, ...extra });
 
     test('trivia: responder com a letra (maiúscula, minúscula ou "b)") acerta ou erra; conversa solta é ignorada', async () => {
         await bot.replyAlt('/games -trivia');
         const id = lastId();
-        const right = 'ABCD'[[...openAlt.values()][0].certa];
+        const right = 'ABCD'[[...openAlt.values()][0].correct];
 
         assert.deepEqual(await reply('quem sabe?', id), [], 'texto que não é letra: ignorado');
         assert.equal(openAlt.size, 1);
@@ -102,7 +102,7 @@ describe('jogar só respondendo (reply) a mensagem do bot, sem o comando', () =>
     });
 
     test('8ball: o comando sem pergunta, respondendo uma mensagem, usa o texto dela', async () => {
-        const [r] = await bot.replyAlt('/games -8ball', { citada: bot.createMessage({ texto: 'vai dar certo?' }) });
+        const [r] = await bot.replyAlt('/games -8ball', { quoted: bot.createMessage({ text: 'vai dar certo?' }) });
         assert.match(r, /^🎱 \*vai dar certo\?\*\n/);
     });
 
@@ -110,10 +110,10 @@ describe('jogar só respondendo (reply) a mensagem do bot, sem o comando', () =>
         for (const [cmd, label] of [['-truth', 'Verdade'], ['-dare', 'Desafio']]) {
             await bot.replyAlt(`/games ${cmd}`);
             const id = lastId();
-            bot.client.reagidas.length = 0;
+            bot.client.reacted.length = 0;
 
             assert.deepEqual(await reply('minha resposta é longa', id), []);
-            assert.deepEqual(bot.client.reagidas.map(r => r.emoji), ['✅']);
+            assert.deepEqual(bot.client.reacted.map(r => r.emoji), ['✅']);
 
             const [other] = await reply('outra', id);
             assert.match(other, new RegExp(`^.{1,3} \\*${label}:\\* `));
@@ -126,9 +126,9 @@ describe('jogar só respondendo (reply) a mensagem do bot, sem o comando', () =>
 
         await bot.replyAlt('/games -truth');
         const id = lastId();
-        for (const j of require('../src/commands/games').games.values()) j.expira = Date.now() - 1;
-        bot.client.reagidas.length = 0;
+        for (const j of require('../src/commands/games').games.values()) j.expires = Date.now() - 1;
+        bot.client.reacted.length = 0;
         assert.deepEqual(await reply('tarde demais', id), []);
-        assert.equal(bot.client.reagidas.length, 0);
+        assert.equal(bot.client.reacted.length, 0);
     });
 });

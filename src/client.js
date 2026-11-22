@@ -134,7 +134,7 @@ client.sendMessage = (chatId, content, options = {}) => {
     registerReply(content);
     // The copy is ignored by message_create, so it leaves no mark for the next message.
     if (logIsCopy(content)) return sendMessageOriginal(chatId, content, options);
-    if (contextDebug().maskTelefones) {
+    if (contextDebug().maskPhones) {
         if (typeof content === 'string') content = maskPhones(content);
         if (typeof options.caption === 'string') {
             options = { ...options, caption: maskPhones(options.caption) };
@@ -157,7 +157,7 @@ client.sendMessage = (chatId, content, options = {}) => {
  */
 async function completeNotice(msg, notice, textAlt, options = {}) {
     registerReply(textAlt);
-    if (contextDebug().maskTelefones) textAlt = maskPhones(textAlt);
+    if (contextDebug().maskPhones) textAlt = maskPhones(textAlt);
     if (notice) {
         try {
             if (await notice.edit(textAlt, options)) return notice;

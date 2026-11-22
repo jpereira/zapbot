@@ -17,8 +17,8 @@ const { t } = require('../i18n');
  * /set <key>          → shows value, default and description
  * /set <snippet|/regex/> → lists the keys that match (e.g.: /set alert)
  * /set <key> <value>  → changes (list: items separated by comma or space)
- *   /set -append <chave> <valor> → numa lista, acrescenta itens (-a)
- *   /set -rm <chave> <valor>    → numa lista, tira itens
+ *   /set -append <key> <value> → numa list, acrescenta items (-a)
+ *   /set -rm <key> <value>    → numa list, tira items
  * /set -reset <key>   → back to default
  * bot.admins (who else uses the admin commands) and bot.users (who uses the
  * common commands) is changed only by the owner. In them, besides the number, the name of the
@@ -31,27 +31,27 @@ const { t } = require('../i18n');
  * other chats, a notice in their place. The secret ones go masked.
  */
 const ENV_VARIABLES = [
-    { nome: 'AAVE_WALLET_ADDRESS' },
-    { nome: 'BASE_RPC_URL', secret: true },
-    { nome: 'ETHEREUM_RPC_URL', secret: true },
-    { nome: 'GIPHY_API_KEY', secret: true },
-    { nome: 'MORPHO_WALLET_ADDRESS' },
-    { nome: 'OPENAI_ADMIN_KEY', secret: true },
-    { nome: 'OPENAI_API_KEY', secret: true },
-    { nome: 'OPENAI_MODEL' },
-    { nome: 'OPENAI_TIMEOUT_MS' },
-    { nome: 'PHONE_NUMBER' },
-    { nome: 'QRCODE_EMAIL_ENABLE' },
-    { nome: 'QRCODE_EMAIL_SMTP_ANTIPHISHING', secret: true },
-    { nome: 'QRCODE_EMAIL_SMTP_FROM' },
-    { nome: 'QRCODE_EMAIL_SMTP_HOST' },
-    { nome: 'QRCODE_EMAIL_SMTP_PASS', secret: true },
-    { nome: 'QRCODE_EMAIL_SMTP_PORT' },
-    { nome: 'QRCODE_EMAIL_SMTP_TO' },
-    { nome: 'QRCODE_EMAIL_SMTP_USER' },
-    { nome: 'ZAPBOT_CACHE_DIR' },
-    { nome: 'ZAPBOT_HEARTBEAT_FILE' },
-    { nome: 'ZAPBOT_HEARTBEAT_MAX_AGE_S' }
+    { name: 'AAVE_WALLET_ADDRESS' },
+    { name: 'BASE_RPC_URL', secret: true },
+    { name: 'ETHEREUM_RPC_URL', secret: true },
+    { name: 'GIPHY_API_KEY', secret: true },
+    { name: 'MORPHO_WALLET_ADDRESS' },
+    { name: 'OPENAI_ADMIN_KEY', secret: true },
+    { name: 'OPENAI_API_KEY', secret: true },
+    { name: 'OPENAI_MODEL' },
+    { name: 'OPENAI_TIMEOUT_MS' },
+    { name: 'PHONE_NUMBER' },
+    { name: 'QRCODE_EMAIL_ENABLE' },
+    { name: 'QRCODE_EMAIL_SMTP_ANTIPHISHING', secret: true },
+    { name: 'QRCODE_EMAIL_SMTP_FROM' },
+    { name: 'QRCODE_EMAIL_SMTP_HOST' },
+    { name: 'QRCODE_EMAIL_SMTP_PASS', secret: true },
+    { name: 'QRCODE_EMAIL_SMTP_PORT' },
+    { name: 'QRCODE_EMAIL_SMTP_TO' },
+    { name: 'QRCODE_EMAIL_SMTP_USER' },
+    { name: 'ZAPBOT_CACHE_DIR' },
+    { name: 'ZAPBOT_HEARTBEAT_FILE' },
+    { name: 'ZAPBOT_HEARTBEAT_MAX_AGE_S' }
 ];
 
 const soInPrivate = () => t('adm.set.envOnlyPrivate');
@@ -60,9 +60,9 @@ const inMyPrivate = async (chatId) => (await chatCurrentIds(chatId)).includes(cl
 
 // Block of the .env variables (only in your private chat)
 function envText() {
-    const widthAlt = Math.max(...ENV_VARIABLES.map(v => v.nome.length));
+    const widthAlt = Math.max(...ENV_VARIABLES.map(v => v.name.length));
     const linesAlt = ENV_VARIABLES
-        .map(v => `${v.nome.padEnd(widthAlt)}  ${formatValueSetting(process.env[v.nome] ?? '', ', ', v.secret)}`)
+        .map(v => `${v.name.padEnd(widthAlt)}  ${formatValueSetting(process.env[v.name] ?? '', ', ', v.secret)}`)
         .join('\n');
     return t('adm.set.envTitle') + '\n\n```\n' + linesAlt + '\n```';
 }
@@ -149,25 +149,25 @@ async function peopleItems(msg, key, textAlt) {
         }
 
         const person = await resolverOrChoose(msg, item, {
-            semEmail: t(withGroups ? 'adm.set.semEmailPeopleGroups' : 'adm.set.semEmailPeople', { key })
+            noEmail: t(withGroups ? 'adm.set.semEmailPeopleGroups' : 'adm.set.semEmailPeople', { key })
         });
         if (!person) return null;
 
-        if (person.grupo && withGroups) {
+        if (person.group && withGroups) {
             items.push(person.id);
             continue;
         }
 
         // Admin group: everyone there would command the bot (/set, /backup -send...). Better not
-        if (person.grupo) {
-            await msg.reply(t('adm.set.isGroup', { nome: person.nome, key }) +
-                (key === 'bot.admins' ? t('adm.set.groupNotAdmin', { nome: person.nome }) : ''));
+        if (person.group) {
+            await msg.reply(t('adm.set.isGroup', { name: person.name, key }) +
+                (key === 'bot.admins' ? t('adm.set.groupNotAdmin', { name: person.name }) : ''));
             return null;
         }
 
         const phoneAlt = person.id.endsWith('@c.us') ? person.id : await resolveLidToPhone(person.id);
         if (!phoneAlt?.endsWith('@c.us')) {
-            await msg.reply(t('adm.set.noPhone', { nome: person.nome }));
+            await msg.reply(t('adm.set.noPhone', { name: person.name }));
             return null;
         }
         items.push(phoneAlt.split('@')[0]);
@@ -180,7 +180,7 @@ async function peopleItems(msg, key, textAlt) {
 const isOOwner = (numberAlt) => numberAlt === client.info?.wid?.user;
 
 // "5521999999999 (Jorge Pereira)": the saved contact name, if any; a group, "👥 Família";
-// o all, "true (todos)"
+// o all, "true (all)"
 async function withName(numberAlt) {
     if (numberAlt === 'all') return t('adm.set.allTrue');
     // The person in a single group: "5521999999999 (Maria) only in 👥 Amigos"
@@ -200,13 +200,13 @@ async function withName(numberAlt) {
 const showItems = async (key, items) => (PEOPLE.includes(key) ? Promise.all(items.map(withName)) : items);
 
 /*
- * veja: where to see the items (in the "does not have"). /bot swaps the reply (reply:
+ * see: where to see the items (in the "does not have"). /bot swaps the reply (reply:
  * (change, value) → text) and the way of showing the items in the "already has"/"does not have"
  * (show: items → texts), to hide the phone of whoever is not in the group.
  */
 async function changeList(msg, optionsAlt) {
-    const { key, bruto: raw, acrescentar: append, veja: see = `/set ${key}`, resposta: reply = null } = optionsAlt;
-    const showAlt = optionsAlt.mostrar ?? ((items) => showItems(key, items));
+    const { key, raw, append, see = `/set ${key}`, answer: reply = null } = optionsAlt;
+    const showAlt = optionsAlt.show ?? ((items) => showItems(key, items));
     const schema = SETTINGS_SCHEMA[key];
     const optionAlt = append ? '-append' : '-rm';
 
@@ -215,11 +215,11 @@ async function changeList(msg, optionsAlt) {
         return;
     }
     if (schema.type !== 'list') {
-        await msg.reply(t('adm.set.notList', { key, opcao: optionAlt }));
+        await msg.reply(t('adm.set.notList', { key, option: optionAlt }));
         return;
     }
     if (!raw) {
-        await msg.reply(t(append ? 'adm.set.needValueAdd' : 'adm.set.needValueRm', { key, opcao: optionAlt }));
+        await msg.reply(t(append ? 'adm.set.needValueAdd' : 'adm.set.needValueRm', { key, option: optionAlt }));
         return;
     }
 
@@ -227,7 +227,7 @@ async function changeList(msg, optionsAlt) {
     try {
         items = validateSetting(key, raw);
     } catch (e) {
-        await msg.reply(t('adm.set.invalid', { key, erro: e.message }));
+        await msg.reply(t('adm.set.invalid', { key, error: e.message }));
         return;
     }
 
@@ -237,8 +237,8 @@ async function changeList(msg, optionsAlt) {
     if (!change.length) {
         const which = (await showAlt(items)).join(', ');
         await msg.reply(append
-            ? t('adm.set.alreadyHas', { key, quais: which })
-            : t('adm.set.doesNotHave', { key, quais: which, veja: see }));
+            ? t('adm.set.alreadyHas', { key, which })
+            : t('adm.set.doesNotHave', { key, which, see }));
         return;
     }
 
@@ -247,7 +247,7 @@ async function changeList(msg, optionsAlt) {
         const freshAlt = append ? [...current, ...change] : current.filter(i => !change.includes(i));
         valueAlt = await setSetting(key, freshAlt);
     } catch (e) {
-        await msg.reply(t('adm.set.invalid', { key, erro: e.message }));
+        await msg.reply(t('adm.set.invalid', { key, error: e.message }));
         return;
     }
     const sep = schema.separator ? ' | ' : ', ';
@@ -258,9 +258,9 @@ async function changeList(msg, optionsAlt) {
     }
     await msg.reply(t('adm.set.listChanged', {
         key,
-        sinal: append ? '+' : '−',
-        mudou: formatValueSetting(await showItems(key, change), sep, schema.secret),
-        valor: formatValueSetting(await showItems(key, valueAlt), sep, schema.secret)
+        sign: append ? '+' : '−',
+        didChange: formatValueSetting(await showItems(key, change), sep, schema.secret),
+        value: formatValueSetting(await showItems(key, valueAlt), sep, schema.secret)
     }));
 }
 
@@ -291,7 +291,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
             if (raw === null) return;
         }
 
-        await changeList(msg, { key, bruto: raw, acrescentar: append });
+        await changeList(msg, { key, raw, append });
         return;
     }
 
@@ -305,7 +305,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
         }
 
         await setSetting(key, schema.default);
-        await msg.reply(t('adm.set.resetDone', { key, valor: formatValueSetting(getSetting(key), ', ', schema.secret) }));
+        await msg.reply(t('adm.set.resetDone', { key, value: formatValueSetting(getSetting(key), ', ', schema.secret) }));
         return;
     }
 
@@ -318,7 +318,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
     }
 
     // A .env variable: read-only, and only in your private chat
-    const variable = ENV_VARIABLES.find(v => v.nome === key);
+    const variable = ENV_VARIABLES.find(v => v.name === key);
 
     if (variable) {
         if (rest.length) {
@@ -326,7 +326,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
         } else if (!(await inMyPrivate(chatId))) {
             await msg.reply(soInPrivate());
         } else {
-            await msg.reply(t('adm.set.envValue', { key, valor: formatValueSetting(process.env[key] ?? '', ', ', variable.secret) }));
+            await msg.reply(t('adm.set.envValue', { key, value: formatValueSetting(process.env[key] ?? '', ', ', variable.secret) }));
         }
         return;
     }
@@ -361,7 +361,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
             : formatValueSetting(valueAlt, ', ', schema.secret);
 
         await msg.reply(t('adm.set.detail', {
-            key, desc: schema.desc, valor: valueText, padrao: formatValueSetting(schema.default), tipo: `${schema.type}${limits}`
+            key, desc: schema.desc, value: valueText, fallback: formatValueSetting(schema.default), type: `${schema.type}${limits}`
         }));
         return;
     }
@@ -383,7 +383,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
             ? `\n${t('adm.set.pollWarning')}` : '';
         await msg.reply(`✅ *${key}* = ${formatValueSetting(await showItems(key, valueAlt), schema.separator ? ' | ' : ', ', schema.secret)}${notice}`);
     } catch (e) {
-        await msg.reply(t('adm.set.invalid', { key, erro: e.message }));
+        await msg.reply(t('adm.set.invalid', { key, error: e.message }));
     }
 }
 
@@ -394,10 +394,10 @@ async function cmdSet({ msg, opts, args, chatId }) {
  * current chat): does not go through the search.
  */
 async function peopleChangeList(msg, key, textAlt, append, optionsAlt = {}) {
-    const { itensProntos: itemsReady = false, resposta: reply, mostrar: showAlt } = optionsAlt;
+    const { readyItems: itemsReady = false, answer: reply, show: showAlt } = optionsAlt;
     const raw = itemsReady ? textAlt : await peopleItems(msg, key, textAlt);
     if (raw === null) return;
-    await changeList(msg, { key, bruto: raw, acrescentar: append, veja: '/bot', resposta: reply, mostrar: showAlt });
+    await changeList(msg, { key, raw, append, see: '/bot', answer: reply, show: showAlt });
 }
 
 module.exports = {

@@ -13,9 +13,9 @@ const WORK = '120363000000000002@g.us';
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 
-const countAlt = (senderId, senderName, n, { chatId = GROUP, chatName = 'Família', quando: when = Date.now(), campos: fields = { msgs: 1 } } = {}) =>
+const countAlt = (senderId, senderName, n, { chatId = GROUP, chatName = 'Família', when = Date.now(), fields = { msgs: 1 } } = {}) =>
     Promise.all(Array.from({ length: n }, () =>
-        countStats({ chatId, chatName, isGroup: 1, senderId, senderName, quando: when, campos: fields })));
+        countStats({ chatId, chatName, isGroup: 1, senderId, senderName, when, fields })));
 
 // The commands run in your private chat: nothing is counted there, so only the
 // counters the test created (in the group, the "/stats" message itself would count)
@@ -31,7 +31,7 @@ describe('contadores', () => {
 
     test('mesma pessoa, dia e hora somam na mesma linha', async () => {
         await countAlt('a', 'A', 3);
-        await countAlt('a', 'A', 1, { campos: { deleted: 1 } });
+        await countAlt('a', 'A', 1, { fields: { deleted: 1 } });
         const linesAlt = await bot.dbAll('SELECT msgs, deleted FROM stats');
         assert.deepEqual(linesAlt, [{ msgs: 3, deleted: 1 }]);
     });
@@ -42,9 +42,9 @@ describe('/stats', () => {
         await countAlt('5521a', 'Tia', 6);
         await countAlt('5521b', 'Tio', 3);
         await countAlt('5521c', 'Primo', 1);
-        await countAlt('5521b', 'Tio', 2, { campos: { deleted: 1 } });
-        await countAlt('5521c', 'Primo', 1, { campos: { edited: 1 } });
-        await countAlt('5521a', 'Tia', 1, { campos: { media: 1 } });
+        await countAlt('5521b', 'Tio', 2, { fields: { deleted: 1 } });
+        await countAlt('5521c', 'Primo', 1, { fields: { edited: 1 } });
+        await countAlt('5521a', 'Tia', 1, { fields: { media: 1 } });
 
         const [r] = await stats('/stats /família/');
         assert.match(r, /📊 \*Estatísticas de Família\*\n_Últimos 7 dias_/);
@@ -61,7 +61,7 @@ describe('/stats', () => {
     });
 
     test('sem /chat/: o chat atual, contando a própria mensagem do comando', async () => {
-        await countAlt(OTHERAlt.user, OTHERAlt.nome, 2);
+        await countAlt(OTHERAlt.user, OTHERAlt.name, 2);
         const [r] = await bot.replyAlt('/stats');
         assert.match(r, /Estatísticas de Família[\s\S]*Mensagens:\* 3 [\s\S]*🥇 Fulano — \*2\*[\s\S]*🥈 Dono — \*1\*/);
     });
@@ -80,7 +80,7 @@ describe('/stats', () => {
     });
 
     test('-N muda o período; limitado a stats.retentionDays', async () => {
-        await countAlt('a', 'A', 1, { quando: Date.now() - 10 * DAY });
+        await countAlt('a', 'A', 1, { when: Date.now() - 10 * DAY });
         await countAlt('a', 'A', 1);
 
         assert.match((await stats('/stats /família/'))[0], /Mensagens:\* 1 /);
@@ -117,13 +117,13 @@ describe('/stats', () => {
         await countAlt('a', 'A', 2, { chatId: WORK, chatName: 'Trabalho' });
         await countAlt('a', 'A', 1, { chatId: '120363000000000003@g.us', chatName: 'Trabalho antigo' });
         t.mock.timers.enable({ apis: ['setTimeout'] });
-        const commandAlt = bot.executar('/stats /trab/');
+        const commandAlt = bot.execute('/stats /trab/');
         for (let i = 0; i < 50; i++) await new Promise(setImmediate);
         t.mock.timers.tick(bot.src('choices').CHOICE_MS);
 
         const r = await commandAlt;
         assert.equal(r.length, 1);
-        assert.equal(r[0].texto, '⌛ Nenhum nº escolhido para "trab" em 2 minutos: nada foi feito.');
+        assert.equal(r[0].text, '⌛ Nenhum nº escolhido para "trab" em 2 minutos: nada foi feito.');
         assert.equal(r[0].editada, true);
     });
 
@@ -151,8 +151,8 @@ describe('/stats', () => {
     test('-me: as suas mensagens em todos os chats', async () => {
         await countAlt(OWNER.user, 'Dono', 3);
         await countAlt(OWNER.user, 'Dono', 1, { chatId: WORK, chatName: 'Trabalho' });
-        await countAlt(OWNER.user, 'Dono', 1, { campos: { deleted: 1 } });
-        await countAlt(OTHERAlt.user, OTHERAlt.nome, 50); // of another person: does not enter
+        await countAlt(OWNER.user, 'Dono', 1, { fields: { deleted: 1 } });
+        await countAlt(OTHERAlt.user, OTHERAlt.name, 50); // of another person: does not enter
 
         const [r] = await stats('/stats -me');
         assert.match(r, /📊 \*Suas estatísticas\*\n_Últimos 7 dias, todos os chats_/);

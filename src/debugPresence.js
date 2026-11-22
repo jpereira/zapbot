@@ -26,10 +26,10 @@ async function diagnosePresence(chatId, { monitor = false } = {}) {
     const load = nameAlt => {
         if (nameAlt in modules) return modules[nameAlt];
         try {
-            const modulo = window.require?.(nameAlt);
-            modules[nameAlt] = modulo ?? null;
-            attempts.push({ method: nameAlt, status: modulo ? 'disponível' : 'indisponível',
-                exports: modulo ? Object.keys(modulo).slice(0, 40) : [] });
+            const module = window.require?.(nameAlt);
+            modules[nameAlt] = module ?? null;
+            attempts.push({ method: nameAlt, status: module ? 'disponível' : 'indisponível',
+                exports: module ? Object.keys(module).slice(0, 40) : [] });
         } catch (err) {
             modules[nameAlt] = null;
             attempts.push({ method: nameAlt, status: 'indisponível',
@@ -142,9 +142,9 @@ async function diagnosePresence(chatId, { monitor = false } = {}) {
     ];
     for (const nameAlt of new Set(['WAWebPresenceCollection', 'WAWebPresenceModel',
         ...discoveredModules.filter(n => /Presence.*Collection/.test(n)).slice(0, 8)])) {
-        const modulo = load(nameAlt);
+        const module = load(nameAlt);
         for (const keyAlt of ['PresenceCollection', 'PresenceCollectionImpl', 'Presence']) {
-            if (modulo?.[keyAlt]?.get) presenceCollections.push([`${nameAlt}.${keyAlt}`, modulo[keyAlt]]);
+            if (module?.[keyAlt]?.get) presenceCollections.push([`${nameAlt}.${keyAlt}`, module[keyAlt]]);
         }
     }
     const searchPresences = () => {
@@ -255,11 +255,11 @@ async function diagnosePresence(chatId, { monitor = false } = {}) {
     const before = sourcesAlt();
     const properties = data => [data, data?.attributes, data?._values,
         data?.get, data?.toJSON, data?._data].filter(Boolean);
-    const campoDe = (sourceAlt, nameAlt) => properties(sourceAlt?.data)
+    const fieldOf = (sourceAlt, nameAlt) => properties(sourceAlt?.data)
         .map(p => p[nameAlt] ?? p[`__x_${nameAlt}`])
         .find(v => v != null && typeof v !== 'object') ?? null;
     const chooseSource = sources => sources.find(s =>
-        priority(s.source, s.id) >= 20) ?? sources.find(s => campoDe(s, 'hasData') === true) ??
+        priority(s.source, s.id) >= 20) ?? sources.find(s => fieldOf(s, 'hasData') === true) ??
         sources.find(s => candidatesAlt([s]).length) ?? sources[0];
     const signature = sourceAlt => JSON.stringify(sourceAlt?.data);
 
@@ -271,15 +271,15 @@ async function diagnosePresence(chatId, { monitor = false } = {}) {
             .slice(0, 8).map(n => [n, load(n)])
     ];
     let subscriptionRequested = false;
-    const signatureActive = monitor && campoDe(chooseSource(before), 'isSubscribed') === true;
+    const signatureActive = monitor && fieldOf(chooseSource(before), 'isSubscribed') === true;
     for (const id of [idPresence]) {
         if (!/@(?:c\.us|lid)$/.test(id)) continue;
-        for (const [nameAlt, modulo] of subscriptions) {
+        for (const [nameAlt, module] of subscriptions) {
             for (const fn of ['subscribeUserPresence', 'subscribePresence']) {
-                const method = modulo?.[fn];
+                const method = module?.[fn];
                 if (signatureActive || subscriptionRequested || typeof method !== 'function') continue;
                 if (fn === 'subscribeUserPresence' && !id.endsWith('@lid')) continue;
-                await attempt(`${nameAlt}.${fn}(${id})`, () => method.call(modulo, widDe(id)));
+                await attempt(`${nameAlt}.${fn}(${id})`, () => method.call(module, widDe(id)));
                 const attemptAlt = attempts.at(-1);
                 subscriptionRequested = ['ok', 'sem retorno'].includes(attemptAlt.status) ||
                     Boolean(attemptAlt.error?.startsWith('Timeout'));
@@ -303,15 +303,15 @@ async function diagnosePresence(chatId, { monitor = false } = {}) {
     for (const nameAlt of new Set(['WAWebPresenceGetters', 'WAWebChatPresenceGetters',
         'WAWebContactGetters', 'WAWebChatGetters',
         ...discoveredModules.filter(n => /(?:Presence|LastSeen).*Getters/.test(n)).slice(0, 8)])) {
-        const modulo = load(nameAlt);
+        const module = load(nameAlt);
         const targets = nameAlt.includes('Contact')
             ? [...ids].map(id => [`Contact(${id})`, get(collections?.Contact, widDe(id))])
             : nameAlt === 'WAWebChatGetters' ? [...chats] : [...modelsAlt];
         for (const fn of ['getLastSeen', 'getLastSeenTimestamp', 'getIsOnline']) {
-            if (typeof modulo?.[fn] !== 'function') continue;
+            if (typeof module?.[fn] !== 'function') continue;
             for (const [source, model] of targets.slice(0, 4)) {
                 if (!model) continue;
-                const value = await attempt(`${nameAlt}.${fn}(${source})`, () => modulo[fn](model));
+                const value = await attempt(`${nameAlt}.${fn}(${source})`, () => module[fn](model));
                 if (value != null) save(`${nameAlt}.${fn}(${source})`, {
                     [fn === 'getIsOnline' ? 'isOnline' : 'lastSeen']: value
                 });
@@ -338,8 +338,8 @@ async function diagnosePresence(chatId, { monitor = false } = {}) {
         const current = chooseSource(sourcesAlt());
         const previous = before.find(s => s.source === current?.source);
         const changed = signature(current) !== signature(previous);
-        const ready = campoDe(current, 'hasData') === true ||
-            (campoDe(current, 'hasData') == null && candidatesAlt(current ? [current] : []).length);
+        const ready = fieldOf(current, 'hasData') === true ||
+            (fieldOf(current, 'hasData') == null && candidatesAlt(current ? [current] : []).length);
         const completed = !subscriptionRequested || changed;
         if (ready && completed) break;
         await new Promise(resolve => setTimeout(resolve, 400));
@@ -348,14 +348,14 @@ async function diagnosePresence(chatId, { monitor = false } = {}) {
     searchPresences();
     const sources = sourcesAlt();
     const sourceAlt = chooseSource(sources);
-    const candidates = campoDe(sourceAlt, 'isOnline') === true
+    const candidates = fieldOf(sourceAlt, 'isOnline') === true
         ? [] : candidatesAlt(sourceAlt ? [sourceAlt] : []);
     const explicit = candidates.find(c => c.kind === 'lastSeen');
     const foundAlt = explicit ?? candidates.find(c => c.kind.startsWith('chatstate offline'));
-    const campo = nameAlt => campoDe(sourceAlt, nameAlt);
+    const field = nameAlt => fieldOf(sourceAlt, nameAlt);
     const dateChangedDuringQuery = Boolean(sourceAlt && signature(sourceAlt) !==
         signature(before.find(s => s.source === sourceAlt.source)));
-    const hasData = campo('hasData');
+    const hasData = field('hasData');
     const queryStatus = dateChangedDuringQuery && hasData === true
         ? 'dados mudaram durante a consulta'
         : hasData === true || foundAlt
@@ -383,17 +383,17 @@ async function diagnosePresence(chatId, { monitor = false } = {}) {
     const state = properties(sourceAlt?.data).map(p => p.chatstate ?? p.__x_chatstate)
         .find(v => v != null) ?? null;
     const stateProps = [state, state?.attributes, state?._values, state?._data].filter(Boolean);
-    const stateCampo = nameAlt => stateProps.map(p => p[nameAlt] ?? p[`__x_${nameAlt}`])
+    const stateField = nameAlt => stateProps.map(p => p[nameAlt] ?? p[`__x_${nameAlt}`])
         .find(v => v != null && typeof v !== 'object') ?? null;
     const resultAlt = {
         chatId, resolvedIds: [...ids], chatFound: chats.size > 0,
         presenceAvailable: modelsAlt.size > 0,
         presenceKeys: sources[0]?.keys ?? [],
         presenceData: {
-            isOnline: campo('isOnline'), lastSeen: valueAlt,
-            hasData: campo('hasData'), isSubscribed: campo('isSubscribed'),
+            isOnline: field('isOnline'), lastSeen: valueAlt,
+            hasData: field('hasData'), isSubscribed: field('isSubscribed'),
             chatstate: typeof state === 'string' ? state : {
-                type: stateCampo('type'), t: stateCampo('t'), deny: stateCampo('deny')
+                type: stateField('type'), t: stateField('t'), deny: stateField('deny')
             }
         },
         lastSeenSource: foundAlt?.source ?? null,

@@ -234,7 +234,7 @@ async function initializeDb() {
     /*
      * /stats statistics: counters per chat, day, hour and sender.
      * Regular messages leave the database in cache.messageRetentionHours (68 h); the counters stay
-     * 'stats.retentionDays' dias.
+     * 'stats.retentionDays' days.
      */
     await dbRun(`
         CREATE TABLE IF NOT EXISTS stats (

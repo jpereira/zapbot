@@ -15,7 +15,7 @@ beforeEach(bot.restart);
 afterEach(cleanCopiesDebug);
 afterEach(bootCompleteLogs);
 const textLogs = () => bot.logs.join('\n');
-const copies = () => bot.client.enviadas.filter(e =>
+const copies = () => bot.client.sent.filter(e =>
     typeof e.content === 'string' && e.content.startsWith('🪲 [ZapBot log]\n'));
 
 async function configure(args) {
@@ -55,9 +55,9 @@ describe('/debug', () => {
         await configure('-on -lvl 0');
         await bot.replyAlt('/watch /sapato -h azul/gi -in /Família/ -to /Fulano/ -m');
         const parser = bot.logs.find(l => l.includes('Command parser: /watch'));
-        assert.match(parser, /regra: '\/sapato -h azul\/gi'/);
-        assert.match(parser, /origem: 'Família'/);
-        assert.match(parser, /destinos: \[ 'Fulano' \]/);
+        assert.match(parser, /rule: '\/sapato -h azul\/gi'/);
+        assert.match(parser, /origin: 'Família'/);
+        assert.match(parser, /destinations: \[ 'Fulano' \]/);
         assert.match(parser, /mask: true/);
     });
 
@@ -78,7 +78,7 @@ describe('/debug', () => {
         const parser = bot.logs.find(l => l.includes('Command parser: /show'));
         assert.match(parser, /query: 'Jorge Pereira'/);
         assert.match(parser, /mask: true/);
-        assert.match(parser, /numero: 3/);
+        assert.match(parser, /number: 3/);
         assert.match(parser, /given: Set\(2\) \{ 'query', 'mask' \}/);
     });
 
@@ -87,8 +87,8 @@ describe('/debug', () => {
         await bot.replyAlt('/cron 10m -r daily -to /Fulano/ -to /Família/ Bom dia, pessoal!');
         const parser = bot.logs.find(l => l.includes('Command parser: /cron'));
         assert.match(parser, /repeat: 'daily'/);
-        assert.match(parser, /texto: 'Bom dia, pessoal!'/);
-        assert.match(parser, /destinos: \[ 'Fulano', 'Família' \]/);
+        assert.match(parser, /text: 'Bom dia, pessoal!'/);
+        assert.match(parser, /destinations: \[ 'Fulano', 'Família' \]/);
     });
 
     test('DEBUG0 preserva toda a mensagem livre do alerta e o destino depois dela', async () => {
@@ -107,7 +107,7 @@ describe('/debug', () => {
         await configure('-on -lvl 0');
         const argv = ['BTC', '>', '90000'];
         const dataAlt = { opt: { argv }, argv, given: new Set(['alert', 'to', 'msg']),
-            valores: new Map([['destino', 'Jorge Pereira'], ['token', 'segredo-mapa']]) };
+            values: new Map([['destino', 'Jorge Pereira'], ['token', 'segredo-mapa']]) };
         dataAlt.circular = dataAlt;
         printDebug('dados do parser', dataAlt);
         const log = textLogs();
@@ -292,7 +292,7 @@ describe('/debug', () => {
         assert.match(copies()[0].content, /sapato 1[\s\S]*sapato 2/);
         assert.doesNotMatch(copies()[0].content, /ignorado|sendMessage/);
         const beforeAlt = bot.logs.length;
-        await bot.deliver(bot.createMessage({ texto: copies()[0].content }));
+        await bot.deliver(bot.createMessage({ text: copies()[0].content }));
         await flushCopiesDebug();
         assert.equal(bot.logs.length, beforeAlt);
         assert.equal(copies().length, 1, 'a própria cópia não gera cópias');
@@ -308,7 +308,7 @@ describe('/debug', () => {
             ['-copy-to /Jorge Pereira/', {}, '5521999999999@c.us'],
             ['-copy-to "Família"', {}, bot.GROUP],
             ['-copy-to +5521999999999', {}, '5521999999999@c.us'],
-            ['-copy-to @5521999999999', { mencoes: ['5521999999999@c.us'] },
+            ['-copy-to @5521999999999', { mentions: ['5521999999999@c.us'] },
                 '5521999999999@c.us'],
             ['-copy-to', { chat: bot.OTHERAlt.jid }, bot.OTHERAlt.jid]
         ]) {
@@ -378,11 +378,11 @@ describe('/debug', () => {
 
     test('logs do boot aguardam a conexão pronta sem pausar a cópia', async () => {
         await configure('-on -copy-to -filter /marcador/');
-        bot.estado.pronto = false;
+        bot.state.ready = false;
         printDebug('marcador durante o boot');
         await flushCopiesDebug();
         assert.equal(copies().length, 0);
-        bot.estado.pronto = true;
+        bot.state.ready = true;
         await flushCopiesDebug();
         assert.match(copies().at(-1).content, /durante o boot/);
     });
@@ -415,24 +415,24 @@ describe('instrumentação', () => {
         await configure('-on -lvl 3');
         const errorAlt = new Error('falhou');
         const object = {
-            numero: 7,
-            somar(n) { return this.numero + n; },
-            async esperar() { return this.numero; },
-            falhar() { throw errorAlt; },
-            async rejeitar() { throw errorAlt; },
-            falharSemErro() { throw 0; },
-            async rejeitarSemErro() { throw undefined; }
+            number: 7,
+            sum(n) { return this.number + n; },
+            async wait() { return this.number; },
+            fail() { throw errorAlt; },
+            async reject() { throw errorAlt; },
+            failWithoutError() { throw 0; },
+            async rejectWithoutError() { throw undefined; }
         };
         instrumentObject(object, 'exemplo', 1);
         instrumentObject(object, 'exemplo', 1);
-        assert.equal(object.somar(2), 9);
-        assert.equal(await object.esperar(), 7);
-        assert.throws(() => object.falhar(), e => e === errorAlt);
-        await assert.rejects(object.rejeitar(), e => e === errorAlt);
-        assert.throws(() => object.falharSemErro(), e => e === 0);
-        await assert.rejects(object.rejeitarSemErro(), e => e === undefined);
-        assert.equal(bot.logs.filter(l => /exemplo.falhar error/.test(l)).length, 1);
-        assert.equal(bot.logs.filter(l => /exemplo.rejeitar error/.test(l)).length, 1);
+        assert.equal(object.sum(2), 9);
+        assert.equal(await object.wait(), 7);
+        assert.throws(() => object.fail(), e => e === errorAlt);
+        await assert.rejects(object.reject(), e => e === errorAlt);
+        assert.throws(() => object.failWithoutError(), e => e === 0);
+        await assert.rejects(object.rejectWithoutError(), e => e === undefined);
+        assert.equal(bot.logs.filter(l => /exemplo.fail error/.test(l)).length, 1);
+        assert.equal(bot.logs.filter(l => /exemplo.reject error/.test(l)).length, 1);
     });
 
     test('credenciais não vazam; objetos circulares, getters e buffers são resumidos', async () => {
@@ -440,8 +440,8 @@ describe('instrumentação', () => {
         process.env.DEBUG_TEST_TOKEN = 'segredo-do-ambiente';
         try {
             await bot.setSetting('gpt.api.key', 'segredo-da-setting');
-            const dataAlt = { password: 'novo-segredo', valor: Buffer.alloc(100),
-                get pesado() { throw new Error('getter não pode executar'); } };
+            const dataAlt = { password: 'novo-segredo', value: Buffer.alloc(100),
+                get heavy() { throw new Error('getter não pode executar'); } };
             dataAlt.circular = dataAlt;
             printDebugLevel(3, 'marcador', dataAlt, 'segredo-do-ambiente', 'segredo-da-setting',
                 'https://api.test/?token=segredo-query&pagina=2',
@@ -463,7 +463,7 @@ describe('instrumentação', () => {
 
     test('escopo sem rastro impede instrumentação e cópia durante o envio', async () => {
         await configure('-on -lvl 3 -copy-to');
-        await withContextDebug({ semRastro: true }, async () => {
+        await withContextDebug({ noTrace: true }, async () => {
             printDebug('não aparece');
             await bot.client.getContacts();
         });

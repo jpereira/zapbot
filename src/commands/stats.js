@@ -39,21 +39,21 @@ async function textTimesStats(filter, params) {
         params
     );
 
-    const ranges = Array.from({ length: 8 }, (_, i) => ({ ini: i * 3, msgs: 0 }));
+    const ranges = Array.from({ length: 8 }, (_, i) => ({ marker: i * 3, msgs: 0 }));
     for (const h of byHour) ranges[Math.floor(h.hour / 3)].msgs += h.msgs;
 
     const greater = Math.max(...ranges.map(f => f.msgs));
     if (!greater) return '';
 
-    const pico = byHour.reduce((a, b) => (b.msgs > a.msgs ? b : a));
+    const peak = byHour.reduce((a, b) => (b.msgs > a.msgs ? b : a));
 
     let textAlt = t('stats.hourTitle');
     for (const f of ranges) {
         const bar = '█'.repeat(Math.round((f.msgs / greater) * 10)) || (f.msgs ? '▏' : '');
-        textAlt += `${String(f.ini).padStart(2, '0')}–${String(f.ini + 3).padStart(2, '0')}h ${bar.padEnd(10)} ${f.msgs}\n`;
+        textAlt += `${String(f.marker).padStart(2, '0')}–${String(f.marker + 3).padStart(2, '0')}h ${bar.padEnd(10)} ${f.msgs}\n`;
     }
     textAlt += '```\n';
-    textAlt += t('stats.peakHour', { from: pico.hour, to: (pico.hour + 1) % 24, msgs: msgs(pico.msgs) });
+    textAlt += t('stats.peakHour', { from: peak.hour, to: (peak.hour + 1) % 24, msgs: msgs(peak.msgs) });
 
     if (byDay?.msgs) {
         const [a, m, d] = byDay.day.split('-');
@@ -67,7 +67,7 @@ async function textTimesStats(filter, params) {
 async function chatTextStats(filter, params, daysAlt) {
     const people = await dbAll(
         `SELECT sender_id,
-                MAX(sender_name) AS nome,
+                MAX(sender_name) AS name,
                 SUM(msgs) AS msgs,
                 SUM(media) AS media,
                 SUM(deleted) AS deleted,
@@ -81,7 +81,7 @@ async function chatTextStats(filter, params, daysAlt) {
     const total = people.reduce((s, p) => s + p.msgs, 0);
     if (!total && !people.some(p => p.deleted || p.edited)) return null;
 
-    const { nome: nameChat } = await dbGet(`SELECT MAX(chat_name) AS nome FROM stats WHERE ${filter}`, params);
+    const { name: nameChat } = await dbGet(`SELECT MAX(chat_name) AS name FROM stats WHERE ${filter}`, params);
     const speakers = people.filter(p => p.msgs > 0).sort((a, b) => b.msgs - a.msgs);
     const mediaAlt = people.reduce((s, p) => s + p.media, 0);
 
@@ -98,18 +98,18 @@ async function chatTextStats(filter, params, daysAlt) {
         textAlt += t('stats.topTalkers');
         speakers.slice(0, 10).forEach((p, i) => {
             const pct = Math.round((p.msgs / total) * 100);
-            textAlt += `${MEDALS[i] || `${i + 1}.`} ${p.nome || p.sender_id} — *${fmtInA(p.msgs)}* _(${pct}%)_\n`;
+            textAlt += `${MEDALS[i] || `${i + 1}.`} ${p.name || p.sender_id} — *${fmtInA(p.msgs)}* _(${pct}%)_\n`;
         });
         if (speakers.length > 10) textAlt += t('stats.morePeople', { count: speakers.length - 10 });
     }
 
     // Who deletes / edits the most (only shows if someone deleted/edited)
-    for (const [campo, title] of [['deleted', t('stats.topDeleters')], ['edited', t('stats.topEditors')]]) {
-        const list = people.filter(p => p[campo] > 0).sort((a, b) => b[campo] - a[campo]).slice(0, 5);
+    for (const [field, title] of [['deleted', t('stats.topDeleters')], ['edited', t('stats.topEditors')]]) {
+        const list = people.filter(p => p[field] > 0).sort((a, b) => b[field] - a[field]).slice(0, 5);
         if (!list.length) continue;
 
         textAlt += `\n${title}\n`;
-        list.forEach((p, i) => { textAlt += `${i + 1}. ${p.nome || p.sender_id} — *${fmtInA(p[campo])}*\n`; });
+        list.forEach((p, i) => { textAlt += `${i + 1}. ${p.name || p.sender_id} — *${fmtInA(p[field])}*\n`; });
     }
 
     return textAlt + await textTimesStats(filter, params);
@@ -119,7 +119,7 @@ async function chatTextStats(filter, params, daysAlt) {
 async function textStatsMy(filter, params, daysAlt, umChat) {
     const chats = await dbAll(
         `SELECT chat_id,
-                MAX(chat_name) AS nome,
+                MAX(chat_name) AS name,
                 MAX(is_group) AS is_group,
                 SUM(msgs) AS msgs,
                 SUM(media) AS media,
@@ -138,7 +138,7 @@ async function textStatsMy(filter, params, daysAlt, umChat) {
     const assets = chats.filter(c => c.msgs > 0).sort((a, b) => b.msgs - a.msgs);
 
     let textAlt = t('stats.myHeader', {
-        chat: umChat && chats[0]?.nome ? t('stats.in', { name: chats[0].nome }) : '',
+        chat: umChat && chats[0]?.name ? t('stats.in', { name: chats[0].name }) : '',
         days: countAlt('stats.days', daysAlt),
         scope: umChat ? '' : t('stats.allChatsScope'),
         total: fmtInA(total),
@@ -154,7 +154,7 @@ async function textStatsMy(filter, params, daysAlt, umChat) {
         assets.slice(0, 10).forEach((c, i) => {
             const pct = Math.round((c.msgs / total) * 100);
             const iconAlt = c.is_group ? '👥' : '👤';
-            textAlt += `${MEDALS[i] || `${i + 1}.`} ${iconAlt} ${c.nome || c.chat_id.split('@')[0]} — *${fmtInA(c.msgs)}* _(${pct}%)_\n`;
+            textAlt += `${MEDALS[i] || `${i + 1}.`} ${iconAlt} ${c.name || c.chat_id.split('@')[0]} — *${fmtInA(c.msgs)}* _(${pct}%)_\n`;
         });
         if (assets.length > 10) textAlt += t('stats.moreChats', { count: assets.length - 10 });
     }
@@ -171,8 +171,8 @@ const withoutBars = (t) => String(t).replace(/^\/(.*)\/$/s, '$1').trim();
 function readStats(opts) {
     const words = [typeof opts.opt.flush === 'string' ? opts.opt.flush : '', ...opts.argv].filter(Boolean);
     return {
-        dias: opts.numero,
-        alvo: withoutBars(words.join(' ')),
+        days: opts.number,
+        target: withoutBars(words.join(' ')),
         me: opts.opt.me,
         list: opts.opt.list,
         flush: opts.given.has('flush'),
@@ -182,11 +182,11 @@ function readStats(opts) {
 
 // The chats with stats, from the one that talks the most to the least
 const chatsWithStats = () => dbAll(
-    `SELECT chat_id, MAX(chat_name) AS nome, MAX(is_group) AS grupo, SUM(msgs) AS msgs, MAX(day) AS ultimo
+    `SELECT chat_id, MAX(chat_name) AS name, MAX(is_group) AS "group", SUM(msgs) AS msgs, MAX(day) AS last
        FROM stats GROUP BY chat_id ORDER BY msgs DESC`
 );
 
-const describeChat = (c) => `${c.grupo ? '👥' : '👤'} ${c.nome || c.chat_id.split('@')[0]}`;
+const describeChat = (c) => `${c.group ? '👥' : '👤'} ${c.name || c.chat_id.split('@')[0]}`;
 
 /*
  * The chat with stats whose name has all the words of the target (the exact name
@@ -195,8 +195,8 @@ const describeChat = (c) => `${c.grupo ? '👥' : '👤'} ${c.nome || c.chat_id.
 async function findChat(msg, target) {
     const words = withoutAccents(target).split(/\s+/).filter(Boolean);
     const chats = await chatsWithStats();
-    const match = chats.filter(c => words.every(p => withoutAccents(c.nome ?? '').includes(p)));
-    const exact = match.find(c => withoutAccents(c.nome ?? '') === words.join(' '));
+    const match = chats.filter(c => words.every(p => withoutAccents(c.name ?? '').includes(p)));
+    const exact = match.find(c => withoutAccents(c.name ?? '') === words.join(' '));
 
     if (exact || match.length === 1) return exact ?? match[0];
     if (!match.length) {
@@ -208,8 +208,8 @@ async function findChat(msg, target) {
         match.slice(0, 10).map((c, i) => `${i + 1}. ${describeChat(c)}`).join('\n') +
         t('stats.multiMatchFooter'));
     return waitChoice(msg.id?.remote ?? msg.from, match.slice(0, 10), {
-        autor: authorAlt(msg),
-        aoExpirar: () => completeNotice(msg, question, t('stats.choiceExpired', { text: target }))
+        author: authorAlt(msg),
+        onExpire: () => completeNotice(msg, question, t('stats.choiceExpired', { text: target }))
     });
 }
 
@@ -222,7 +222,7 @@ async function listChats(msg) {
 
     const data = (day) => day.split('-').reverse().slice(0, 2).join('/');
     await msg.reply(t('stats.listHeader', { count: chats.length, days: countAlt('stats.days', getSetting('stats.retentionDays')) }) +
-        chats.map((c, i) => t('stats.listLine', { n: i + 1, chat: describeChat(c), msgs: fmtInA(c.msgs), date: data(c.ultimo) })).join('\n') +
+        chats.map((c, i) => t('stats.listLine', { n: i + 1, chat: describeChat(c), msgs: fmtInA(c.msgs), date: data(c.last) })).join('\n') +
         t('stats.listFooter'));
 }
 
@@ -243,7 +243,7 @@ async function cmdStats({ msg, opts, chatId }) {
         return;
     }
 
-    if (r.flush && !r.alvo) {
+    if (r.flush && !r.target) {
         await msg.reply(t('stats.flushNeedsChat'));
         return;
     }
@@ -251,8 +251,8 @@ async function cmdStats({ msg, opts, chatId }) {
     // The chat: the target's (/Grupo/) or the current one; with -me and no target, all
     let ids = r.me ? null : await chatCurrentIds(chatId);
     let chat = null;
-    if (r.alvo) {
-        chat = await findChat(msg, r.alvo);
+    if (r.target) {
+        chat = await findChat(msg, r.target);
         if (!chat) return;
         ids = await chatCurrentIds(chat.chat_id);
     }
@@ -264,7 +264,7 @@ async function cmdStats({ msg, opts, chatId }) {
     }
 
     const maxDays = getSetting('stats.retentionDays');
-    const daysAlt = Math.min(r.dias ?? 7, maxDays);
+    const daysAlt = Math.min(r.days ?? 7, maxDays);
     if (daysAlt < 1) {
         await msg.reply(commandUsage('/stats'));
         return;

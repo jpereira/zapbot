@@ -3,7 +3,7 @@
  * when the fees to collect go over a value.
  */
 
-const { estado: stateAlt } = require('../state');
+const { state: stateAlt } = require('../state');
 const { describe, alertDescribeDestination, alertDestinations, addressAlt2, fmtUsd, readRegistration } = require('../commands/defi');
 const { dbAll, dbReady, dbRun } = require('../db');
 const { sendToDestinations } = require('../destinations');
@@ -21,40 +21,40 @@ const { getSetting } = require('../settings');
  */
 async function notify(p, n, emoji, title, texts) {
     const textAlt = `${emoji} *${title}*\n\n${texts.join('\n\n')}\n\n${t('defi.alertTip', { n })}`;
-    await sendToDestinations(alertDestinations(p), textAlt, { assunto: title })
+    await sendToDestinations(alertDestinations(p), textAlt, { subject: title })
         .then(() => printInfo(`/defi -alert: ${title} → ${alertDescribeDestination(p)}`))
         .catch(err => printError(`/defi -alert: failed to notify (${addressAlt2(p)}):`, err.message));
 }
 
 // Saves BEFORE notifying: if the send fails, it does not repeat on every check
-async function checkRange(p, n, lido) {
-    if (lido.naFaixa === null) return;   // wallet without an open position: nothing to watch
-    const inRange = lido.naFaixa ? 1 : 0;
+async function checkRange(p, n, wasRead) {
+    if (wasRead.inRange === null) return;   // wallet without an open position: nothing to watch
+    const inRange = wasRead.inRange ? 1 : 0;
     if (inRange === p.in_range) return;
 
     await dbRun('UPDATE defi_positions SET in_range = ? WHERE id = ?', [inRange, p.id]);
     if (inRange && p.in_range === null) return;   // first read, already in range: only records
 
-    if (inRange) await notify(p, n, '✅', t('defi.backInRange', { desc: describe(p) }), lido.textos);
-    else await notify(p, n, '🚨', t('defi.leftRange', { desc: describe(p) }), lido.foraDaFaixa);
+    if (inRange) await notify(p, n, '✅', t('defi.backInRange', { desc: describe(p) }), wasRead.texts);
+    else await notify(p, n, '🚨', t('defi.leftRange', { desc: describe(p) }), wasRead.outOfRange);
 }
 
-async function checkRates(p, n, lido) {
-    if (!p.alert_fees || lido.taxasUsd === null) return;
-    const passed = lido.taxasUsd >= p.alert_fees ? 1 : 0;
+async function checkRates(p, n, wasRead) {
+    if (!p.alert_fees || wasRead.ratesUsd === null) return;
+    const passed = wasRead.ratesUsd >= p.alert_fees ? 1 : 0;
     if (passed === p.fees_notified) return;
 
     await dbRun('UPDATE defi_positions SET fees_notified = ? WHERE id = ?', [passed, p.id]);
     if (passed) {
-        await notify(p, n, '💸', t('defi.feesOver', { desc: describe(p), fees: fmtUsd(lido.taxasUsd), limit: fmtUsd(p.alert_fees) }), lido.textos);
+        await notify(p, n, '💸', t('defi.feesOver', { desc: describe(p), fees: fmtUsd(wasRead.ratesUsd), limit: fmtUsd(p.alert_fees) }), wasRead.texts);
     }
 }
 
 let lastCheck = 0;
 let checking = false;
 
-async function checkAlertsDefi({ forcar: force = false } = {}) {
-    if (checking || !stateAlt.pronto) return;
+async function checkAlertsDefi({ force = false } = {}) {
+    if (checking || !stateAlt.ready) return;
     if (!force && Date.now() - lastCheck < getSetting('defi.alert.intervalMin') * 60 * 1000) return;
 
     checking = true;
@@ -68,16 +68,16 @@ async function checkAlertsDefi({ forcar: force = false } = {}) {
         for (const [i, p] of positions.entries()) {
             if (!p.alert) continue;
 
-            let lido;
+            let wasRead;
             try {
-                lido = await readRegistration(p);
+                wasRead = await readRegistration(p);
             } catch (err) {
                 printError(`/defi -alert: could not read ${addressAlt2(p)}:`, err.message);
                 continue;
             }
 
-            await checkRange(p, i + 1, lido);
-            await checkRates(p, i + 1, lido);
+            await checkRange(p, i + 1, wasRead);
+            await checkRates(p, i + 1, wasRead);
         }
     } catch (err) {
         printError('Error checking the /defi alerts:', err.message);

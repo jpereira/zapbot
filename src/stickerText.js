@@ -19,7 +19,7 @@ const MAX_CHARACTERS = 200;
 const FRAMES_PER_SECOND = 2;   // blinks every half second
 
 // "#fff", "FFFFFF" or "#ffffff" → "#FFFFFF"; invalid → null
-function readCor(valueAlt) {
+function readColor(valueAlt) {
     const m = String(valueAlt ?? '').trim().replace(/^#/, '').match(/^([0-9a-f]{3}|[0-9a-f]{6})$/i);
     if (!m) return null;
     const hex = m[1].length === 3 ? [...m[1]].map(c => c + c).join('') : m[1];
@@ -86,7 +86,7 @@ async function textSticker(textAlt, colors) {
 
 module.exports = {
     MAX_CHARACTERS,
-    readCor,
+    readColor,
     textFrames,
     textSticker
 };

@@ -15,24 +15,24 @@ async function cmdAlias({ msg, args }) {
     await dbReady;
     const textAlt = args.trim();
     if (!textAlt || /^-(list|l)$/.test(textAlt)) return listAliases(msg);
-    const mover = textAlt.match(/^-(?:move|m)\s+(\S+)\s+(\S+)$/);
-    if (/^-(?:move|m)(?:\s|$)/.test(textAlt) && !mover) return msg.reply(t('adm.alias.usageMove'));
-    if (mover) {
-        const [oldAlt2, freshAlt] = [aliasName(mover[1]), aliasName(mover[2])];
-        if (!NAME.test(mover[2])) return msg.reply(t('adm.alias.invalidName', { nome: freshAlt }));
+    const move = textAlt.match(/^-(?:move|m)\s+(\S+)\s+(\S+)$/);
+    if (/^-(?:move|m)(?:\s|$)/.test(textAlt) && !move) return msg.reply(t('adm.alias.usageMove'));
+    if (move) {
+        const [oldAlt2, freshAlt] = [aliasName(move[1]), aliasName(move[2])];
+        if (!NAME.test(move[2])) return msg.reply(t('adm.alias.invalidName', { name: freshAlt }));
         if (freshAlt === '/all') return msg.reply(t('adm.alias.allReserved'));
         if (botConfig.commands.some(c => c.cmd === freshAlt || c.aliases?.includes(freshAlt))) {
-            return msg.reply(t('adm.alias.isCommand', { nome: freshAlt }));
+            return msg.reply(t('adm.alias.isCommand', { name: freshAlt }));
         }
         if (!(await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [oldAlt2]))) {
-            return msg.reply(t('adm.alias.notFound', { nome: oldAlt2 }));
+            return msg.reply(t('adm.alias.notFound', { name: oldAlt2 }));
         }
-        if (oldAlt2 === freshAlt) return msg.reply(t('adm.alias.sameName', { nome: freshAlt }));
+        if (oldAlt2 === freshAlt) return msg.reply(t('adm.alias.sameName', { name: freshAlt }));
         if (await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [freshAlt])) {
-            return msg.reply(t('adm.alias.exists', { nome: freshAlt }));
+            return msg.reply(t('adm.alias.exists', { name: freshAlt }));
         }
         await dbRun('UPDATE command_aliases SET name = ? WHERE name = ?', [freshAlt, oldAlt2]);
-        return msg.reply(t('adm.alias.renamed', { antigo: oldAlt2, novo: freshAlt }));
+        return msg.reply(t('adm.alias.renamed', { old: oldAlt2, fresh: freshAlt }));
     }
     const removeAlt2 = textAlt.match(/^-rm\s+(\S[\s\S]*)$/);
     if (removeAlt2) {
@@ -48,11 +48,11 @@ async function cmdAlias({ msg, args }) {
             (r.changes ? removed : missing).push(nameAlt);
         }
         if (names.length === 1) {
-            return msg.reply(t(removed.length ? 'adm.alias.removed' : 'adm.alias.notFound', { nome: names[0] }));
+            return msg.reply(t(removed.length ? 'adm.alias.removed' : 'adm.alias.notFound', { name: names[0] }));
         }
         return msg.reply([
-            removed.length && t('adm.alias.removedMany', { n: removed.length, lista: removed.join(', ') }),
-            missing.length && t('adm.alias.missing', { n: missing.length, lista: missing.join(', ') })
+            removed.length && t('adm.alias.removedMany', { n: removed.length, list: removed.join(', ') }),
+            missing.length && t('adm.alias.missing', { n: missing.length, list: missing.join(', ') })
         ].filter(Boolean).join('\n'));
     }
     // Only the name (/alias /dolar): shows what the alias does; if it is not an alias, the error
@@ -61,7 +61,7 @@ async function cmdAlias({ msg, args }) {
         const alias = await dbGet('SELECT * FROM command_aliases WHERE name = ?', [nameAlt]);
         if (alias) return msg.reply(aliasBlock(alias), undefined, { linkPreview: false });
         const isCommand = botConfig.commands.some(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt));
-        return msg.reply(t(isCommand ? 'adm.alias.isCommand' : 'adm.alias.notFound', { nome: nameAlt }));
+        return msg.reply(t(isCommand ? 'adm.alias.isCommand' : 'adm.alias.notFound', { name: nameAlt }));
     }
     // -q|-quiet: without the "🔗 Alias ..." header when running; works before the name, after it or after the description
     let quiet = false;
@@ -73,7 +73,7 @@ async function cmdAlias({ msg, args }) {
     const nameAlt = aliasName(registration[1]);
     if (nameAlt === '/all') return msg.reply(t('adm.alias.allReserved'));
     if (botConfig.commands.some(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt))) {
-        return msg.reply(t('adm.alias.isCommand', { nome: nameAlt }));
+        return msg.reply(t('adm.alias.isCommand', { name: nameAlt }));
     }
     let commandAlt = removeQuiet(registration[2].trim());
     let description = '';
@@ -83,8 +83,8 @@ async function cmdAlias({ msg, args }) {
     const soDescription = commandAlt.match(new RegExp(`^-(?:desc|d)\\s+${QUOTES}$`));
     if (soDescription) {
         const r = await dbRun('UPDATE command_aliases SET description = ? WHERE name = ?', [removeQuotes(soDescription[1]), nameAlt]);
-        if (!r.changes) return msg.reply(t('adm.alias.notFoundDesc', { nome: nameAlt }));
-        return msg.reply(t('adm.alias.descUpdated', { nome: nameAlt, desc: removeQuotes(soDescription[1]) }), undefined, { linkPreview: false });
+        if (!r.changes) return msg.reply(t('adm.alias.notFoundDesc', { name: nameAlt }));
+        return msg.reply(t('adm.alias.descUpdated', { name: nameAlt, desc: removeQuotes(soDescription[1]) }), undefined, { linkPreview: false });
     }
     if (/^-(desc|d)(?:\s|$)/.test(commandAlt)) {
         const d = commandAlt.match(new RegExp(`^-(?:desc|d)\\s+${QUOTES}\\s+([\\s\\S]+)$`));
@@ -116,7 +116,7 @@ async function cmdAlias({ msg, args }) {
         ON CONFLICT(name) DO UPDATE SET description = excluded.description,
         command = excluded.command, quiet = excluded.quiet`, [nameAlt, description, commandAlt, quiet ? 1 : 0]);
     const detail = (description ? `\n📝 ${description}` : '') + (quiet ? '\n🔇 quiet' : '');
-    await msg.reply(t('adm.alias.saved', { nome: nameAlt, comando: commandAlt, detalhe: detail }), undefined, { linkPreview: false });
+    await msg.reply(t('adm.alias.saved', { name: nameAlt, command: commandAlt, detail }), undefined, { linkPreview: false });
 }
 
 module.exports = { cmdAlias };

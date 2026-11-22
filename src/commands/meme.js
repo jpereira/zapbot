@@ -16,7 +16,7 @@ async function cmdMeme({ msg, args }) {
         const memes = data.data.memes.filter(m => !search || m.name.toLowerCase().includes(search));
 
         if (!memes.length) {
-            await msg.reply(t('meme.none', { busca: args.trim() }));
+            await msg.reply(t('meme.none', { search: args.trim() }));
             return;
         }
 

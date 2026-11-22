@@ -41,7 +41,7 @@ module.exports = {
             ex: ['/alias -rm /demo', '/alias -rm demo demo2 /dollar', '/alias -rm all']
         }
     ],
-    argumentosLivres: true,
-    digitando: false, // replies right away: without the "typing..."
+    freeArguments: true,
+    typing: false, // replies right away: without the "typing..."
     role: ADMIN // creates shortcuts for any command
 };

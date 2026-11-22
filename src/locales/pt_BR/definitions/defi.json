@@ -164,7 +164,7 @@
       ]
     }
   ],
-  "protocolos": {
+  "protocols": {
     "orca": {
       "usage": "/defi orca [-mask]  ou  /defi orca -address <endereço> [-pool <endereço>] [-nft <mint>] [-name <nome>] [-alert [valor]]",
       "help": "Posições de liquidez da Orca (Whirlpools, na Solana): saldo, faixa, preço e taxas a coletar, lidos on-chain. Cada posição é cadastrada pelo endereço dela (-address).",

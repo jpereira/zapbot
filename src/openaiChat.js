@@ -39,7 +39,7 @@ function errorOpenAi(err, cmd) {
     if (err.code === 'ECONNABORTED') return t('openai.timeout', { s: timeout / 1000 });
     if (err.response?.status === 401) return t('openai.badKey');
     if (err.response?.status === 429) return t('openai.quota');
-    return t('openai.error', { cmd, erro: err.response?.data?.error?.message || err.message });
+    return t('openai.error', { cmd, error: err.response?.data?.error?.message || err.message });
 }
 
 /*
@@ -51,20 +51,20 @@ const consumptionCurrent = new AsyncLocalStorage();
 
 /**
  * Runs fn measuring the usage of the OpenAI calls made inside it.
- * @param {boolean} ligado  shows the status in the footer (-status or the gpt.status setting)
+ * @param {boolean} on  shows the status in the footer (-status or the gpt.status setting)
  */
 function measureConsumption(on, fn) {
-    const consumption = { ligado: on || getSetting('gpt.status'), custo: 0, semPreco: false, chamadas: 0, tx: 0, rx: 0, entrada: 0, saida: 0, total: 0 };
+    const consumption = { on: on || getSetting('gpt.status'), cost: 0, noPrice: false, calls: 0, tx: 0, rx: 0, input: 0, output: 0, total: 0 };
     return consumptionCurrent.run(consumption, fn);
 }
 
-const bytesDe = (body) => {
+const bytesOf = (body) => {
     if (body == null) return 0;
     if (Buffer.isBuffer(body) || body instanceof ArrayBuffer || ArrayBuffer.isView(body)) return body.byteLength;
     if (typeof body === 'string') return Buffer.byteLength(body);
     if (typeof FormData !== 'undefined' && body instanceof FormData) {
         let sum = 0;
-        for (const [campo, valueAlt] of body.entries()) sum += Buffer.byteLength(campo) + (typeof valueAlt === 'string' ? Buffer.byteLength(valueAlt) : valueAlt.size);
+        for (const [field, valueAlt] of body.entries()) sum += Buffer.byteLength(field) + (typeof valueAlt === 'string' ? Buffer.byteLength(valueAlt) : valueAlt.size);
         return sum;
     }
     return Buffer.byteLength(JSON.stringify(body));
@@ -74,23 +74,23 @@ const bytesDe = (body) => {
 function countAlt(sentAlt, received, usage = null, modelAlt = null) {
     const c = consumptionCurrent.getStore();
     if (!c) return;
-    c.chamadas++;
-    c.tx += bytesDe(sentAlt);
-    c.rx += bytesDe(received);
+    c.calls++;
+    c.tx += bytesOf(sentAlt);
+    c.rx += bytesOf(received);
     const inputAlt = usage?.prompt_tokens ?? usage?.input_tokens ?? 0;
     const outputAlt = usage?.completion_tokens ?? usage?.output_tokens ?? 0;
-    c.entrada += inputAlt;
-    c.saida += outputAlt;
+    c.input += inputAlt;
+    c.output += outputAlt;
     c.total += usage?.total_tokens ?? inputAlt + outputAlt;
 
     // The cost is an estimate (tokens × gpt.pricing price); without a price, the call's is unknown
     const price = inputAlt || outputAlt ? modelPrice(modelAlt) : null;
     if (price) {
-        const cost = (inputAlt * price.entrada + outputAlt * price.saida) / 1e6;
-        c.custo += cost;
+        const cost = (inputAlt * price.input + outputAlt * price.output) / 1e6;
+        c.cost += cost;
         spentSinceAReading += cost;
     } else {
-        c.semPreco = true;
+        c.noPrice = true;
     }
 }
 
@@ -103,9 +103,9 @@ function modelPrice(modelAlt) {
     let best = null;
     for (const item of getSetting('gpt.pricing')) {
         const [nameAlt, price] = item.split('=');
-        if (!modelAlt.startsWith(nameAlt) || (best && best.nome.length >= nameAlt.length)) continue;
+        if (!modelAlt.startsWith(nameAlt) || (best && best.name.length >= nameAlt.length)) continue;
         const [inputAlt, outputAlt] = price.split('/').map(Number);
-        best = { nome: nameAlt, entrada: inputAlt, saida: outputAlt };
+        best = { name: nameAlt, input: inputAlt, output: outputAlt };
     }
     return best;
 }
@@ -115,7 +115,7 @@ function modelPrice(modelAlt) {
  * Priority) and returns the price per 1M tokens (input/output) of each gpt-* model. The page embeds the
  * JSON table, one row per model: [name, input, cache, ..., output]. The models are left out
  * that are not text ones (audio, image, voice, search), the "pro" ones and those with a date (fine-tuning).
- * @returns {Promise<Map<string, string>>}  modelo → "entrada/saida"
+ * @returns {Promise<Map<string, string>>}  model → "input/output"
  */
 async function searchPrices({ cmd }) {
     let html;
@@ -148,7 +148,7 @@ async function searchPrices({ cmd }) {
 /**
  * Fetches the prices from the site and updates the gpt.pricing setting: the page's models come in or are
  * fixed; those the page does not have (the ones you added) stay as they are.
- * @returns {Promise<{ novos: string[], mudados: { modelo: string, antes: string, depois: string }[], iguais: number }>}
+ * @returns {Promise<{ added: string[], changed: { model: string, before: string, after: string }[], equal: number }>}
  */
 async function updatePrices({ cmd }) {
     const foundAlt6 = await searchPrices({ cmd });
@@ -160,7 +160,7 @@ async function updatePrices({ cmd }) {
     let equal = 0;
     for (const [modelAlt, price] of foundAlt6) {
         if (!current.has(modelAlt)) freshAlt3.push(modelAlt);
-        else if (current.get(modelAlt) !== price) changed.push({ modelo: modelAlt, antes: current.get(modelAlt), depois: price });
+        else if (current.get(modelAlt) !== price) changed.push({ model: modelAlt, before: current.get(modelAlt), after: price });
         else equal++;
         current.set(modelAlt, price);
     }
@@ -169,7 +169,7 @@ async function updatePrices({ cmd }) {
         await setSetting('gpt.pricing', [...current].map(([modelAlt, price]) => `${modelAlt}=${price}`).join(' '));
     }
     await setSetting('gpt.pricing.updated', new Date().toISOString().slice(0, 10));
-    return { novos: freshAlt3, mudados: changed, iguais: equal };
+    return { added: freshAlt3, changed, equal };
 }
 
 /*
@@ -188,13 +188,13 @@ function pricesAge(nowAlt = Date.now()) {
     return data ? Math.floor((nowAlt - Date.parse(data)) / 86400000) : Infinity;
 }
 
-async function updatePricesSeExpired(nowAlt = Date.now()) {
+async function updatePricesIfExpired(nowAlt = Date.now()) {
     if (!getSetting('gpt.pricing.auto') || !keyOpenAi()) return null;
     if (nowAlt < pricesNextAttempt || pricesAge(nowAlt) < PRICES_INTERVAL_DAYS) return null;
 
     try {
         const r = await updatePrices({ cmd: '/gpt' });
-        printInfo(`gpt.pricing updated: ${r.mudados.length} changed, ${r.novos.length} new`);
+        printInfo(`gpt.pricing updated: ${r.changed.length} changed, ${r.added.length} new`);
         return r;
     } catch (err) {
         pricesNextAttempt = nowAlt + PRICES_RETRY_MS;
@@ -205,8 +205,8 @@ async function updatePricesSeExpired(nowAlt = Date.now()) {
 
 // Called in app.js: a check right after starting and another every 6 hours
 function startPricesAutomatic() {
-    setTimeout(() => updatePricesSeExpired(), 60 * 1000).unref();
-    setInterval(() => updatePricesSeExpired(), PRICES_RETRY_MS).unref();
+    setTimeout(() => updatePricesIfExpired(), 60 * 1000).unref();
+    setInterval(() => updatePricesIfExpired(), PRICES_RETRY_MS).unref();
 }
 
 /*
@@ -221,19 +221,19 @@ async function balanceEstimated(c) {
     const total = getSetting('gpt.credit.total');
     if (!total || !keyAdminOpenAi()) return null;
 
-    if (!spentReading || Date.now() - spentReading.quando > READING_VALIDITY_MS) {
+    if (!spentReading || Date.now() - spentReading.when > READING_VALIDITY_MS) {
         const sinceData = getSetting('gpt.credit.since');
         const since = sinceData ? Math.floor(Date.parse(sinceData) / 1000) : Math.floor(Date.now() / 1000) - 180 * 86400;
         try {
-            const read = await queryCosts({ cmd: '/gpt', desde: since });
+            const read = await queryCosts({ cmd: '/gpt', since });
             const used = read.reduce((t, b) => t + (b.results ?? []).reduce((s, r) => s + Number(r.amount?.value ?? 0), 0), 0);
-            spentReading = { usado: used, quando: Date.now() };
-            spentSinceAReading = c.custo; // the Costs API lags: this call is not yet in the spend read
+            spentReading = { used, when: Date.now() };
+            spentSinceAReading = c.cost; // the Costs API lags: this call is not yet in the spend read
         } catch {
-            spentReading = { falhou: true, quando: Date.now() };
+            spentReading = { failed: true, when: Date.now() };
         }
     }
-    return spentReading.falhou ? null : { restante: total - spentReading.usado - spentSinceAReading, total };
+    return spentReading.failed ? null : { remaining: total - spentReading.used - spentSinceAReading, total };
 }
 
 const size = (n) => n < 1024 ? `${n} B` : n < 1024 * 1024 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1024 / 1024).toFixed(2)} MB`;
@@ -246,17 +246,17 @@ const dollar = (n) => {
 /** The reply footer ("\n\n_📡 ..._"); empty with the status off or without an OpenAI call */
 async function consumptionFooter() {
     const c = consumptionCurrent.getStore();
-    if (!c?.ligado || !c.chamadas) return '';
-    const tokens = c.total ? ` · 🪙 ${c.total} tokens (📥 ${c.entrada} · 📤 ${c.saida})` : '';
+    if (!c?.on || !c.calls) return '';
+    const tokens = c.total ? ` · 🪙 ${c.total} tokens (📥 ${c.input} · 📤 ${c.output})` : '';
     const linesAlt = [`📡 ⬆️ ${size(c.tx)} TX · ⬇️ ${size(c.rx)} RX${tokens}` +
-        `${c.chamadas > 1 ? t('openai.calls', { n: c.chamadas }) : ''}`];
+        `${c.calls > 1 ? t('openai.calls', { n: c.calls }) : ''}`];
 
     // The ~ marks that the value is estimated
     const balance = await balanceEstimated(c);
-    linesAlt.push(`💵 ${c.semPreco ? t('openai.noPrice') : `~${dollar(c.custo)}`}` +
-        (balance ? t('openai.balance', { restante: dollar(balance.restante), total: dollar(balance.total) }) : ''));
+    linesAlt.push(`💵 ${c.noPrice ? t('openai.noPrice') : `~${dollar(c.cost)}`}` +
+        (balance ? t('openai.balance', { remaining: dollar(balance.remaining), total: dollar(balance.total) }) : ''));
     const age = pricesAge();
-    if (Number.isFinite(age) && age > PRICES_NOTICE_DAYS) linesAlt.push(t('openai.oldPrices', { dias: age }));
+    if (Number.isFinite(age) && age > PRICES_NOTICE_DAYS) linesAlt.push(t('openai.oldPrices', { days: age }));
     return `\n\n${linesAlt.map(l => `_${l}_`).join('\n')}`;
 }
 
@@ -265,12 +265,12 @@ async function consumptionFooter() {
  * On error, logs (without the key) and throws the axios error.
  * @param {object} o
  * @param {string} o.cmd        command that called (for the log)
- * @param {string} o.sistema    instructions (role "system")
- * @param {string} o.texto      question or content (role "user")
- * @param {{ mimetype: string, data: string }} [o.imagem]  an image (base64) that goes along with the question
+ * @param {string} o.system    instructions (role "system")
+ * @param {string} o.text      question or content (role "user")
+ * @param {{ mimetype: string, data: string }} [o.image]  an image (base64) that goes along with the question
  * @returns {Promise<string>}
  */
-async function askOnChat({ cmd, sistema: system, texto: textAlt, imagem: image = null, imagens: images = [] }) {
+async function askOnChat({ cmd, system, text: textAlt, image = null, images = [] }) {
     // With image(s), the content becomes the list of parts (text + images as data URL)
     const allAlt = [image, ...images].filter(Boolean);
     const content = allAlt.length
@@ -310,13 +310,13 @@ async function askOnChat({ cmd, sistema: system, texto: textAlt, imagem: image =
  * On error, logs (without the key) and throws the axios error.
  * @param {object} o
  * @param {string} o.cmd  command that called (for the log)
- * @param {{ arquivo: string, mimetype: string, data: string }} o.audio  the audio in base64; the name
+ * @param {{ file: string, mimetype: string, data: string }} o.audio  the audio in base64; the name
  * of the file (with the right extension) is what OpenAI uses to know the format
  * @returns {Promise<string>}  the text (empty if there is no speech)
  */
 async function transcribeAudio({ cmd, audio }) {
     const form = new FormData();
-    form.append('file', new Blob([Buffer.from(audio.data, 'base64')], { type: audio.mimetype }), audio.arquivo);
+    form.append('file', new Blob([Buffer.from(audio.data, 'base64')], { type: audio.mimetype }), audio.file);
     form.append('model', getSetting('gpt.transcribe.model'));
 
     try {
@@ -341,11 +341,11 @@ const VOICE_MAX_CHARACTERS = 4096;
  * On error, logs (without the key) and throws the axios error.
  * @param {object} o
  * @param {string} o.cmd    command that called (for the log)
- * @param {string} o.texto  up to VOICE_MAX_CHARACTERS
- * @param {string} [o.estilo]  how to speak (overrides the gpt.tts.instructions setting)
+ * @param {string} o.text  up to VOICE_MAX_CHARACTERS
+ * @param {string} [o.style]  how to speak (overrides the gpt.tts.instructions setting)
  * @returns {Promise<Buffer>}
  */
-async function synthesizeVoice({ cmd, texto: textAlt, estilo: style = null }) {
+async function synthesizeVoice({ cmd, text: textAlt, style = null }) {
     const modelAlt = getSetting('gpt.tts.model');
 
     try {
@@ -381,16 +381,16 @@ const TIMEOUT_IMAGE_MS = 3 * 60 * 1000;
 const TIMEOUT_GIF_MS = 5 * 60 * 1000;
 
 /**
- * Generates an image (v1/images/generations) or, with `imagem`, edits the one that came (v1/images/edits). With
+ * Generates an image (v1/images/generations) or, with `image`, edits the one that came (v1/images/edits). With
  * `gif`, the result is an animated GIF (output_format gif, only on the gpt-image-2.6-* models).
  * @param {object} o
  * @param {string} o.cmd     command that called (for the log)
  * @param {string} o.prompt  what to generate or change
- * @param {Buffer} [o.imagem]  the image to edit, as PNG
+ * @param {Buffer} [o.image]  the image to edit, as PNG
  * @param {{ frames: number, frameMs: number }} [o.gif]  asks for the GIF, with the frames and the duration of each
  * @returns {Promise<string>}  the image (PNG) or the GIF, in base64
  */
-async function generateImage({ cmd, prompt, imagem: image = null, imagens: images = [], gif = null }) {
+async function generateImage({ cmd, prompt, image = null, images = [], gif = null }) {
     const inputs = [image, ...images].filter(Boolean); // PNG in a Buffer; more than one: image[] (the photo and the profiles)
     // The GIF has its own model (only the gpt-image-2.6-* ones do it) and the frames come out at 512x512: OpenAI charges the
     // pixels of all of them
@@ -411,7 +411,7 @@ async function generateImage({ cmd, prompt, imagem: image = null, imagens: image
             const form = new FormData();
             form.append('model', modelAlt);
             form.append('prompt', prompt);
-            for (const [campo, valueAlt] of Object.entries(extras)) form.append(campo, String(valueAlt));
+            for (const [field, valueAlt] of Object.entries(extras)) form.append(field, String(valueAlt));
             inputs.forEach((png, i) => form.append(inputs.length > 1 ? 'image[]' : 'image', new Blob([png], { type: 'image/png' }), `imagem${i + 1}.png`));
             sentAlt = form;
             reply = await axios.post(OPENAI_IMAGE_EDIT_URL, form, { ...config, maxBodyLength: Infinity });
@@ -458,7 +458,7 @@ function logError(cmd, err) {
  * Reads the pages of a /v1/organization endpoint (usage and costs: both need the admin key) and joins
  * the buckets. On error, logs (without the key) and throws the axios error.
  */
-async function buckets({ cmd, caminho: pathAlt, params }) {
+async function buckets({ cmd, path: pathAlt, params }) {
     const allAlt2 = [];
     let page = null;
 
@@ -485,15 +485,15 @@ async function buckets({ cmd, caminho: pathAlt, params }) {
  * an admin key (sk-admin-...); the normal key does not work.
  * @param {object} o
  * @param {string} o.cmd   command that called (for the log)
- * @param {number} o.dias  how many days, counting today (1-day buckets, in UTC)
+ * @param {number} o.days  how many days, counting today (1-day buckets, in UTC)
  * @returns {Promise<{ buckets: object[] }>}  the OpenAI buckets, from all pages
  */
-async function queryConsumption({ cmd, dias: daysAlt }) {
+async function queryConsumption({ cmd, days: daysAlt }) {
     const end = Math.floor(Date.now() / 1000);
     return {
         buckets: await buckets({
             cmd,
-            caminho: 'usage/completions',
+            path: 'usage/completions',
             params: { start_time: end - daysAlt * 86400, bucket_width: '1d', limit: daysAlt, group_by: ['model'] }
         })
     };
@@ -501,11 +501,11 @@ async function queryConsumption({ cmd, dias: daysAlt }) {
 
 /**
  * The cost in dollars (GET /v1/organization/costs), per day and per item (e.g.: "gpt-4o-mini, input").
- * @param {number} o.desde  start, in seconds (UTC)
+ * @param {number} o.since  start, in seconds (UTC)
  * @returns {Promise<object[]>}  the OpenAI buckets
  */
-const queryCosts = ({ cmd, desde: since }) => buckets({
-    cmd, caminho: 'costs', params: { start_time: since, bucket_width: '1d', limit: 180, group_by: ['line_item'] }
+const queryCosts = ({ cmd, since }) => buckets({
+    cmd, path: 'costs', params: { start_time: since, bucket_width: '1d', limit: 180, group_by: ['line_item'] }
 });
 
 // The uses beyond the chat, with what each one measures
@@ -515,17 +515,17 @@ const USAGE_SERVICES = ['images', 'audio_speeches', 'audio_transcriptions', 'emb
  * The usage of images, voice, transcription and embeddings over the last days (whatever fails comes null: it is an extra).
  * @returns {Promise<Record<string, object[] | null>>}
  */
-async function queryServices({ cmd, dias: daysAlt }) {
+async function queryServices({ cmd, days: daysAlt }) {
     const end = Math.floor(Date.now() / 1000);
     const params = { start_time: end - daysAlt * 86400, bucket_width: '1d', limit: daysAlt };
-    const read = await Promise.allSettled(USAGE_SERVICES.map(nameAlt => buckets({ cmd, caminho: `usage/${nameAlt}`, params })));
+    const read = await Promise.allSettled(USAGE_SERVICES.map(nameAlt => buckets({ cmd, path: `usage/${nameAlt}`, params })));
     return Object.fromEntries(USAGE_SERVICES.map((nameAlt, i) => [nameAlt, read[i].status === 'fulfilled' ? read[i].value : null]));
 }
 
 /**
  * The limits and what is left in the current window, read from the x-ratelimit-* headers of a call
  * minimal to the chat (spends a few tokens). The normal key works.
- * @returns {Promise<{ modelo: string, tokens: object, requisicoes: object }>}
+ * @returns {Promise<{ model: string, tokens: object, requests: object }>}
  */
 async function queryLimits({ cmd }) {
     const modelAlt = envOuSetting('OPENAI_MODEL', 'gpt.api.model');
@@ -542,9 +542,9 @@ async function queryLimits({ cmd }) {
 
         const h = (nameAlt) => headers?.[`x-ratelimit-${nameAlt}`] ?? null;
         return {
-            modelo: modelAlt,
-            tokens: { limite: h('limit-tokens'), restante: h('remaining-tokens'), reseta: h('reset-tokens') },
-            requisicoes: { limite: h('limit-requests'), restante: h('remaining-requests'), reseta: h('reset-requests') }
+            model: modelAlt,
+            tokens: { limit: h('limit-tokens'), remaining: h('remaining-tokens'), resets: h('reset-tokens') },
+            requests: { limit: h('limit-requests'), remaining: h('remaining-requests'), resets: h('reset-requests') }
         };
     } catch (err) {
         logError(cmd, err);
@@ -555,7 +555,7 @@ async function queryLimits({ cmd }) {
 module.exports = {
     WITHOUT_KEY,
     updatePrices,
-    updatePricesSeExpired,
+    updatePricesIfExpired,
     startPricesAutomatic,
     measureConsumption,
     consumptionFooter,

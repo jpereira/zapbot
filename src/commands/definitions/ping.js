@@ -10,6 +10,6 @@ module.exports = {
     aliases: [],
     summary: 'Checks whether the bot is responding',
     help: 'Checks whether the bot is responding (replies pong).',
-    digitando: false, // replies right away: without the "typing..."
+    typing: false, // replies right away: without the "typing..."
     role: USER
 };

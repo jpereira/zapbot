@@ -37,7 +37,7 @@ const REGISTRATION = `/defi orca -address ${POSITION} -pool ${POOL} -nft ${NFT}`
 const account = (address) => Buffer.from(ACCOUNTS[address], 'base64');
 
 // Simulated Solana RPC: returns the fixture accounts (the others do not exist)
-function simulateSolana({ dono: owner = orca.WHIRLPOOL_PROGRAM, contas: accounts = ACCOUNTS } = {}) {
+function simulateSolana({ owner = orca.WHIRLPOOL_PROGRAM, accounts = ACCOUNTS } = {}) {
     network.responder('post', 'api.mainnet-beta.solana.com', (url, cfg) => {
         assert.equal(cfg.body.method, 'getMultipleAccounts');
         assert.equal(cfg.body.jsonrpc, '2.0', 'a versão do protocolo JSON-RPC (não a do bot)');
@@ -68,9 +68,9 @@ describe('Solana (defi/solana.js)', () => {
     });
 
     test('isEnderecoSolana', () => {
-        assert.ok(solana.isEnderecoSolana(POSITION));
-        assert.ok(!solana.isEnderecoSolana('abc'));
-        assert.ok(!solana.isEnderecoSolana(`${POSITION}0`));
+        assert.ok(solana.isAddressSolana(POSITION));
+        assert.ok(!solana.isAddressSolana('abc'));
+        assert.ok(!solana.isAddressSolana(`${POSITION}0`));
     });
 
     test('PDA: a posição sai do NFT, e os tick arrays da pool; PDAs ficam fora da curva', () => {
@@ -88,34 +88,34 @@ describe('Orca (defi/orca.js)', () => {
     const arrays = ['DBXWJ7pvgGt3F4LJ3Q47BBPQYMUX58nTpQv8G6YzwdPX', '6uMwpdwsubtzQpJp4jhPYdGUHZxk74uCEK9zxfGTBGYE']
         .map(e => orca.decodeTickArray(account(e)));
     const tickDe = (t) => {
-        const a = arrays.find(x => x.inicio === orca.tickArrayStart(t, pool.tickSpacing));
-        return a.ticks[(t - a.inicio) / pool.tickSpacing];
+        const a = arrays.find(x => x.start === orca.tickArrayStart(t, pool.tickSpacing));
+        return a.ticks[(t - a.start) / pool.tickSpacing];
     };
 
     test('decodifica a posição e a pool', () => {
-        assert.deepEqual([position.whirlpool, position.mint, position.liquidez, position.tickInferior, position.tickSuperior],
+        assert.deepEqual([position.whirlpool, position.mint, position.liquidity, position.tickInferior, position.tickSuperior],
             [POOL, NFT, 470425599913n, -88720, -88320]);
-        assert.deepEqual([pool.tickSpacing, pool.feeRate, pool.taxaProtocolo, pool.mintA, pool.mintB], [16, 1600, 1300, SOL, CBBTC]);
-        assert.deepEqual(arrays.map(a => a.inicio), [-90112, -88704]);
+        assert.deepEqual([pool.tickSpacing, pool.feeRate, pool.protocolRate, pool.mintA, pool.mintB], [16, 1600, 1300, SOL, CBBTC]);
+        assert.deepEqual(arrays.map(a => a.start), [-90112, -88704]);
     });
 
     test('taxas a coletar iguais às do SDK; quantidades iguais até o arredondamento', () => {
-        const c = orca.calculatePosition({ posicao: position, pool, tickInf: tickDe(position.tickInferior), tickSup: tickDe(position.tickSuperior) });
+        const c = orca.calculatePosition({ position, pool, tickInf: tickDe(position.tickInferior), tickSup: tickDe(position.tickSuperior) });
 
-        assert.equal(c.taxaA, 6249429909n);   // collectFeesQuote: feeOwedA
-        assert.equal(c.taxaB, 821247n);       // collectFeesQuote: feeOwedB
-        assert.ok(Math.abs(c.qtdA - 778160344025) / 778160344025 < 1e-9, `qtdA ${c.qtdA}`);   // decreaseLiquidityQuote
-        assert.ok(Math.abs(c.qtdB - 1144829) / 1144829 < 1e-6, `qtdB ${c.qtdB}`);
-        assert.equal(c.naFaixa, true);
-        assert.deepEqual(c.recompensas.map(r => r.quantidade), [0n]);
+        assert.equal(c.rateA, 6249429909n);   // collectFeesQuote: feeOwedA
+        assert.equal(c.rateB, 821247n);       // collectFeesQuote: feeOwedB
+        assert.ok(Math.abs(c.qtyA - 778160344025) / 778160344025 < 1e-9, `qtdA ${c.qtyA}`);   // decreaseLiquidityQuote
+        assert.ok(Math.abs(c.qtyB - 1144829) / 1144829 < 1e-6, `qtdB ${c.qtyB}`);
+        assert.equal(c.inRange, true);
+        assert.deepEqual(c.rewards.map(r => r.quantity), [0n]);
     });
 
     test('fora da faixa: tudo num token só', () => {
-        const below = { ...pool, sqrtPrice: pool.sqrtPrice / 2n, tickAtual: -100000 };
-        const c = orca.calculatePosition({ posicao: position, pool: below, tickInf: tickDe(position.tickInferior), tickSup: tickDe(position.tickSuperior) });
-        assert.equal(c.naFaixa, false);
-        assert.ok(c.qtdA > 0);
-        assert.equal(c.qtdB, 0);
+        const below = { ...pool, sqrtPrice: pool.sqrtPrice / 2n, currentTick: -100000 };
+        const c = orca.calculatePosition({ position, pool: below, tickInf: tickDe(position.tickInferior), tickSup: tickDe(position.tickSuperior) });
+        assert.equal(c.inRange, false);
+        assert.ok(c.qtyA > 0);
+        assert.equal(c.qtyB, 0);
     });
 
     test('tick array dinâmico: ticks vazios ocupam 1 byte', () => {
@@ -127,9 +127,9 @@ describe('Orca (defi/orca.js)', () => {
         for (let i = 0; i < 88; i++) partsAlt.push(i === 2 ? Buffer.concat([Buffer.from([1]), tick]) : Buffer.from([0]));
 
         const a = orca.decodeTickArray(Buffer.concat(partsAlt));
-        assert.equal(a.inicio, -1408);
-        assert.equal(a.ticks[2].foraTaxaA, 77n);
-        assert.equal(a.ticks[3].foraTaxaA, 0n);
+        assert.equal(a.start, -1408);
+        assert.equal(a.ticks[2].outOfRateA, 77n);
+        assert.equal(a.ticks[3].outOfRateA, 0n);
         assert.throws(() => orca.decodeTickArray(Buffer.alloc(100)), /não é um tick array/);
     });
 
@@ -217,7 +217,7 @@ describe('/defi', () => {
         await errorAlt(`/defi orca -address ${POOL}`, /não é uma posição da Orca/);
         await errorAlt(`/defi orca -address ${'1'.repeat(32)}`, /❌ A conta 1{32} não existe na Solana/);
 
-        simulateSolana({ dono: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' });
+        simulateSolana({ owner: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' });
         await errorAlt(`/defi orca -address ${POSITION}`, /não é uma posição da Orca/);
 
         simulateSolana();
@@ -229,18 +229,18 @@ describe('/defi', () => {
         await bot.replyAlt(REGISTRATION);
 
         network.responder('post', 'api.mainnet-beta.solana.com', { error: { code: 429, message: 'Too many requests' } });
-        const [r] = await bot.replyAlt('/defi', { erroEsperado: true });
+        const [r] = await bot.replyAlt('/defi', { expectedError: true });
         assert.match(r, /⚠️ Não consegui ler Orca · ime1…VPcg agora: RPC da Solana: Too many requests\.\n💡 _O RPC público da Solana limita as consultas; um RPC próprio vai no setting defi\.solana\.rpc\._/);
 
-        simulateSolana({ contas: { [POOL]: ACCOUNTS[POOL] } });
-        assert.match((await bot.replyAlt('/defi', { erroEsperado: true }))[0], /a posição não existe mais \(foi fechada\?\)/);
+        simulateSolana({ accounts: { [POOL]: ACCOUNTS[POOL] } });
+        assert.match((await bot.replyAlt('/defi', { expectedError: true }))[0], /a posição não existe mais \(foi fechada\?\)/);
     });
 
     test('defi.solana.rpc: troca o RPC e só aceita URL', async () => {
         await bot.setSetting('defi.solana.rpc', 'https://meu-rpc.exemplo.com/?api-key=x');
         network.responder('post', 'meu-rpc.exemplo.com', { result: { value: [null] } });
         await bot.replyAlt(`/defi orca -address ${POSITION}`);
-        assert.match(network.chamadas.at(-1).url, /meu-rpc\.exemplo\.com/);
+        assert.match(network.calls.at(-1).url, /meu-rpc\.exemplo\.com/);
 
         await assert.rejects(bot.setSetting('defi.solana.rpc', 'não é url'), /URL inválida/);
     });
@@ -263,14 +263,14 @@ function rangePoolOutside() {
     return b.toString('base64');
 }
 
-const rangeOutside = () => simulateSolana({ contas: { ...ACCOUNTS, [POOL]: rangePoolOutside() } });
+const rangeOutside = () => simulateSolana({ accounts: { ...ACCOUNTS, [POOL]: rangePoolOutside() } });
 const inRange = () => simulateSolana();
 
 // A -alert check; returns what the bot sent
 async function check() {
-    const beforeAlt = bot.client.enviadas.length;
-    await checkAlertsDefi({ forcar: true });
-    return bot.client.enviadas.slice(beforeAlt);
+    const beforeAlt = bot.client.sent.length;
+    await checkAlertsDefi({ force: true });
+    return bot.client.sent.slice(beforeAlt);
 }
 
 describe('/defi -alert (-a)', () => {
@@ -337,7 +337,7 @@ describe('/defi -alert (-a)', () => {
 
     test('RPC fora: liga sem o estado e avisa na primeira leitura fora da faixa', async () => {
         network.responder('post', 'api.mainnet-beta.solana.com', { error: { code: 429, message: 'Too many requests' } });
-        assert.match((await bot.replyAlt('/defi -a 1', { erroEsperado: true }))[0], /· ❔ ainda não lida/);
+        assert.match((await bot.replyAlt('/defi -a 1', { expectedError: true }))[0], /· ❔ ainda não lida/);
         assert.deepEqual(await check(), []);
 
         rangeOutside();
@@ -400,12 +400,12 @@ describe('/defi -alert (-a)', () => {
             assert.doesNotMatch(m.text, /[*_]/);
 
             // An email that fails does not repeat on every check
-            nodemailer.falhar = true;
+            nodemailer.fail = true;
             inRange();
             await check();
             rangeOutside();
-            await checkAlertsDefi({ forcar: true });
-            nodemailer.falhar = false;
+            await checkAlertsDefi({ force: true });
+            nodemailer.fail = false;
             assert.equal(emails.length, 1);
             assert.equal((await bot.dbGet('SELECT in_range FROM defi_positions')).in_range, 0);
         } finally {
@@ -444,12 +444,12 @@ describe('/defi: Project X (HyperEVM)', () => {
         const tickHype = tickDe(RAW_HYPE);
         return {
             slot0: { [POOL_BTC]: RAW_BTC, [POOL_HYPE]: RAW_HYPE },
-            posicoes: {
-                3: { t0: UBTC, t1: USDT0, taxa: 500, tl: 67000, tu: 68200, L: 0n },
-                7: { t0: UBTC, t1: USDT0, taxa: 500, tl: 67000, tu: 68200, L: 10n ** 10n },
-                9: { t0: WHYPE, t1: USDT0, taxa: 3000, tl: tickHype + 1000, tu: tickHype + 3000, L: 10n ** 15n }
+            positions: {
+                3: { t0: UBTC, t1: USDT0, rate: 500, tl: 67000, tu: 68200, L: 0n },
+                7: { t0: UBTC, t1: USDT0, rate: 500, tl: 67000, tu: 68200, L: 10n ** 10n },
+                9: { t0: WHYPE, t1: USDT0, rate: 3000, tl: tickHype + 1000, tu: tickHype + 3000, L: 10n ** 15n }
             },
-            coleta: { 7: [100000n, 12500000n], 9: [0n, 0n] },
+            collection: { 7: [100000n, 12500000n], 9: [0n, 0n] },
             tokens: { [UBTC]: ['UBTC', 8], [USDT0]: ['USD₮0', 6], [WHYPE]: ['WHYPE', 18] }
         };
     }
@@ -465,11 +465,11 @@ describe('/defi: Project X (HyperEVM)', () => {
             if (sel === prjx.SEL.balanceOf) return w(owner === WALLET.toLowerCase() ? 3 : 0);
             if (sel === prjx.SEL.tokenOfOwnerByIndex) return w([3, 7, 9][Number(BigInt(`0x${arg(1)}`))]);
             const id = Number(BigInt(`0x${arg(0)}`));
-            const p = chainAlt.posicoes[id];
-            if (sel === prjx.SEL.positions) return w(0) + w(0) + a(p.t0) + a(p.t1) + w(p.taxa) + w(p.tl) + w(p.tu) + w(p.L) + w(0).repeat(4);
+            const p = chainAlt.positions[id];
+            if (sel === prjx.SEL.positions) return w(0) + w(0) + a(p.t0) + a(p.t1) + w(p.rate) + w(p.tl) + w(p.tu) + w(p.L) + w(0).repeat(4);
             if (sel === prjx.SEL.collect) {
                 assert.equal(from, WALLET.toLowerCase(), 'o collect simulado sai da carteira dona do NFT');
-                return w(chainAlt.coleta[id][0]) + w(chainAlt.coleta[id][1]);
+                return w(chainAlt.collection[id][0]) + w(chainAlt.collection[id][1]);
             }
         }
         if (target === prjx.FACTORY.toLowerCase() && sel === prjx.SEL.getPool) return a(`0x${arg(0).slice(24)}` === UBTC ? POOL_BTC : POOL_HYPE);
@@ -527,24 +527,24 @@ describe('/defi: Project X (HyperEVM)', () => {
         assert.deepEqual(rest, []);
 
         assert.match(btc, /^🌊 \*Project X · UBTC\/USD₮0\* · taxa 0\.05%\n📍 #7 · ✅ dentro da faixa\n\n💰 \*Saldo:\* \$/);
-        const [q0, q1] = expected(chainAlt.posicoes[7], RAW_BTC, 8, 6);
+        const [q0, q1] = expected(chainAlt.positions[7], RAW_BTC, 8, 6);
         assert.ok(Math.abs(dollars(btc) - (q0 * 86000 + q1)) < 0.01, `saldo ${dollars(btc)} ≠ ${q0 * 86000 + q1}`);
         assert.match(btc, /📏 \*Faixa:\* [\d,.]+ – [\d,.]+ USD₮0 por UBTC\n🎯 \*Preço atual:\* 86,000 USD₮0 por UBTC\n {3}▕─+●─+▏ \d+% da faixa/);
         assert.match(btc, /💸 \*Taxas a coletar:\* \$98\.50\n {3}• 0\.001 UBTC \(\$86\.00\)\n {3}• 12\.5 USD₮0 \(\$12\.50\)$/);
 
         assert.match(hype, /^🌊 \*Project X · WHYPE\/USD₮0\* · taxa 0\.3%\n📍 #9 · ⚠️ \*fora da faixa\* \(preço abaixo: a posição não rende taxas\)/);
-        const [h0] = expected(chainAlt.posicoes[9], RAW_HYPE, 18, 6);
+        const [h0] = expected(chainAlt.positions[9], RAW_HYPE, 18, 6);
         assert.ok(Math.abs(dollars(hype) - h0 * 30) < 0.01);
         assert.match(hype, /• 0 USD₮0 \(\$0\.00\)\n\n📏/);   // below the range: all in WHYPE
     });
 
     test('prjx -mask: mantém as taxas a coletar e oculta os saldos', async () => {
         await bot.replyAlt(`/defi prjx -wallet ${WALLET}`);
-        const normais = await bot.replyAlt('/defi prjx');
-        const mascaradas = await bot.replyAlt('/defi prjx -mask');
-        assert.equal(mascaradas.length, normais.length);
-        for (const [i, textAlt] of mascaradas.entries()) {
-            assert.equal(textAlt.split('💸')[1], normais[i].split('💸')[1]);
+        const regular = await bot.replyAlt('/defi prjx');
+        const masked = await bot.replyAlt('/defi prjx -mask');
+        assert.equal(masked.length, regular.length);
+        for (const [i, textAlt] of masked.entries()) {
+            assert.equal(textAlt.split('💸')[1], regular[i].split('💸')[1]);
             assert.match(textAlt, /💰 \*Saldo:\*[^]*?\*/);
         }
     });
@@ -649,23 +649,23 @@ describe('/defi: Project X (HyperEVM)', () => {
 
     test('RPC com limite: não cadastra; no /defi, avisa e sugere o defi.hyperevm.rpc', async () => {
         network.responder('post', 'rpc.hyperliquid.xyz/evm', { jsonrpc: '2.0', id: null, error: { code: -32005, message: 'rate limited' } });
-        assert.match((await bot.replyAlt(`/defi prjx -w ${WALLET}`, { erroEsperado: true }))[0],
+        assert.match((await bot.replyAlt(`/defi prjx -w ${WALLET}`, { expectedError: true }))[0],
             /⚠️ Não consegui ler a carteira agora: RPC da HyperEVM: rate limited\.\n💡 _.*defi\.hyperevm\.rpc/);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n, 0);
 
         simulateHyperEvm();
         await bot.replyAlt(`/defi prjx -wallet ${WALLET}`);
         network.responder('post', 'rpc.hyperliquid.xyz/evm', { jsonrpc: '2.0', id: null, error: { code: -32005, message: 'rate limited' } });
-        assert.match((await bot.replyAlt('/defi', { erroEsperado: true }))[0],
+        assert.match((await bot.replyAlt('/defi', { expectedError: true }))[0],
             /^⚠️ Não consegui ler Project X · carteira 0x12…5678 agora: RPC da HyperEVM: rate limited\.\n💡 _O RPC público da HyperEVM/);
     });
 
     test('-alert -fees: avisa uma vez quando as taxas passam do valor; depois de coletar, de novo', async () => {
         const checkNow = async () => {
-            const beforeAlt = bot.client.enviadas.length;
-            bot.estado.pronto = true;
-            await checkAlertsDefi({ forcar: true });
-            return bot.client.enviadas.slice(beforeAlt).map(e => e.content);
+            const beforeAlt = bot.client.sent.length;
+            bot.state.ready = true;
+            await checkAlertsDefi({ force: true });
+            return bot.client.sent.slice(beforeAlt).map(e => e.content);
         };
         await bot.replyAlt(`/defi prjx -wallet ${WALLET}`);
 
@@ -681,9 +681,9 @@ describe('/defi: Project X (HyperEVM)', () => {
         assert.match(notice, /^💸 \*DeFi: Project X · carteira 0x12…5678 tem \$98\.50 em taxas a coletar \(passou de \$50\.00\)\*\n\n🌊/);
         assert.deepEqual(await checkNow(), [], 'continua acima: não repete');
 
-        chainAlt.coleta[7] = [0n, 0n];       // coletou
+        chainAlt.collection[7] = [0n, 0n];       // coletou
         assert.deepEqual(await checkNow(), []);
-        chainAlt.coleta[7] = [0n, 60000000n]; // filled up again: $60
+        chainAlt.collection[7] = [0n, 60000000n]; // filled up again: $60
         assert.match((await checkNow())[0], /tem \$60\.00 em taxas a coletar/);
 
         // Turning on again without -fees keeps the value; -fees off removes it
@@ -695,10 +695,10 @@ describe('/defi: Project X (HyperEVM)', () => {
         await bot.replyAlt(`/defi prjx -wallet ${WALLET}`);
         await bot.replyAlt('/defi -a 1');
         chainAlt.slot0[POOL_HYPE] = RAW_HYPE * 1.0001 ** 2000;
-        const beforeAlt = bot.client.enviadas.length;
-        bot.estado.pronto = true;
-        await checkAlertsDefi({ forcar: true });
-        const [volta] = bot.client.enviadas.slice(beforeAlt);
+        const beforeAlt = bot.client.sent.length;
+        bot.state.ready = true;
+        await checkAlertsDefi({ force: true });
+        const [volta] = bot.client.sent.slice(beforeAlt);
         assert.match(volta.content, /^✅ \*DeFi: Project X · carteira 0x12…5678 voltou para a faixa\*\n\n🌊 \*Project X · WHYPE\/USD₮0\*[\s\S]*🌊 \*Project X · UBTC\/USD₮0\*/);
     });
 
@@ -708,10 +708,10 @@ describe('/defi: Project X (HyperEVM)', () => {
         assert.match((await bot.replyAlt('/defi -a 1'))[0], /1\. Project X · carteira 0x12…5678 · ✅ na faixa/);
 
         chainAlt.slot0[POOL_HYPE] = RAW_HYPE;                     // sai
-        const beforeAlt = bot.client.enviadas.length;
-        bot.estado.pronto = true;
-        await checkAlertsDefi({ forcar: true });
-        const [notice, ...more] = bot.client.enviadas.slice(beforeAlt);
+        const beforeAlt = bot.client.sent.length;
+        bot.state.ready = true;
+        await checkAlertsDefi({ force: true });
+        const [notice, ...more] = bot.client.sent.slice(beforeAlt);
         assert.deepEqual(more, []);
         assert.equal(notice.chatId, OWNER.jid);
         assert.match(notice.content, /^🚨 \*DeFi: Project X · carteira 0x12…5678 saiu da faixa\*\n\n🌊 \*Project X · WHYPE\/USD₮0\*/);
@@ -732,35 +732,35 @@ describe('/defi: Liquidswap (Aptos)', () => {
 
     const WALLET = '0x8f3c4d2a1b9e7f6a5c4b3a29180f7e6d5c4b3a2918f7e6d5c4b3a2918f7e6d5c';
     const SHORT = '0x8F3C';   // the short Aptos form: becomes 0x000…8f3c
-    const V0 = { pacote: '0x190d44266241744264b964a37b8f09863167a12d3e70cda39376cfb4e3561e12', contas: '0x5a97986a9d031c4567e15b797be516910cfcb4156312482efc6a19c0a30c948' };
-    const V05 = { pacote: '0x163df34fccbf003ce219d3f1d9e70d140b60622cb9dd47599c25fb2f797ba6e', contas: '0x61d2c22a6cb7831bee0f48363b0eec92369357aece0d1142062f7d5d85c7bef8' };
+    const V0 = { pack: '0x190d44266241744264b964a37b8f09863167a12d3e70cda39376cfb4e3561e12', accounts: '0x5a97986a9d031c4567e15b797be516910cfcb4156312482efc6a19c0a30c948' };
+    const V05 = { pack: '0x163df34fccbf003ce219d3f1d9e70d140b60622cb9dd47599c25fb2f797ba6e', accounts: '0x61d2c22a6cb7831bee0f48363b0eec92369357aece0d1142062f7d5d85c7bef8' };
     const APT = '0x1::aptos_coin::AptosCoin';
     const USDC = '0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a01b17fa::asset::USDC';
     const USDT = '0xf22bede237a07e121b56d91a491eb7bcdfd1f5907926a9e58338f964a01b17fa::asset::USDT';
     const MOJO = '0x881ac202b1f1e6ad4efcff7a1d0579411533f2502417a19211cfc49751ddb5f4::coin::MOJO';
     const TOKENS = { [APT]: ['APT', 8], [USDC]: ['USDC', 6], [USDT]: ['USDT', 6], [MOJO]: ['MOJO', 8] };
 
-    const lp = (v, x, y, curve) => `${v.contas}::lp_coin::LP<${x}, ${y}, ${v.pacote}::curves::${curve}>`;
+    const lp = (v, x, y, curve) => `${v.accounts}::lp_coin::LP<${x}, ${y}, ${v.pack}::curves::${curve}>`;
     /*
      * USDC/APT (v0): 1% of 40,000 USDC + 50,000 APT; 1 USDC = 1.25 APT (APT at $0.80).
      * USDC/USDT (v0.5, stable): 25% of 1,000 USDC + 3,000 USDT.
      * APT/MOJO (v0): no stablecoin, only the amounts.
      */
     const POOLS = [
-        { tipo: lp(V0, USDC, APT, 'Uncorrelated'), v: V0, x: USDC, y: APT, curva: 'Uncorrelated', rx: 40000e6, ry: 50000e8, fee: 30, supply: 1e9, saldo: 1e7 },
-        { tipo: lp(V05, USDC, USDT, 'Stable'), v: V05, x: USDC, y: USDT, curva: 'Stable', rx: 1000e6, ry: 3000e6, fee: 4, supply: 4e9, saldo: 1e9 },
-        { tipo: lp(V0, APT, MOJO, 'Uncorrelated'), v: V0, x: APT, y: MOJO, curva: 'Uncorrelated', rx: 100e8, ry: 1000e8, fee: 30, supply: 1e6, saldo: 1e5 }
+        { type: lp(V0, USDC, APT, 'Uncorrelated'), v: V0, x: USDC, y: APT, curve: 'Uncorrelated', rx: 40000e6, ry: 50000e8, fee: 30, supply: 1e9, balance: 1e7 },
+        { type: lp(V05, USDC, USDT, 'Stable'), v: V05, x: USDC, y: USDT, curve: 'Stable', rx: 1000e6, ry: 3000e6, fee: 4, supply: 4e9, balance: 1e9 },
+        { type: lp(V0, APT, MOJO, 'Uncorrelated'), v: V0, x: APT, y: MOJO, curve: 'Uncorrelated', rx: 100e8, ry: 1000e8, fee: 30, supply: 1e6, balance: 1e5 }
     ];
     const norm = aptos.normalizeType;
     let balances;
 
     function simulateAptos() {
         network.responder('post', 'aptoslabs.com/v1/graphql', (url, cfg) => ({
-            data: { current_fungible_asset_balances: cfg.body.variables.dono === WALLET ? balances : [] }
+            data: { current_fungible_asset_balances: cfg.body.variables.owner === WALLET ? balances : [] }
         }));
         network.responder('post', 'aptoslabs.com/v1/view', (url, cfg) => {
             const { function: fn, type_arguments: [type] } = cfg.body;
-            const pool = POOLS.find(p => norm(p.tipo) === type);
+            const pool = POOLS.find(p => norm(p.type) === type);
             const token = Object.entries(TOKENS).find(([t]) => norm(t) === type)?.[1];
             if (fn === '0x1::coin::supply' && pool) return [{ vec: [String(pool.supply)] }];
             if (fn === '0x1::coin::symbol' && token) return [token[0]];
@@ -769,8 +769,8 @@ describe('/defi: Liquidswap (Aptos)', () => {
         });
         network.responder('get', 'aptoslabs.com/v1/accounts/', (url) => {
             const [, account, type] = url.match(/accounts\/(0x[0-9a-f]+)\/resource\/(.+)$/);
-            const pool = POOLS.find(p => aptos.normalizeAddress(p.v.contas) === account &&
-                norm(`${p.v.pacote}::liquidity_pool::LiquidityPool<${p.x}, ${p.y}, ${p.v.pacote}::curves::${p.curva}>`) === decodeURIComponent(type));
+            const pool = POOLS.find(p => aptos.normalizeAddress(p.v.accounts) === account &&
+                norm(`${p.v.pack}::liquidity_pool::LiquidityPool<${p.x}, ${p.y}, ${p.v.pack}::curves::${p.curve}>`) === decodeURIComponent(type));
             if (!pool) return errorHttp(404, 'HTTP 404', { data: { message: 'Resource not found' } });
             return { type: decodeURIComponent(type), data: { coin_x_reserve: { value: String(pool.rx) }, coin_y_reserve: { value: String(pool.ry) }, fee: String(pool.fee) } };
         });
@@ -779,7 +779,7 @@ describe('/defi: Liquidswap (Aptos)', () => {
     beforeEach(() => {
         // As the indexer returns: the LPs (addresses in short form), a common coin and an LP from another package
         balances = [
-            ...POOLS.map(p => ({ asset_type_v1: p.tipo, amount: p.saldo })),
+            ...POOLS.map(p => ({ asset_type_v1: p.type, amount: p.balance })),
             { asset_type_v1: APT, amount: 5e8 },
             { asset_type_v1: `0xabc::lp_coin::LP<${APT}, ${USDC}, 0xabc::curves::Uncorrelated>`, amount: 1 },
             { asset_type_v1: null, amount: 7 }
@@ -795,13 +795,13 @@ describe('/defi: Liquidswap (Aptos)', () => {
     });
 
     test('tipo do LP: só os das duas versões, com os endereços na forma curta ou inteira', () => {
-        const lido = liquidswap.lpReadType(POOLS[0].tipo);
-        assert.equal(lido.versao.nome, 'v0');
-        assert.equal(lido.x, norm(USDC));
-        assert.equal(lido.y, '0x0000000000000000000000000000000000000000000000000000000000000001::aptos_coin::AptosCoin');
-        assert.equal(lido.estavel, false);
-        assert.equal(liquidswap.lpReadType(POOLS[1].tipo).versao.nome, 'v0.5');
-        assert.equal(liquidswap.lpReadType(POOLS[1].tipo).estavel, true);
+        const wasRead = liquidswap.lpReadType(POOLS[0].type);
+        assert.equal(wasRead.version.name, 'v0');
+        assert.equal(wasRead.x, norm(USDC));
+        assert.equal(wasRead.y, '0x0000000000000000000000000000000000000000000000000000000000000001::aptos_coin::AptosCoin');
+        assert.equal(wasRead.stable, false);
+        assert.equal(liquidswap.lpReadType(POOLS[1].type).version.name, 'v0.5');
+        assert.equal(liquidswap.lpReadType(POOLS[1].type).stable, true);
         assert.equal(liquidswap.lpReadType(APT), null);
         assert.equal(liquidswap.lpReadType(`0xabc::lp_coin::LP<${APT}, ${USDC}, 0xabc::curves::Uncorrelated>`), null);
         assert.deepEqual(aptos.typeArguments('a::m::S<A, b::c::D<E, F>, G>'), ['A', 'b::c::D<E, F>', 'G']);
@@ -862,8 +862,8 @@ describe('/defi: Liquidswap (Aptos)', () => {
         assert.match(withoutDollar, /🏊 \*Pool:\* 100 APT \+ 1,000 MOJO/);
 
         // The indexer receives the whole wallet
-        const query = network.chamadas.find(c => c.url.includes('graphql'));
-        assert.equal(query.cfg.body.variables.dono, WALLET);
+        const query = network.calls.find(c => c.url.includes('graphql'));
+        assert.equal(query.cfg.body.variables.owner, WALLET);
     });
 
     test('-mask e -name: os números da carteira escondidos; o nome junto da fatia', async () => {
@@ -885,31 +885,31 @@ describe('/defi: Liquidswap (Aptos)', () => {
     test('limite da API da Aptos: não cadastra; no /defi, avisa e sugere a chave', async () => {
         const limitAlt = errorHttp(429, 'HTTP 429', { data: { errors: [{ message: 'Per anonymous IP rate limit exceeded' }] } });
         network.responder('post', 'aptoslabs.com/v1/graphql', limitAlt);
-        assert.match((await bot.replyAlt(`/defi liquidswap -w ${WALLET}`, { erroEsperado: true }))[0],
+        assert.match((await bot.replyAlt(`/defi liquidswap -w ${WALLET}`, { expectedError: true }))[0],
             /^⚠️ Não consegui ler a carteira agora: Indexador da Aptos: limite de consultas atingido\.\n💡 _.*APTOS_API_KEY/);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n, 0);
 
         simulateAptos();
         await bot.replyAlt(`/defi liquidswap -wallet ${WALLET}`);
         network.responder('post', 'aptoslabs.com/v1/view', limitAlt);
-        assert.match((await bot.replyAlt('/defi', { erroEsperado: true }))[0],
+        assert.match((await bot.replyAlt('/defi', { expectedError: true }))[0],
             /^⚠️ Não consegui ler Liquidswap · carteira 0x8f…6d5c agora: RPC da Aptos: limite de consultas atingido\.\n💡 _A API pública da Aptos/);
     });
 
     test('a chave da API (APTOS_API_KEY ou defi.aptos.apikey) vai no Authorization', async () => {
         await bot.replyAlt(`/defi liquidswap -wallet ${WALLET}`);
-        assert.ok(network.chamadas.every(c => !c.cfg.headers?.Authorization), 'sem chave, sem o cabeçalho');
+        assert.ok(network.calls.every(c => !c.cfg.headers?.Authorization), 'sem chave, sem o cabeçalho');
 
         await bot.setSetting('defi.aptos.apikey', 'chave-do-setting');
-        network.chamadas.length = 0;
+        network.calls.length = 0;
         await bot.replyAlt('/defi liquidswap');
-        assert.ok(network.chamadas.length && network.chamadas.every(c => c.cfg.headers?.Authorization === 'Bearer chave-do-setting'));
+        assert.ok(network.calls.length && network.calls.every(c => c.cfg.headers?.Authorization === 'Bearer chave-do-setting'));
 
         process.env.APTOS_API_KEY = 'chave-do-env';
         try {
-            network.chamadas.length = 0;
+            network.calls.length = 0;
             await bot.replyAlt('/defi liquidswap');
-            assert.ok(network.chamadas.every(c => c.cfg.headers?.Authorization === 'Bearer chave-do-env'));
+            assert.ok(network.calls.every(c => c.cfg.headers?.Authorization === 'Bearer chave-do-env'));
         } finally {
             delete process.env.APTOS_API_KEY;
         }
@@ -975,27 +975,27 @@ describe('/defi morpho', () => {
 
     test('as contas batem com as da API: HF, LTV e preço de liquidação (em BigInt)', () => {
         const r = morpho.marketRisk({
-            colateral: 19324183428n, emprestado: 5171791555324n, lltv: 860000000000000000n,
-            preco: 849095615471500000000000000000000000000n
+            collateral: 19324183428n, borrowed: 5171791555324n, lltv: 860000000000000000n,
+            price: 849095615471500000000000000000000000000n
         });
         assert.ok(Math.abs(r.hf - MARKET_BTC.healthFactor) < 1e-6, `HF ${r.hf}`);
         assert.equal(r.ltv, 0.315197);
 
         // The API says how much the price needs to fall until liquidation (-63.35%)
         const oracle = 84909.56154715;
-        const settlement = Number(r.precoLiquidacaoBruto) / 10 ** (36 - 8 + 6);
+        const settlement = Number(r.liquidationPriceRaw) / 10 ** (36 - 8 + 6);
         assert.ok(Math.abs(settlement - oracle * (1 - 0.633490857982935)) < 0.01, `liquidação ${settlement}`);
 
         // Numbers larger than 2^53 (18 decimals): without losing precision along the way
         const large = morpho.marketRisk({
-            colateral: 9497294999999976205989826n, emprestado: 1121922582611364335090401280n,
-            lltv: 770000000000000000n, preco: 50000000000000000000000000000000000000000n
+            collateral: 9497294999999976205989826n, borrowed: 1121922582611364335090401280n,
+            lltv: 770000000000000000n, price: 50000000000000000000000000000000000000000n
         });
         assert.ok(Math.abs(large.hf - 325.9100611460455) < 1e-5, `HF ${large.hf}`);
 
         // Without debt: ∞; debt with no oracle price: cannot compute
-        assert.equal(morpho.marketRisk({ colateral: 1n, emprestado: 0n, preco: 1n, lltv: 1n }).hf, Infinity);
-        assert.equal(morpho.marketRisk({ colateral: 1n, emprestado: 1n, preco: null, lltv: 1n }).hf, null);
+        assert.equal(morpho.marketRisk({ collateral: 1n, borrowed: 0n, price: 1n, lltv: 1n }).hf, Infinity);
+        assert.equal(morpho.marketRisk({ collateral: 1n, borrowed: 1n, price: null, lltv: 1n }).hf, null);
         assert.equal(morpho.inTokens(123456789012345678901234567890n, 18), 123456789012.34567);
         assert.equal(morpho.inTokens(1n, 99), null, 'decimals inválidos');
     });
@@ -1013,9 +1013,9 @@ describe('/defi morpho', () => {
         assert.match(r.split(SEP).at(-1), /^👛 Carteira: `0x74…97C4`\n🌐 Rede: `Base`\n🕐 Atualizado: `\d\d:\d\d:\d\d`$/);
 
         // Read-only: one POST with the query, the wallet and the timeout
-        const [call] = network.chamadas;
+        const [call] = network.calls;
         assert.equal(call.url, 'https://api.morpho.org/graphql');
-        assert.equal(call.cfg.body.variables.carteira, WALLET);
+        assert.equal(call.cfg.body.variables.wallet, WALLET);
         assert.match(call.cfg.body.query, /c8453: userByAddress\(address: \$carteira, chainId: 8453\)/);
         assert.equal(call.cfg.timeout, 15000);
         assert.ok(bot.logs.some(l => l.includes('[MORPHO] Querying wallet 0x7445...97C4')));
@@ -1045,8 +1045,8 @@ describe('/defi morpho', () => {
         assert.doesNotMatch(r, /Health Rate|RISCO|BORROWED/);
 
         // Debt with no collateral: without dividing by zero
-        assert.deepEqual(morpho.marketRisk({ colateral: 0n, emprestado: 5n, preco: 10n ** 36n, lltv: 10n ** 17n }),
-            { hf: null, ltv: null, precoLiquidacaoBruto: null });
+        assert.deepEqual(morpho.marketRisk({ collateral: 0n, borrowed: 5n, price: 10n ** 36n, lltv: 10n ** 17n }),
+            { hf: null, ltv: null, liquidationPriceRaw: null });
     });
 
     test('várias posições (mercado e vault, duas redes): totais e o Health Rate de cada uma', async () => {
@@ -1070,7 +1070,7 @@ describe('/defi morpho', () => {
         });
 
         const [r] = await bot.replyAlt('/defi morpho');
-        // Fornecido: 16,407,882.93 + 2,499.97 + 8,000; emprestado: 5,171,721.19 + 4,950
+        // Fornecido: 16,407,882.93 + 2,499.97 + 8,000; borrowed: 5,171,721.19 + 4,950
         assert.match(r, /💰 \*Total líquido\*\n`\$11,241,711\.71`\n\n📥 \*Total supplied\/collateral\*\n`\$16,418,382\.90`\n\n📤 \*Total borrowed\*\n`\$5,176,671\.19`/);
         assert.match(r, /\*POSIÇÃO 1\* · cbBTC\/USDC · Base[\s\S]*Health Rate: `2\.73`/);
         assert.match(r, /\*POSIÇÃO 2\* · Vault Steakhouse USDC · Base\n\n📥 \*SUPPLIED\*\n\n💵 \*USDC\* _\(vault Steakhouse USDC\)_\nQuantidade: `2,500\.00 USDC`/);
@@ -1110,11 +1110,11 @@ describe('/defi morpho', () => {
 
         await bot.setSetting('defi.morpho.wallet', OTHER);
         await bot.replyAlt('/defi morpho');
-        assert.equal(network.chamadas.at(-1).cfg.body.variables.carteira, OTHER);
+        assert.equal(network.calls.at(-1).cfg.body.variables.wallet, OTHER);
 
         process.env.MORPHO_WALLET_ADDRESS = WALLET;   // the .env has priority
         await bot.replyAlt('/defi morpho');
-        assert.equal(network.chamadas.at(-1).cfg.body.variables.carteira, WALLET);
+        assert.equal(network.calls.at(-1).cfg.body.variables.wallet, WALLET);
         await assert.rejects(bot.setSetting('defi.morpho.wallet', 'xyz'), /0x e 40 caracteres/);
     });
 
@@ -1147,14 +1147,14 @@ describe('/defi morpho', () => {
     });
 
     test('cadastrada com a API fora do ar: não cadastra; depois, o /defi avisa', async () => {
-        network.limpar();
+        network.clear();
         replyApi(errorHttp(503));
-        assert.equal((await bot.replyAlt(`/defi morpho -w ${WALLET}`, { erroEsperado: true }))[0],
+        assert.equal((await bot.replyAlt(`/defi morpho -w ${WALLET}`, { expectedError: true }))[0],
             '⚠️ Não consegui ler a carteira agora: A API do Morpho está fora do ar.\n💡 _Tente de novo em alguns instantes._');
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM defi_positions')).n, 0);
 
         await bot.dbRun("INSERT INTO defi_positions (protocol, wallet, created_at) VALUES ('morpho', ?, 0)", [WALLET.toLowerCase()]);
-        assert.deepEqual(await bot.replyAlt('/defi', { erroEsperado: true }),
+        assert.deepEqual(await bot.replyAlt('/defi', { expectedError: true }),
             ['⚠️ Não consegui ler Morpho · carteira 0x74…97c4 agora: A API do Morpho está fora do ar.\n💡 _Tente de novo em alguns instantes._']);
     });
 
@@ -1167,9 +1167,9 @@ describe('/defi morpho', () => {
     test('erros: fora do ar, timeout, rate limit, rede não suportada e resposta inesperada', async () => {
         const error = async (reply) => {
             morpho.cleanCacheMorpho();
-            network.limpar();
+            network.clear();
             replyApi(reply);
-            const [r] = await bot.replyAlt('/defi morpho', { erroEsperado: true });
+            const [r] = await bot.replyAlt('/defi morpho', { expectedError: true });
             assert.match(r, /^❌ \*Erro ao consultar Morpho\*\n\n.*\n\nTente novamente em alguns instantes\.$/);
             return r.split('\n')[2];
         };
@@ -1204,13 +1204,13 @@ describe('/defi morpho', () => {
     test('cache de 30 s: a mesma carteira não consulta a API de novo', async () => {
         await bot.replyAlt('/defi morpho');
         await bot.replyAlt('/defi morpho');
-        assert.equal(network.chamadas.length, 1);
+        assert.equal(network.calls.length, 1);
 
         // The registration (in lowercase) is the same wallet; another query
         await bot.replyAlt(`/defi morpho -w ${WALLET}`);
-        assert.equal(network.chamadas.length, 1);
+        assert.equal(network.calls.length, 1);
         await bot.replyAlt(`/defi morpho -w ${OTHER}`);
-        assert.equal(network.chamadas.length, 2, 'outra carteira consulta');
+        assert.equal(network.calls.length, 2, 'outra carteira consulta');
     });
 });
 
@@ -1237,13 +1237,13 @@ describe('/defi aave', () => {
 
     const end = (c) => `0x${c.repeat(40)}`;
     const TOKENS = {
-        WETH: { endereco: end('e'), decimals: 18, preco: 2500 },
-        cbBTC: { endereco: end('b'), decimals: 8, preco: 100000 },
-        USDC: { endereco: end('c'), decimals: 6, preco: 1 }
+        WETH: { address: end('e'), decimals: 18, price: 2500 },
+        cbBTC: { address: end('b'), decimals: 8, price: 100000 },
+        USDC: { address: end('c'), decimals: 6, price: 1 }
     };
     const NETWORKS = {
-        1: { url: 'ethereum-rpc.publicnode.com', provider: '0x2f39d218133afab8f2b819b1066c7e434ad94e9e', pool: end('1'), oraculo: end('2'), dados: end('3') },
-        8453: { url: 'mainnet.base.org', provider: '0xe20fcbdbffc4dd138ce8b2e6fbb6cb49777ad64d', pool: end('4'), oraculo: end('5'), dados: end('6') }
+        1: { url: 'ethereum-rpc.publicnode.com', provider: '0x2f39d218133afab8f2b819b1066c7e434ad94e9e', pool: end('1'), oracle: end('2'), data: end('3') },
+        8453: { url: 'mainnet.base.org', provider: '0xe20fcbdbffc4dd138ce8b2e6fbb6cb49777ad64d', pool: end('4'), oracle: end('5'), data: end('6') }
     };
 
     let chainAlt;
@@ -1251,20 +1251,20 @@ describe('/defi aave', () => {
         // Ethereum: WETH and cbBTC as collateral, USDC borrowed; HF 1.62
         1: {
             emode: 0,
-            conta: { colateral: 600000, divida: 300000, disponivel: 162000, lt: 8100, ltv: 7700, hf: 1.62 },
-            saldos: {
-                WETH: { fornecido: 200, colateral: true },
-                cbBTC: { fornecido: 1, colateral: true },
-                USDC: { variavel: 300000 }
+            account: { collateral: 600000, debt: 300000, available: 162000, lt: 8100, ltv: 7700, hf: 1.62 },
+            balances: {
+                WETH: { provided: 200, collateral: true },
+                cbBTC: { provided: 1, collateral: true },
+                USDC: { variable: 300000 }
             },
-            teto: {}
+            cap: {}
         },
         // Base: only supplied USDC, not as collateral, and no debt
         8453: {
             emode: 0,
-            conta: { colateral: 0, divida: 0, disponivel: 0, lt: 0, ltv: 0, hf: null },
-            saldos: { USDC: { fornecido: 1000, colateral: false } },
-            teto: {}
+            account: { collateral: 0, debt: 0, available: 0, lt: 0, ltv: 0, hf: null },
+            balances: { USDC: { provided: 1000, collateral: false } },
+            cap: {}
         }
     });
 
@@ -1274,39 +1274,39 @@ describe('/defi aave', () => {
         const c = chainAlt[id];
         const sel = data.slice(0, 10);
         const arg = (i) => data.slice(10 + i * 64, 10 + (i + 1) * 64);
-        const token = (addressArg) => Object.entries(TOKENS).find(([, t]) => a(t.endereco) === addressArg);
+        const token = (addressArg) => Object.entries(TOKENS).find(([, t]) => a(t.address) === addressArg);
 
-        if (to === r.provider) return { [SEL.getPool]: a(r.pool), [SEL.getPriceOracle]: a(r.oraculo), [SEL.getPoolDataProvider]: a(r.dados) }[sel] ?? null;
+        if (to === r.provider) return { [SEL.getPool]: a(r.pool), [SEL.getPriceOracle]: a(r.oracle), [SEL.getPoolDataProvider]: a(r.data) }[sel] ?? null;
         if (to === r.pool && sel === SEL.getUserAccountData) {
-            const k = c.conta;
-            return w(E(k.colateral, 8)) + w(E(k.divida, 8)) + w(E(k.disponivel, 8)) + w(k.lt) + w(k.ltv) + w(k.hf === null ? MAX : E(k.hf, 18));
+            const k = c.account;
+            return w(E(k.collateral, 8)) + w(E(k.debt, 8)) + w(E(k.available, 8)) + w(k.lt) + w(k.ltv) + w(k.hf === null ? MAX : E(k.hf, 18));
         }
         if (to === r.pool && sel === SEL.getUserEMode) return w(c.emode);
         if (to === r.pool && sel === SEL.getEModeCategoryLabel) return textAbi('ETH correlated');
-        if (to === r.oraculo && sel === SEL.BASE_CURRENCY_UNIT) return w(10n ** 8n);
-        if (to === r.oraculo && sel === SEL.getAssetsPrices) {
+        if (to === r.oracle && sel === SEL.BASE_CURRENCY_UNIT) return w(10n ** 8n);
+        if (to === r.oracle && sel === SEL.getAssetsPrices) {
             const n = Number(BigInt(`0x${arg(1)}`));
-            const prices = Array.from({ length: n }, (_, i) => token(arg(2 + i))[1].preco);
+            const prices = Array.from({ length: n }, (_, i) => token(arg(2 + i))[1].price);
             return w(32) + w(n) + prices.map(p => w(E(p, 8))).join('');
         }
-        if (to === r.dados && sel === SEL.getAllReservesTokens) {
+        if (to === r.data && sel === SEL.getAllReservesTokens) {
             const list = Object.entries(TOKENS);
-            const tuples = list.map(([s, t]) => w(64) + a(t.endereco) + textAbi(s).slice(64));
+            const tuples = list.map(([s, t]) => w(64) + a(t.address) + textAbi(s).slice(64));
             let offset = list.length * 32;
             const offsets = tuples.map(t => { const o = offset; offset += t.length / 2; return w(o); });
             return w(32) + w(list.length) + offsets.join('') + tuples.join('');
         }
-        if (to === r.dados) {
+        if (to === r.data) {
             const [symbolAlt, t] = token(arg(0));
-            const s = c.saldos[symbolAlt] ?? {};
+            const s = c.balances[symbolAlt] ?? {};
             if (sel === SEL.getUserReserveData) {
-                return w(E(s.fornecido ?? 0, t.decimals)) + w(E(s.estavel ?? 0, t.decimals)) + w(E(s.variavel ?? 0, t.decimals)) +
-                    w(0) + w(0) + w(s.estavel ? 6n * 10n ** 25n : 0) + w(0) + w(0) + w(s.colateral ? 1 : 0);
+                return w(E(s.provided ?? 0, t.decimals)) + w(E(s.stable ?? 0, t.decimals)) + w(E(s.variable ?? 0, t.decimals)) +
+                    w(0) + w(0) + w(s.stable ? 6n * 10n ** 25n : 0) + w(0) + w(0) + w(s.collateral ? 1 : 0);
             }
             if (sel === SEL.getReserveConfigurationData) return w(t.decimals) + w(7500) + w(8000) + w(10500) + w(1000) + w(1) + w(1) + w(0) + w(1) + w(0);
             // liquidityRate 3% and variableBorrowRate 5% (APR in ray)
             if (sel === SEL.getReserveData) return w(0).repeat(5) + w(3n * 10n ** 25n) + w(5n * 10n ** 25n) + w(0).repeat(5);
-            if (sel === SEL.getDebtCeiling) return w(c.teto[symbolAlt] ?? 0);
+            if (sel === SEL.getDebtCeiling) return w(c.cap[symbolAlt] ?? 0);
         }
         return null;
     }
@@ -1349,7 +1349,7 @@ describe('/defi aave', () => {
         assert.equal(aave.healthFactor(MAX, 1n), Infinity);
         assert.equal(aave.healthFactor(5n * 10n ** 17n, 0n), Infinity, 'sem dívida');
         assert.equal(aave.healthFactor(1620000000000000000n, 1n), 1.62);
-        assert.deepEqual(aave.decodeReserves(contract(1, NETWORKS[1].dados, SEL.getAllReservesTokens)).map(t => t.simbolo), ['WETH', 'cbBTC', 'USDC']);
+        assert.deepEqual(aave.decodeReserves(contract(1, NETWORKS[1].data, SEL.getAllReservesTokens)).map(t => t.symbol), ['WETH', 'cbBTC', 'USDC']);
     });
 
     test('duas redes: o total global e cada rede com o seu Health Factor', async () => {
@@ -1382,9 +1382,9 @@ describe('/defi aave', () => {
         await bot.setSetting('defi.aave.chains', '1');
         Object.assign(chainAlt[1], {
             emode: 1,
-            conta: { colateral: 100000, divida: 50000, disponivel: 20000, lt: 7500, ltv: 7000, hf: 1.5 },
-            saldos: { cbBTC: { fornecido: 1, colateral: true }, USDC: { variavel: 40000, estavel: 10000 } },
-            teto: { cbBTC: 1000000 }   // 2 casas: $10,000.00
+            account: { collateral: 100000, debt: 50000, available: 20000, lt: 7500, ltv: 7000, hf: 1.5 },
+            balances: { cbBTC: { provided: 1, collateral: true }, USDC: { variable: 40000, stable: 10000 } },
+            cap: { cbBTC: 1000000 }   // 2 places: $10,000.00
         });
         const [r] = await bot.replyAlt('/defi aave -f');
         assert.match(r, /Preço de liquidação \(cbBTC\): `\$66,666\.67`/);
@@ -1403,22 +1403,22 @@ describe('/defi aave', () => {
 
     test('poeira (menos de $0.01) não aparece; carteira sem nada: nenhuma posição aberta', async () => {
         await bot.setSetting('defi.aave.chains', '8453');
-        chainAlt[8453].saldos.WETH = { fornecido: 0.000000000001, colateral: true };
+        chainAlt[8453].balances.WETH = { provided: 0.000000000001, collateral: true };
         assert.doesNotMatch((await bot.replyAlt('/defi aave'))[0], /WETH/);
         await bot.setSetting('defi.aave.chains', '1 8453');
 
         aave.cleanCacheAave();
-        chainAlt = { 1: { ...newChain()[1], saldos: {} }, 8453: { ...newChain()[8453], saldos: {} } };
+        chainAlt = { 1: { ...newChain()[1], balances: {} }, 8453: { ...newChain()[8453], balances: {} } };
         assert.deepEqual(await bot.replyAlt('/defi aave'), ['🟣 *AAVE V3*\n\nNenhuma posição aberta na carteira `0x12…5678` (chain 1, 8453).']);
     });
 
     test('RPC: fora do ar, timeout, rate limit e contrato inexistente; uma rede que falha não derruba a outra', async () => {
         const error = async (reply) => {
             aave.cleanCacheAave();
-            network.limpar();
+            network.clear();
             network.responder('post', NETWORKS[1].url, reply);
             simulateRpc(8453);
-            return (await bot.replyAlt('/defi aave', { erroEsperado: true }))[0];
+            return (await bot.replyAlt('/defi aave', { expectedError: true }))[0];
         };
 
         const partial = await error(new Error('connect ECONNREFUSED'));
@@ -1432,9 +1432,9 @@ describe('/defi aave', () => {
 
         // Both out: the Aave error, with each network's reason
         aave.cleanCacheAave();
-        network.limpar();
+        network.clear();
         network.responder('post', /./, errorHttp(503));
-        assert.deepEqual(await bot.replyAlt('/defi aave', { erroEsperado: true }), ['❌ *Erro ao consultar Aave*\n\n' +
+        assert.deepEqual(await bot.replyAlt('/defi aave', { expectedError: true }), ['❌ *Erro ao consultar Aave*\n\n' +
             'Ethereum: O RPC da Ethereum está fora do ar.\nBase: O RPC da Base está fora do ar.\n\nTente novamente em alguns instantes.']);
     });
 
@@ -1465,8 +1465,8 @@ describe('/defi aave', () => {
 
     test('cache de 30 s por carteira e rede', async () => {
         await bot.replyAlt('/defi aave');
-        const calls = network.chamadas.length;
+        const calls = network.calls.length;
         await bot.replyAlt('/defi aave -full');
-        assert.equal(network.chamadas.length, calls);
+        assert.equal(network.calls.length, calls);
     });
 });

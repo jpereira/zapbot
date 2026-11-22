@@ -8,7 +8,7 @@ const { downloadMedia } = require('./get');
 const { t } = require('../i18n');
 const { printError } = require('../log');
 const { stickerMeta } = require('../settings');
-const { MAX_CHARACTERS, readCor, textSticker } = require('../stickerText');
+const { MAX_CHARACTERS, readColor, textSticker } = require('../stickerText');
 
 /*
  * /sticker -txt <text> [-bg <color>] [-fg <color>]: -bg and -fg take a value
@@ -30,21 +30,21 @@ function readText(args) {
     const beforeAlt = m ? rest.slice(0, m.index) : '';
 
     return {
-        comTexto: Boolean(m),
-        comVideo: /(^|\s)(-(ss|es|startSec|endSec|v|verbose)(\s|$)|https?:\/\/)/i.test(beforeAlt),
-        texto: (m?.[2] ?? '').trim().replace(/^(["'])(.*)\1$/s, '$2').trim(),
+        withText: Boolean(m),
+        withVideo: /(^|\s)(-(ss|es|startSec|endSec|v|verbose)(\s|$)|https?:\/\/)/i.test(beforeAlt),
+        text: (m?.[2] ?? '').trim().replace(/^(["'])(.*)\1$/s, '$2').trim(),
         bg: bg ?? '#FFFFFF',
         fg: fg ?? '#000000',
-        semTxt: !m && (bg !== undefined || fg !== undefined)
+        noTxt: !m && (bg !== undefined || fg !== undefined)
     };
 }
 
-async function stickerWithText(msg, { texto: textAlt, bg: bgTyped, fg: fgTyped }) {
-    const [bg, fg] = [readCor(bgTyped), readCor(fgTyped)];
+async function stickerWithText(msg, { text: textAlt, bg: bgTyped, fg: fgTyped }) {
+    const [bg, fg] = [readColor(bgTyped), readColor(fgTyped)];
     const errorAlt = !textAlt ? t('sticker.needText')
         : textAlt.length > MAX_CHARACTERS ? t('sticker.tooLong', { max: MAX_CHARACTERS })
-            : !bg ? t('sticker.badBg', { cor: bgTyped })
-                : !fg ? t('sticker.badFg', { cor: fgTyped })
+            : !bg ? t('sticker.badBg', { color: bgTyped })
+                : !fg ? t('sticker.badFg', { color: fgTyped })
                     : bg === fg ? t('sticker.sameColor')
                         : null;
     if (errorAlt) {
@@ -57,7 +57,7 @@ async function stickerWithText(msg, { texto: textAlt, bg: bgTyped, fg: fgTyped }
         await msg.reply(new MessageMedia('image/webp', webp, 'sticker.webp'), null, { sendMediaAsSticker: true, ...stickerMeta() });
     } catch (err) {
         printError('/sticker -txt:', err.message);
-        await msg.reply(t('sticker.fail', { erro: err.message }));
+        await msg.reply(t('sticker.fail', { error: err.message }));
     }
 }
 
@@ -68,19 +68,19 @@ async function stickerWithText(msg, { texto: textAlt, bg: bgTyped, fg: fgTyped }
 async function cmdSticker(ctx) {
     const { msg, args, opts } = ctx;
     const txt = readText(args);
-    if (txt.semTxt) {
+    if (txt.noTxt) {
         await msg.reply(t('sticker.colorsNeedTxt'));
         return;
     }
-    if (txt.comVideo) {
+    if (txt.withVideo) {
         await msg.reply(t('sticker.txtConflict'));
         return;
     }
-    if (txt.comTexto && opts.given.has('pos')) {
+    if (txt.withText && opts.given.has('pos')) {
         await msg.reply(t('sticker.posConflict'));
         return;
     }
-    if (txt.comTexto) {
+    if (txt.withText) {
         await stickerWithText(msg, txt);
         return;
     }

@@ -28,14 +28,14 @@ function tokenizeCommand(input) {
             if (end < textAlt.length && (!textAlt[afterAlt] || /\s/.test(textAlt[afterAlt]))) {
                 const raw = textAlt.slice(0, afterAlt);
                 const valueAlt = delimiter === '/' ? raw : textAlt.slice(1, end);
-                tokens.push({ valor: valueAlt, opcao: false });
+                tokens.push({ value: valueAlt, option: false });
                 textAlt = textAlt.slice(afterAlt).trimStart();
                 continue;
             }
         }
         // Paths and texts without a closing delimiter remain ordinary arguments.
         const valueAlt = textAlt.match(/^\S+/)[0];
-        tokens.push({ valor: valueAlt, opcao: true });
+        tokens.push({ value: valueAlt, option: true });
         textAlt = textAlt.slice(valueAlt.length).trimStart();
     }
     return tokens;
@@ -63,9 +63,9 @@ const isTimeNegative = (token) => /^-\d[\d:.]*$/.test(token);
  * value (null, but present) of "-x" absent (null).
  *
  * Two optional features, turned on in commands.js:
- * numero: true (in a cmd_opts entry) reads "-10" as `numero` (the 1st; a 2nd is an error), instead
+ * number: true (in a cmd_opts entry) reads "-10" as `number` (the 1st; a 2nd is an error), instead
  * before sending it to argv;
- * strict: true (in the command) stores the unknown option in `desconhecidas`, instead of sending it
+ * strict: true (in the command) stores the unknown option in `unknown`, instead of sending it
  * to argv (the handler never sees it); 'primeira' only does that with the 1st word, if it looks like a
  * option (-letter), for the commands where the rest is free text (/gpt, /tldr).
  */
@@ -75,8 +75,8 @@ function GetOptFromCommand(input, config = {}) {
     const argv = [];
     const given = new Set();
     const unknown = [];
-    const result = { opt: {}, argv, given, numero: null, desconhecidas: unknown };
-    const readNumber = (config.cmd_opts ?? []).some(o => o.numero);
+    const result = { opt: {}, argv, given, number: null, unknown };
+    const readNumber = (config.cmd_opts ?? []).some(o => o.number);
 
     const commandOptions = [
         { opts: ['help', 'h'], values: [], desc: 'Exibe ajuda.' },
@@ -103,7 +103,7 @@ function GetOptFromCommand(input, config = {}) {
 
     // `input` is only the arguments (without the "/command"): a 1st argument starting with "/" is an argument
     for (let i = 0; i < tokens.length; i++) {
-        const { valor: token, opcao: optionAlt } = tokens[i];
+        const { value: token, option: optionAlt } = tokens[i];
 
         if (!optionAlt || !isOption(token)) {
             argv.push(normalizeArg(token));
@@ -111,18 +111,18 @@ function GetOptFromCommand(input, config = {}) {
         }
 
         if (readNumber && /^-\d+$/.test(token)) {
-            if (result.numero === null) result.numero = Number(token.slice(1));
+            if (result.number === null) result.number = Number(token.slice(1));
             else unknown.push(token);
             continue;
         }
 
         const option = optionMap.get(token.slice(1));
 
-        // An unknown option goes to argv (or, in a strict command, to `desconhecidas`)
+        // An unknown option goes to argv (or, in a strict command, to `unknown`)
         if (!option) {
             // strict: 'primeira' only refuses the 1st word (/gpt -price), since the rest is free text
             // (the /gpt question); and only what looks like an option (-letter): "-2h" of /tldr and "-1" pass
-            const reject = config.estrito === 'primeira' ? i === 0 && /^-[A-Za-z]/.test(token) : config.estrito;
+            const reject = config.strict === 'primeira' ? i === 0 && /^-[A-Za-z]/.test(token) : config.strict;
             if (reject) unknown.push(token);
             else argv.push(normalizeArg(token));
             continue;
@@ -138,9 +138,9 @@ function GetOptFromCommand(input, config = {}) {
 
         if (option.expectedValues.length === 1) {
             const next = tokens[i + 1];
-            const nextToken = next?.valor;
+            const nextToken = next?.value;
 
-            if (nextToken === undefined || (next.opcao && isOption(nextToken) && !isTimeNegative(nextToken))) {
+            if (nextToken === undefined || (next.option && isOption(nextToken) && !isTimeNegative(nextToken))) {
                 result.opt[canonicalName] = null;
                 continue;
             }
@@ -154,8 +154,8 @@ function GetOptFromCommand(input, config = {}) {
         const values = [];
         for (let x = 0; x < option.expectedValues.length; x++) {
             const next = tokens[i + 1];
-            const nextToken = next?.valor;
-            if (nextToken === undefined || (next.opcao && isOption(nextToken))) break;
+            const nextToken = next?.value;
+            if (nextToken === undefined || (next.option && isOption(nextToken))) break;
             values.push(normalizeArg(nextToken));
             i++;
         }

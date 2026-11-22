@@ -33,6 +33,6 @@ module.exports = {
             ex: ['/antilink -deny youtube.com']
         }
     ],
-    delegavel: true,
+    isDelegable: true,
     role: ADMIN // Touches the current group: delegable
 };

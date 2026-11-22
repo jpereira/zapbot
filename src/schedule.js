@@ -3,7 +3,7 @@
  */
 
 const { sendMedia, commandsError, assembleText, breakLines } = require('./textCommands');
-const { estado: stateAlt } = require('./state');
+const { state: stateAlt } = require('./state');
 const { client } = require('./client');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const {
@@ -34,22 +34,22 @@ const { REPETITIONS, fmtWhen, readWhen, readRepetition, partsInBrasilia, nextRep
 const TYPES = {
     lembrete: {
         cmd: '/cron -reminder',
-        icone: '⏰',
-        criado: 'adm.agenda.createdReminder',
-        exemplo: 'adm.agenda.exReminder',
-        aceitaTo: false,
-        aceitaPv: true
+        icon: '⏰',
+        created: 'adm.agenda.createdReminder',
+        example: 'adm.agenda.exReminder',
+        acceptsTo: false,
+        acceptsPv: true
     },
     agendar: {
         cmd: '/cron',
-        icone: '📅',
-        criado: 'adm.agenda.createdMessage',
-        exemplo: 'adm.agenda.exMessage',
-        aceitaTo: true,
-        aceitaPv: false
+        icon: '📅',
+        created: 'adm.agenda.createdMessage',
+        example: 'adm.agenda.exMessage',
+        acceptsTo: true,
+        acceptsPv: false
     }
 };
-const examples = () => t('adm.agenda.examples', { a: t(TYPES.agendar.exemplo), b: t(TYPES.lembrete.exemplo) });
+const examples = () => t('adm.agenda.examples', { a: t(TYPES.agendar.example), b: t(TYPES.lembrete.example) });
 
 const MAX_DAYS = 366;
 const DELAY_TOLERATED_MS = 5 * 60_000;
@@ -58,11 +58,11 @@ const DELAY_TOLERATED_MS = 5 * 60_000;
  * Reads "<when> [options] <text>": the options and the "when" come at the start, in
  * any order; the text is the rest, as typed (with the line breaks,
  * and the typed \n becomes one).
- * @returns {{ opt: {list?, lembrete?, rm?, repetir?, pv?, edit?, pause?, resume?, test?}, quando: {ms}|null,
- *            texto: string, destinos: Array<string|null>, comDestino: boolean }}
+ * @returns {{ opt: {list?, lembrete?, rm?, repetir?, pv?, edit?, pause?, resume?, test?}, when: {ms}|null,
+ *            text: string, destinations: Array<string|null>, withDestination: boolean }}
  */
 function readScheduling(args) {
-    const { destinos: destinations, informado: withDestination, resto: rest } = extractDestinations(args);
+    const { destinations, given: withDestination, rest } = extractDestinations(args);
     const words = [...rest.matchAll(/\S+/g)];
     const opt = {};
     let when = null;
@@ -83,12 +83,12 @@ function readScheduling(args) {
             opt[nameAlt] = nums.join(' ');
         } else if (['edit', 'test'].includes(nameAlt)) opt[nameAlt] = words[++i]?.[0] ?? '';
         else if (nameAlt === 'repeat' || nameAlt === 'r') opt.repeat = words[++i]?.[0] ?? '';
-        else if (!when && (when = readWhen(words.slice(i).map(m => m[0])))) i += when.usadas - 1;
+        else if (!when && (when = readWhen(words.slice(i).map(m => m[0])))) i += when.used - 1;
         else break;
     }
 
     const textAlt = i < words.length ? breakLines(rest.slice(words[i].index)).trim() : '';
-    return { opt, quando: when, texto: textAlt, destinos: destinations, comDestino: withDestination };
+    return { opt, when, text: textAlt, destinations, withDestination };
 }
 
 // Reminders and messages together, in the order they go out (the -rm numbers). The daily status (/bot -status) is left out
@@ -97,27 +97,27 @@ const listAlt = () => dbAll("SELECT * FROM schedules WHERE kind != 'status' ORDE
 // An item's destinations: the several -to (recipients) or its chat
 const itemDestinations = (s) => (s.recipients
     ? JSON.parse(s.recipients)
-    : [{ id: s.chat_id, nome: s.chat_name, grupo: Boolean(s.is_group) }]);
+    : [{ id: s.chat_id, name: s.chat_name, group: Boolean(s.is_group) }]);
 
-// Where it goes: "👥 Grupo", "👤 Contato" or "seu privado"
-const destinationWhere = (d) => (d.id === client.info.wid._serialized ? t('adm.agenda.myPrivate') : `${d.grupo ? '👥' : '👤'} ${d.nome}`);
+// Where it goes: "👥 Grupo", "👤 Contato" or "seu ownerOnly"
+const destinationWhere = (d) => (d.id === client.info.wid._serialized ? t('adm.agenda.myPrivate') : `${d.group ? '👥' : '👤'} ${d.name}`);
 const itemWhere = (s) => itemDestinations(s).map(destinationWhere).join(', ');
 
 // The same, with the id (group) or the number (person), for the log
 function whereInLog(d) {
     const whereAlt = destinationWhere(d);
     if (d.id === client.info.wid._serialized) return whereAlt;
-    const numberAlt = !d.grupo && d.id.endsWith('@c.us') ? `+${d.id.split('@')[0]}` : d.id;
+    const numberAlt = !d.group && d.id.endsWith('@c.us') ? `+${d.id.split('@')[0]}` : d.id;
     return `${whereAlt} (${numberAlt})`;
 }
 
 function listLine(s, i) {
-    const repeat = s.repeat ? ` 🔁 ${REPETITIONS[s.repeat].rotulo}` : '';
+    const repeat = s.repeat ? ` 🔁 ${REPETITIONS[s.repeat].label}` : '';
     const paused = s.paused ? t('adm.agenda.paused') : '';
     // The whole text, as registered; the following lines indented, like the destination's
     const textAlt = s.text.replace(/\n/g, '\n   ');
     const destinations = itemDestinations(s).map(d => `\n   → ${destinationWhere(d)}`).join('');
-    return `${i + 1}. ${TYPES[s.kind]?.icone ?? '📅'} *${fmtWhen(s.due_at)}*${repeat}${paused} — ${textAlt}${destinations}`;
+    return `${i + 1}. ${TYPES[s.kind]?.icon ?? '📅'} *${fmtWhen(s.due_at)}*${repeat}${paused} — ${textAlt}${destinations}`;
 }
 
 // "2" → [item 2]; "all" → all; otherwise null
@@ -132,25 +132,25 @@ function numberItems(items, valueAlt) {
  * "1 3,5" → items 1, 3 and 5 (the list numbers, in order; a repeat counts
  * once); "all" → all. If any does not exist: { missing }, and the caller does not
  * touches none.
- * @returns {{ alvos: object[] } | { faltando: string[] }}
+ * @returns {{ targets: object[] } | { missing: string[] }}
  */
 function numbersItems(items, valueAlt) {
     const partsAlt = withoutAccents(valueAlt ?? '').split(/[\s,]+/).filter(Boolean);
-    if (partsAlt.includes('all')) return { alvos: items };
+    if (partsAlt.includes('all')) return { targets: items };
 
     const numbers = [...new Set(partsAlt.map(Number))].sort((a, b) => a - b);
     const missing = numbers.filter(n => !items[n - 1]);
-    if (!numbers.length || missing.length) return { faltando: missing.length ? missing.map(String) : ['?'] };
-    return { alvos: numbers.map(n => items[n - 1]) };
+    if (!numbers.length || missing.length) return { missing: missing.length ? missing.map(String) : ['?'] };
+    return { targets: numbers.map(n => items[n - 1]) };
 }
 
-// "❌ Nº 7, 9 não existem. Nada foi <feito>; ..."
+// "❌ Nº 7, 9 não existem. Nada foi <done>; ..."
 const numbersError = (missing, done, usage) =>
-    t('adm.agenda.noItem', { n: missing.length, lista: missing.join(', '), feito: done, uso: usage });
+    t('adm.agenda.noItem', { n: missing.length, list: missing.join(', '), done, usage });
 
 // The "when" of a new or edited item: in the future and up to MAX_DAYS
 function whenError(ms, nowAlt = Date.now()) {
-    if (ms <= nowAlt) return t('adm.agenda.pastErr', { quando: fmtWhen(ms) });
+    if (ms <= nowAlt) return t('adm.agenda.pastErr', { when: fmtWhen(ms) });
     if (ms > nowAlt + MAX_DAYS * 86400_000) return t('adm.agenda.maxDays', { n: MAX_DAYS });
     return null;
 }
@@ -161,10 +161,10 @@ function whenError(ms, nowAlt = Date.now()) {
  */
 async function pauseOrResume(msg, items, pause, valueAlt) {
     const optionAlt = pause ? '-pause' : '-resume';
-    const { alvos: targets, faltando: missing } = numbersItems(items, valueAlt);
+    const { targets, missing } = numbersItems(items, valueAlt);
 
     if (missing) {
-        await msg.reply(numbersError(missing, t(pause ? 'adm.agenda.donePaused' : 'adm.agenda.doneResumed'), t('adm.agenda.usePause', { opcao: optionAlt })));
+        await msg.reply(numbersError(missing, t(pause ? 'adm.agenda.donePaused' : 'adm.agenda.doneResumed'), t('adm.agenda.usePause', { option: optionAlt })));
         return;
     }
 
@@ -192,7 +192,7 @@ async function pauseOrResume(msg, items, pause, valueAlt) {
  * -edit <no.> [when] [-repeat ...] [text]: replaces whatever comes. The destination and the
  * mode do not change (for that, remove and create again).
  */
-async function edit(msg, items, { opt, quando: when, texto: textAlt }) {
+async function edit(msg, items, { opt, when, text: textAlt }) {
     const [s] = numberItems(items, opt.edit ?? '') ?? [];
 
     if (!s || withoutAccents(opt.edit).trim() === 'all') {
@@ -231,22 +231,22 @@ async function edit(msg, items, { opt, quando: when, texto: textAlt }) {
     }
 
     await dbRun('UPDATE schedules SET due_at = ?, day_of_month = ?, text = ?, repeat = ? WHERE id = ?',
-        [dueAt, when ? partsInBrasilia(dueAt).dia : s.day_of_month, textAlt || s.text, repeatAlt, s.id]);
+        [dueAt, when ? partsInBrasilia(dueAt).day : s.day_of_month, textAlt || s.text, repeatAlt, s.id]);
 
-    await msg.reply(t('adm.agenda.edited', { icone: TYPES[s.kind]?.icone ?? '📅', quando: fmtWhen(dueAt) }) +
-        (repeatAlt ? ` 🔁 ${REPETITIONS[repeatAlt].rotulo}` : '') + (s.paused ? t('adm.agenda.paused') : '') +
+    await msg.reply(t('adm.agenda.edited', { icon: TYPES[s.kind]?.icon ?? '📅', when: fmtWhen(dueAt) }) +
+        (repeatAlt ? ` 🔁 ${REPETITIONS[repeatAlt].label}` : '') + (s.paused ? t('adm.agenda.paused') : '') +
         `\n📝 ${summarizeText(textAlt || s.text, 100)}`);
 }
 
 async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg }) {
     await dbReady;
 
-    const { opt, quando: when, texto: typed, destinos: destinationsText, comDestino: withDestination } = readScheduling(args);
+    const { opt, when, text: typed, destinations: destinationsText, withDestination } = readScheduling(args);
 
     // Reminder mode: with -reminder
     const kind = opt.reminder ? 'lembrete' : 'agendar';
     const type = TYPES[kind];
-    const syntax = t('adm.agenda.syntax', { ex: t(type.exemplo) });
+    const syntax = t('adm.agenda.syntax', { ex: t(type.example) });
     const items = await listAlt();
 
     // -status: the text goes to the WhatsApp Status (message only; without -to or -private)
@@ -255,12 +255,12 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
         return;
     }
 
-    if (opt.private && !type.aceitaPv) {
+    if (opt.private && !type.acceptsPv) {
         await msg.reply(t('adm.agenda.pvOnlyReminder'));
         return;
     }
 
-    if (withDestination && !type.aceitaTo) {
+    if (withDestination && !type.acceptsTo) {
         await msg.reply(t('adm.agenda.reminderNoTo'));
         return;
     }
@@ -274,7 +274,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
         }
 
         // If any does not exist: none is removed (the list stays as it was)
-        const { alvos: removed, faltando: missing } = numbersItems(items, opt.rm);
+        const { targets: removed, missing } = numbersItems(items, opt.rm);
         if (missing) {
             await msg.reply(numbersError(missing, t('adm.agenda.doneRemoved'), t('adm.agenda.useRm')));
             return;
@@ -284,7 +284,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
 
         const line = (s) => `*${fmtWhen(s.due_at)}* — ${summarizeText(s.text, 60)}`;
         await msg.reply(removed.length === 1
-            ? t('adm.agenda.removedOne', { linha: line(removed[0]) })
+            ? t('adm.agenda.removedOne', { line: line(removed[0]) })
             : `${t('adm.agenda.removedMany', { n: removed.length })}\n${removed.map(s => `• ${line(s)}`).join('\n')}`);
         return;
     }
@@ -301,7 +301,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
             await msg.reply(t('adm.agenda.editLimits'));
             return;
         }
-        await edit(msg, items, { opt, quando: when, texto: typed });
+        await edit(msg, items, { opt, when, text: typed });
         return;
     }
 
@@ -314,7 +314,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
     // -l, or nothing: the list (reminders and messages)
     if (opt.list || (!when && !typed && !quotedMsg)) {
         if (!items.length) {
-            await msg.reply(t('adm.agenda.nothing', { exemplos: examples() }));
+            await msg.reply(t('adm.agenda.nothing', { examples: examples() }));
             return;
         }
 
@@ -324,7 +324,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
     }
 
     if (!when) {
-        await msg.reply(t('adm.agenda.badWhen', { sintaxe: syntax }));
+        await msg.reply(t('adm.agenda.badWhen', { syntax }));
         return;
     }
 
@@ -332,7 +332,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
     const textAlt = typed || (kind === 'lembrete' ? quotedMsg?.body?.trim() : '') || '';
 
     if (!textAlt) {
-        await msg.reply(t('adm.agenda.noText', { sintaxe: syntax }));
+        await msg.reply(t('adm.agenda.noText', { syntax }));
         return;
     }
 
@@ -368,22 +368,22 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
 
     // Where it goes: -to (message; several -to, one item with all), -private (reminder) or the current chat
     const myId = client.info.wid._serialized;
-    let destinations = [{ id: chatId, nome: chatName, grupo: Boolean(isGroup) }];
+    let destinations = [{ id: chatId, name: chatName, group: Boolean(isGroup) }];
 
     if (opt.status) {
-        destinations = [{ id: STATUS_ID, nome: t('adm.agenda.statusName'), grupo: false }];
+        destinations = [{ id: STATUS_ID, name: t('adm.agenda.statusName'), group: false }];
     } else if (withDestination) {
         destinations = [];
         for (const destinationText of destinationsText) {
             // Several contacts or groups with the name: waits for you to choose from the list
             const destination = await resolverOrChoose(msg, destinationText, {
-                semEmail: t('adm.agenda.semEmail')
+                noEmail: t('adm.agenda.semEmail')
             });
             if (!destination) return;
             if (!destinations.some(d => d.id === destination.id)) destinations.push(destination);
         }
     } else if (opt.private) {
-        destinations = [{ id: myId, nome: 'seu privado', grupo: false }];
+        destinations = [{ id: myId, name: 'seu privado', group: false }];
     }
 
     // The reminder replies to the message replied by the command, or the command itself (only in the same chat)
@@ -392,33 +392,33 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
         ? (quotedMsg?.id?._serialized ?? msg.id?._serialized ?? null)
         : null;
     const recipients = destinations.length > 1
-        ? JSON.stringify(destinations.map(d => ({ id: d.id, nome: d.nome, grupo: Boolean(d.grupo) })))
+        ? JSON.stringify(destinations.map(d => ({ id: d.id, name: d.name, group: Boolean(d.group) })))
         : null;
 
     await dbRun(
         `INSERT INTO schedules (kind, chat_id, chat_name, is_group, text, due_at, repeat, day_of_month, quoted_id, created_at, recipients)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [kind, first.id, first.nome, first.grupo ? 1 : 0, textAlt, when.ms, repeatAlt,
-            partsInBrasilia(when.ms).dia, quoted, nowAlt, recipients]
+        [kind, first.id, first.name, first.group ? 1 : 0, textAlt, when.ms, repeatAlt,
+            partsInBrasilia(when.ms).day, quoted, nowAlt, recipients]
     );
 
-    const whereAlt = (d) => (d.id === myId ? t('adm.agenda.inPrivate') : d.id === chatId ? t('adm.agenda.inThisChat') : t('adm.agenda.inDest', { destino: describeDestination(d) }));
+    const whereAlt = (d) => (d.id === myId ? t('adm.agenda.inPrivate') : d.id === chatId ? t('adm.agenda.inThisChat') : t('adm.agenda.inDest', { destination: describeDestination(d) }));
     await msg.reply(t('adm.agenda.created', {
-        icone: type.icone,
-        criado: t(type.criado),
-        quando: fmtWhen(when.ms),
-        repete: repeatAlt ? ` 🔁 ${REPETITIONS[repeatAlt].rotulo}` : '',
-        onde: destinations.length > 1
-            ? t('adm.agenda.inChats', { n: destinations.length, lista: destinations.map(d => `• ${describeDestination(d)}`).join('\n') })
+        icon: type.icon,
+        created: t(type.created),
+        when: fmtWhen(when.ms),
+        repeats: repeatAlt ? ` 🔁 ${REPETITIONS[repeatAlt].label}` : '',
+        where: destinations.length > 1
+            ? t('adm.agenda.inChats', { n: destinations.length, list: destinations.map(d => `• ${describeDestination(d)}`).join('\n') })
             : ` ${whereAlt(destinations[0])}.\n`,
-        texto: summarizeText(textAlt, 100)
+        text: summarizeText(textAlt, 100)
     }) + (opt.status ? `\n${t('adm.agenda.statusRisk')}` : ''));
 }
 
 // What goes out in the chat: the plain text (message mode) or the ⏰ Reminder
 function itemText(s, textAlt, late = false) {
     if (s.kind === 'agendar') return textAlt;
-    return `${t('adm.agenda.reminderTitle')}\n\n${textAlt}` + (late ? t('adm.agenda.late', { quando: fmtWhen(s.due_at) }) : '');
+    return `${t('adm.agenda.reminderTitle')}\n\n${textAlt}` + (late ? t('adm.agenda.late', { when: fmtWhen(s.due_at) }) : '');
 }
 
 /*
@@ -434,13 +434,13 @@ async function test(msg, items, valueAlt) {
     }
 
     // The {/command}s run as in the first destination
-    const { texto: textAlt, midias: mediaAltAlt } = await assembleText(s.text, s);
+    const { text: textAlt, mediaItems: mediaAltAlt } = await assembleText(s.text, s);
 
     await msg.reply(t('adm.agenda.testTitle', {
         n: valueAlt.trim(),
-        quando: fmtWhen(s.due_at),
-        onde: itemWhere(s),
-        texto: textAlt ? itemText(s, textAlt) : t('adm.agenda.onlyMedia')
+        when: fmtWhen(s.due_at),
+        where: itemWhere(s),
+        text: textAlt ? itemText(s, textAlt) : t('adm.agenda.onlyMedia')
     }));
     for (const { content, options } of mediaAltAlt) await msg.reply(content, undefined, { caption: options?.caption });
 }
@@ -462,7 +462,7 @@ async function triggerItem(s, nowAlt) {
         // The /bot -status report, built on the spot, in the -to destinations (without them, the private chat)
         const destinations = statusDestinations(s);
         const textAlt = await statusText(nowAlt);
-        await sendToDestinations(destinations, textAlt, { assunto: t('adm.agenda.statusSubject') })
+        await sendToDestinations(destinations, textAlt, { subject: t('adm.agenda.statusSubject') })
             .catch(err => printError('/bot -status: failed to send:', err.message));
         printInfo(`/bot -status: sent to ${destinations.length ? destinations.map(d => d.email ?? d.id).join(', ') : 'your private chat'}` +
             (late ? ' (late)' : ''));
@@ -481,8 +481,8 @@ async function triggerItem(s, nowAlt) {
  * of a group is the group's) and the media goes out after the message.
  */
 async function itemSendOnDestination(s, d, late) {
-    const inChat = { ...s, chat_id: d.id, chat_name: d.nome, is_group: d.grupo ? 1 : 0 };
-    const { texto: assembled, midias: mediaAltAlt, comandos: commands } = await assembleText(s.text, inChat);
+    const inChat = { ...s, chat_id: d.id, chat_name: d.name, is_group: d.group ? 1 : 0 };
+    const { text: assembled, mediaItems: mediaAltAlt, commands } = await assembleText(s.text, inChat);
     const textAlt = itemText(s, assembled, late);
 
     // Media only (e.g.: "{/meme}"): there is no text to send
@@ -508,7 +508,7 @@ async function itemSendOnDestination(s, d, late) {
 let checking = false;
 
 async function checkSchedule() {
-    if (checking || !stateAlt.pronto) return;
+    if (checking || !stateAlt.ready) return;
     checking = true;
 
     try {

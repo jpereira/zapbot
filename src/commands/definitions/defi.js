@@ -22,7 +22,7 @@ module.exports = {
             values: ['<address>'],
             desc: 'Registers the Orca position by its address.',
             cron: false,
-            protocolos: ['orca']
+            protocols: ['orca']
         },
         {
             opts: ['alert', 'a'],
@@ -30,14 +30,14 @@ module.exports = {
             desc: 'Without #: lists the alerts. With # (or all): notifies when the position leaves the range and when it comes back, in your private chat or at the -to destinations (checked every defi.alert.intervalMin minutes). With -rm: turns it off. When registering (with -address or -wallet), turns on the alert for the new position; the value is the fee limit in dollars (like -fees).',
             ex: ['/defi -a 1', '/defi orca -address <address> -a 2000'],
             cron: false,
-            protocolos: ['orca', 'prjx']
+            protocols: ['orca', 'prjx']
         },
         {
             opts: ['full', 'f'],
             values: [],
             desc: 'With aave: the position details (LTV, liquidation threshold, available borrows, APY of each asset, what is collateral, eMode, and isolation mode).',
             ex: ['/defi aave -f'],
-            protocolos: ['aave']
+            protocols: ['aave']
         },
         {
             opts: ['list', 'l'],
@@ -65,14 +65,14 @@ module.exports = {
             values: ['<mint>'],
             desc: 'With orca -address: the position NFT (optional; the bot checks that it matches).',
             cron: false,
-            protocolos: ['orca']
+            protocols: ['orca']
         },
         {
             opts: ['pool'],
             values: ['<address>'],
             desc: 'With orca -address: the pool (optional; the bot checks that it matches).',
             cron: false,
-            protocolos: ['orca']
+            protocols: ['orca']
         },
         {
             opts: ['rm'],
@@ -85,7 +85,7 @@ module.exports = {
             values: ['[value|off]'],
             desc: 'Alone: the summary of fees to collect. It comes in one message, with the range and price of each Orca and Project X position and the total in dollars (Liquidswap is included, but has nothing to collect; what is not registered shows up as such). With -alert (without value), also shows the alert of each registration and how far it is from the fee limit. Together with -alert <#|all>: also notifies when the fees to collect go over the value, in dollars (e.g.: -fees 50); notifies once and again after you collect; off removes it.',
             ex: ['/defi -fees', '/defi prjx -fees', '/defi -fees -a'],
-            protocolos: ['orca', 'prjx']
+            protocols: ['orca', 'prjx']
         },
         {
             opts: ['to'],
@@ -100,7 +100,7 @@ module.exports = {
                 '-to you@example.com'
             ],
             cron: false,
-            protocolos: ['orca', 'prjx']
+            protocols: ['orca', 'prjx']
         },
         {
             opts: ['wallet', 'w'],
@@ -111,7 +111,7 @@ module.exports = {
                 '/defi liquidswap -w <0x...>',
                 '/defi morpho -w <0x...>'
             ],
-            protocolos: ['prjx', 'liquidswap', 'morpho', 'aave'],
+            protocols: ['prjx', 'liquidswap', 'morpho', 'aave'],
             cron: false
         },
         {
@@ -122,34 +122,34 @@ module.exports = {
     ],
     role: ADMIN, // the owner's wallets and positions
     cron: true,
-    protocolos: {
+    protocols: {
         orca: {
-            nome: 'Orca',
+            name: 'Orca',
             usage: '/defi orca [-mask]  or  /defi orca -address <address> [-pool <address>] [-nft <mint>] [-name <name>] [-alert [value]]',
             help: 'Liquidity positions on Orca (Whirlpools, on Solana): balance, range, price, and fees to collect, read on-chain. Each position is registered by its address (-address).',
             ex: ['/defi orca', '/defi orca -address <address> -a 2000']
         },
         prjx: {
-            nome: 'Project X',
+            name: 'Project X',
             usage: '/defi prjx [-mask]  or  /defi prjx -wallet <0x...> [-name <name>] [-alert [value]]',
             help: 'Liquidity positions on Project X (on HyperEVM): balance, range, price, and fees to collect, read on-chain. Register the wallet (-wallet): the bot reads all its open positions.',
             ex: ['/defi prjx', '/defi prjx -w <0x...> -a']
         },
         liquidswap: {
-            nome: 'Liquidswap',
+            name: 'Liquidswap',
             aliases: ['liqswp'],
             usage: '/defi liquidswap|liqswp [-mask]  or  /defi liquidswap -wallet <0x...> [-name <name>]',
             help: 'Liquidity positions on Liquidswap (the Pontem DEX, on Aptos, versions v0 and v0.5): the pool share, the balance of each token, and the price, read on-chain. Register the wallet (-wallet): the bot reads all its positions. Swap fees go into the pool and are already in the balance, so there is no range, no fees to collect, and no -alert.',
             ex: ['/defi liquidswap', '/defi liqswp -w <0x...> -n Aptos Wallet']
         },
         morpho: {
-            nome: 'Morpho',
+            name: 'Morpho',
             usage: '/defi morpho [-mask]  or  /defi morpho -wallet <0x...> [-name <name>]',
             help: 'Position, loans, and risk on Morpho (on Base and the networks in the setting defi.morpho.chains): collateral, debt, Health Rate, LTV, LLTV, and liquidation price of each market, and the vaults. Register the wallet (-wallet); without a registration, the one in MORPHO_WALLET_ADDRESS (or the setting defi.morpho.wallet) is used.',
             ex: ['/defi morpho', '/defi morpho -w <0x...>']
         },
         aave: {
-            nome: 'Aave',
+            name: 'Aave',
             usage: '/defi aave [-full] [-mask]  or  /defi aave -wallet <0x...> [-name <name>] [-full]',
             help: 'Position and risk on Aave V3, read on-chain from the official contracts (Ethereum and Base, setting defi.aave.chains): what was supplied and borrowed, the Health Factor of each network, and the net position. With -full, the details: LTV, liquidation threshold, available borrows, APY, what is collateral, eMode, and isolation mode. Register the wallet (-wallet); without a registration, the one in AAVE_WALLET_ADDRESS (or the setting defi.aave.wallet) is used.',
             ex: ['/defi aave', '/defi aave -f', '/defi aave -w <0x...> -n Wallet X']

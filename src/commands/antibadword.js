@@ -1,7 +1,7 @@
 /*
  * /antibadword: deletes the message of whoever is not an admin and has a word from the group list (see src/groupRules.js).
  * /antibadword                    → the mode and how many words there are
- *   /antibadword -delete|-warn|-remove|-off   → o modo
+ *   /antibadword -delete|-warn|-remove|-off   → o mode
  * /antibadword -add <word>     → adds to the list (phrase in quotes)
  * /antibadword -rm <word>      → removes from the list
  * /antibadword -list              → shows the words
@@ -12,12 +12,12 @@ const { t } = require('../i18n');
 const { MODES, groupIsAdmin, recordRule, groupRule } = require('../moderation');
 const { WORDS_MAX, normalizeWord } = require('../groupRules');
 
-async function showAlt(msg, rule, group, { lista: list = false } = {}) {
+async function showAlt(msg, rule, group, { list = false } = {}) {
     const eu = group.participants.find((p) => p.id._serialized === client.info.wid._serialized || p.id.user === client.info.wid.user);
-    const words = rule.dados.words ?? [];
-    await msg.reply(t('antibadword.status', { mode: t(`antilink.mode.${rule.modo}`), n: words.length }) +
+    const words = rule.data.words ?? [];
+    await msg.reply(t('antibadword.status', { mode: t(`antilink.mode.${rule.mode}`), n: words.length }) +
         (list ? `\n${words.length ? words.join(', ') : t('antibadword.empty')}` : '') +
-        (rule.modo !== 'off' && !groupIsAdmin(eu) ? `\n${t('antibadword.botNotAdmin')}` : ''));
+        (rule.mode !== 'off' && !groupIsAdmin(eu) ? `\n${t('antibadword.botNotAdmin')}` : ''));
 }
 
 async function cmdAntibadword({ msg, opts, isGroup }) {
@@ -29,7 +29,7 @@ async function cmdAntibadword({ msg, opts, isGroup }) {
 
     const chatId = group.id._serialized;
     const rule = await groupRule(chatId, 'antibadword');
-    rule.dados.words ??= [];
+    rule.data.words ??= [];
 
     const modes = MODES.filter((m) => opts.given.has(m));
     if (modes.length > 1) {
@@ -39,31 +39,31 @@ async function cmdAntibadword({ msg, opts, isGroup }) {
 
     const touched = [];
     if (modes.length) {
-        rule.modo = modes[0];
-        touched.push(t('antilink.setMode', { mode: t(`antilink.mode.${rule.modo}`) }));
+        rule.mode = modes[0];
+        touched.push(t('antilink.setMode', { mode: t(`antilink.mode.${rule.mode}`) }));
     }
 
-    for (const [optionAlt, poe] of [['add', true], ['rm', false]]) {
+    for (const [optionAlt, puts] of [['add', true], ['rm', false]]) {
         if (!opts.given.has(optionAlt)) continue;
         const word = normalizeWord(opts.opt[optionAlt]);
         if (!word) {
             await msg.reply(t('antibadword.badWord', { value: opts.opt[optionAlt] ?? '' }));
             return;
         }
-        const has = rule.dados.words.includes(word);
-        if (poe && !has) {
-            if (rule.dados.words.length >= WORDS_MAX) {
+        const has = rule.data.words.includes(word);
+        if (puts && !has) {
+            if (rule.data.words.length >= WORDS_MAX) {
                 await msg.reply(t('antibadword.full', { max: WORDS_MAX }));
                 return;
             }
-            rule.dados.words.push(word);
+            rule.data.words.push(word);
         }
-        if (!poe) rule.dados.words = rule.dados.words.filter((p) => p !== word);
-        touched.push(t(poe ? 'antibadword.added' : 'antibadword.removedWord', { word: word }));
+        if (!puts) rule.data.words = rule.data.words.filter((p) => p !== word);
+        touched.push(t(puts ? 'antibadword.added' : 'antibadword.removedWord', { word: word }));
     }
 
     if (!touched.length) {
-        await showAlt(msg, rule, group, { lista: opts.given.has('list') });
+        await showAlt(msg, rule, group, { list: opts.given.has('list') });
         return;
     }
 

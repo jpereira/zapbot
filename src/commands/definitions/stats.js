@@ -29,29 +29,29 @@ module.exports = {
             opts: ['list', 'l'],
             values: [],
             desc: 'Lists the chats with stats, from the most active to the least. With the total and the day of the last message.',
-            outrosChats: true
+            otherChats: true
         },
         {
             opts: ['me'],
             values: [],
             desc: 'Your messages, summed across all chats (or only in /chat/): where you talk the most, hours and peak.',
-            outrosChats: true
+            otherChats: true
         },
         {
             argv: ['-N'],
             desc: 'Period in days (default 7, max. stats.retentionDays). Goes before or after /chat/.',
             ex: ['/stats -30', '/stats /Family Group/ -10'],
-            numero: true
+            number: true
         },
         {
             argv: ['</chat/>'],
             desc: 'Another chat instead of the current one: a group, or the private chat with a person, searched by name (case and accent insensitive) among those that have stats; several with the name: you pick from the list.',
             ex: ['/stats /Family Group/', '/stats -10 /Family/', '/stats -me /Family/'],
-            outrosChats: true
+            otherChats: true
         }
     ],
-    estrito: true,
-    delegavel: true,
+    strict: true,
+    isDelegable: true,
     role: ADMIN, // delegable: current chat only (-flush is owner only)
     cron: true
 };

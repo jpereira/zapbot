@@ -21,16 +21,16 @@ const groupIsAdmin = (p) => Boolean(p?.isAdmin || p?.isSuperAdmin);
  * @param {object} o
  * @param {object} o.msg
  * @param {string} o.chatId
- * @param {string} o.modo        delete | warn | remove
+ * @param {string} o.mode        delete | warn | remove
  * @param {string} o.senderName
  * @param {string} o.tag         for the log: 'Antilink', 'Antitag', 'Antibadword'
- * @param {string} o.detalhe     what was found (for the log)
+ * @param {string} o.detail     what was found (for the log)
  * @param {string} o.noticeDeleted  "Link de Fulano apagado."
- * @param {string} o.noticeRemoved "Fulano mandou link e foi removido do grupo."
- * @param {string} o.motivo      the /warn reason
- * @returns {Promise<boolean>} true = a mensagem foi apagada (tratada)
+ * @param {string} o.noticeRemoved "Fulano mandou link e foi removido do group."
+ * @param {string} o.reason      the /warn reason
+ * @returns {Promise<boolean>} true = a message foi apagada (tratada)
  */
-async function applyMode({ msg, chatId, modo: mode, senderName, tag, detalhe: detail, avisoApagada: noticeDeleted, avisoRemovida: noticeRemoved, motivo: reasonAlt }) {
+async function applyMode({ msg, chatId, mode, senderName, tag, detail, deletedNotice: noticeDeleted, removedNotice: noticeRemoved, reason: reasonAlt }) {
     const group = await msg.getChat().catch(() => null);
     if (!group?.isGroup) return false;
 
@@ -57,7 +57,7 @@ async function applyMode({ msg, chatId, modo: mode, senderName, tag, detalhe: de
     if (mode === 'delete') {
         await send(noticeDeleted.replace('{name}', nameAlt));
     } else if (mode === 'warn' && author) {
-        const r = await notify({ grupo: group, participante: author, nome: nameAlt, motivo: reasonAlt, por: tag.toLowerCase() });
+        const r = await notify({ group, participant: author, name: nameAlt, reason: reasonAlt, by: tag.toLowerCase() });
         await send(`${noticeDeleted.replace('{name}', nameAlt)}\n${noticeText(nameAlt, reasonAlt, r)}`);
     } else if (mode === 'remove' && author) {
         try {
@@ -83,10 +83,10 @@ async function groupRule(chatId, kind) {
     } catch {
         dataAlt = {};
     }
-    return { modo: row?.mode ?? 'off', dados: dataAlt };
+    return { mode: row?.mode ?? 'off', data: dataAlt };
 }
 
-async function recordRule(chatId, kind, { modo: mode, dados: dataAlt }) {
+async function recordRule(chatId, kind, { mode, data: dataAlt }) {
     await dbReady;
     await dbRun(
         `INSERT INTO group_rules (chat_id, kind, mode, data) VALUES (?, ?, ?, ?)

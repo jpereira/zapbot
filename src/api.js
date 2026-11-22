@@ -21,7 +21,7 @@ const http = require('http');
 const packageJson = require('../package.json');
 const { client } = require('./client');
 const { dbAll, dbGet, dbReady } = require('./db');
-const { estado: stateAlt } = require('./state');
+const { state: stateAlt } = require('./state');
 const { printError, printInfo } = require('./log');
 const { getSetting } = require('./settings');
 
@@ -86,7 +86,7 @@ async function send({ to, text }) {
     const textAlt = String(text ?? '').trim();
     if (!textAlt) throw new ErrorApi(400, '"text" is required');
     if (textAlt.length > MAX_TEXT) throw new ErrorApi(400, `"text" has ${textAlt.length} characters; the limit is ${MAX_TEXT}`);
-    if (!stateAlt.pronto) throw new ErrorApi(503, 'WhatsApp not connected');
+    if (!stateAlt.ready) throw new ErrorApi(503, 'WhatsApp not connected');
     if (sendingsLimit()) throw new ErrorApi(429, `at most ${SENDINGS_PER_MIN} messages per minute`);
 
     const id = await resolverDestination(to);
@@ -113,7 +113,7 @@ async function readNote(id) {
 const statusAlt = () => ({
     name: 'zapbot',
     version: packageJson.version,
-    connected: Boolean(stateAlt.pronto),
+    connected: Boolean(stateAlt.ready),
     mcp: Boolean(getSetting('mcp.enabled'))
 });
 
@@ -228,7 +228,7 @@ async function handle(req, res) {
     const rota = `${req.method} ${url.pathname}`;
 
     if (rota === 'GET /health') {
-        replyAlt(res, 200, { ok: true, connected: Boolean(stateAlt.pronto) });
+        replyAlt(res, 200, { ok: true, connected: Boolean(stateAlt.ready) });
         return;
     }
     if (!authenticated(req)) throw new ErrorApi(401, 'invalid or missing API key');
@@ -242,7 +242,7 @@ async function handle(req, res) {
     } else throw new ErrorApi(404, 'not found');
 }
 
-function createServidor() {
+function createServer() {
     return http.createServer((req, res) => {
         handle(req, res).catch((err) => {
             if (!(err instanceof ErrorApi)) printError('API:', err.message);
@@ -251,7 +251,7 @@ function createServidor() {
     });
 }
 
-let servidor = null;
+let server = null;
 
 // Called in app.js: turns on if api.enabled and api.key are in the setting
 async function startApi() {
@@ -263,17 +263,17 @@ async function startApi() {
     }
 
     const host = getSetting('api.host');
-    const porta = getSetting('api.port');
-    servidor = createServidor();
-    servidor.on('error', err => printError('API:', err.message));
-    servidor.listen(porta, host, () => {
-        printInfo(`API: listening on http://${host}:${porta}` +
+    const port = getSetting('api.port');
+    server = createServer();
+    server.on('error', err => printError('API:', err.message));
+    server.listen(port, host, () => {
+        printInfo(`API: listening on http://${host}:${port}` +
             (getSetting('mcp.enabled') ? ' (EXPERIMENTAL MCP on at /mcp)' : ''));
         if (host !== '127.0.0.1' && host !== 'localhost') {
             printInfo('API: listening outside localhost: put an HTTPS proxy in front and keep the api.key strong');
         }
     });
-    return servidor;
+    return server;
 }
 
 // Resets the minute's send count (the tests)
@@ -282,7 +282,7 @@ const restartSendings = () => { sendings = []; };
 module.exports = {
     ErrorApi,
     TOOLS,
-    createServidor,
+    createServer,
     startApi,
     restartSendings,
     handleMcp

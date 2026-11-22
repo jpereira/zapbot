@@ -47,9 +47,9 @@ const SYSTEM_TYPES = new Set([
 
 client.on('message_create', (msg) => withContextDebug({
     chatId: channelId(msg?.from, msg?.id?.remote, msg?.to) || msg?.id?.remote || msg?.from || msg?.to,
-    comando: (msg.body || '').trim().startsWith('/') ? msg.body : null,
-    profundidade: 0,
-    maskTelefones: false
+    command: (msg.body || '').trim().startsWith('/') ? msg.body : null,
+    depth: 0,
+    maskPhones: false
 }, async () => {
     if (msg.fromMe && logIsCopy(msg.body)) return;
     instrumentObject(msg, 'WhatsApp.Message', 2,
@@ -83,7 +83,7 @@ client.on('message_create', (msg) => withContextDebug({
 
         /*
          * Remetente real:
-         *   grupo   -> msg.author (participante)
+         *   group   -> msg.author (participant)
          * status/broadcast -> msg.author; the @broadcast chat is not a person
          * channel -> the @newsletter itself, without attributing the post to a contact
          * private -> msg.from (or msg.to if it was me)
@@ -140,7 +140,7 @@ client.on('message_create', (msg) => withContextDebug({
             const status = chatId === 'status@broadcast' || msg.isStatus;
             chatName = senderJid === 'UNKNOWN'
                 ? t(status ? 'mensagens.status' : 'mensagens.transmissao')
-                : t(status ? 'mensagens.statusDe' : 'mensagens.transmissaoDe', { nome: senderName });
+                : t(status ? 'mensagens.statusDe' : 'mensagens.transmissaoDe', { name: senderName });
         }
         Object.assign(contextDebug(), { chatName, senderName });
         printDebugLevel(1, 'message_create sender and chat', { chatName, senderName, senderJid });
@@ -220,8 +220,8 @@ client.on('message_create', (msg) => withContextDebug({
                 chatId, chatName, isGroup,
                 senderId: msg.fromMe ? myIdStats() : (senderNumber || senderJid),
                 senderName: msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName,
-                quando: paraMs(msg.timestamp) || timestamp,
-                campos: { msgs: 1, media: hasMedia }
+                when: paraMs(msg.timestamp) || timestamp,
+                fields: { msgs: 1, media: hasMedia }
             });
         }
 
@@ -272,13 +272,13 @@ client.on('message_create', (msg) => withContextDebug({
 
         // /antilink: a link from someone who is not a group admin is deleted (according to the group mode)
         if (isGroup && !msg.fromMe) {
-            const dismissed = answer(levelAlt({ fromMe: msg.fromMe, numero: senderNumber, permissao: permissionHere({ numero: senderNumber, chatId, isGroup }) }), ROLES.ADMIN);
-            if (await checkAntilink({ msg, chatId, body, dispensado: dismissed, senderName }).catch((err) => {
+            const dismissed = answer(levelAlt({ fromMe: msg.fromMe, number: senderNumber, permission: permissionHere({ number: senderNumber, chatId, isGroup }) }), ROLES.ADMIN);
+            if (await checkAntilink({ msg, chatId, body, dismissed, senderName }).catch((err) => {
                 printError('/antilink: error checking:', err.message);
                 return false;
             })) return;
             // /antitag and /antibadword: tagging everyone and prohibited words
-            if (await checkRules({ msg, chatId, body, dispensado: dismissed, senderName }).catch((err) => {
+            if (await checkRules({ msg, chatId, body, dismissed, senderName }).catch((err) => {
                 printError('/antitag, /antibadword: error checking:', err.message);
                 return false;
             })) return;
@@ -312,19 +312,19 @@ client.on('message_create', (msg) => withContextDebug({
         if (!command) {
             if (msg.fromMe || isDebugMode()) {
                 const who = msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName;
-                printCommandUnknown(who, body.length > 100 ? `${body.slice(0, 100)}…` : body, { doDono: msg.fromMe });
+                printCommandUnknown(who, body.length > 100 ? `${body.slice(0, 100)}…` : body, { ofOwner: msg.fromMe });
             }
-            const permission = permissionHere({ numero: senderNumber, chatId, isGroup });
-            const level = levelAlt({ fromMe: msg.fromMe, numero: senderNumber, permissao: permission });
+            const permission = permissionHere({ number: senderNumber, chatId, isGroup });
+            const level = levelAlt({ fromMe: msg.fromMe, number: senderNumber, permission });
             if (!level) return;
 
             // The start of more than one command (e.g.: /un): lists the ones the person can use
-            const possible = (resolved?.possiveis ?? [])
-                .filter(c => answer(level, c.role) || (c.alvos ?? [c.cmd])
-                    .every(cmd => ALWAYS_RELEASED.includes(cmd) || permission.pode(cmd)))
+            const possible = (resolved?.candidates ?? [])
+                .filter(c => answer(level, c.role) || (c.targets ?? [c.cmd])
+                    .every(cmd => ALWAYS_RELEASED.includes(cmd) || permission.can(cmd)))
                 .map(c => c.cmd);
             await msg.reply(possible.length
-                ? t('mensagens.ambiguo', { caller, lista: possible.join(', ') })
+                ? t('mensagens.ambiguo', { caller, list: possible.join(', ') })
                 : t('mensagens.desconhecido', { body }));
             return;
         }
@@ -340,7 +340,7 @@ client.on('message_create', (msg) => withContextDebug({
         if (passwordLogin !== null) {
             await hideInDb(msgIdPure);
             if (msg.fromMe) await msg.reply(t('mensagens.voceEDono'));
-            else await msg.reply(await tryLogin({ numero: senderNumber, nome: senderName, senha: passwordLogin, isGroup }));
+            else await msg.reply(await tryLogin({ number: senderNumber, name: senderName, password: passwordLogin, isGroup }));
             return;
         }
 
@@ -352,17 +352,17 @@ client.on('message_create', (msg) => withContextDebug({
          * rude doorman, just deaf). The exception: whoever only has permission in
          * groups and tries in private learns where they can.
          */
-        const permission = permissionHere({ numero: senderNumber, chatId, isGroup });
+        const permission = permissionHere({ number: senderNumber, chatId, isGroup });
 
         // The typist's level: owner (you, the bot account), admin (bot.admins, by phone), user or none
-        const level = levelAlt({ fromMe: msg.fromMe, numero: senderNumber, permissao: permission });
+        const level = levelAlt({ fromMe: msg.fromMe, number: senderNumber, permission });
         const admin = answer(level, ROLES.ADMIN); // the owner or an admin
         if (!level) {
             printDebug(`Command '${command.cmd}' from ${senderName} ignored: outside bot.users`);
-            if (!isGroup && permission.soNosGrupos.length) {
-                const groups = await Promise.all(permission.soNosGrupos.map(async (id) =>
+            if (!isGroup && permission.onlyInGroups.length) {
+                const groups = await Promise.all(permission.onlyInGroups.map(async (id) =>
                     `👥 ${await groupResolverName(id).catch(() => null) || id}`));
-                await msg.reply(t('mensagens.semPermissaoPrivado', { grupos: groups.join(', ') }));
+                await msg.reply(t('mensagens.semPermissaoPrivado', { groups: groups.join(', ') }));
             }
             return;
         }
@@ -372,9 +372,9 @@ client.on('message_create', (msg) => withContextDebug({
          * chat and only warns in your private chat. Avoids that, with several zapbots in the same group, one person's command
          * of one person be executed by everyone.
          */
-        if (!answer(level, command.role) && !(command.alvos ?? [command.cmd]).every(cmd => permission.pode(cmd))) {
+        if (!answer(level, command.role) && !(command.targets ?? [command.cmd]).every(cmd => permission.can(cmd))) {
             if (isDebugMode()) {
-                messageToSelf(t('mensagens.tentouExecutar', { nome: senderName, cmd: command.cmd, chat: chatName }));
+                messageToSelf(t('mensagens.tentouExecutar', { name: senderName, cmd: command.cmd, chat: chatName }));
             }
             return;
         }
@@ -382,13 +382,13 @@ client.on('message_create', (msg) => withContextDebug({
         // Flood protection (only for non-admins): over the limit, one warning and then silence
         if (!admin) {
             const flood = checkFlood(senderNumber || senderJid, command.cmd);
-            if (!flood.liberado) {
-                if (flood.avisar) {
-                    printInfo(`Flood: ${senderName} repeated ${command.cmd}; ignored for ${flood.segundos}s`);
+            if (!flood.allowed) {
+                if (flood.notify) {
+                    printInfo(`Flood: ${senderName} repeated ${command.cmd}; ignored for ${flood.seconds}s`);
                     const max = getSetting('flood.maxCommandRepeated');
                     await msg.reply(t('mensagens.flood', {
                         max: t(max === 1 ? 'mensagens.vez' : 'mensagens.vezes', { n: max }),
-                        espera: t(flood.segundos === 1 ? 'mensagens.segundo' : 'mensagens.segundos', { n: flood.segundos })
+                        wait: t(flood.seconds === 1 ? 'mensagens.segundo' : 'mensagens.segundos', { n: flood.seconds })
                     }));
                 }
                 return;
@@ -396,40 +396,40 @@ client.on('message_create', (msg) => withContextDebug({
         }
 
         // The rule's commands (/bot +cmd|-cmd); /help and /whois always pass. In a text alias, each {/command}
-        const denied = !admin && (command.alvos ?? [command.cmd])
-            .find(cmd => !ALWAYS_RELEASED.includes(cmd) && !permission.pode(cmd));
+        const denied = !admin && (command.targets ?? [command.cmd])
+            .find(cmd => !ALWAYS_RELEASED.includes(cmd) && !permission.can(cmd));
         if (denied) {
             printDebug(`Command '${denied}' from ${senderName} ignored: outside their commands`);
-            await msg.reply(limitNotice(permission.regras, denied));
+            await msg.reply(limitNotice(permission.rules, denied));
             return;
         }
 
-        if (resolved.prefixo) printDebug(`Command '${resolved.prefixo}' completed to '${command.cmd}'`);
+        if (resolved.prefix) printDebug(`Command '${resolved.prefix}' completed to '${command.cmd}'`);
         printDebug(isGroup
             ? `Running command '${body}' from '${senderName}' in group '${chatName}'`
             : `Running command '${body}' in '${chatName}'`);
 
         // Text alias: the {/command}s run here, with the permissions of whoever called (the arguments stay out)
-        if (resolved.texto) {
+        if (resolved.text) {
             printCall(msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName, body, chatName);
             const runAlias = () => withTyping(msg, command, () => textRunAlias(msg, resolved, {
                 chatId, chatName, isGroup,
-                quem: { nivel: level, admin, podeUsar: admin ? () => true : permission.pode, senderContact, senderName, senderNumber }
+                who: { level, admin, canUse: admin ? () => true : permission.can, senderContact, senderName, senderNumber }
             }));
             // The usage limit (/bot +limit) applies to each {/command} of the alias; the owner and the admins have none
             if (admin) await runAlias();
-            else await withLimit({ msg, quem: { numero: senderNumber, chatId, isGroup }, cmds: command.alvos ?? [command.cmd], params: body }, runAlias);
+            else await withLimit({ msg, who: { number: senderNumber, chatId, isGroup }, cmds: command.targets ?? [command.cmd], params: body }, runAlias);
             return;
         }
 
         if (resolved.alias) {
-            const call = [resolved.destino, args].filter(Boolean).join(' ');
-            if (!resolved.quiet) await msg.reply(t('mensagens.alias', { alias: resolved.alias, chamada: call }), undefined, { linkPreview: false });
+            const call = [resolved.destination, args].filter(Boolean).join(' ');
+            if (!resolved.quiet) await msg.reply(t('mensagens.alias', { alias: resolved.alias, call }), undefined, { linkPreview: false });
         }
 
         // The saved command's options belong to the target, including -h and -rm.
         const opts = readOptions(command, args);
-        contextDebug().maskTelefones = askedMask(command, opts);
+        contextDebug().maskPhones = askedMask(command, opts);
 
         if (isDebugMode()) {
             printDebug('Command parser:', command.cmd, dataParserCommand(args, command, opts));
@@ -463,7 +463,7 @@ client.on('message_create', (msg) => withContextDebug({
         const run = () => withTyping(msg, command, () => handler(assembleContext({
             msg, args, opts, quotedMsg,
             chat: { chatId, chatName, isGroup },
-            quem: { nivel: level, admin, podeUsar: admin ? () => true : permission.pode, senderContact, senderName, senderNumber }
+            who: { level, admin, canUse: admin ? () => true : permission.can, senderContact, senderName, senderNumber }
         })));
 
         /*
@@ -473,8 +473,8 @@ client.on('message_create', (msg) => withContextDebug({
         if (admin) {
             await run();
         } else {
-            const gratis = (command.usageFree ?? []).some(o => opts.given.has(o));
-            await withLimit({ msg, quem: { numero: senderNumber, chatId, isGroup }, cmds: [command.cmd], gratis, params: args }, run);
+            const free = (command.usageFree ?? []).some(o => opts.given.has(o));
+            await withLimit({ msg, who: { number: senderNumber, chatId, isGroup }, cmds: [command.cmd], free, params: args }, run);
         }
     } catch (error) {
         printError('[message_create] Handled general error:', {

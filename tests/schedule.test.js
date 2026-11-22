@@ -22,9 +22,9 @@ beforeEach(async () => {
 // Expires the item (or all) `delayMs` ago and runs the check; returns what was sent
 async function expire(delayMs = 1000) {
     await bot.dbRun('UPDATE schedules SET due_at = ?', [Date.now() - delayMs]);
-    const beforeAlt = bot.client.enviadas.length;
+    const beforeAlt = bot.client.sent.length;
     await checkSchedule();
-    return bot.client.enviadas.slice(beforeAlt);
+    return bot.client.sent.slice(beforeAlt);
 }
 
 const items = () => bot.dbAll('SELECT * FROM schedules ORDER BY id');
@@ -34,7 +34,7 @@ describe('datas (util/when.js)', () => {
     const NOW = instantInBrasilia(2026, 10, 1, 9, 0);
     const when = (textAlt) => {
         const r = readWhen(textAlt.split(' '), NOW);
-        return r && `${fmtWhen(r.ms, NOW)} (${r.usadas})`;
+        return r && `${fmtWhen(r.ms, NOW)} (${r.used})`;
     };
 
     test('daqui a tanto tempo: 30m, 1d, 1h30m, e +2h, em 2h, daqui (a) 2h', () => {
@@ -91,27 +91,27 @@ describe('datas (util/when.js)', () => {
     test('lerAgendamento: opções e "quando" no começo, em qualquer ordem; o texto fica como veio', () => {
         const r = readScheduling('-repeat weekly amanhã 10h -to /Grupo L200/ Bom dia\nsegunda linha');
         assert.deepEqual(r.opt, { repeat: 'weekly' });
-        assert.equal(r.quando.usadas, 2);
-        assert.equal(r.texto, 'Bom dia\nsegunda linha');
-        assert.deepEqual(r.destinos, ['Grupo L200']);
+        assert.equal(r.when.used, 2);
+        assert.equal(r.text, 'Bom dia\nsegunda linha');
+        assert.deepEqual(r.destinations, ['Grupo L200']);
         assert.deepEqual(readScheduling('-rm 2').opt, { rm: '2' });
         assert.deepEqual(readScheduling('-rm 1 3,5 texto').opt, { rm: '1 3,5' });
-        assert.deepEqual(readScheduling('8h -to /Família/ -to Trabalho -to +5521999999999 oi').destinos, ['Família', 'Trabalho', '+5521999999999']);
+        assert.deepEqual(readScheduling('8h -to /Família/ -to Trabalho -to +5521999999999 oi').destinations, ['Família', 'Trabalho', '+5521999999999']);
         assert.deepEqual(readScheduling('-edit 3 18h novo texto').opt, { edit: '3' });
         assert.deepEqual(readScheduling('-pause all').opt, { pause: 'all' });
         assert.deepEqual(readScheduling('-resume 2 4').opt, { resume: '2 4' });
         assert.deepEqual(readScheduling('-rem 2h x').opt, { reminder: true });
-        assert.equal(readScheduling('2h -private 18h').texto, '18h');   // a single "when"
+        assert.equal(readScheduling('2h -private 18h').text, '18h');   // a single "when"
         // The typed \n becomes a line break, without the surrounding spaces
-        assert.equal(readScheduling('8h Orca {/defi orca}\\n Prjx {/defi prjx}').texto, 'Orca {/defi orca}\nPrjx {/defi prjx}');
-        assert.equal(readScheduling('8h linha 1 \\n\\nlinha 3').texto, 'linha 1\n\nlinha 3');
+        assert.equal(readScheduling('8h Orca {/defi orca}\\n Prjx {/defi prjx}').text, 'Orca {/defi orca}\nPrjx {/defi prjx}');
+        assert.equal(readScheduling('8h linha 1 \\n\\nlinha 3').text, 'linha 1\n\nlinha 3');
     });
 });
 
 describe('/cron -reminder: o modo lembrete', () => {
     test('cria no chat atual, responde a mensagem do comando e sai depois de enviar', async () => {
-        const cmd = bot.createMessage({ texto: '/cron -reminder 30m pagar o boleto' });
-        const [r] = (await bot.deliver(cmd)).map(e => e.texto);
+        const cmd = bot.createMessage({ text: '/cron -reminder 30m pagar o boleto' });
+        const [r] = (await bot.deliver(cmd)).map(e => e.text);
         assert.match(r, /^⏰ \*Lembrete criado\* para \*[a-zá]{3} \d\d\/\d\d \d\d:\d\d\* neste chat\.\n📝 pagar o boleto$/);
 
         const [item] = await items();
@@ -128,8 +128,8 @@ describe('/cron -reminder: o modo lembrete', () => {
 
     test('-private lembra no seu privado; respondendo uma mensagem, o texto dela', async () => {
         await bot.replyAlt('/cron -reminder -private +2h ligar pro banco');
-        const quoted = bot.createMessage({ texto: 'reunião às 15h', de: OTHERAlt.jid });
-        await bot.replyAlt('/cron -reminder +1h', { citada: quoted });
+        const quoted = bot.createMessage({ text: 'reunião às 15h', de: OTHERAlt.jid });
+        await bot.replyAlt('/cron -reminder +1h', { quoted });
 
         const [pv, replied] = await items();
         assert.deepEqual([pv.chat_id, pv.quoted_id, pv.text], [OWNER.jid, null, 'ligar pro banco']);
@@ -139,10 +139,10 @@ describe('/cron -reminder: o modo lembrete', () => {
     test('atrasado (bot fora do ar na hora) avisa; desconectado, espera', async () => {
         await bot.replyAlt('/cron -reminder às 18h tomar o remédio');
 
-        bot.estado.pronto = false;
+        bot.state.ready = false;
         assert.deepEqual(await expire(), []);
 
-        bot.estado.pronto = true;
+        bot.state.ready = true;
         const [sentAlt] = await expire(HOUR);
         assert.match(sentAlt.content, /^⏰ \*Lembrete\*\n\ntomar o remédio\n\n_\(atrasado: era para [a-zá]{3} \d\d\/\d\d \d\d:\d\d\)_$/);
     });
@@ -303,7 +303,7 @@ describe('/cron', () => {
 
         // The LID as @lid, without WhatsApp's map: the @c.us stays
         bot.client.lids.clear();
-        bot.client.contatos.delete('100000000000004@c.us');
+        bot.client.contacts.delete('100000000000004@c.us');
         bot.createContact('100000000000004@lid', 'Lourival Vieira Neto');
         assert.match((await bot.replyAlt('/cron 07:00 -to /Lourival Neto/ Bom dia!'))[0], /em 👤 Lourival Vieira Neto\./);
         assert.equal((await items())[1].chat_id, PHONE);
@@ -316,21 +316,21 @@ describe('/cron', () => {
          * isMyContact; they come from the WAWebContactGetters functions and
          * WAWebFrontendContactGetters (the same ones whatsapp-web.js uses).
          */
-        const contactAlt = (id, nameAlt, { naAgenda: inSchedule = true, eu = false, telefone: phoneAlt = null } = {}) =>
-            ({ id: wid(id), _nome: nameAlt, _naAgenda: inSchedule, _eu: eu, ...(phoneAlt ? { phoneNumber: wid(phoneAlt) } : {}) });
+        const contactAlt = (id, nameAlt, { inSchedule = true, eu = false, phone: phoneAlt = null } = {}) =>
+            ({ id: wid(id), name: nameAlt, _inSchedule: inSchedule, _eu: eu, ...(phoneAlt ? { phoneNumber: wid(phoneAlt) } : {}) });
         const collections = {
             WAWebCollections: {
                 Contact: { getModelsArray: () => [
                     contactAlt('15559998888@c.us', 'Rafael Silva'),
-                    contactAlt('100000000000005@lid', 'Rafael Silva', { telefone: '15559998888@c.us' }),
+                    contactAlt('100000000000005@lid', 'Rafael Silva', { phone: '15559998888@c.us' }),
                     contactAlt('5521900000000@c.us', 'Rafael Eu', { eu: true }),
-                    contactAlt('5521977777777@c.us', 'Rafael Souza', { naAgenda: false })
+                    contactAlt('5521977777777@c.us', 'Rafael Souza', { inSchedule: false })
                 ] },
                 Chat: { getModelsArray: () => [{ id: wid(L200), formattedTitle: 'Grupo sobre L200' }] }
             },
             WAWebApiContact: { getAlternateUserWid: () => null },
-            WAWebContactGetters: { getName: c => c._nome, getIsMe: c => c._eu },
-            WAWebFrontendContactGetters: { getIsMyContact: c => c._naAgenda }
+            WAWebContactGetters: { getName: c => c.name, getIsMe: c => c._eu },
+            WAWebFrontendContactGetters: { getIsMyContact: c => c._inSchedule }
         };
         globalThis.window = { require: (m) => collections[m] };
         bot.client.pupPage = { evaluate: async (fn, arg) => fn(arg) };
@@ -353,7 +353,7 @@ describe('/cron', () => {
 
         // The page does not respond: error, without hanging
         bot.client.pupPage = { evaluate: async () => { throw new Error('página fechada'); } };
-        assert.match((await bot.replyAlt('/cron 08:00 -to /Rafael/ oi', { erroEsperado: true }))[0],
+        assert.match((await bot.replyAlt('/cron 08:00 -to /Rafael/ oi', { expectedError: true }))[0],
             /⚠️ Não consegui buscar "Rafael" nos contatos e grupos agora \(página fechada\)/);
     });
 
@@ -435,15 +435,15 @@ describe('/cron', () => {
         const daily = (await items()).find(i => i.repeat);
         assert.ok(daily.due_at > Date.now());
 
-        const beforeAlt = bot.client.enviadas.length;
+        const beforeAlt = bot.client.sent.length;
         await checkSchedule();
-        assert.deepEqual(bot.client.enviadas.slice(beforeAlt).map(e => e.content), ['único']);
+        assert.deepEqual(bot.client.sent.slice(beforeAlt).map(e => e.content), ['único']);
         assert.match((await bot.replyAlt('/cron -resume 7'))[0], /❌ Nº 7 não existe/);
     });
 
     test('-to por menção (@ no WhatsApp), junto com outros destinos', async () => {
         bot.client.lids.set('100000000000002@lid', OTHERAlt.jid);
-        assert.match((await bot.replyAlt('/cron +1h -to @100000000000002 -to L200 oi', { mencoes: ['100000000000002@lid'] }))[0],
+        assert.match((await bot.replyAlt('/cron +1h -to @100000000000002 -to L200 oi', { mentions: ['100000000000002@lid'] }))[0],
             /em 2 chats:\n• 👤 Fulano\n• 👥 Grupo sobre L200/);
         assert.deepEqual(JSON.parse((await items())[0].recipients).map(d => d.id), [OTHERAlt.jid, L200]);
     });
@@ -464,7 +464,7 @@ describe('/cron', () => {
     test('-to você mesmo: pelo nome salvo ou pelo nome de perfil, é o seu privado', async () => {
         bot.createContact(OWNER.jid, 'Jorge Pereira').isMe = true;
         assert.match((await bot.replyAlt('/cron +1h -to /Jorge Pereira/ Preço: {/uptime}'))[0], /no seu privado\.\n📝 Preço: \{\/uptime\}$/);
-        assert.match((await bot.replyAlt(`/cron +1h -to /${OWNER.nome}/ oi`))[0], /no seu privado\./);   // o pushname
+        assert.match((await bot.replyAlt(`/cron +1h -to /${OWNER.name}/ oi`))[0], /no seu privado\./);   // o pushname
         assert.deepEqual((await items()).map(s => s.chat_id), [OWNER.jid, OWNER.jid]);
     });
 
@@ -511,7 +511,7 @@ describe('/cron: comandos no texto ({/comando})', () => {
     test('{/bot -flush-email true} só o dono agenda; as outras opções do /bot são recusadas', async () => {
         assert.match((await bot.replyAlt('/cron +1h -to L200 Hora de limpar {/bot -fe true}'))[0],
             /^📅 \*Mensagem agendada\*/);
-        assert.match((await bot.replyAlt('/cron +1h -to L200 x {/bot -off}', { erroEsperado: true }))[0],
+        assert.match((await bot.replyAlt('/cron +1h -to L200 x {/bot -off}', { expectedError: true }))[0],
             /o -off do \/bot não roda dentro do \/cron/);
     });
 
@@ -585,10 +585,10 @@ describe('/cron: comandos no texto ({/comando})', () => {
         await bot.replyAlt('/cron +1h -to L200 Status: {/uptime}');
         const [beforeAlt] = await items();
 
-        const sentAlt3 = await bot.executar('/cron -test 1');
+        const sentAlt3 = await bot.execute('/cron -test 1');
         assert.equal(sentAlt3.length, 1);
         assert.equal(sentAlt3[0].chatId, GROUP);
-        assert.match(sentAlt3[0].texto, /^🧪 \*Teste do nº 1\* _\(sai em [^\n]+ → 👥 Grupo sobre L200\)_\n\nStatus:\n\n🤖 \*ZapBot/);
+        assert.match(sentAlt3[0].text, /^🧪 \*Teste do nº 1\* _\(sai em [^\n]+ → 👥 Grupo sobre L200\)_\n\nStatus:\n\n🤖 \*ZapBot/);
         assert.deepEqual(await items(), [beforeAlt]);
 
         assert.match((await bot.replyAlt('/cron -test 9'))[0], /^❌ Nº 9 não existe/);

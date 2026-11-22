@@ -24,7 +24,7 @@ function cleanCopiesDebug() {
 }
 
 function copyLog(line) {
-    if (contextDebug().semRastro || paused || !configureDebug().copyTo) return;
+    if (contextDebug().noTrace || paused || !configureDebug().copyTo) return;
     if (queue.length >= LIMIT_QUEUE) { queue.shift(); discarded++; }
     // Also limits the size of a very large line, preserving the rest in blocks.
     for (let i = 0; i < line.length; i += SIZE_BATCH) {
@@ -42,12 +42,12 @@ async function flushCopiesDebug() {
     clearTimeout(timer);
     timer = null;
     const current = generation;
-    sending = withContextDebug({ semRastro: true }, async () => {
+    sending = withContextDebug({ noTrace: true }, async () => {
         while (queue.length && current === generation) {
             const cfg = configureDebug();
             if (!cfg.enabled || !cfg.copyTo || paused) { queue = []; return; }
             // Settings may be loaded before the connection is ready at boot.
-            if (!require('./state').estado.pronto) return;
+            if (!require('./state').state.ready) return;
             const linesAlt = [];
             let size = 0;
             if (discarded) {

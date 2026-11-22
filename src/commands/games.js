@@ -27,7 +27,7 @@ const GAME_MS = 30 * 60 * 1000;
 const games = new Map();   // bot message id → { game, expires }
 const TRIVIA_MS = 5 * 60 * 1000;
 const LETTERS = ['A', 'B', 'C', 'D'];
-const openAlt = new Map();   // chatId → { certa, texto, expira }
+const openAlt = new Map();   // chatId → { correct, text, expires }
 
 const list = (nameAlt) => (GAMES[language()] ?? GAMES.en_US)[nameAlt];
 const draw = (items) => items[Math.floor(Math.random() * items.length)];
@@ -36,12 +36,12 @@ const draw = (items) => items[Math.floor(Math.random() * items.length)];
 async function send(msg, textAlt, game) {
     const sent = await msg.reply(textAlt);
     const id = sent?.id?._serialized;
-    if (id) games.set(id, { jogo: game, expira: Date.now() + GAME_MS });
+    if (id) games.set(id, { game, expires: Date.now() + GAME_MS });
 }
 
 function ask(chatId) {
     const q = draw(list('trivia'));
-    openAlt.set(chatId, { certa: q.a, resposta: q.o[q.a], expira: Date.now() + TRIVIA_MS });
+    openAlt.set(chatId, { correct: q.a, answer: q.o[q.a], expires: Date.now() + TRIVIA_MS });
     return t('games.trivia', {
         question: q.q,
         options: q.o.map((o, i) => `${LETTERS[i]}) ${o}`).join('\n'),
@@ -54,17 +54,17 @@ function replyAlt(chatId, letter) {
     if (i < 0) return t('games.triviaBadAnswer');
 
     const open = openAlt.get(chatId);
-    if (!open || open.expira < Date.now()) {
+    if (!open || open.expires < Date.now()) {
         openAlt.delete(chatId);
         return t('games.triviaNone');
     }
 
     openAlt.delete(chatId);
-    const right = `${LETTERS[open.certa]}) ${open.resposta}`;
-    return t(i === open.certa ? 'games.triviaRight' : 'games.triviaWrong', { answer: right });
+    const right = `${LETTERS[open.correct]}) ${open.answer}`;
+    return t(i === open.correct ? 'games.triviaRight' : 'games.triviaWrong', { answer: right });
 }
 
-const bola = (question) => t('games.ball', { question: question, answer: draw(list('ball')) });
+const ball = (question) => t('games.ball', { question: question, answer: draw(list('ball')) });
 const truth = () => t('games.truth', { text: draw(list('truth')) });
 const challenge = () => t('games.dare', { text: draw(list('dare')) });
 
@@ -74,7 +74,7 @@ async function cmdGames({ msg, opts, chatId, quotedMsg }) {
     const question = argv.join(' ').trim() || (opt['8ball'] ? String(quotedMsg?.body ?? '').trim() : '');
 
     if (opt['8ball']) {
-        if (question) await send(msg, bola(question), 'ball');
+        if (question) await send(msg, ball(question), 'ball');
         else await msg.reply(t('games.ballNeedsQuestion'));
     } else if (opt.truth) {
         await send(msg, truth(), 'truth');
@@ -97,22 +97,22 @@ async function replyGame(msg, chatId, body, { senderNumber, isGroup }) {
     if (!games.size || !msg.hasQuotedMsg || !body || body.startsWith('/')) return false;
 
     const nowAlt = Date.now();
-    for (const [id, j] of games) if (j.expira < nowAlt) games.delete(id);
+    for (const [id, j] of games) if (j.expires < nowAlt) games.delete(id);
 
     const quoted = await msg.getQuotedMessage().catch(() => null);
-    const game = games.get(quoted?.id?._serialized)?.jogo;
+    const game = games.get(quoted?.id?._serialized)?.game;
     if (!game || getSetting('bot.paused')) return false;
 
-    const permission = permissionHere({ numero: senderNumber, chatId, isGroup });
-    const level = levelAlt({ fromMe: msg.fromMe, numero: senderNumber, permissao: permission });
-    if (!answer(level, ROLES.ADMIN) && !permission.pode('/games')) return false;
+    const permission = permissionHere({ number: senderNumber, chatId, isGroup });
+    const level = levelAlt({ fromMe: msg.fromMe, number: senderNumber, permission });
+    if (!answer(level, ROLES.ADMIN) && !permission.can('/games')) return false;
 
     if (game === 'trivia') {
         const letter = body.match(/^\s*([abcd])\s*[).]?\s*$/i)?.[1];
         if (!letter) return false;
         await msg.reply(replyAlt(chatId, letter));
     } else if (game === 'ball') {
-        await send(msg, bola(body), 'ball');
+        await send(msg, ball(body), 'ball');
     } else if (/^\s*(next|another|other|outra|outro|pular|passo|pass)\b/i.test(body)) {
         await send(msg, game === 'truth' ? truth() : challenge(), game);
     } else {

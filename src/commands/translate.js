@@ -14,7 +14,7 @@ const { getSetting } = require('../settings');
  * /translate: Google Translate from the translate.google.com site, with no key and no cost, through the package
  * google-translate-api-x (unofficial access: Google may limit by IP or change the format).
  * /translate hello world        → to the default language (setting 'translate.lang', pt)
- * /translate -to en bom dia   → to English
+ * /translate -to en bom day   → to English
  * (replying to a message) /translate [-to es]
  *   /translate -l                 → idiomas aceitos
  * The source language is detected by Google.
@@ -37,12 +37,12 @@ function errorTranslation(err) {
         return t('translate.limited');
     }
     if (status === 403) return t('translate.refused');
-    return t('translate.error', { erro: err.message });
+    return t('translate.error', { error: err.message });
 }
 
 async function listLanguages(msg) {
     const languagesAlt = [...CODES.values()].map(c => `${c} ${languages[c]}`);
-    await msg.reply(t('translate.languages', { n: languagesAlt.length, lista: languagesAlt.join('\n'), padrao: getSetting('translate.lang') }));
+    await msg.reply(t('translate.languages', { n: languagesAlt.length, list: languagesAlt.join('\n'), fallback: getSetting('translate.lang') }));
 }
 
 async function cmdTranslate({ msg, args, opts, quotedMsg }) {
@@ -56,7 +56,7 @@ async function cmdTranslate({ msg, args, opts, quotedMsg }) {
         }
 
         if (!target) {
-            await msg.reply(t('translate.invalid', { pedido: request }));
+            await msg.reply(t('translate.invalid', { request }));
             return;
         }
 
@@ -76,10 +76,10 @@ async function cmdTranslate({ msg, args, opts, quotedMsg }) {
 
         const resultAlt = await translate(textAlt, { to: target, requestFunction: withTimeLimit });
         const origin = resultAlt.from?.language?.iso;
-        let reply = t('translate.result', { origem: origin ?? '?', alvo: target, texto: resultAlt.text });
+        let reply = t('translate.result', { origin: origin ?? '?', target, text: resultAlt.text });
 
         if (origin && origin.toLowerCase() === target.toLowerCase().split('-')[0]) {
-            reply += t('translate.sameLang', { alvo: target });
+            reply += t('translate.sameLang', { target });
         }
 
         await msg.reply(reply);

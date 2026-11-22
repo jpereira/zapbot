@@ -7,14 +7,14 @@ const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { OTHERAlt } = bot;
-const BELTRANO = { jid: '5521922222222@c.us', nome: 'Beltrano' };
+const BELTRANO = { jid: '5521922222222@c.us', name: 'Beltrano' };
 
 beforeEach(async () => {
     await bot.restart();
-    bot.createContact(BELTRANO.jid, BELTRANO.nome);
+    bot.createContact(BELTRANO.jid, BELTRANO.name);
 });
 
-const contactAlt = (jid) => bot.client.contatos.get(jid);
+const contactAlt = (jid) => bot.client.contacts.get(jid);
 
 // A contact WhatsApp only knows by the @lid (its number is the lid itself)
 const blockedByLid = (lid) => Object.assign(bot.createContact(lid, null),
@@ -54,11 +54,11 @@ describe('/block e /unblock', () => {
 
     test('várias pessoas de uma vez: números, /nome/ e @menção; um resumo só', async () => {
         const CICLANO = bot.createContact('5521933333333@c.us', 'Ciclano Souza');
-        bot.createContact(bot.OWNER.jid, bot.OWNER.nome);  // the bot account, found by the number
+        bot.createContact(bot.OWNER.jid, bot.OWNER.name);  // the bot account, found by the number
         contactAlt(BELTRANO.jid).isBlocked = true;
 
         const r = await bot.replyAlt('/block +5521911111111 /Ciclano Souza/ @5521922222222 +5521900000000 +5521911111111',
-            { mencoes: [BELTRANO.jid] });
+            { mentions: [BELTRANO.jid] });
         assert.deepEqual(r, ['🚫 *Bloqueados (2):*\n👤 Fulano\n👤 Ciclano Souza\n\n' +
             'ℹ️ *Já estavam bloqueados (1):*\n👤 Beltrano\n\n' +
             '❌ *Não bloqueados (1):*\n👤 Dono: é a conta do próprio bot\n\n' +
@@ -85,12 +85,12 @@ describe('/block e /unblock', () => {
         // WhatsApp Web's internal error, without a message: the "t" in the log
         contactAlt(OTHERAlt.jid).block = async () => { throw new Error('t'); };
 
-        const r = await bot.replyAlt('/block +5521911111111 +5521922222222', { erroEsperado: true });
+        const r = await bot.replyAlt('/block +5521911111111 +5521922222222', { expectedError: true });
         assert.deepEqual(r, ['🚫 *Bloqueados (1):*\n👤 Beltrano\n\n' +
             '❌ *Não bloqueados (1):*\n👤 Fulano: o WhatsApp recusou o bloqueio (erro "t")\n\n' +
             '💡 _Desfaça com /unblock; veja a lista com /block._']);
 
-        assert.deepEqual(await bot.replyAlt('/block +5521911111111', { erroEsperado: true }),
+        assert.deepEqual(await bot.replyAlt('/block +5521911111111', { expectedError: true }),
             ['⚠️ Não consegui bloquear 👤 Fulano: o WhatsApp recusou o bloqueio (erro "t").']);
     });
 
@@ -98,8 +98,8 @@ describe('/block e /unblock', () => {
         t.mock.timers.enable({ apis: ['setTimeout'] });
         contactAlt(OTHERAlt.jid).block = async () => true;  // like whatsapp-web.js: true, without checking
 
-        const [r] = await bot.waitWithClock(t, bot.executar('/block +5521911111111'), 500);
-        assert.equal(r.texto, '⚠️ Não consegui bloquear 👤 Fulano: o WhatsApp não bloqueou (não entrou na lista).');
+        const [r] = await bot.waitWithClock(t, bot.execute('/block +5521911111111'), 500);
+        assert.equal(r.text, '⚠️ Não consegui bloquear 👤 Fulano: o WhatsApp não bloqueou (não entrou na lista).');
     });
 
     test('palavras soltas são um nome só (não várias pessoas)', async () => {
@@ -124,12 +124,12 @@ describe('/block e /unblock', () => {
     });
 
     test('respondendo uma mensagem: quem a escreveu; a sua conta não', async () => {
-        const quoted = bot.createMessage({ texto: 'spam', de: OTHERAlt.jid });
-        assert.match((await bot.replyAlt('/block', { citada: quoted }))[0], /^🚫 \*Bloqueado:\* 👤 Fulano\n/);
-        assert.equal((await bot.replyAlt('/unblock', { citada: quoted }))[0], '✅ *Desbloqueado:* 👤 Fulano');
+        const quoted = bot.createMessage({ text: 'spam', de: OTHERAlt.jid });
+        assert.match((await bot.replyAlt('/block', { quoted }))[0], /^🚫 \*Bloqueado:\* 👤 Fulano\n/);
+        assert.equal((await bot.replyAlt('/unblock', { quoted }))[0], '✅ *Desbloqueado:* 👤 Fulano');
 
-        const my = bot.createMessage({ texto: 'oi' });
-        assert.equal((await bot.replyAlt('/block', { citada: my }))[0], '❌ Não dá para bloquear a conta do próprio bot.');
+        const my = bot.createMessage({ text: 'oi' });
+        assert.equal((await bot.replyAlt('/block', { quoted: my }))[0], '❌ Não dá para bloquear a conta do próprio bot.');
     });
 
     test('grupo e e-mail não; ninguém bloqueado: a dica (no /block e no /unblock)', async () => {
@@ -147,9 +147,9 @@ describe('/block e /unblock', () => {
         contactAlt(BELTRANO.jid).isBlocked = true;
         blockedByLid('8706418802871@lid').unblock = async () => { throw new Error('rede fora'); };
 
-        const r = await bot.executar('/unblock -a');
+        const r = await bot.execute('/unblock -a');
         assert.equal(r.length, 1, 'só o aviso, editado com o resultado');
-        assert.equal(r[0].texto, '✅ 2 desbloqueados.\n\n⚠️ Não consegui desbloquear (1):\n' +
+        assert.equal(r[0].text, '✅ 2 desbloqueados.\n\n⚠️ Não consegui desbloquear (1):\n' +
             '• 8706418802871 _(id interno, sem telefone conhecido)_: rede fora');
         assert.equal(r[0].editada, true, 'o "⏳ Desbloqueando 3 contatos, aguarde." virou o resultado');
         assert.deepEqual([contactAlt(OTHERAlt.jid).isBlocked, contactAlt(BELTRANO.jid).isBlocked], [false, false]);
@@ -157,7 +157,7 @@ describe('/block e /unblock', () => {
 
     test('/unblock -all: se o WhatsApp não deixa editar o aviso, o resultado vai em outra mensagem', async () => {
         contactAlt(OTHERAlt.jid).isBlocked = true;
-        bot.client.recusarEdicao = true;
+        bot.client.refuseEdit = true;
         assert.deepEqual(await bot.replyAlt('/unblock -a'), ['⏳ Desbloqueando 1 contato, aguarde.', '✅ 1 desbloqueado.']);
     });
 
@@ -171,19 +171,19 @@ describe('/block e /unblock', () => {
         };
         // The check waits for WhatsApp Web to refresh the list: the simulated clock skips the wait
         beforeEach((t) => t.mock.timers.enable({ apis: ['setTimeout'] }));
-        const runWithClock = (t, line, optionsAlt) => bot.waitWithClock(t, bot.executar(line, optionsAlt), 500);
+        const runWithClock = (t, line, optionsAlt) => bot.waitWithClock(t, bot.execute(line, optionsAlt), 500);
 
         test('continua na lista: falha, sem o ✅ falso', async (t) => {
             withoutEffect(OTHERAlt.jid);
             contactAlt(BELTRANO.jid).isBlocked = true;
 
             // Without the WhatsApp Web page (the fake has none), the 2nd attempt fails and stays in the log
-            const [r] = await runWithClock(t, '/unblock -all', { erroEsperado: true });
-            assert.equal(r.texto, '✅ 1 desbloqueado.\n\n⚠️ Não consegui desbloquear (1):\n' +
+            const [r] = await runWithClock(t, '/unblock -all', { expectedError: true });
+            assert.equal(r.text, '✅ 1 desbloqueado.\n\n⚠️ Não consegui desbloquear (1):\n' +
                 '• Fulano · +5521911111111: o WhatsApp não desbloqueou (continua na lista)');
 
-            const [s1] = await runWithClock(t, '/unblock /Fulano/', { erroEsperado: true });
-            assert.equal(s1.texto, '⚠️ Não consegui desbloquear 👤 Fulano: o WhatsApp não desbloqueou (continua na lista).');
+            const [s1] = await runWithClock(t, '/unblock /Fulano/', { expectedError: true });
+            assert.equal(s1.text, '⚠️ Não consegui desbloquear 👤 Fulano: o WhatsApp não desbloqueou (continua na lista).');
         });
 
         test('quem ficou é desbloqueado pelo id exato da lista', async (t) => {
@@ -192,7 +192,7 @@ describe('/block e /unblock', () => {
             bot.client.pupPage = { evaluate: async (fn, id) => { requests.push(id); contactAlt(id).isBlocked = false; } };
             try {
                 const [r] = await runWithClock(t, '/unblock -all');
-                assert.equal(r.texto, '✅ 1 desbloqueado.');
+                assert.equal(r.text, '✅ 1 desbloqueado.');
                 assert.deepEqual(requests, [OTHERAlt.jid]);
                 assert.equal(someone.isBlocked, false);
             } finally {

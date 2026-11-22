@@ -14,28 +14,28 @@ beforeEach(async () => {
     await bot.restart();
     messages = [];
     bot.client.setStatus = async (textAlt) => { messages.push(textAlt); };
-    bot.createContact(OTHERAlt.jid, OTHERAlt.nome).getAbout = async () => 'Só para emergências';
+    bot.createContact(OTHERAlt.jid, OTHERAlt.name).getAbout = async () => 'Só para emergências';
 });
 
 test('-about: o recado de quem foi pedido (nome, número), com o nome da agenda e o telefone', async () => {
     for (const line of ['/profile -a /Fulano/', '/profile -about +' + OTHERAlt.user]) {
         assert.deepEqual(await bot.replyAlt(line),
-            ['📝 Recado de ' + OTHERAlt.nome + ' <+' + OTHERAlt.user + '>: Só para emergências'], line);
+            ['📝 Recado de ' + OTHERAlt.name + ' <+' + OTHERAlt.user + '>: Só para emergências'], line);
     }
 });
 
 test('-about: no privado, o da pessoa; respondendo uma mensagem, o de quem a escreveu', async () => {
     assert.match((await bot.replyAlt('/profile -a', { chat: OTHERAlt.jid }))[0], /^📝 Recado de .*: Só para emergências$/);
 
-    const quoted = bot.createMessage({ texto: 'oi', chat: GROUP, de: OTHERAlt.jid });
-    assert.match((await bot.replyAlt('/profile -a', { citada: quoted }))[0], /^📝 Recado de .*: Só para emergências$/);
+    const quoted = bot.createMessage({ text: 'oi', chat: GROUP, de: OTHERAlt.jid });
+    assert.match((await bot.replyAlt('/profile -a', { quoted }))[0], /^📝 Recado de .*: Só para emergências$/);
 });
 
 test('-about: sem recado (ou escondido), avisa; erro no WhatsApp também vira "sem recado"', async () => {
-    bot.client.contatos.get(OTHERAlt.jid).getAbout = async () => null;
+    bot.client.contacts.get(OTHERAlt.jid).getAbout = async () => null;
     assert.match((await bot.replyAlt('/profile -a /Fulano/'))[0], /^🚫 .* não tem recado/);
 
-    bot.client.contatos.get(OTHERAlt.jid).getAbout = async () => { throw new Error('privado'); };
+    bot.client.contacts.get(OTHERAlt.jid).getAbout = async () => { throw new Error('privado'); };
     assert.match((await bot.replyAlt('/profile -a /Fulano/'))[0], /^🚫 .* não tem recado/);
 });
 
@@ -64,8 +64,8 @@ test('-set <texto>: 139 caracteres passa (emoji conta um), 140 não; invisíveis
 test('-set <texto>: com uma imagem junto continua trocando a foto', async () => {
     let photo = null;
     bot.client.setProfilePicture = async (mediaAlt) => { photo = mediaAlt; return true; };
-    const image = bot.createMessage({ tipo: 'image', midia: { mimetype: 'image/jpeg', data: 'AAAA' } });
-    const [r] = await bot.replyAlt('/profile -s legenda qualquer', { citada: image, chat: OWNER.jid });
+    const image = bot.createMessage({ type: 'image', media: { mimetype: 'image/jpeg', data: 'AAAA' } });
+    const [r] = await bot.replyAlt('/profile -s legenda qualquer', { quoted: image, chat: OWNER.jid });
     assert.match(r, /foto/i);
     assert.equal(photo.data, 'AAAA');
     assert.deepEqual(messages, []);
@@ -73,6 +73,6 @@ test('-set <texto>: com uma imagem junto continua trocando a foto', async () => 
 
 test('-set: falha do WhatsApp avisa; quem não é admin é ignorado', async () => {
     bot.client.setStatus = async () => { throw new Error('boom'); };
-    assert.match((await bot.replyAlt('/profile -s oi', { erroEsperado: true }))[0], /boom/);
+    assert.match((await bot.replyAlt('/profile -s oi', { expectedError: true }))[0], /boom/);
     assert.deepEqual(await bot.replyAlt('/profile -s oi', { de: OTHERAlt.jid, chat: GROUP }), []);
 });

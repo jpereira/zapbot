@@ -12,7 +12,7 @@ const storage = new AsyncLocalStorage();
 async function collect(fn) {
     const replies = [];
     const resultAlt = await storage.run(replies, fn);
-    return { resultado: resultAlt, respostas: replies };
+    return { result: resultAlt, answers: replies };
 }
 
 // Called by whoever sends (client.sendMessage, completeNotice, msg.reply): outside a collector, it does nothing

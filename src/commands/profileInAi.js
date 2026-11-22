@@ -23,9 +23,9 @@ const THIS = /^[@$]this$/i;
 const REPLY = /^[@$]reply$/i;
 
 // The address book names (without accent and lowercase), for 30 s: the first name and the whole name of each contact
-let namesCache = { quando: 0, inteiros: new Set(), primeiros: new Set() };
+let namesCache = { when: 0, integers: new Set(), first: new Set() };
 async function scheduleNames(nowAlt = Date.now()) {
-    if (nowAlt - namesCache.quando < 30_000) return namesCache;
+    if (nowAlt - namesCache.when < 30_000) return namesCache;
     const integers = new Set();
     const first = new Set();
     for (const c of await client.getContacts().catch(() => [])) {
@@ -34,12 +34,12 @@ async function scheduleNames(nowAlt = Date.now()) {
         integers.add(nameAlt);
         first.add(nameAlt.split(' ')[0]);
     }
-    namesCache = { quando: nowAlt, inteiros: integers, primeiros: first };
+    namesCache = { when: nowAlt, integers, first };
     return namesCache;
 }
 
 // Resets the schedule cache (the tests)
-const restartNames = () => { namesCache = { quando: 0, inteiros: new Set(), primeiros: new Set() }; };
+const restartNames = () => { namesCache = { when: 0, integers: new Set(), first: new Set() }; };
 
 const WORD = /^[\p{L}][\p{L}'’-]*$/u;
 
@@ -52,7 +52,7 @@ async function nameLoose(textAlt) {
     const words = textAlt.trim().split(/\s+/).slice(0, 3);
     if (!words.length || !WORD.test(words[0]) || withoutAccents(words[0]).length < 2) return null;
 
-    const { inteiros: integers, primeiros: first } = await scheduleNames();
+    const { integers, first } = await scheduleNames();
     for (let k = words.length; k >= 1; k--) {
         const group = words.slice(0, k);
         if (!group.every(p => WORD.test(p))) continue;
@@ -64,8 +64,8 @@ async function nameLoose(textAlt) {
 
 /**
  * Separates -p and the people right after it from the rest of the request.
- * @param {string} texto  what was typed after the command
- * @returns {Promise<{ itens: string[], texto: string } | null>}  null: without -p
+ * @param {string} text  what was typed after the command
+ * @returns {Promise<{ items: string[], text: string } | null>}  null: without -p
  */
 async function textReadProfile(textAlt) {
     const m = String(textAlt ?? '').match(FLAG);
@@ -83,14 +83,14 @@ async function textReadProfile(textAlt) {
     }
 
     const beforeAlt = textAlt.slice(0, m.index);
-    return { itens: items, texto: [beforeAlt.trim(), rest.trim()].filter(Boolean).join(' ') };
+    return { items, text: [beforeAlt.trim(), rest.trim()].filter(Boolean).join(' ') };
 }
 
 /**
  * People's profile photos. Replies the error (no photo, person not found, no person) and returns null.
- * @returns {Promise<Array<{ nome: string, imagem: { mimetype: string, data: string } }> | null>}
+ * @returns {Promise<Array<{ name: string, image: { mimetype: string, data: string } }> | null>}
  */
-async function resolverProfiles({ msg, quotedMsg, chatId, isGroup, itens: items, cmd }) {
+async function resolverProfiles({ msg, quotedMsg, chatId, isGroup, items, cmd }) {
     const people = [];
 
     // Nobody: in private, the other person; in a group, whoever wrote the replied message
@@ -112,7 +112,7 @@ async function resolverProfiles({ msg, quotedMsg, chatId, isGroup, itens: items,
     };
     // @this: the chat you are in: in private, the other person; in a group, the group's own photo
     const thisChat = async () => isGroup
-        ? { id: chatId, nome: await groupResolverName(chatId).catch(() => null) ?? undefined }
+        ? { id: chatId, name: await groupResolverName(chatId).catch(() => null) ?? undefined }
         : { id: chatId };
 
     if (!items.length) {
@@ -139,14 +139,14 @@ async function resolverProfiles({ msg, quotedMsg, chatId, isGroup, itens: items,
 
     const profiles = [];
     for (const person of people) {
-        const { telefone: phoneAlt, nome: nameAlt, ids } = await dataAlt(person.id);
-        const label = nameAlt ?? person.nome ?? (phoneAlt ? `+${phoneAlt}` : person.id.split('@')[0]);
+        const { phone: phoneAlt, name: nameAlt, ids } = await dataAlt(person.id);
+        const label = nameAlt ?? person.name ?? (phoneAlt ? `+${phoneAlt}` : person.id.split('@')[0]);
         const photo = await photoAlt(ids);
         if (!photo) {
-            await msg.reply(t('ai.profileNoPhoto', { nome: label }));
+            await msg.reply(t('ai.profileNoPhoto', { name: label }));
             return null;
         }
-        profiles.push({ nome: label, imagem: { mimetype: photo.mimetype, data: photo.data } });
+        profiles.push({ name: label, image: { mimetype: photo.mimetype, data: photo.data } });
     }
     return profiles;
 }
@@ -154,19 +154,19 @@ async function resolverProfiles({ msg, quotedMsg, chatId, isGroup, itens: items,
 /**
  * The text that tells the AI which image is which (the images go in order: the message photo and then the profile ones).
  */
-function imagesContext({ comFotoDaMensagem: messageWithPhoto, perfis: profiles }) {
+function imagesContext({ withMessagePhoto: messageWithPhoto, profiles }) {
     if (!profiles.length) return '';
     const list = [
         ...(messageWithPhoto ? [t('ai.imgMessage')] : []),
-        ...profiles.map(p => t('ai.imgProfile', { nome: p.nome }))
+        ...profiles.map(p => t('ai.imgProfile', { name: p.name }))
     ].map((x, i) => `${i + 1}) ${x}`).join('; ');
-    return t('ai.imgContext', { lista: list });
+    return t('ai.imgContext', { list });
 }
 
 /**
  * Without -p: @me/$me and @this/$this right at the start of the request (after valueless options like -img or -g) count
  * as an implicit -p. Only these variables: a loose @mention at the start remains request text.
- * @returns {{ itens: string[], texto: string } | null}  null: no variable at the start
+ * @returns {{ items: string[], text: string } | null}  null: no variable at the start
  */
 function readProfileImplicit(textAlt) {
     const t0 = String(textAlt ?? '');
@@ -178,7 +178,7 @@ function readProfileImplicit(textAlt) {
         rest = rest.slice(m[0].length);
     }
     if (!items.length) return null;
-    return { itens: items, texto: [optionsAlt.trim(), rest.trim()].filter(Boolean).join(' ') };
+    return { items, text: [optionsAlt.trim(), rest.trim()].filter(Boolean).join(' ') };
 }
 
 module.exports = { imagesContext, textReadProfile, readProfileImplicit, restartNames, resolverProfiles };

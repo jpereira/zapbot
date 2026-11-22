@@ -27,19 +27,19 @@ async function levelAlt(numberAlt, { chatId, isGroup }) {
     const users = getSetting('bot.users');
     const soInGroups = users.filter(u => u.startsWith(`${numberAlt}:`))
         .map(u => u.slice(u.indexOf(':') + 1));
-    if (isOOwner(numberAlt)) return `${ROLES.dono} ${t('whois.owner')}`;
+    if (isOOwner(numberAlt)) return `${ROLES.owner} ${t('whois.owner')}`;
     if (getSetting('bot.admins').includes(numberAlt)) return `${ROLES.admin} ${t('whois.admin')}`;
-    if (users.includes(numberAlt)) return `${ROLES.usuario} ${t('whois.user')}`;
-    if (users.includes('all')) return `${ROLES.usuario} ${t('whois.everyone')}`;
-    if (isGroup && users.includes(chatId)) return `${ROLES.usuario} ${t('whois.userByGroup')}`;
-    if (isGroup && soInGroups.includes(chatId)) return `${ROLES.usuario} ${t('whois.userInThisGroup')}`;
+    if (users.includes(numberAlt)) return `${ROLES.user} ${t('whois.user')}`;
+    if (users.includes('all')) return `${ROLES.user} ${t('whois.everyone')}`;
+    if (isGroup && users.includes(chatId)) return `${ROLES.user} ${t('whois.userByGroup')}`;
+    if (isGroup && soInGroups.includes(chatId)) return `${ROLES.user} ${t('whois.userInThisGroup')}`;
 
     // Only in other groups: says where
     if (soInGroups.length) {
         const groups = await Promise.all(soInGroups.map(async g => `👥 ${await groupResolverName(g).catch(() => null) || g}`));
-        return `${ROLES.nenhum} ${t('whois.noneHere', { groups: groups.join(', ') })}`;
+        return `${ROLES.none} ${t('whois.noneHere', { groups: groups.join(', ') })}`;
     }
-    return `${ROLES.nenhum} ${t('whois.none')}`;
+    return `${ROLES.none} ${t('whois.none')}`;
 }
 
 // The phone of an id (the LID becomes the phone, if WhatsApp knows); null: I do not know
@@ -63,18 +63,18 @@ async function textPhones(msg, textAlt) {
         }
 
         const person = await resolverOrChoose(msg, item, {
-            semEmail: t('whois.noEmail')
+            noEmail: t('whois.noEmail')
         });
         if (!person) return null;
 
-        if (person.grupo) {
-            await msg.reply(t('whois.isGroup', { name: person.nome }));
+        if (person.group) {
+            await msg.reply(t('whois.isGroup', { name: person.name }));
             return null;
         }
 
         const phoneAlt = await phoneAlt3(person.id);
         if (!phoneAlt) {
-            await msg.reply(t('whois.unknownPhoneOf', { name: person.nome }));
+            await msg.reply(t('whois.unknownPhoneOf', { name: person.name }));
             return null;
         }
         numbers.push(phoneAlt);
@@ -122,7 +122,7 @@ async function cmdWhois({ msg, opts, quotedMsg, senderNumber, chatId, isGroup, a
 
     // -id: only the identifiers (the chat's and each person's), without the permission level
     if (opts.opt.id) {
-        await msg.reply(listIds({ numeros: numbers, bruto: raw, chatId, isGroup }));
+        await msg.reply(listIds({ numbers, raw, chatId, isGroup }));
         return;
     }
 
@@ -131,10 +131,10 @@ async function cmdWhois({ msg, opts, quotedMsg, senderNumber, chatId, isGroup, a
     const levels = await Promise.all(numbers.map(n => levelAlt(n, chat)));
     // User with a rule (/bot +cmd|-cmd): their commands here, below
     const linesAlt = await Promise.all(numbers.map(async (n, i) => {
-        const { regras: rules } = permissionHere({ numero: n, chatId, isGroup });
-        const user = levels[i].startsWith(ROLES.usuario);
+        const { rules } = permissionHere({ number: n, chatId, isGroup });
+        const user = levels[i].startsWith(ROLES.user);
         // And the usage limits (/bot +limit), with what has already been used
-        const limits = user ? await limitsWithUsage({ numero: n, chatId, isGroup }) : [];
+        const limits = user ? await limitsWithUsage({ number: n, chatId, isGroup }) : [];
         return `• ${levels[i]} · ${await describeItem(n, scope)}` +
             (user && rules.length ? `\n → ${rules.map(describeRule).join('; ')}` : '') +
             (limits.length ? `\n ⏱️ ${limits.map(usageLine).join('; ')}` : '');
@@ -142,8 +142,8 @@ async function cmdWhois({ msg, opts, quotedMsg, senderNumber, chatId, isGroup, a
 
     await msg.reply(`${t('whois.title', { n: numbers.length })}\n${linesAlt.join('\n')}\n\n` +
         permissions({
-            dono: numbers.some(isOOwner),
-            semPermissao: levels.some(n => n.startsWith(ROLES.nenhum))
+            owner: numbers.some(isOOwner),
+            noPermission: levels.some(n => n.startsWith(ROLES.none))
         }) +
         '\n\n' + t('whois.helpHint'));
 }
@@ -152,7 +152,7 @@ async function cmdWhois({ msg, opts, quotedMsg, senderNumber, chatId, isGroup, a
  * /whois -id: the chat id (group, private) and each person's: the phone, the @c.us and, when the
  * WhatsApp sent, the @lid (the internal id, which is not the phone).
  */
-function listIds({ numeros: numbers, bruto: raw, chatId, isGroup }) {
+function listIds({ numbers, raw, chatId, isGroup }) {
     const people = numbers.map(n => {
         const lid = numbers.length === 1 && raw?.endsWith('@lid') ? `\n  🔗 ${raw}` : '';
         return `• 📞 +${n}\n  🪪 ${n}@c.us${lid}`;

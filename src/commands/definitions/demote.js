@@ -21,6 +21,6 @@ module.exports = {
             desc: 'The people, separated by spaces: an address book contact by name or part of it (a name with spaces goes between /.../ or quotes; if several match, you pick from the list), someone mentioned with @, or a number. With nobody, replying to a message, whoever wrote it.'
         }
     ],
-    delegavel: true,
+    isDelegable: true,
     role: ADMIN // Touches the current group: delegable
 };

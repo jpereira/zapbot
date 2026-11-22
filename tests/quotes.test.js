@@ -46,20 +46,20 @@ function simulateMarket() {
     });
 
     network.responder('get', 'api.binance.com/api/v3/ticker/24hr', (url, cfg) =>
-        JSON.parse(cfg.params.symbols).map(par => {
-            const v = prices[par.replace(/USDT$/, '')];
-            return { symbol: par, lastPrice: v, priceChangePercent: '1.5', highPrice: v * 1.02, lowPrice: v * 0.98, quoteVolume: 12_345_678 };
+        JSON.parse(cfg.params.symbols).map(pair => {
+            const v = prices[pair.replace(/USDT$/, '')];
+            return { symbol: pair, lastPrice: v, priceChangePercent: '1.5', highPrice: v * 1.02, lowPrice: v * 0.98, quoteVolume: 12_345_678 };
         }));
 
-    // exchangeInfo of the reais pairs: all trading, except DOTBRL (paused, as on the real Binance)
+    // exchangeInfo of the brl pairs: all trading, except DOTBRL (paused, as on the real Binance)
     network.responder('get', 'api.binance.com/api/v3/exchangeInfo', (url, cfg) =>
-        ({ symbols: JSON.parse(cfg.params.symbols).map(par => ({ symbol: par, baseAsset: par.replace(/BRL$/, ''), quoteAsset: 'BRL', status: par === 'DOTBRL' ? 'BREAK' : 'TRADING' })) }));
+        ({ symbols: JSON.parse(cfg.params.symbols).map(pair => ({ symbol: pair, baseAsset: pair.replace(/BRL$/, ''), quoteAsset: 'BRL', status: pair === 'DOTBRL' ? 'BREAK' : 'TRADING' })) }));
 
-    // <TOKEN>USDT (the alerts) and <TOKEN>BRL (/crypto in reais): the reais pair is the dollar price × 5.2; USDTBRL is USDT itself
+    // <TOKEN>USDT (the alerts) and <TOKEN>BRL (/crypto in brl): the brl pair is the dollar price × 5.2; USDTBRL is USDT itself
     network.responder('get', 'api.binance.com/api/v3/ticker/price', (url, cfg) =>
-        JSON.parse(cfg.params.symbols).map(par => ({
-            symbol: par,
-            price: String(par.endsWith('BRL') ? prices[par.replace(/BRL$/, '')] * (par === 'USDTBRL' ? 1 : 5.2) : prices[par.replace(/USDT$/, '')])
+        JSON.parse(cfg.params.symbols).map(pair => ({
+            symbol: pair,
+            price: String(pair.endsWith('BRL') ? prices[pair.replace(/BRL$/, '')] * (pair === 'USDTBRL' ? 1 : 5.2) : prices[pair.replace(/USDT$/, '')])
         })));
 }
 
@@ -103,7 +103,7 @@ describe('/stocks (moedas e ações; o /rates é o mesmo comando)', () => {
 
     test('Yahoo fora do ar: as moedas usam a AwesomeAPI (sem abertura)', async () => {
         network.responder('get', 'query1.finance.yahoo.com', new Error('429'));
-        const [r] = await bot.replyAlt('/stocks eur', { erroEsperado: true });
+        const [r] = await bot.replyAlt('/stocks eur', { expectedError: true });
         assert.match(r, /💰 \*R\$ 5,8500\*/);
         assert.match(r, /🔔 Abertura: —\n   🏁 Fechamento anterior: R\$ 5,8000/);
         assert.match(r, /· AwesomeAPI_/);
@@ -111,7 +111,7 @@ describe('/stocks (moedas e ações; o /rates é o mesmo comando)', () => {
 
     test('uma fonte fora do ar não derruba as outras', async () => {
         network.responder('get', 'api.binance.com/api/v3/klines', new Error('timeout'));
-        const [r] = await bot.replyAlt('/stocks', { erroEsperado: true });
+        const [r] = await bot.replyAlt('/stocks', { expectedError: true });
         assert.match(r, /EUR\/BRL[\s\S]*💰/);
         assert.match(r, /USDT\/BRL\* _\(Tether\)_\n   ⚠️ _Cotação indisponível agora\._/);
     });
@@ -171,7 +171,7 @@ describe('/crypto', () => {
 
         bot.src('quotes').zeroStatusBrl();
         network.responder('get', 'api.binance.com/api/v3/exchangeInfo', new Error('fora do ar'));
-        const [r2] = await bot.replyAlt('/crypto', { erroEsperado: true });
+        const [r2] = await bot.replyAlt('/crypto', { expectedError: true });
         assert.match(r2, /● DOT\n    💰 \$8\.00 +🟢 \+1\.50%\n    🇧🇷 R\$ 41,60\n/, 'sem o status vale a lista fixa: DOT direto (8 × 5,2)');
     });
 
@@ -180,7 +180,7 @@ describe('/crypto', () => {
         assert.match((await bot.replyAlt('/crypto BTC'))[0], /🇧🇷 R\$ 494,000\.00/);
 
         network.responder('get', 'api.binance.com/api/v3/ticker/price', new Error('fora do ar'));
-        const [r] = await bot.replyAlt('/crypto BTC', { erroEsperado: true });
+        const [r] = await bot.replyAlt('/crypto BTC', { expectedError: true });
         assert.match(r, /₿ BTC\n    💰 \$95,000\.00/);
         assert.doesNotMatch(r, /🇧🇷/);
     });
@@ -231,7 +231,7 @@ describe('/crypto', () => {
 
         await bot.setSetting('crypto.coins', 'BTC');
         network.responder('get', 'ticker/24hr', new Error('fora do ar'));
-        assert.deepEqual(await bot.replyAlt('/crypto', { erroEsperado: true }),
+        assert.deepEqual(await bot.replyAlt('/crypto', { expectedError: true }),
             ['❌ Não consegui consultar as cotações de criptomoedas. Tente de novo.']);
     });
 });
@@ -245,29 +245,29 @@ describe('alertas de preço (-alert)', () => {
         assert.match(list, /🔔 \*ALERTAS DE PREÇO\* _\(\/stocks\)_\n\n1\. 🇺🇸 USD\/BRL acima de \*R\$ 5,3000\*/);
 
         // Not yet: nothing happens
-        await priceCheckAlerts({ forcar: true });
-        assert.equal(bot.client.enviadas.length, 2);
+        await priceCheckAlerts({ force: true });
+        assert.equal(bot.client.sent.length, 2);
 
         prices.USD = 5.31;
-        const beforeAlt = bot.client.enviadas.length;
-        await priceCheckAlerts({ forcar: true });
-        const [notice] = bot.client.enviadas.slice(beforeAlt);
+        const beforeAlt = bot.client.sent.length;
+        await priceCheckAlerts({ force: true });
+        const [notice] = bot.client.sent.slice(beforeAlt);
 
         assert.equal(notice.chatId, OWNER.jid);
         assert.match(notice.content, /🔔 \*ALERTA DE PREÇO\*\n\n📈 🇺🇸 \*USD\/BRL\* ficou acima de R\$ 5,3000\n💰 Agora: \*R\$ 5,3100\* _\(🟢 \+2,12% desde a criação\)_/);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 0);
 
         // Removed: does not fire again
-        await priceCheckAlerts({ forcar: true });
-        assert.equal(bot.client.enviadas.length, beforeAlt + 1);
+        await priceCheckAlerts({ force: true });
+        assert.equal(bot.client.sent.length, beforeAlt + 1);
     });
 
     test('/crypto -alert: abaixo de, em dólar', async () => {
         assert.match((await bot.replyAlt('/crypto -alert BTC < 90000'))[0], /₿ BTC\/USDT abaixo de \*\$90,000\.00\*/);
         prices.BTC = 89000;
-        const beforeAlt = bot.client.enviadas.length;
-        await priceCheckAlerts({ forcar: true });
-        assert.match(bot.client.enviadas[beforeAlt].content, /📉 ₿ \*BTC\/USDT\* ficou abaixo de \$90,000\.00\n💰 Agora: \*\$89,000\.00\*/);
+        const beforeAlt = bot.client.sent.length;
+        await priceCheckAlerts({ force: true });
+        assert.match(bot.client.sent[beforeAlt].content, /📉 ₿ \*BTC\/USDT\* ficou abaixo de \$90,000\.00\n💰 Agora: \*\$89,000\.00\*/);
     });
 
     test('formatos aceitos: sem espaços, vírgula decimal, minúsculas', async () => {
@@ -277,7 +277,7 @@ describe('alertas de preço (-alert)', () => {
     test('regra inválida, moeda não suportada e já cumprida', async () => {
         assert.match((await bot.replyAlt('/stocks -alert USD = 5'))[0], /❌ Regra inválida: "USD = 5"/);
         assert.match((await bot.replyAlt('/stocks -alert USD > abc'))[0], /❌ Regra inválida/);
-        assert.match((await bot.replyAlt('/stocks -alert XYZ > 1', { erroEsperado: true }))[0], /⚠️ Não consegui consultar o preço de XYZ agora/, 'ticker que o Yahoo não conhece');
+        assert.match((await bot.replyAlt('/stocks -alert XYZ > 1', { expectedError: true }))[0], /⚠️ Não consegui consultar o preço de XYZ agora/, 'ticker que o Yahoo não conhece');
         assert.match((await bot.replyAlt('/crypto -alert XYZ > 1'))[0], /❌ Moeda não suportada: XYZ\n💡 _Veja as suportadas com \/crypto -l_/);
         assert.match((await bot.replyAlt('/stocks -alert USD > 5'))[0], /ℹ️ USD\/BRL já está acima de R\$ 5,0000: agora está em \*R\$ 5,2000\*/);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 0);
@@ -292,7 +292,7 @@ describe('alertas de preço (-alert)', () => {
 
     test('preço indisponível na criação', async () => {
         network.responder('get', 'ticker/price', new Error('fora do ar'));
-        assert.match((await bot.replyAlt('/crypto -alert BTC > 1', { erroEsperado: true }))[0], /⚠️ Não consegui consultar o preço de BTC/);
+        assert.match((await bot.replyAlt('/crypto -alert BTC > 1', { expectedError: true }))[0], /⚠️ Não consegui consultar o preço de BTC/);
     });
 
     test('-rm N, -rm all e nº inexistente; listas separadas por comando', async () => {
@@ -332,9 +332,9 @@ describe('alertas de preço (-alert)', () => {
         ]);
 
         prices.BTC = 97000;
-        const beforeAlt = bot.client.enviadas.length;
-        await priceCheckAlerts({ forcar: true });
-        const [notice] = bot.client.enviadas.slice(beforeAlt);
+        const beforeAlt = bot.client.sent.length;
+        await priceCheckAlerts({ force: true });
+        const [notice] = bot.client.sent.slice(beforeAlt);
         assert.equal(notice.chatId, OTHERAlt.jid);
         assert.match(notice.content, /^Isso é uma mensagem: hora de vender!\n\n🔔 \*ALERTA DE PREÇO\*\n\n📈 ₿ \*BTC\/USDT\*/);
 
@@ -365,9 +365,9 @@ describe('alertas de preço (-alert)', () => {
         assert.deepEqual(destinations.map(d => d.dest_name), ['Grupo sobre L200', 'Grupo sobre L200', 'Família Ônibus']);
 
         prices.BTC = 89000;
-        const beforeAlt = bot.client.enviadas.length;
-        await priceCheckAlerts({ forcar: true });
-        const notice = bot.client.enviadas.slice(beforeAlt).find(e => e.content.includes('BTC'));
+        const beforeAlt = bot.client.sent.length;
+        await priceCheckAlerts({ force: true });
+        const notice = bot.client.sent.slice(beforeAlt).find(e => e.content.includes('BTC'));
         assert.equal(notice.chatId, L200);
         assert.match(notice.content, /🔔 \*ALERTA DE PREÇO\*/);
     });
@@ -384,9 +384,9 @@ describe('alertas de preço (-alert)', () => {
         assert.match((await bot.replyAlt('/stocks -alert'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 👤 Fulano/);
 
         prices.USD = 6.1;
-        const beforeAlt = bot.client.enviadas.length;
-        await priceCheckAlerts({ forcar: true });
-        assert.equal(bot.client.enviadas[beforeAlt].chatId, OTHERAlt.jid);
+        const beforeAlt = bot.client.sent.length;
+        await priceCheckAlerts({ force: true });
+        assert.equal(bot.client.sent[beforeAlt].chatId, OTHERAlt.jid);
     });
 
     test('vários -to: um alerta só, que avisa em todos (o repetido conta uma vez)', async () => {
@@ -402,9 +402,9 @@ describe('alertas de preço (-alert)', () => {
         assert.deepEqual(JSON.parse(a.recipients).map(d => d.id), [L200, OTHERAlt.jid]);
 
         prices.USD = 6.1;
-        const beforeAlt = bot.client.enviadas.length;
-        await priceCheckAlerts({ forcar: true });
-        assert.deepEqual(bot.client.enviadas.slice(beforeAlt).map(e => e.chatId), [L200, OTHERAlt.jid]);
+        const beforeAlt = bot.client.sent.length;
+        await priceCheckAlerts({ force: true });
+        assert.deepEqual(bot.client.sent.slice(beforeAlt).map(e => e.chatId), [L200, OTHERAlt.jid]);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 0);
 
         // A destination that fails does not hold up the others
@@ -415,9 +415,9 @@ describe('alertas de preço (-alert)', () => {
             : send.call(bot.client, chatId, ...rest));
         try {
             prices.EUR = 7.1;
-            const afterAlt = bot.client.enviadas.length;
-            await priceCheckAlerts({ forcar: true });
-            assert.deepEqual(bot.client.enviadas.slice(afterAlt).map(e => e.chatId), [OTHERAlt.jid]);
+            const afterAlt = bot.client.sent.length;
+            await priceCheckAlerts({ force: true });
+            assert.deepEqual(bot.client.sent.slice(afterAlt).map(e => e.chatId), [OTHERAlt.jid]);
         } finally {
             bot.client.sendMessage = send;
         }
@@ -438,9 +438,9 @@ describe('alertas de preço (-alert)', () => {
             assert.match((await bot.replyAlt('/stocks -alert'))[0], /USD\/BRL acima de \*R\$ 6,0000\* → 📧 eu@exemplo\.com/);
 
             prices.USD = 6.1;
-            const beforeAlt = bot.client.enviadas.length;
-            await priceCheckAlerts({ forcar: true });
-            assert.equal(bot.client.enviadas.length, beforeAlt, 'nada no WhatsApp');
+            const beforeAlt = bot.client.sent.length;
+            await priceCheckAlerts({ force: true });
+            assert.equal(bot.client.sent.length, beforeAlt, 'nada no WhatsApp');
             const [m] = emails;
             assert.equal(m.to, 'eu@exemplo.com');
             assert.equal(m.subject, '[ZapBot] 🔔 Alerta de preço: USD/BRL acima de R$ 6,0000');
@@ -449,7 +449,7 @@ describe('alertas de preço (-alert)', () => {
             // -msg goes at the start of the email too, without WhatsApp formatting
             await bot.replyAlt('/stocks -alert EUR > 7 -to email -msg *Euro* nas alturas!');
             prices.EUR = 7.1;
-            await priceCheckAlerts({ forcar: true });
+            await priceCheckAlerts({ force: true });
             assert.match(emails.at(-1).text, /^Euro nas alturas!\n\n🔔 ALERTA DE PREÇO\n\n📈 🇪🇺 EUR\/BRL/);
         } finally {
             for (const v of Object.keys(env)) delete process.env[v];
@@ -476,21 +476,21 @@ describe('alertas de preço (-alert)', () => {
         await bot.replyAlt('/stocks -alert USD > 5.30');
         prices.USD = 6;
 
-        bot.estado.pronto = false;
-        await priceCheckAlerts({ forcar: true });
+        bot.state.ready = false;
+        await priceCheckAlerts({ force: true });
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 1, 'desconectado: não verifica');
 
-        bot.estado.pronto = true;
+        bot.state.ready = true;
         network.responder('get', 'query1.finance.yahoo.com', new Error('429'));
         network.responder('get', 'economia.awesomeapi.com.br', new Error('fora'));
         const logBefore = bot.logs.length;
-        await priceCheckAlerts({ forcar: true });
+        await priceCheckAlerts({ force: true });
         assert.ok(bot.errorsInLog(logBefore).length > 0);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 1, 'falha na consulta: mantém');
 
         // Within the interval (alert.intervalMin) the check without forcing does not query
-        network.chamadas.length = 0;
+        network.calls.length = 0;
         await priceCheckAlerts();
-        assert.equal(network.chamadas.length, 0);
+        assert.equal(network.calls.length, 0);
     });
 });

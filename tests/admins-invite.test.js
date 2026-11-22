@@ -7,14 +7,14 @@ const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { OWNER, GROUP, OTHERAlt } = bot;
-const CICLANO = { jid: '5521922222222@c.us', nome: 'Ciclano' };
+const CICLANO = { jid: '5521922222222@c.us', name: 'Ciclano' };
 
 let group;
 let calls;
 
 beforeEach(async () => {
     await bot.restart();
-    bot.createContact(CICLANO.jid, CICLANO.nome);
+    bot.createContact(CICLANO.jid, CICLANO.name);
     group = bot.createGroup(GROUP, 'Família', [
         { jid: OWNER.jid, isAdmin: true },
         { jid: OTHERAlt.jid, isAdmin: true },
@@ -37,8 +37,8 @@ describe('/promote e /demote', () => {
     });
 
     test('respondendo uma mensagem: quem a escreveu', async () => {
-        const quoted = bot.createMessage({ texto: 'oi', de: CICLANO.jid });
-        const [r] = await bot.replyAlt('/promote', { citada: quoted });
+        const quoted = bot.createMessage({ text: 'oi', de: CICLANO.jid });
+        const [r] = await bot.replyAlt('/promote', { quoted });
         assert.equal(r, '✅ Ciclano agora é admin do grupo.');
         assert.deepEqual(calls, [['promote', [CICLANO.jid]]]);
     });
@@ -83,8 +83,8 @@ describe('/promote e /demote', () => {
 
     test('o WhatsApp recusando: a resposta traz o motivo', async () => {
         group.promoteParticipants = async () => ({ status: 403 });
-        const r = await bot.executar(`/promote +${CICLANO.jid.split('@')[0]}`, { erroEsperado: true });
-        assert.equal(r[0].texto, '❌ O WhatsApp recusou a mudança para Ciclano: status 403');
+        const r = await bot.execute(`/promote +${CICLANO.jid.split('@')[0]}`, { expectedError: true });
+        assert.equal(r[0].text, '❌ O WhatsApp recusou a mudança para Ciclano: status 403');
     });
 
     test('fora de grupo', async () => {
@@ -106,8 +106,8 @@ describe('/invite', () => {
 
     test('sem o código (a conta não é admin): o aviso', async () => {
         group.getInviteCode = async () => undefined;
-        const [r] = await bot.executar('/invite', { erroEsperado: true });
-        assert.match(r.texto, /^❌ Não consegui o link de convite: O WhatsApp não deu o link/);
+        const [r] = await bot.execute('/invite', { expectedError: true });
+        assert.match(r.text, /^❌ Não consegui o link de convite: O WhatsApp não deu o link/);
     });
 
     test('fora de grupo; e um usuário comum não usa (admin, não delegável)', async () => {

@@ -2,7 +2,7 @@ const { MessageMedia } = require('whatsapp-web.js');
 const { resolverOrChoose } = require('../destinations');
 const { resolveLidToPhone } = require('../contacts');
 const { getSetting } = require('../settings');
-const { estado: stateAlt } = require('../state');
+const { state: stateAlt } = require('../state');
 const { withoutAccents } = require('../util/format');
 const { language, t } = require('../i18n');
 const {
@@ -17,7 +17,7 @@ const withoutDelimiters = textAlt => String(textAlt ?? '').trim()
     .replace(/^(?:\/([^/]*)\/|"([^"]*)"|'([^']*)')$/, '$1$2$3');
 
 async function resolverPerson(msg, textAlt) {
-    const contactAlt = await resolverOrChoose(msg, withoutDelimiters(textAlt), { tipo: 'contato' });
+    const contactAlt = await resolverOrChoose(msg, withoutDelimiters(textAlt), { type: 'contato' });
     if (contactAlt?.id.endsWith('@lid')) {
         contactAlt.id = await resolveLidToPhone(contactAlt.id) ?? contactAlt.id;
     }
@@ -39,7 +39,7 @@ async function searchMonitored(msg, valueAlt) {
             ? await resolveLidToPhone(c.contact_id) ?? c.contact_id : c.contact_id;
         if (phone === person.id) return c;
     }
-    await msg.reply(t('monitor.notRegistered', { name: person.nome }));
+    await msg.reply(t('monitor.notRegistered', { name: person.name }));
     return null;
 }
 
@@ -71,7 +71,7 @@ async function replyList(msg, valueAlt = null) {
         return;
     }
     const statusAlt = !getSetting('monitor.enabled') || getSetting('bot.paused') ? t('monitor.state.paused')
-        : !stateAlt.pronto || stateAlt.reiniciando ? t('monitor.state.waiting') : t('monitor.state.active');
+        : !stateAlt.ready || stateAlt.restarting ? t('monitor.state.waiting') : t('monitor.state.active');
     const linesAlt = [
         t('monitor.list.title', { state: statusAlt }),
         t('monitor.list.interval', { interval: intervalMonitor() }),
@@ -143,14 +143,14 @@ async function cmdMonitor({ msg, args }) {
         const contactAlt = await resolverPerson(msg, valueAlt);
         if (!contactAlt) return;
         const r = await registerMonitored(contactAlt);
-        const registered = r.contato ?? r.existente;
+        const registered = r.contact ?? r.existing;
         if (withAlert && registered) await enableAlertMonitor(registered.id);
-        if (r.existente) {
-            await msg.reply(t('monitor.add.exists', { name: r.existente.contact_name, id: r.existente.id }));
-        } else if (r.limite) {
+        if (r.existing) {
+            await msg.reply(t('monitor.add.exists', { name: r.existing.contact_name, id: r.existing.id }));
+        } else if (r.limit) {
             await msg.reply(t('monitor.add.limit', { max: getSetting('monitor.max') }));
         } else {
-            await msg.reply(t('monitor.add.done', { id: r.contato.id, name: r.contato.contact_name,
+            await msg.reply(t('monitor.add.done', { id: r.contact.id, name: r.contact.contact_name,
                 interval: intervalMonitor(), risk: risk() }));
             if (!getSetting('monitor.enabled')) {
                 await msg.reply(t('monitor.add.paused'));

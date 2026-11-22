@@ -47,16 +47,16 @@ const TEXT_DOC_TYPES = /^(text\/|application\/(json|xml|x-yaml|yaml|javascript|x
 const TEXT_DOC_EXTENSIONS = /\.(txt|md|csv|tsv|json|xml|ya?ml|log|ini|conf|sh|js|ts|py|rb|go|rs|c|h|cpp|java|sql|html?|css)$/i;
 
 /**
- * @returns {Promise<null | { documento: { nome: string, texto: string } } | { erro: string }>}
+ * @returns {Promise<null | { document: { name: string, text: string } } | { error: string }>}
  * null: the replied message is not a document
  */
 async function replyDocument(quotedMsg) {
     if (!quotedMsg?.hasMedia || quotedMsg.type !== 'document') return null;
 
     const mediaAlt = await quotedMsg.downloadMedia().catch(() => null);
-    if (!mediaAlt?.data) return { erro: t('gpt.docDownload') };
+    if (!mediaAlt?.data) return { error: t('gpt.docDownload') };
     if (mediaAlt.data.length * 0.75 > DOC_MAX_BYTES) {
-        return { erro: t('gpt.docTooBig', { mb: DOC_MAX_BYTES / 1024 / 1024 }) };
+        return { error: t('gpt.docTooBig', { mb: DOC_MAX_BYTES / 1024 / 1024 }) };
     }
 
     const nameAlt = mediaAlt.filename || t('gpt.docName');
@@ -72,19 +72,19 @@ async function replyDocument(quotedMsg) {
             fs.writeFileSync(fileAlt, bytes);
             textAlt = await captureOutput('pdftotext', ['-layout', fileAlt, '-'], 60_000);
         } catch {
-            return { erro: t('gpt.pdfRead') };
+            return { error: t('gpt.pdfRead') };
         } finally {
             fs.rmSync(folder, { recursive: true, force: true });
         }
     } else if (TEXT_DOC_TYPES.test(type) || TEXT_DOC_EXTENSIONS.test(nameAlt)) {
         textAlt = bytes.toString('utf8');
     } else {
-        return { erro: t('gpt.docType', { tipo: type || nameAlt }) };
+        return { error: t('gpt.docType', { type: type || nameAlt }) };
     }
 
     textAlt = textAlt.trim();
-    if (!textAlt) return { erro: t('gpt.docEmpty') };
-    return { documento: { nome: nameAlt, texto: textAlt.slice(0, DOC_MAX_CHARACTERS) } };
+    if (!textAlt) return { error: t('gpt.docEmpty') };
+    return { document: { name: nameAlt, text: textAlt.slice(0, DOC_MAX_CHARACTERS) } };
 }
 
 // The replied audio: the right extension for OpenAI (the format comes from the file name) and its ceiling
@@ -96,28 +96,28 @@ const AUDIO_MAX_BYTES = 25 * 1024 * 1024;
 
 /**
  * The replied message's audio (audio or voice note), downloaded as base64.
- * @returns {Promise<null | { audio: { arquivo: string, mimetype: string, data: string } } | { erro: string }>}
+ * @returns {Promise<null | { audio: { file: string, mimetype: string, data: string } } | { error: string }>}
  * null: the replied message is not audio
  */
 async function replyAudio(quotedMsg) {
     if (!quotedMsg?.hasMedia || !['audio', 'ptt'].includes(quotedMsg.type)) return null;
 
     const mediaAlt = await quotedMsg.downloadMedia().catch(() => null);
-    if (!mediaAlt?.data) return { erro: t('gpt.audioDownload') };
+    if (!mediaAlt?.data) return { error: t('gpt.audioDownload') };
 
     // "audio/ogg; codecs=opus" (the WhatsApp voice note) → "audio/ogg"
     const type = String(mediaAlt.mimetype).split(';')[0].trim().toLowerCase();
     const extension = AUDIO_EXTENSIONS[type];
     if (!extension) {
-        return { erro: t('gpt.audioFormat', { tipo: type, formatos: [...new Set(Object.values(AUDIO_EXTENSIONS))].join(', ') }) };
+        return { error: t('gpt.audioFormat', { type, formats: [...new Set(Object.values(AUDIO_EXTENSIONS))].join(', ') }) };
     }
     if (mediaAlt.data.length * 0.75 > AUDIO_MAX_BYTES) {
-        return { erro: t('gpt.audioTooBig', { mb: AUDIO_MAX_BYTES / 1024 / 1024 }) };
+        return { error: t('gpt.audioTooBig', { mb: AUDIO_MAX_BYTES / 1024 / 1024 }) };
     }
-    return { audio: { arquivo: `audio.${extension}`, mimetype: type, data: mediaAlt.data } };
+    return { audio: { file: `audio.${extension}`, mimetype: type, data: mediaAlt.data } };
 }
 
-// "agora transcreva isso", "transcreve", "now transcribe this": it is only the transcription (no question for the chat)
+// "now transcreva isso", "transcreve", "now transcribe this": it is only the transcription (no question for the chat)
 const soTranscribe = (args) => !args.trim() ||
     (/^((agora|now)\s+)?(transcrev|transcrib)\w*/i.test(args.trim()) && args.trim().split(/\s+/).length <= 6);
 
@@ -125,7 +125,7 @@ const soTranscribe = (args) => !args.trim() ||
  * Replying to an audio: transcribes (v1/audio/transcriptions). Without a question, or just "transcreva", replies the
  * transcription; with another question ("resuma", "traduza para o inglês"), sends the transcription along to the chat.
  */
-async function replyOnAudio(msg, { audio, erro: errorAlt }, args) {
+async function replyOnAudio(msg, { audio, error: errorAlt }, args) {
     if (errorAlt) {
         await msg.reply(errorAlt);
         return;
@@ -141,12 +141,12 @@ async function replyOnAudio(msg, { audio, erro: errorAlt }, args) {
             return;
         }
         if (soTranscribe(args)) {
-            await completeNotice(msg, notice, `${t('gpt.transcription', { texto: transcription })}${await consumptionFooter()}`);
+            await completeNotice(msg, notice, `${t('gpt.transcription', { text: transcription })}${await consumptionFooter()}`);
             return;
         }
 
         const reply = await askOnChat({
-            cmd: '/gpt', sistema: GPT_INSTRUCTIONS(), texto: t('gpt.audioPrompt', { pergunta: args.trim(), transcricao: transcription })
+            cmd: '/gpt', system: GPT_INSTRUCTIONS(), text: t('gpt.audioPrompt', { question: args.trim(), transcription })
         });
         await completeNotice(msg, notice, `🤖 ${reply}${await consumptionFooter()}`);
     } catch (err) {
@@ -156,18 +156,18 @@ async function replyOnAudio(msg, { audio, erro: errorAlt }, args) {
 
 /*
  * What /gpt -voice speaks from the replied message: its text or, if it is audio, the transcription.
- * @returns {Promise<{ texto?: string, erro?: string }>}  without text: there is nothing to speak in the reply
+ * @returns {Promise<{ text?: string, error?: string }>}  without text: there is nothing to speak in the reply
  */
 async function contentForTalk(quotedMsg, cmd = '/gpt') {
     const audio = await replyAudio(quotedMsg);
-    if (!audio) return { texto: String(quotedMsg?.body ?? '').trim() };
-    if (audio.erro) return { erro: audio.erro };
+    if (!audio) return { text: String(quotedMsg?.body ?? '').trim() };
+    if (audio.error) return { error: audio.error };
 
     try {
         const transcription = await transcribeAudio({ cmd, audio: audio.audio });
-        return transcription ? { texto: transcription } : { erro: t('gpt.noSpeech') };
+        return transcription ? { text: transcription } : { error: t('gpt.noSpeech') };
     } catch (err) {
-        return { erro: (await modelError(err, AUDIO_MODEL, cmd)) || errorOpenAi(err, cmd) };
+        return { error: (await modelError(err, AUDIO_MODEL, cmd)) || errorOpenAi(err, cmd) };
     }
 }
 
@@ -183,12 +183,12 @@ async function talkText(msg, args, quotedMsg, cmd = '/gpt') {
     // Replying to a text (or an audio, which is transcribed): what was typed is the speech style
     // ("/gpt -voice speak like a metallic robot") and the replied content is what is spoken.
     const replied = await contentForTalk(quotedMsg, cmd);
-    if (replied.erro) {
-        await msg.reply(replied.erro);
+    if (replied.error) {
+        await msg.reply(replied.error);
         return;
     }
-    if (replied.texto) {
-        textAlt = replied.texto;
+    if (replied.text) {
+        textAlt = replied.text;
         style = typed || null;
     }
 
@@ -203,7 +203,7 @@ async function talkText(msg, args, quotedMsg, cmd = '/gpt') {
 
     const notice = await notifyProcessing(msg, cmd);
     try {
-        const voice = await synthesizeVoice({ cmd, texto: textAlt, estilo: style });
+        const voice = await synthesizeVoice({ cmd, text: textAlt, style });
         await completeNotice(msg, notice, t('gpt.voiceBelow'));
         await msg.reply(new MessageMedia('audio/ogg; codecs=opus', voice.toString('base64'), 'voz.ogg'), null, { sendAudioAsVoice: true });
         await replyConsumption(msg);
@@ -223,15 +223,15 @@ const CREATE_VERB = /\b(ger[ae]r?|cri[ae]r?|fa[çc]a|fazer|faz|anim[ae]r?|transf
 const asksGif = (textAlt) => ASKED_GIF.test(textAlt) && CREATE_VERB.test(textAlt);
 
 // -img and -gif are those of /draw (desenhar() is a single one): here only the request text and the usage message
-const gptDraw = (msg, args, quotedMsg, { opcao: optionAlt, gif, perfis: profiles = [], semPedido: withoutRequest }) =>
-    drawAlt({ msg, cmd: '/gpt', pedido: withoutOption(args, optionAlt), quotedMsg, gif, perfis: profiles, semPedido: withoutRequest });
+const gptDraw = (msg, args, quotedMsg, { option: optionAlt, gif, profiles = [], noRequest: withoutRequest }) =>
+    drawAlt({ msg, cmd: '/gpt', request: withoutOption(args, optionAlt), quotedMsg, gif, profiles, noRequest: withoutRequest });
 
 const DAYS_DEFAULT = 7;
 const DAYS_MAX = 31;
 
-const sum = () => ({ entrada: 0, saida: 0, cache: 0, requisicoes: 0 });
-const tokens = (x) => x.entrada + x.saida;
-const summary = (x) => `${fmtInA(tokens(x))} tokens · ${fmtInA(x.requisicoes)} req`;
+const sum = () => ({ input: 0, output: 0, cache: 0, requests: 0 });
+const tokens = (x) => x.input + x.output;
+const summary = (x) => `${fmtInA(tokens(x))} tokens · ${fmtInA(x.requests)} req`;
 
 // Dollars: cents, or 4 decimals when it is less than 1 cent ($0,0012)
 const usd = (v) => `$${v.toLocaleString(loc(), v === 0 || v >= 0.01
@@ -243,16 +243,16 @@ const dateShort = (start) => new Date(start * 1000).toISOString().slice(5, 10).s
 
 // The usage of images, voice, transcription and embeddings (whatever did not come or is zero does not show)
 function servicesLines(services) {
-    const sumAlt = (buckets, campo) => (buckets ?? []).reduce((t, b) => t + (b.results ?? []).reduce((s, r) => s + (r[campo] ?? 0), 0), 0);
+    const sumAlt = (buckets, field) => (buckets ?? []).reduce((t, b) => t + (b.results ?? []).reduce((s, r) => s + (r[field] ?? 0), 0), 0);
     const defs = [
         ['images', t('gpt.svcImages'), 'images', t('gpt.unitImages')],
         ['audio_speeches', t('gpt.svcVoice'), 'characters', t('gpt.unitChars')],
         ['audio_transcriptions', t('gpt.svcTranscription'), 'seconds', t('gpt.unitAudio')],
         ['embeddings', '🧬 Embeddings', 'input_tokens', 'tokens']
     ];
-    return defs.flatMap(([nameAlt, label, campo, unit]) => {
+    return defs.flatMap(([nameAlt, label, field, unit]) => {
         const req = sumAlt(services?.[nameAlt], 'num_model_requests');
-        return req ? [`• ${label} · ${fmtInA(sumAlt(services[nameAlt], campo))} ${unit} · ${fmtInA(req)} req`] : [];
+        return req ? [`• ${label} · ${fmtInA(sumAlt(services[nameAlt], field))} ${unit} · ${fmtInA(req)} req`] : [];
     });
 }
 
@@ -260,16 +260,16 @@ function servicesLines(services) {
  * The Usage API buckets (+ the costs and the other uses) → the chat text: the money, the total, per day,
  * per model, per service. The costs and services are extras: without them, only the tokens.
  */
-function consumptionText(buckets, daysAlt, { custos: costs = null, servicos: services = null } = {}) {
+function consumptionText(buckets, daysAlt, { costs = null, services = null } = {}) {
     const total = sum();
     const byDay = new Map();
     const byModel = new Map();
     const accumulate = (map, keyAlt, r) => {
         const x = map.get(keyAlt) ?? sum();
-        x.entrada += r.input_tokens ?? 0;
-        x.saida += r.output_tokens ?? 0;
+        x.input += r.input_tokens ?? 0;
+        x.output += r.output_tokens ?? 0;
         x.cache += r.input_cached_tokens ?? 0;
-        x.requisicoes += r.num_model_requests ?? 0;
+        x.requests += r.num_model_requests ?? 0;
         map.set(keyAlt, x);
     };
 
@@ -296,11 +296,11 @@ function consumptionText(buckets, daysAlt, { custos: costs = null, servicos: ser
     const withCost = costs !== null;
     const cost = (v) => (withCost ? ` · ${usd(v ?? 0)}` : '');
 
-    const linesAlt = [daysAlt === 1 ? t('gpt.usageTitleToday') : t('gpt.usageTitleDays', { dias: daysAlt })];
-    if (withCost) linesAlt.push(t('gpt.spent', { valor: usd(sumCosts(period)) }));
+    const linesAlt = [daysAlt === 1 ? t('gpt.usageTitleToday') : t('gpt.usageTitleDays', { days: daysAlt })];
+    if (withCost) linesAlt.push(t('gpt.spent', { value: usd(sumCosts(period)) }));
     linesAlt.push(
-        t('gpt.tokensLine', { total: fmtInA(tokens(total)), entrada: fmtInA(total.entrada), cache: fmtInA(total.cache), saida: fmtInA(total.saida) }),
-        t('gpt.requests', { n: fmtInA(total.requisicoes) })
+        t('gpt.tokensLine', { total: fmtInA(tokens(total)), input: fmtInA(total.input), cache: fmtInA(total.cache), output: fmtInA(total.output) }),
+        t('gpt.requests', { n: fmtInA(total.requests) })
     );
 
     if (byDay.size) {
@@ -335,31 +335,31 @@ function consumptionText(buckets, daysAlt, { custos: costs = null, servicos: ser
 function balanceText(used, total, since) {
     const remains = total - used;
     return t('gpt.balance', {
-        usado: usd(used),
+        used: usd(used),
         total: usd(total),
-        resta: remains >= 0 ? t('gpt.balanceLeft', { valor: usd(remains) }) : t('gpt.balanceOver', { valor: usd(-remains) }),
-        periodo: since ? t('gpt.balanceSince', { data: since.split('-').reverse().join('/') }) : t('gpt.balance180')
+        left: remains >= 0 ? t('gpt.balanceLeft', { value: usd(remains) }) : t('gpt.balanceOver', { value: usd(-remains) }),
+        period: since ? t('gpt.balanceSince', { data: since.split('-').reverse().join('/') }) : t('gpt.balance180')
     });
 }
 
 // The x-ratelimit-* headers → the chat text
-function limitsText({ modelo: modelAlt, tokens: tk, requisicoes: r }) {
-    const line = (nameAlt, x) => (x.limite
-        ? t('gpt.limitLine', { nome: nameAlt, restante: fmtInA(x.restante ?? 0), limite: fmtInA(x.limite) }) +
-            (x.reseta ? t('gpt.limitReset', { reseta: x.reseta }) : '')
+function limitsText({ model: modelAlt, tokens: tk, requests: r }) {
+    const line = (nameAlt, x) => (x.limit
+        ? t('gpt.limitLine', { name: nameAlt, remaining: fmtInA(x.remaining ?? 0), limit: fmtInA(x.limit) }) +
+            (x.resets ? t('gpt.limitReset', { resets: x.resets }) : '')
         : null);
     const linesAlt = [line('tokens', tk), line(t('gpt.limitRequests'), r)].filter(Boolean);
-    return [t('gpt.limitsTitle', { modelo: modelAlt }), ...(linesAlt.length ? linesAlt : [t('gpt.limitsNone')])].join('\n');
+    return [t('gpt.limitsTitle', { model: modelAlt }), ...(linesAlt.length ? linesAlt : [t('gpt.limitsNone')])].join('\n');
 }
 
 /*
  * /gpt -usage [days]: the consumption (Usage API, with the admin key) and the current limits (headers
- * of a minimal call, with the normal key). Only the owner and the admins (role in comandos).
+ * of a minimal call, with the normal key). Only the owner and the admins (role in commands).
  */
 async function showUsage(msg, daysTyped) {
     const daysAlt = daysTyped == null ? DAYS_DEFAULT : Number(daysTyped);
     if (!Number.isInteger(daysAlt) || daysAlt < 1 || daysAlt > DAYS_MAX) {
-        await msg.reply(t('gpt.usageUsage', { max: DAYS_MAX, padrao: DAYS_DEFAULT }));
+        await msg.reply(t('gpt.usageUsage', { max: DAYS_MAX, fallback: DAYS_DEFAULT }));
         return;
     }
 
@@ -381,14 +381,14 @@ async function showUsage(msg, daysTyped) {
 
             // The usage is required (its error is the key's); the cost, the balance and the other uses are extras
             const [consumption, costs, balanceCosts, services] = await Promise.all([
-                queryConsumption({ cmd: '/gpt', dias: daysAlt }),
-                queryCosts({ cmd: '/gpt', desde: nowAlt - daysAlt * 86400 }).catch(() => null),
-                total ? queryCosts({ cmd: '/gpt', desde: startBalance }).catch(() => null) : null,
-                queryServices({ cmd: '/gpt', dias: daysAlt })
+                queryConsumption({ cmd: '/gpt', days: daysAlt }),
+                queryCosts({ cmd: '/gpt', since: nowAlt - daysAlt * 86400 }).catch(() => null),
+                total ? queryCosts({ cmd: '/gpt', since: startBalance }).catch(() => null) : null,
+                queryServices({ cmd: '/gpt', days: daysAlt })
             ]);
 
             if (balanceCosts) partsAlt.push(balanceText(sumCosts(balanceCosts), total, sinceData));
-            partsAlt.push(consumptionText(consumption.buckets, daysAlt, { custos: costs, servicos: services }));
+            partsAlt.push(consumptionText(consumption.buckets, daysAlt, { costs, services }));
             if (!total && costs) {
                 partsAlt.push(t('gpt.creditHint'));
             }
@@ -422,22 +422,22 @@ async function showUsage(msg, daysTyped) {
 async function showPrices(msg) {
     const notice = await notifyProcessing(msg, '/gpt');
     try {
-        const { novos: freshAlt3, mudados: changed, iguais: equal } = await updatePrices({ cmd: '/gpt' });
+        const { added: freshAlt3, changed, equal } = await updatePrices({ cmd: '/gpt' });
         const linesAlt = [
-            ...changed.map(m => `🔄 ${m.modelo}: ${m.antes} → *${m.depois}*`),
+            ...changed.map(m => `🔄 ${m.model}: ${m.before} → *${m.after}*`),
             ...freshAlt3.map(m => `➕ ${m}`)
         ];
         const summary = linesAlt.length
             ? t('gpt.pricesUpdated', {
-                mudados: t(changed.length === 1 ? 'gpt.priceChangedOne' : 'gpt.priceChangedMany', { n: changed.length }),
-                novos: t(freshAlt3.length === 1 ? 'gpt.priceNewOne' : 'gpt.priceNewMany', { n: freshAlt3.length }),
-                iguais: equal,
-                linhas: linesAlt.slice(0, 20).join('\n')
+                changed: t(changed.length === 1 ? 'gpt.priceChangedOne' : 'gpt.priceChangedMany', { n: changed.length }),
+                added: t(freshAlt3.length === 1 ? 'gpt.priceNewOne' : 'gpt.priceNewMany', { n: freshAlt3.length }),
+                equal,
+                lines: linesAlt.slice(0, 20).join('\n')
             }) + (linesAlt.length > 20 ? t('gpt.pricesMore', { n: linesAlt.length - 20 }) : '')
-            : t('gpt.pricesUpToDate', { iguais: equal });
+            : t('gpt.pricesUpToDate', { equal });
         await completeNotice(msg, notice, `${summary}\n${t('gpt.pricesFooter')}`);
     } catch (err) {
-        await completeNotice(msg, notice, t('gpt.pricesFail', { erro: err.message }));
+        await completeNotice(msg, notice, t('gpt.pricesFail', { error: err.message }));
     }
 }
 
@@ -448,7 +448,7 @@ async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
     }
 
     if (opts?.given.has('model')) {
-        await swapModel(msg, opts.opt.model, opts, { cmd: '/gpt', icone: '🤖', usos: GPT_USES, padrao: QUESTION_USAGE });
+        await swapModel(msg, opts.opt.model, opts, { cmd: '/gpt', icon: '🤖', uses: GPT_USES, fallback: QUESTION_USAGE });
         return;
     }
 
@@ -467,8 +467,8 @@ async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
     const profileText = opts?.given.has('profile') ? await textReadProfile(args) : readProfileImplicit(args);
     const prepareProfiles = async () => {
         if (!profileText) return [];
-        args = profileText.texto;
-        return resolverProfiles({ msg, quotedMsg, chatId, isGroup, itens: profileText.itens, cmd: '/gpt' });
+        args = profileText.text;
+        return resolverProfiles({ msg, quotedMsg, chatId, isGroup, items: profileText.items, cmd: '/gpt' });
     };
 
     // -img: creates (or, replying to a photo, edits) an image; -gif: a GIF (replying to a photo, animates it).
@@ -477,8 +477,8 @@ async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
         const profiles = await prepareProfiles();
         if (!profiles) return;
         await gptDraw(msg, args, quotedMsg, {
-            opcao: 'img', gif: null, perfis: profiles,
-            semPedido: t('gpt.imgUsage')
+            option: 'img', gif: null, profiles,
+            noRequest: t('gpt.imgUsage')
         });
         return;
     }
@@ -490,8 +490,8 @@ async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
         const profiles = await prepareProfiles();
         if (!profiles) return;
         await gptDraw(msg, args, quotedMsg, {
-            opcao: 'gif', gif: {}, perfis: profiles,
-            semPedido: t('gpt.gifUsage')
+            option: 'gif', gif: {}, profiles,
+            noRequest: t('gpt.gifUsage')
         });
         return;
     }
@@ -515,25 +515,25 @@ async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
 
     // Replying to a document: its content goes along with the question
     const doc = await replyDocument(quotedMsg);
-    if (doc?.erro) {
-        await msg.reply(doc.erro);
+    if (doc?.error) {
+        await msg.reply(doc.error);
         return;
     }
 
     // Replying to a message, its text (or the photo caption, or the document) goes before the question
     const replied = doc
-        ? t('gpt.docPrompt', { nome: doc.documento.nome, texto: doc.documento.texto })
+        ? t('gpt.docPrompt', { name: doc.document.name, text: doc.document.text })
         : String(quotedMsg?.body ?? '').trim();
     let question = [replied, unescape(args.trim())].filter(Boolean).join('\n\n');
 
     // Replying to a photo, it goes along with the question (without a question, /gpt describes the photo)
     const photo = await messageImage(quotedMsg, '/gpt');
-    if (photo?.erro) {
-        await msg.reply(photo.erro);
+    if (photo?.error) {
+        await msg.reply(photo.error);
         return;
     }
     if ((photo || profiles.length) && !question) question = PHOTO_QUESTION();
-    const context = imagesContext({ comFotoDaMensagem: Boolean(photo), perfis: profiles });
+    const context = imagesContext({ withMessagePhoto: Boolean(photo), profiles });
     if (context) question = `${question}\n\n${context}`;
 
     if (!question) {
@@ -544,7 +544,7 @@ async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
     const notice = await notifyProcessing(msg, '/gpt');
     try {
         const reply = await askOnChat({
-            cmd: '/gpt', sistema: GPT_INSTRUCTIONS(), texto: question, imagens: [photo?.imagem, ...profiles.map(p => p.imagem)].filter(Boolean)
+            cmd: '/gpt', system: GPT_INSTRUCTIONS(), text: question, images: [photo?.image, ...profiles.map(p => p.image)].filter(Boolean)
         });
 
         // The 🤖 in front also guarantees the reply never starts with "/" (see markSentByBot)

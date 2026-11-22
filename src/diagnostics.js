@@ -13,7 +13,7 @@ const { client } = require('./client');
 const { BIN_FFMPEG, BIN_PYTHON, BIN_YT, CACHE_DIR } = require('./constants');
 const { dbGet, dbReady } = require('./db');
 const { smtpForSend, checkSmtp } = require('./email');
-const { estado: stateAlt } = require('./state');
+const { state: stateAlt } = require('./state');
 const { boxConfigured, check: checkImap } = require('./imap');
 const { notFound, output, chromiumVersion } = require('./system');
 const { t } = require('./i18n');
@@ -37,9 +37,9 @@ async function testCache() {
 
     try {
         await fs.promises.writeFile(fileAlt, dataAlt);
-        const lido = await fs.promises.readFile(fileAlt);
-        if (!lido.equals(dataAlt)) return { ok: false, detalhe: t('diag.leituraDifere') };
-        return { ok: true, detalhe: t('diag.escritaLeitura', { tam: humanSize(dataAlt.length), ms: ms(start) }) };
+        const wasRead = await fs.promises.readFile(fileAlt);
+        if (!wasRead.equals(dataAlt)) return { ok: false, detail: t('diag.leituraDifere') };
+        return { ok: true, detail: t('diag.escritaLeitura', { tam: humanSize(dataAlt.length), ms: ms(start) }) };
     } finally {
         await fs.promises.rm(fileAlt, { force: true });
     }
@@ -47,9 +47,9 @@ async function testCache() {
 
 async function testDisk() {
     const { bavail, bsize, blocks } = await fs.promises.statfs(CACHE_DIR);
-    const livre = bavail * bsize;
+    const free = bavail * bsize;
     const pct = Math.round((bavail / blocks) * 100);
-    return { ok: livre >= DISK_MIN_BYTES, detalhe: t('diag.livres', { tam: humanSize(livre), pct }) };
+    return { ok: free >= DISK_MIN_BYTES, detail: t('diag.livres', { tam: humanSize(free), pct }) };
 }
 
 async function testDb() {
@@ -57,54 +57,54 @@ async function testDb() {
     const start = performance.now();
     const r = await dbGet('PRAGMA quick_check');
     const resultAlt = Object.values(r ?? {})[0];
-    return { ok: resultAlt === 'ok', detalhe: resultAlt === 'ok' ? t('diag.integro', { ms: ms(start) }) : String(resultAlt) };
+    return { ok: resultAlt === 'ok', detail: resultAlt === 'ok' ? t('diag.integro', { ms: ms(start) }) : String(resultAlt) };
 }
 
 async function testWhatsApp() {
-    if (stateAlt.reiniciando) return { ok: false, detalhe: t('diag.reiniciando') };
-    if (!stateAlt.pronto) return { ok: false, detalhe: t('diag.semConexao') };
+    if (stateAlt.restarting) return { ok: false, detail: t('diag.reiniciando') };
+    if (!stateAlt.ready) return { ok: false, detail: t('diag.semConexao') };
 
     const start = performance.now();
     const statusAlt = await client.getState();
-    return { ok: statusAlt === 'CONNECTED', detalhe: `${statusAlt} (${ms(start)})` };
+    return { ok: statusAlt === 'CONNECTED', detail: `${statusAlt} (${ms(start)})` };
 }
 
 async function testDns() {
     const start = performance.now();
     const r = await dns.lookup('web.whatsapp.com');
-    return { ok: true, detalhe: `web.whatsapp.com → ${r.address} (${ms(start)})` };
+    return { ok: true, detail: `web.whatsapp.com → ${r.address} (${ms(start)})` };
 }
 
 async function testInternet() {
     const start = performance.now();
     const r = await axios.get('https://web.whatsapp.com/', { timeout: 10_000, validateStatus: () => true });
-    return { ok: r.status < 500, detalhe: `HTTP ${r.status} (${ms(start)})` };
+    return { ok: r.status < 500, detail: `HTTP ${r.status} (${ms(start)})` };
 }
 
 async function testSmtp() {
-    if (!smtpForSend()) return { ok: null, detalhe: t('diag.naoConfiguradoSmtp') };
+    if (!smtpForSend()) return { ok: null, detail: t('diag.naoConfiguradoSmtp') };
 
     const start = performance.now();
     await checkSmtp();
-    return { ok: true, detalhe: t('diag.loginOk', { ms: ms(start) }) };
+    return { ok: true, detail: t('diag.loginOk', { ms: ms(start) }) };
 }
 
 async function testImap() {
-    if (!boxConfigured()) return { ok: null, detalhe: t('diag.naoConfiguradoImap') };
+    if (!boxConfigured()) return { ok: null, detail: t('diag.naoConfiguradoImap') };
 
     const start = performance.now();
     await checkImap();
-    return { ok: true, detalhe: t('diag.loginOk', { ms: ms(start) }) };
+    return { ok: true, detail: t('diag.loginOk', { ms: ms(start) }) };
 }
 
 const testProgram = (nameAlt, bin, args, extract = (l) => l) => async () => {
     const line = await output(bin, args);
-    return line ? { ok: true, detalhe: extract(line) } : { ok: false, detalhe: t('diag.naoRodou', { nome: nameAlt }) };
+    return line ? { ok: true, detail: extract(line) } : { ok: false, detail: t('diag.naoRodou', { name: nameAlt }) };
 };
 
 async function testChromium() {
     const version = await chromiumVersion();
-    return { ok: version !== notFound(), detalhe: version.replace(/_/g, '') };
+    return { ok: version !== notFound(), detail: version.replace(/_/g, '') };
 }
 
 // Alone at the end: nothing else uses the network while it measures
@@ -123,11 +123,11 @@ async function testSpeed() {
 
     return {
         ok: descent >= SPEED_MIN_MBPS && rise >= SPEED_MIN_MBPS,
-        detalhe: `↓ ${descent.toFixed(1)} Mbps · ↑ ${rise.toFixed(1)} Mbps`
+        detail: `↓ ${descent.toFixed(1)} Mbps · ↑ ${rise.toFixed(1)} Mbps`
     };
 }
 
-const TESTES = () => [
+const TESTS = () => [
     [t('diag.nomeCache'), testCache],
     [t('diag.nomeDisco'), testDisk],
     [t('diag.nomeBanco'), testDb],
@@ -152,29 +152,29 @@ async function run([nameAlt, test]) {
             test(),
             new Promise((_, reject) => { limitAlt = setTimeout(() => reject(new Error(t('diag.semResposta', { s: TEST_TIMEOUT_MS / 1000 }))), TEST_TIMEOUT_MS); })
         ]);
-        return { nome: nameAlt, ...r };
+        return { name: nameAlt, ...r };
     } catch (err) {
-        return { nome: nameAlt, ok: false, detalhe: err.message };
+        return { name: nameAlt, ok: false, detail: err.message };
     } finally {
         clearTimeout(limitAlt);
     }
 }
 
-const line = ({ nome: nameAlt, ok, detalhe: detail }) => `${ok === null ? '➖' : ok ? '✅' : '❌'} *${nameAlt}* — ${detail}`;
+const line = ({ name: nameAlt, ok, detail }) => `${ok === null ? '➖' : ok ? '✅' : '❌'} *${nameAlt}* — ${detail}`;
 
 /**
  * Runs all the tests and builds the /bot -test text.
  */
 async function testText() {
-    const results = await Promise.all(TESTES().map(run));
+    const results = await Promise.all(TESTS().map(run));
     results.push(await run(TEST_FINAL()));
 
     const counted = results.filter(r => r.ok !== null);
     const failures = counted.filter(r => !r.ok).length;
 
-    return t('diag.titulo', { linhas: results.map(line).join('\n') }) +
+    return t('diag.titulo', { lines: results.map(line).join('\n') }) +
         (failures
-            ? t('diag.comFalha', { falhas: failures, total: counted.length })
+            ? t('diag.comFalha', { failures, total: counted.length })
             : t('diag.todosOk', { total: counted.length }));
 }
 

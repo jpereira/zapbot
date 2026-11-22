@@ -21,28 +21,28 @@ beforeEach(async () => {
 
 // Message received and later deleted
 async function messageDeleted(textAlt, optionsAlt = {}) {
-    const msg = bot.createMessage({ texto: textAlt, de: OTHERAlt.jid, ...optionsAlt });
+    const msg = bot.createMessage({ text: textAlt, de: OTHERAlt.jid, ...optionsAlt });
     await bot.deliver(msg);
-    return { msg, alerta: await bot.apagar(msg) };
+    return { msg, alert: await bot.erase(msg) };
 }
 
 async function messageEdited(textAlt, freshAlt, optionsAlt = {}) {
-    const msg = bot.createMessage({ texto: textAlt, de: OTHERAlt.jid, ...optionsAlt });
+    const msg = bot.createMessage({ text: textAlt, de: OTHERAlt.jid, ...optionsAlt });
     await bot.deliver(msg);
-    return { msg, alerta: await bot.edit(msg, freshAlt) };
+    return { msg, alert: await bot.edit(msg, freshAlt) };
 }
 
 describe('evento: mensagem apagada', () => {
     test('avisa no seu privado com grupo, autor e texto; marca como apagada', async () => {
-        const { msg, alerta: alert } = await messageDeleted('segredo');
+        const { msg, alert } = await messageDeleted('segredo');
 
         assert.equal(alert.length, 1);
         assert.equal(alert[0].chatId, PRIVATE_OWNER);
-        assert.match(alert[0].texto, /❌ \*MENSAGEM APAGADA DETECTADA\*/);
-        assert.match(alert[0].texto, /👥 \*Grupo:\* Família/);
-        assert.match(alert[0].texto, /👤 \*Nome:\* Fulano/);
-        assert.match(alert[0].texto, /📱 \*Número:\* \+5521911111111/);
-        assert.match(alert[0].texto, /💬 \*Texto:\* "segredo"/);
+        assert.match(alert[0].text, /❌ \*MENSAGEM APAGADA DETECTADA\*/);
+        assert.match(alert[0].text, /👥 \*Grupo:\* Família/);
+        assert.match(alert[0].text, /👤 \*Nome:\* Fulano/);
+        assert.match(alert[0].text, /📱 \*Número:\* \+5521911111111/);
+        assert.match(alert[0].text, /💬 \*Texto:\* "segredo"/);
 
         const row = await bot.dbGet('SELECT revoked, revoked_at FROM messages WHERE id = ?', [msg.id.id]);
         assert.equal(row.revoked, 1);
@@ -53,42 +53,42 @@ describe('evento: mensagem apagada', () => {
         const contactAlt = bot.createContact(OTHERAlt.jid, 'Fulano da Agenda');
         contactAlt.pushname = 'fulaninho_99';
 
-        const { alerta: alert } = await messageDeleted('segredo');
-        assert.match(alert[0].texto, /👤 \*Nome:\* Fulano da Agenda/);
-        assert.doesNotMatch(alert[0].texto, /fulaninho_99/);
+        const { alert } = await messageDeleted('segredo');
+        assert.match(alert[0].text, /👤 \*Nome:\* Fulano da Agenda/);
+        assert.doesNotMatch(alert[0].text, /fulaninho_99/);
     });
 
     test('mensagem que não está no banco: só registra no log', async () => {
-        const ghost = bot.createMessage({ texto: 'x', de: OTHERAlt.jid, id: 'NUNCA_VISTA' });
+        const ghost = bot.createMessage({ text: 'x', de: OTHERAlt.jid, id: 'NUNCA_VISTA' });
         const logBefore = bot.logs.length;
-        assert.deepEqual(await bot.apagar(ghost), []);
+        assert.deepEqual(await bot.erase(ghost), []);
         assert.ok(bot.errorsInLog(logBefore).some(l => l.includes('NUNCA_VISTA not found')));
     });
 
     test('show.alert.deleted off: guarda sem avisar; o /show reexibe', async () => {
         await bot.setSetting('show.alert.deleted', false);
-        const { msg, alerta: alert } = await messageDeleted('segredo');
+        const { msg, alert } = await messageDeleted('segredo');
         assert.deepEqual(alert, []);
         assert.equal((await bot.dbGet('SELECT revoked FROM messages WHERE id = ?', [msg.id.id])).revoked, 1);
 
         // Does not apply to status (show.alert.status)
-        const { alerta: status } = await messageDeleted('meu status', { chat: 'status@broadcast' });
-        assert.match(status[0].texto, /📸 \*STATUS APAGADO DETECTADO\*/);
+        const { alert: status } = await messageDeleted('meu status', { chat: 'status@broadcast' });
+        assert.match(status[0].text, /📸 \*STATUS APAGADO DETECTADO\*/);
     });
 
     test('status apagado: título próprio; show.alert.status off ignora', async () => {
-        const { alerta: alert } = await messageDeleted('meu status', { chat: 'status@broadcast' });
-        assert.match(alert[0].texto, /📸 \*STATUS APAGADO DETECTADO\*/);
+        const { alert } = await messageDeleted('meu status', { chat: 'status@broadcast' });
+        assert.match(alert[0].text, /📸 \*STATUS APAGADO DETECTADO\*/);
 
         await bot.setSetting('show.alert.status', false);
-        const { msg, alerta: nothing } = await messageDeleted('outro status', { chat: 'status@broadcast' });
+        const { msg, alert: nothing } = await messageDeleted('outro status', { chat: 'status@broadcast' });
         assert.deepEqual(nothing, []);
         assert.equal((await bot.dbGet('SELECT revoked FROM messages WHERE id = ?', [msg.id.id])).revoked, 0);
     });
 
     test('mídia apagada volta como mídia, com a legenda', async () => {
-        const { alerta: alert } = await messageDeleted('legenda da foto', {
-            tipo: 'image', midia: { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') }
+        const { alert } = await messageDeleted('legenda da foto', {
+            type: 'image', media: { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') }
         });
         assert.equal(alert.length, 1);
         assert.equal(alert[0].content.mimetype, 'image/jpeg');
@@ -96,15 +96,15 @@ describe('evento: mensagem apagada', () => {
     });
 
     test('áudio apagado volta como nota de voz, depois do aviso', async () => {
-        const { alerta: alert } = await messageDeleted('', { tipo: 'ptt', midia: { mimetype: 'audio/ogg; codecs=opus', data: 'AA==' } });
+        const { alert } = await messageDeleted('', { type: 'ptt', media: { mimetype: 'audio/ogg; codecs=opus', data: 'AA==' } });
         assert.equal(alert.length, 2);
-        assert.match(alert[0].texto, /🎵 \*Tipo:\* ÁUDIO \/ NOTA DE VOZ/);
+        assert.match(alert[0].text, /🎵 \*Tipo:\* ÁUDIO \/ NOTA DE VOZ/);
         assert.equal(alert[1].content.mimetype, 'audio/ogg');
         assert.equal(alert[1].options.sendAudioAsVoice, true);
     });
 
     test('documento apagado volta como documento', async () => {
-        const { alerta: alert } = await messageDeleted('contrato', { tipo: 'document', midia: { mimetype: 'application/pdf', data: 'AA==' } });
+        const { alert } = await messageDeleted('contrato', { type: 'document', media: { mimetype: 'application/pdf', data: 'AA==' } });
         assert.equal(alert.length, 1);
         assert.equal(alert[0].options.sendMediaAsDocument, true);
         assert.match(alert[0].options.caption, /📄 \*Tipo:\* DOCUMENTO\n💬 \*Legenda:\* "contrato"/);
@@ -112,49 +112,49 @@ describe('evento: mensagem apagada', () => {
 
     test('contato (vCard de verdade) volta como contato', async () => {
         const vcard = 'BEGIN:VCARD\nVERSION:3.0\nFN:Maria\nEND:VCARD';
-        const { alerta: alert } = await messageDeleted(vcard, { tipo: 'vcard' });
+        const { alert } = await messageDeleted(vcard, { type: 'vcard' });
         assert.equal(alert.length, 2);
-        assert.match(alert[0].texto, /📇 \*Tipo:\* CARTÃO DE CONTATO/);
+        assert.match(alert[0].text, /📇 \*Tipo:\* CARTÃO DE CONTATO/);
         assert.equal(alert[1].content, vcard);
         assert.equal(alert[1].options.parseVCards, true);
     });
 
     test('remetente @lid: o aviso mostra o nome e o telefone reais', async () => {
         bot.client.lids.set('999@lid', OTHERAlt.jid);
-        const msg = bot.createMessage({ texto: 'de um lid', de: '999@lid' });
+        const msg = bot.createMessage({ text: 'de um lid', de: '999@lid' });
         await bot.deliver(msg);
-        const [alert] = await bot.apagar(msg);
-        assert.match(alert.texto, /👤 \*Nome:\* Fulano\n📱 \*Número:\* \+5521911111111/);
+        const [alert] = await bot.erase(msg);
+        assert.match(alert.text, /👤 \*Nome:\* Fulano\n📱 \*Número:\* \+5521911111111/);
     });
 
     test('mídia sem o arquivo no disco: avisa que não está disponível', async () => {
-        const msg = bot.createMessage({ texto: '', de: OTHERAlt.jid, tipo: 'image', midia: { mimetype: 'image/jpeg', data: 'AA==' } });
+        const msg = bot.createMessage({ text: '', de: OTHERAlt.jid, type: 'image', media: { mimetype: 'image/jpeg', data: 'AA==' } });
         await bot.deliver(msg);
         const { media_path } = await bot.dbGet('SELECT media_path FROM messages WHERE id = ?', [msg.id.id]);
         fs.unlinkSync(media_path);
 
-        const [alert] = await bot.apagar(msg);
-        assert.match(alert.texto, /IMAGE _\(arquivo não disponível no cache\)_/);
+        const [alert] = await bot.erase(msg);
+        assert.match(alert.text, /IMAGE _\(arquivo não disponível no cache\)_/);
     });
 
     test('localização apagada: link do mapa + a localização', async () => {
-        const { alerta: alert } = await messageDeleted('Praia', { tipo: 'location', extras: { location: { latitude: -22.9, longitude: -43.1 } } });
+        const { alert } = await messageDeleted('Praia', { type: 'location', extras: { location: { latitude: -22.9, longitude: -43.1 } } });
         assert.equal(alert.length, 2);
-        assert.match(alert[0].texto, /google\.com\/maps\?q=-22\.9,-43\.1/);
+        assert.match(alert[0].text, /google\.com\/maps\?q=-22\.9,-43\.1/);
         assert.ok(alert[1].content instanceof Location);
     });
 
     test('contato com texto que não é vCard vai só como texto (nunca cru)', async () => {
-        const { alerta: alert } = await messageDeleted('/cache -a', { tipo: 'vcard' });
+        const { alert } = await messageDeleted('/cache -a', { type: 'vcard' });
         assert.equal(alert.length, 1);
-        assert.match(alert[0].texto, /CARTÃO DE CONTATO[\s\S]*💬 \*Conteúdo:\* "\/cache -a"/);
+        assert.match(alert[0].text, /CARTÃO DE CONTATO[\s\S]*💬 \*Conteúdo:\* "\/cache -a"/);
     });
 
     test('conta no /stats para o autor; apagada por você conta para você', async () => {
         await messageDeleted('a');
-        const my = bot.createMessage({ texto: 'b' });
+        const my = bot.createMessage({ text: 'b' });
         await bot.deliver(my);
-        await bot.apagar(my);
+        await bot.erase(my);
 
         const deletedAlt = await bot.dbAll('SELECT sender_id, SUM(deleted) AS n FROM stats WHERE deleted > 0 GROUP BY sender_id ORDER BY sender_id');
         assert.deepEqual(deletedAlt, [{ sender_id: OWNER.user, n: 1 }, { sender_id: OTHERAlt.user, n: 1 }]);
@@ -163,13 +163,13 @@ describe('evento: mensagem apagada', () => {
 
 describe('evento: mensagem editada', () => {
     test('avisa com o antes e o depois, grava a edição e o texto final', async () => {
-        const { msg, alerta: alert } = await messageEdited('reunião às 14h', 'reunião às 15h');
+        const { msg, alert } = await messageEdited('reunião às 14h', 'reunião às 15h');
 
         assert.equal(alert.length, 1);
         assert.equal(alert[0].chatId, PRIVATE_OWNER);
-        assert.match(alert[0].texto, /✏️ \*MENSAGEM EDITADA DETECTADA\*/);
-        assert.match(alert[0].texto, /👥 \*Grupo:\* Família/);
-        assert.match(alert[0].texto, /📝 \*Antes:\* "reunião às 14h"\n💬 \*Depois:\* "reunião às 15h"/);
+        assert.match(alert[0].text, /✏️ \*MENSAGEM EDITADA DETECTADA\*/);
+        assert.match(alert[0].text, /👥 \*Grupo:\* Família/);
+        assert.match(alert[0].text, /📝 \*Antes:\* "reunião às 14h"\n💬 \*Depois:\* "reunião às 15h"/);
 
         const edit = await bot.dbGet('SELECT * FROM message_edits WHERE message_id = ?', [msg.id.id]);
         assert.deepEqual([edit.old_body, edit.new_body, edit.sender_number], ['reunião às 14h', 'reunião às 15h', OTHERAlt.user]);
@@ -177,12 +177,12 @@ describe('evento: mensagem editada', () => {
     });
 
     test('ignora: mudança que não é edição, as suas edições e texto igual', async () => {
-        const msg = bot.createMessage({ texto: 'a', de: OTHERAlt.jid });
+        const msg = bot.createMessage({ text: 'a', de: OTHERAlt.jid });
         await bot.deliver(msg);
-        assert.deepEqual(await bot.edit(msg, 'b', { realmente: false }), []);
+        assert.deepEqual(await bot.edit(msg, 'b', { really: false }), []);
         assert.deepEqual(await bot.edit(msg, 'a'), []);
 
-        const my = bot.createMessage({ texto: 'x' });
+        const my = bot.createMessage({ text: 'x' });
         await bot.deliver(my);
         assert.deepEqual(await bot.edit(my, 'y'), []);
 
@@ -190,18 +190,18 @@ describe('evento: mensagem editada', () => {
     });
 
     test('a mesma edição avisada duas vezes (body e caption) é gravada uma vez', async () => {
-        const msg = bot.createMessage({ texto: 'a', de: OTHERAlt.jid });
+        const msg = bot.createMessage({ text: 'a', de: OTHERAlt.jid });
         await bot.deliver(msg);
         const when = Date.now();
-        assert.equal((await bot.edit(msg, 'b', { editadaEm: when })).length, 1);
-        assert.equal((await bot.edit(msg, 'b', { editadaEm: when })).length, 0);
-        assert.equal((await bot.edit(msg, 'c', { antigo: 'b', editadaEm: when + 1000 })).length, 1);
+        assert.equal((await bot.edit(msg, 'b', { editedAt: when })).length, 1);
+        assert.equal((await bot.edit(msg, 'b', { editedAt: when })).length, 0);
+        assert.equal((await bot.edit(msg, 'c', { old: 'b', editedAt: when + 1000 })).length, 1);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 2);
     });
 
     test('show.alert.edited off: guarda sem avisar; conta no /stats', async () => {
         await bot.setSetting('show.alert.edited', false);
-        const { msg, alerta: alert } = await messageEdited('a', 'b');
+        const { msg, alert } = await messageEdited('a', 'b');
         assert.deepEqual(alert, []);
         assert.ok(await bot.dbGet('SELECT 1 FROM message_edits WHERE message_id = ?', [msg.id.id]));
         assert.equal((await bot.dbGet('SELECT SUM(edited) AS n FROM stats')).n, 1);
@@ -294,7 +294,7 @@ describe('/show <chat>', () => {
         await messageDeleted('oi', { chat: OTHERAlt.jid });
         await messageDeleted('meu status', { chat: 'status@broadcast' }); // the name "Fulano" in the cache
 
-        const r = await bot.replyAlt(`/show -2 @${OTHERAlt.user}`, { mencoes: [OTHERAlt.jid] });
+        const r = await bot.replyAlt(`/show -2 @${OTHERAlt.user}`, { mentions: [OTHERAlt.jid] });
         assert.equal(r[0], '🗄️ *2 mensagens* (🗑️ 1 · 📸 1)\n💬 *Chat:* Fulano');
         assert.match((await bot.replyAlt(`/show @${OTHERAlt.user}`))[0], /não é uma menção/);
         assert.match((await bot.replyAlt('/show @Fulano -d'))[1], /"oi"/, '@ digitado: vale o nome');
@@ -322,13 +322,13 @@ describe('/show <chat>', () => {
         await messageDeleted('a');
         await messageDeleted('b', { chat: WORK });
         t.mock.timers.enable({ apis: ['setTimeout'] });
-        const commandAlt = bot.executar('/show a');
+        const commandAlt = bot.execute('/show a');
         for (let i = 0; i < 50; i++) await new Promise(setImmediate);
         t.mock.timers.tick(bot.src('choices').CHOICE_MS);
 
         const r = await commandAlt;
         assert.equal(r.length, 1);
-        assert.equal(r[0].texto, '⌛ Nenhum nº escolhido para "a" em 2 minutos: nada foi feito.');
+        assert.equal(r[0].text, '⌛ Nenhum nº escolhido para "a" em 2 minutos: nada foi feito.');
         assert.equal(r[0].editada, true);
     });
 });
@@ -390,7 +390,7 @@ describe('/show -l (lista)', () => {
             assert.match((await bot.replyAlt('/show -l /^(fam|trab)/'))[0],
                 /1\. 👥 Família[^\n]*\n2\. 👥 Trabalho/);
 
-            const [byMention] = await bot.replyAlt(`/show -l @${OTHERAlt.user}`, { mencoes: [OTHERAlt.jid] });
+            const [byMention] = await bot.replyAlt(`/show -l @${OTHERAlt.user}`, { mentions: [OTHERAlt.jid] });
             assert.match(byMention, /📸 \*Status:\* 1 /);
             assert.match(byMention, /3\. 👤 Fulano — 📸 1 /);
             assert.doesNotMatch(byMention, /Família|Trabalho/);
@@ -482,7 +482,7 @@ describe('/show -q (busca)', () => {
 
 describe('/show -f (flush)', () => {
     test('-f: só o dono; remove só as apagadas deste chat (e as mídias)', async () => {
-        const { msg } = await messageDeleted('foto', { midia: { mimetype: 'image/png', data: 'AA==' } });
+        const { msg } = await messageDeleted('foto', { media: { mimetype: 'image/png', data: 'AA==' } });
         await messageDeleted('b', { chat: WORK });
         const { media_path } = await bot.dbGet('SELECT media_path FROM messages WHERE id = ?', [msg.id.id]);
 
@@ -571,27 +571,27 @@ describe('/show -e (editadas)', () => {
 });
 
 test('as menções cruas (@número) viram o nome na apagada e na editada; o banco guarda o texto original', async () => {
-    const msg = bot.createMessage({ texto: `parabéns @${OTHERAlt.user}!`, de: OTHERAlt.jid });
+    const msg = bot.createMessage({ text: `parabéns @${OTHERAlt.user}!`, de: OTHERAlt.jid });
     await bot.deliver(msg);
 
     const [edited] = await bot.edit(msg, `parabéns de novo @${OTHERAlt.user}!`);
-    assert.match(edited.texto, /parabéns @Fulano!/);
-    assert.match(edited.texto, /parabéns de novo @Fulano!/);
+    assert.match(edited.text, /parabéns @Fulano!/);
+    assert.match(edited.text, /parabéns de novo @Fulano!/);
 
-    const [deleted] = await bot.apagar(msg);
-    assert.match(deleted.texto, /parabéns de novo @Fulano!/);
-    assert.doesNotMatch(deleted.texto, new RegExp(`@${OTHERAlt.user}`));
+    const [deleted] = await bot.erase(msg);
+    assert.match(deleted.text, /parabéns de novo @Fulano!/);
+    assert.doesNotMatch(deleted.text, new RegExp(`@${OTHERAlt.user}`));
     assert.match((await bot.dbGet('SELECT body FROM messages WHERE id = ?', [msg.id.id])).body, new RegExp(`@${OTHERAlt.user}`));
 });
 
 test('os ids das menções ficam na coluna mentions, e a exibição usa eles para achar o nome', async () => {
     const LID = '100000000000077@lid';
-    const msg = bot.createMessage({ texto: 'oi @100000000000077 e @100000000000078', de: OTHERAlt.jid, mencoes: [LID, OTHERAlt.jid, LID] });
+    const msg = bot.createMessage({ text: 'oi @100000000000077 e @100000000000078', de: OTHERAlt.jid, mentions: [LID, OTHERAlt.jid, LID] });
     await bot.deliver(msg);
     const row = await bot.dbGet('SELECT mentions FROM messages WHERE id = ?', [msg.id.id]);
     assert.deepEqual(JSON.parse(row.mentions), [LID, OTHERAlt.jid], 'sem repetir');
 
-    const without = bot.createMessage({ texto: 'sem menção', de: OTHERAlt.jid });
+    const without = bot.createMessage({ text: 'sem menção', de: OTHERAlt.jid });
     await bot.deliver(without);
     assert.equal((await bot.dbGet('SELECT mentions FROM messages WHERE id = ?', [without.id.id])).mentions, null);
 
@@ -615,7 +615,7 @@ test('os ids das menções ficam na coluna mentions, e a exibição usa eles par
 
 test('editar a mensagem marcando gente nova: os ids da edição entram na coluna mentions', async () => {
     const LID = '100000000000077@lid';
-    const msg = bot.createMessage({ texto: 'oi pessoal', de: OTHERAlt.jid, mencoes: [OTHERAlt.jid] });
+    const msg = bot.createMessage({ text: 'oi pessoal', de: OTHERAlt.jid, mentions: [OTHERAlt.jid] });
     await bot.deliver(msg);
 
     msg.mentionedIds = [OTHERAlt.jid, LID];
@@ -634,11 +634,11 @@ test('mensagens antigas (sem a coluna mentions): os ids saem dos participantes d
     await bot.dbRun(base, ['ANTIGA3', '120363000000000077@g.us', 'quem? @100000000000011', 3]);
 
     const { fillMentionsOld } = bot.src('mentions');
-    assert.deepEqual(await fillMentionsOld(), { lidas: 2, preenchidas: 1 });
-    const lido = async (id) => (await bot.dbGet('SELECT mentions FROM messages WHERE id = ?', [id])).mentions;
-    assert.deepEqual(JSON.parse(await lido('ANTIGA1')), [LID], 'só quem é do grupo');
-    assert.equal(await lido('ANTIGA2'), null, 'sem @número: não mexe');
-    assert.equal(await lido('ANTIGA3'), '[]', 'ninguém achado: não tenta de novo');
+    assert.deepEqual(await fillMentionsOld(), { read: 2, filled: 1 });
+    const wasRead = async (id) => (await bot.dbGet('SELECT mentions FROM messages WHERE id = ?', [id])).mentions;
+    assert.deepEqual(JSON.parse(await wasRead('ANTIGA1')), [LID], 'só quem é do grupo');
+    assert.equal(await wasRead('ANTIGA2'), null, 'sem @número: não mexe');
+    assert.equal(await wasRead('ANTIGA3'), '[]', 'ninguém achado: não tenta de novo');
 
-    assert.deepEqual(await fillMentionsOld(), { lidas: 0, preenchidas: 0 }, 'a segunda vez não acha nada');
+    assert.deepEqual(await fillMentionsOld(), { read: 0, filled: 0 }, 'a segunda vez não acha nada');
 });

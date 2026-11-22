@@ -18,7 +18,7 @@ beforeEach(async () => {
 });
 
 const call = (de = OTHERAlt.jid) => ({ from: de, fromMe: false, isGroup: false, reject: async () => { rejected++; } });
-const messagesFor = (jid) => bot.client.enviadas.filter(e => e.chatId === jid).map(e => e.content);
+const messagesFor = (jid) => bot.client.sent.filter(e => e.chatId === jid).map(e => e.content);
 
 test('desligado (o padrão): a ligação toca, nada acontece', async () => {
     assert.equal(await handleCall(call()), 'ignorada');

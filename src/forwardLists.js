@@ -28,20 +28,20 @@ const list = (destinations) => destinations.map(describeDestination).join('\n');
 
 // The order the members appear in (and are numbered): people, groups and emails
 const sorted = (members) => [
-    ...members.filter(d => !d.email && !d.grupo), ...members.filter(d => d.grupo), ...members.filter(d => d.email)
+    ...members.filter(d => !d.email && !d.group), ...members.filter(d => d.group), ...members.filter(d => d.email)
 ];
 
 // Numbered from 1 on, in sections by type (the number works in -rm #list <no.>)
 function sections(members) {
     const allAlt2 = sorted(members);
     const groups = [
-        ['forward.list.people', allAlt2.filter(d => !d.email && !d.grupo)],
-        ['forward.list.groups', allAlt2.filter(d => d.grupo)],
+        ['forward.list.people', allAlt2.filter(d => !d.email && !d.group)],
+        ['forward.list.groups', allAlt2.filter(d => d.group)],
         ['forward.list.emails', allAlt2.filter(d => d.email)]
     ].filter(([, items]) => items.length);
 
     let n = 0;
-    return groups.map(([keyAlt, items]) => `${t(keyAlt, { n: items.length })}\n${items.map(d => `${++n}. ${d.email ?? d.nome}`).join('\n')}`)
+    return groups.map(([keyAlt, items]) => `${t(keyAlt, { n: items.length })}\n${items.map(d => `${++n}. ${d.email ?? d.name}`).join('\n')}`)
         .join('\n\n');
 }
 
@@ -67,22 +67,22 @@ async function save(nameAlt, destinations, description) {
     );
 }
 
-// "#lista" at the start: { name, rest } (name null: missing or invalid)
+// "#list" at the start: { name, rest } (name null: missing or invalid)
 function firstList(textAlt) {
     const m = textAlt.trim().match(/^#(\S+)(?:\s+([\s\S]*))?$/);
-    return m ? { nome: readName(m[1]), resto: (m[2] ?? '').trim() } : { nome: null, resto: textAlt.trim() };
+    return m ? { name: readName(m[1]), rest: (m[2] ?? '').trim() } : { name: null, rest: textAlt.trim() };
 }
 
 async function addAlt(msg, textAlt) {
-    const { nome: nameAlt, resto: rest } = firstList(textAlt);
+    const { name: nameAlt, rest } = firstList(textAlt);
     if (!nameAlt) return msg.reply(t('forward.list.addUsage'));
     if (!NAME.test(nameAlt)) return msg.reply(t('forward.list.badName', { name: nameAlt }));
 
-    const { destinos: porTo, resto: withoutTo } = extractDestinations(rest);
-    const texts = [...textPeople(withoutTo).map(withoutDelimiters), ...porTo];
+    const { destinations: byTo, rest: withoutTo } = extractDestinations(rest);
+    const texts = [...textPeople(withoutTo).map(withoutDelimiters), ...byTo];
     if (!texts.length) return msg.reply(t('forward.list.addUsage'));
 
-    const destinations = await resolverDestinations(msg, texts, { aceitaEmail: true });
+    const destinations = await resolverDestinations(msg, texts, { acceptsEmail: true });
     if (!destinations) return;
 
     const existing = await dbGet('SELECT * FROM forward_lists WHERE list = ?', [nameAlt]);
@@ -134,7 +134,7 @@ async function listAlt(msg, textAlt) {
 function findMembers(members, textAlt) {
     const q = withoutAccents(textAlt).toLowerCase().trim();
     const digits = q.replace(/\D/g, '');
-    const fields = (d) => [d.nome, d.email].filter(Boolean).map(s => withoutAccents(s).toLowerCase());
+    const fields = (d) => [d.name, d.email].filter(Boolean).map(s => withoutAccents(s).toLowerCase());
     const exact = members.filter(d => fields(d).includes(q) || (digits.length >= 8 && d.id?.split('@')[0] === digits));
     return exact.length ? exact : members.filter(d => fields(d).some(c => c.includes(q)));
 }
@@ -157,7 +157,7 @@ async function removeAlt2(msg, textAlt) {
     }
 
     // Members: "-rm #list /Jorge/ fulano@x.com"
-    const { nome: nameAlt, resto: rest } = firstList(textAlt);
+    const { name: nameAlt, rest } = firstList(textAlt);
     if (!nameAlt) return msg.reply(t('forward.list.rmUsage'));
     const line = allAlt.find(l => l.list === nameAlt);
     if (!line) return msg.reply(t('forward.list.notFound', { name: nameAlt }));
@@ -172,7 +172,7 @@ async function removeAlt2(msg, textAlt) {
         const foundAlt4 = /^\d{1,3}$/.test(q) ? [order[Number(q) - 1]].filter(Boolean) : findMembers(members, q);
         if (!foundAlt4.length) absent.push(q);
         else if (foundAlt4.length > 1) {
-            return msg.reply(t('forward.list.memberAmbiguous', { name: nameAlt, text: q, names: foundAlt4.map(d => d.email ?? d.nome).join(', ') }));
+            return msg.reply(t('forward.list.memberAmbiguous', { name: nameAlt, text: q, names: foundAlt4.map(d => d.email ?? d.name).join(', ') }));
         } else remove.push(foundAlt4[0]);
     }
     if (absent.length) return msg.reply(t('forward.list.memberMissing', { name: nameAlt, names: absent.join(', ') }));
@@ -187,7 +187,7 @@ async function removeAlt2(msg, textAlt) {
     await msg.reply(t('forward.list.memberRemoved', { name: nameAlt, who: who }));
 }
 
-async function mover(msg, textAlt) {
+async function move(msg, textAlt) {
     const m = textAlt.trim().match(/^#(\S+)\s+#(\S+)$/);
     if (!m) return msg.reply(t('forward.list.moveUsage'));
     const [de, para] = [readName(m[1]), readName(m[2])];
@@ -209,7 +209,7 @@ async function mover(msg, textAlt) {
 }
 
 async function describe(msg, textAlt) {
-    const { nome: request, resto: rest } = firstList(textAlt);
+    const { name: request, rest } = firstList(textAlt);
     if (!request) return msg.reply(t('forward.list.descUsage'));
 
     const allAlt = await listAll();
@@ -234,27 +234,27 @@ async function describe(msg, textAlt) {
 /*
  * The #lists in a send's text (outside /.../ and "..."): removes them from the text and returns the members.
  * Whole name (no partial search). error: the message to reply with (a list that does not exist).
- * @returns {Promise<{ resto: string, destinos: object[] } | { erro: string }>}
+ * @returns {Promise<{ rest: string, destinations: object[] } | { error: string }>}
  */
 async function expandLists(textAlt) {
     await dbReady;
     const mask = textAlt.replace(/\/[^/]*\/|"[^"]*"/g, (m) => ' '.repeat(m.length));
     const foundAlt4 = [...mask.matchAll(/(^|\s)#([^\s#]+)(?=\s|$)/g)];
-    if (!foundAlt4.length) return { resto: textAlt, destinos: [] };
+    if (!foundAlt4.length) return { rest: textAlt, destinations: [] };
 
     let rest = textAlt;
     for (const m of [...foundAlt4].reverse()) {
-        const ini = m.index + m[1].length;
-        rest = rest.slice(0, ini) + ' '.repeat(m[0].length - m[1].length) + rest.slice(ini + m[0].length - m[1].length);
+        const marker = m.index + m[1].length;
+        rest = rest.slice(0, marker) + ' '.repeat(m[0].length - m[1].length) + rest.slice(marker + m[0].length - m[1].length);
     }
 
     const names = [...new Set(foundAlt4.map(m => readName(m[2])))];
     const allAlt = await listAll();
     const missing = names.filter(n => !allAlt.some(l => l.list === n));
-    if (missing.length) return { erro: t('forward.list.notFound', { name: missing.join(', #') }) };
+    if (missing.length) return { error: t('forward.list.notFound', { name: missing.join(', #') }) };
 
     const destinations = names.reduce((acc, n) => join(acc, membersAlt(allAlt.find(l => l.list === n))), []);
-    return { resto: rest.replace(/[ \t]{2,}/g, ' ').trim(), destinos: destinations };
+    return { rest: rest.replace(/[ \t]{2,}/g, ' ').trim(), destinations };
 }
 
 // The list-management options: true if the text was one of them (already handled), false if not
@@ -268,7 +268,7 @@ async function manage(msg, textAlt) {
         '-add': () => addAlt(msg, rest), '-a': () => addAlt(msg, rest),
         '-list': () => listAlt(msg, rest), '-l': () => listAlt(msg, rest),
         '-rm': () => removeAlt2(msg, words.join(' ')), '-r': () => removeAlt2(msg, words.join(' ')),
-        '-move': () => mover(msg, rest), '-m': () => mover(msg, rest),
+        '-move': () => move(msg, rest), '-m': () => move(msg, rest),
         '-desc': () => describe(msg, rest)
     };
     if (!Object.hasOwn(handlers, nameAlt)) return false;

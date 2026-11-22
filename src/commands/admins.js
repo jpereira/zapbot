@@ -52,19 +52,19 @@ async function changeAdmin(promote, { msg, opts, quotedMsg, isGroup }) {
 
         const target = await participantAlt(group, person.id);
         if (!target) {
-            await msg.reply(t('grp.admin.notMember', { name: person.nome }));
+            await msg.reply(t('grp.admin.notMember', { name: person.name }));
             continue;
         }
         if (promote && (target.isAdmin || target.isSuperAdmin)) {
-            await msg.reply(t('grp.admin.alreadyAdmin', { name: person.nome }));
+            await msg.reply(t('grp.admin.alreadyAdmin', { name: person.name }));
             continue;
         }
         if (!promote && !target.isAdmin && !target.isSuperAdmin) {
-            await msg.reply(t('grp.admin.notAdmin', { name: person.nome }));
+            await msg.reply(t('grp.admin.notAdmin', { name: person.name }));
             continue;
         }
         if (!promote && target.isSuperAdmin) {
-            await msg.reply(t('grp.admin.creator', { name: person.nome }));
+            await msg.reply(t('grp.admin.creator', { name: person.name }));
             continue;
         }
 
@@ -73,10 +73,10 @@ async function changeAdmin(promote, { msg, opts, quotedMsg, isGroup }) {
                 ? await group.promoteParticipants([target.id._serialized])
                 : await group.demoteParticipants([target.id._serialized]);
             if (r?.status && r.status !== 200) throw new Error(`status ${r.status}`);
-            await msg.reply(t(promote ? 'grp.admin.promoted' : 'grp.admin.demoted', { name: person.nome }));
+            await msg.reply(t(promote ? 'grp.admin.promoted' : 'grp.admin.demoted', { name: person.name }));
         } catch (err) {
             printError(`${cmd}:`, err.message);
-            await msg.reply(t('grp.admin.failed', { name: person.nome, error: err.message }));
+            await msg.reply(t('grp.admin.failed', { name: person.name, error: err.message }));
         }
     }
 }

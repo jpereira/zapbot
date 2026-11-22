@@ -25,21 +25,21 @@ function dataParserCommand(args, command, opts) {
         const alert = ['/crypto', '/stocks'].includes(command.cmd) && opts.given.has('alert');
         if (!hasDestination && !alert) return opts;
         const destinations = hasDestination ? extractDestinations(args) : null;
-        let rest = destinations?.resto ?? args;
+        let rest = destinations?.rest ?? args;
         const messageAlt = alert ? extractMessage(rest) : null;
-        rest = messageAlt?.resto ?? rest;
+        rest = messageAlt?.rest ?? rest;
         const resultAlt = GetOptFromCommand(rest, command);
-        if (destinations?.informado) {
-            resultAlt.opt.to = destinations.destinos;
+        if (destinations?.given) {
+            resultAlt.opt.to = destinations.destinations;
             resultAlt.given.add('to');
         }
-        if (messageAlt?.informado) {
-            resultAlt.opt.msg = messageAlt.mensagem;
+        if (messageAlt?.given) {
+            resultAlt.opt.msg = messageAlt.message;
             resultAlt.given.add('msg');
         }
         return resultAlt;
     } catch (err) {
-        return { entrada: args, erro: err.message };
+        return { input: args, error: err.message };
     }
 }
 

@@ -20,12 +20,12 @@ beforeEach(async () => {
     group.removeParticipants = async (ids) => { removed.push(ids); return { status: 200 }; };
 });
 
-async function send(textAlt, { de = OTHERAlt.jid, mencoes: mentions = [] } = {}) {
-    const msg = bot.createMessage({ texto: textAlt, de, mencoes: mentions });
+async function send(textAlt, { de = OTHERAlt.jid, mentions = [] } = {}) {
+    const msg = bot.createMessage({ text: textAlt, de, mentions });
     await bot.deliver(msg);
     return msg;
 }
-const notices = () => bot.client.enviadas.map(e => e.content);
+const notices = () => bot.client.sent.map(e => e.content);
 
 test('palavras: sem acento, maiúscula nem pontuação, e só a palavra inteira', () => {
     assert.equal(normalizeWord('  ÍDIOTA! '), 'idiota');
@@ -62,14 +62,14 @@ test('/antibadword -delete: apaga a palavra de quem não é admin; admin, dono e
     await bot.replyAlt('/antibadword -add idiota -delete');
 
     const m = await send('Você é um IDIOTA!');
-    assert.equal(m.apagadaPara, 'todos');
+    assert.equal(m.deletedFor, 'todos');
     assert.ok(notices().includes('🤬 Mensagem de Fulano apagada: palavra proibida.'), JSON.stringify(notices()));
 
-    assert.equal((await send('bom dia, tudo bem?')).apagadaPara, undefined);
-    assert.equal((await send('/ping idiota')).apagadaPara, undefined, 'comando não conta');
+    assert.equal((await send('bom dia, tudo bem?')).deletedFor, undefined);
+    assert.equal((await send('/ping idiota')).deletedFor, undefined, 'comando não conta');
 
     group.participants.find(p => p.id._serialized === OTHERAlt.jid).isAdmin = true;
-    assert.equal((await send('idiota')).apagadaPara, undefined, 'admin do grupo');
+    assert.equal((await send('idiota')).deletedFor, undefined, 'admin do grupo');
 });
 
 test('/antibadword -remove: apaga e tira a pessoa; -warn soma um aviso', async () => {
@@ -81,7 +81,7 @@ test('/antibadword -remove: apaga e tira a pessoa; -warn soma um aviso', async (
     removed.length = 0;
     await bot.replyAlt('/antibadword -warn');
     const m = await send('idiota');
-    assert.equal(m.apagadaPara, 'todos');
+    assert.equal(m.deletedFor, 'todos');
     assert.deepEqual(removed, [], '1 aviso, abaixo do warn.max');
     assert.ok(notices().some(c => /⚠️|aviso/i.test(c)));
 });
@@ -93,22 +93,22 @@ test('/antitag: modo e mínimo; apaga quem marca gente demais', async () => {
     assert.match(r, /🏷️ \*Antitag:\* apagar\n📏 \*Mínimo:\* 6 marcações numa mensagem/);
     assert.match((await bot.replyAlt('/antitag -min 2'))[0], /Use um número inteiro de 3 a 1000/);
 
-    const few = await send('oi @a @b', { mencoes: MEMBERS.slice(0, 2) });
-    assert.equal(few.apagadaPara, undefined);
-    const five = await send('oi gente', { mencoes: MEMBERS.slice(0, 5) });
-    assert.equal(five.apagadaPara, undefined, 'abaixo do mínimo (6)');
-    const six = await send('oi gente', { mencoes: MEMBERS.slice(0, 6) });
-    assert.equal(six.apagadaPara, 'todos');
+    const few = await send('oi @a @b', { mentions: MEMBERS.slice(0, 2) });
+    assert.equal(few.deletedFor, undefined);
+    const five = await send('oi gente', { mentions: MEMBERS.slice(0, 5) });
+    assert.equal(five.deletedFor, undefined, 'abaixo do mínimo (6)');
+    const six = await send('oi gente', { mentions: MEMBERS.slice(0, 6) });
+    assert.equal(six.deletedFor, 'todos');
     assert.ok(notices().includes('🏷️ Mensagem de Fulano apagada: marcou gente demais.'));
 
     group.participants.find(p => p.id._serialized === OTHERAlt.jid).isAdmin = true;
-    assert.equal((await send('oi', { mencoes: MEMBERS.slice(0, 8) })).apagadaPara, undefined, 'admin do grupo');
+    assert.equal((await send('oi', { mentions: MEMBERS.slice(0, 8) })).deletedFor, undefined, 'admin do grupo');
 });
 
 test('/antitag desligado não faz nada, e o bot sem ser admin não apaga', async () => {
-    assert.equal((await send('oi', { mencoes: MEMBERS })).apagadaPara, undefined);
+    assert.equal((await send('oi', { mentions: MEMBERS })).deletedFor, undefined);
     await bot.replyAlt('/antitag -delete');
     group.participants.find(p => p.id._serialized === OWNER.jid).isAdmin = false;
-    assert.equal((await send('oi', { mencoes: MEMBERS })).apagadaPara, undefined);
+    assert.equal((await send('oi', { mentions: MEMBERS })).deletedFor, undefined);
     assert.match((await bot.replyAlt('/antitag'))[0], /O bot não é admin do grupo/);
 });

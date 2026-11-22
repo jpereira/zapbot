@@ -39,9 +39,9 @@ function messageKey(key) {
     return { id: partsAlt[2], chatId: partsAlt[1], fromMe: partsAlt[0] === 'true' };
 }
 
-async function sendReactionUndone(destination, row, { contagem: count = null } = {}) {
+async function sendReactionUndone(destination, row, { count = null } = {}) {
     const removed = !row.new_reaction;
-    const title = t(`reacoes.${removed ? 'removida' : 'trocada'}${count ? 'Contagem' : 'Detectada'}`, { contagem: count });
+    const title = t(`reacoes.${removed ? 'removida' : 'trocada'}${count ? 'Contagem' : 'Detectada'}`, { count });
 
     // Raw mentions (@265472113143884) become the name only on display; the original text stays in the database
     const body = await messageResolverMentions(row.body, row.message_id);
@@ -54,21 +54,21 @@ async function sendReactionUndone(destination, row, { contagem: count = null } =
             senderName: row.sender_name, senderNumber: row.sender_number
         }) +
         t('reacoes.corpo', {
-            reagiu: formatData(row.reacted_at),
-            quandoRotulo: t(removed ? 'reacoes.removidaEm' : 'reacoes.trocadaEm'),
-            quando: formatData(row.changed_at),
-            reacao: removed ? row.old_reaction : `${row.old_reaction} → ${row.new_reaction}`,
-            naMensagem: t(row.msg_from_me ? 'reacoes.naSuaMensagem' : 'reacoes.naMensagem'),
-            mensagem: messageAlt
+            reacted: formatData(row.reacted_at),
+            whenLabel: t(removed ? 'reacoes.removidaEm' : 'reacoes.trocadaEm'),
+            when: formatData(row.changed_at),
+            reaction: removed ? row.old_reaction : `${row.old_reaction} → ${row.new_reaction}`,
+            inMessage: t(row.msg_from_me ? 'reacoes.naSuaMensagem' : 'reacoes.naMensagem'),
+            message: messageAlt
         });
 
     // Records where it came from (/mute replying to the notice)
     const sent = await client.sendMessage(destination, textAlt, { linkPreview: false });
-    await registerNotice(sent, { chatId: row.chat_id, remetente: row.sender_number || row.sender_jid });
+    await registerNotice(sent, { chatId: row.chat_id, sender: row.sender_number || row.sender_jid });
 }
 
 // Saves the undone reaction (with the name of who reacted and the message text) and notifies
-async function registerReactionUndone({ chave: keyAlt, sender, antes: beforeAlt, nova: fresh, quando: when }) {
+async function registerReactionUndone({ key: keyAlt, sender, before: beforeAlt, fresh, when }) {
     const phoneAlt = sender.endsWith('@lid') ? await resolveLidToPhone(sender) : sender;
     const numberAlt = phoneAlt?.endsWith('@c.us') ? phoneAlt.split('@')[0] : null;
     const contactAlt = await client.getContactById(phoneAlt || sender).catch(() => null);
@@ -109,7 +109,7 @@ async function registerReactionUndone({ chave: keyAlt, sender, antes: beforeAlt,
 
     // /mute: this chat's or this person's notice is muted (the reaction stays saved for /show -r)
     const senders = [sender, phoneAlt, numberAlt];
-    if (getSetting('show.alert.reaction') && !(await ignoreNotice('reacao', { chatId: keyAlt.chatId, remetentes: senders }))) {
+    if (getSetting('show.alert.reaction') && !(await ignoreNotice('reacao', { chatId: keyAlt.chatId, senders }))) {
         await sendReactionUndone(client.info.wid._serialized, row);
     }
 }
@@ -142,7 +142,7 @@ client.on('message_reaction', async (reaction) => {
         // New reaction (or the same one notified again): only stores
         if (!beforeAlt || beforeAlt.reaction === fresh) return;
 
-        await registerReactionUndone({ chave: keyAlt, sender, antes: beforeAlt, nova: fresh, quando: when });
+        await registerReactionUndone({ key: keyAlt, sender, before: beforeAlt, fresh, when });
     } catch (err) {
         printError('[Reaction] Error processing the reaction:', err.message);
     }

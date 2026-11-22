@@ -93,7 +93,7 @@ function fromWord(cs, widthAlt) {
 }
 
 /*
- * A line of text into lines of letters that fit `largura`: breaks at spaces, with the word
+ * A line of text into lines of letters that fit `width`: breaks at spaces, with the word
  * whole on the line below when it does not fit. Only a word longer than the line is broken letter by letter.
  */
 function breakInLines(part, widthAlt) {
@@ -121,18 +121,18 @@ function breakInLines(part, widthAlt) {
 }
 
 /**
- * @param {string} texto
+ * @param {string} text
  * @param {object} [o]
- * @param {number} [o.largura]  columns per line of letters
- * @param {string} [o.traco]    the dash character
+ * @param {number} [o.width]  columns per line of letters
+ * @param {string} [o.dash]    the dash character
  * @returns {string} the lines of letters, separated by a blank line
  */
-function generateAscii(textAlt, { largura: widthAlt = WIDTH_DEFAULT, traco = '#' } = {}) {
+function generateAscii(textAlt, { width: widthAlt = WIDTH_DEFAULT, dash = '#' } = {}) {
     // "\n" (typed) and a real line break start a new line of letters
     const groups = String(textAlt).split(/\\n|\r?\n/).flatMap(part => breakInLines(part, widthAlt));
 
     return groups.filter(g => g.length).map(g => Array.from({ length: 5 }, (_, line) =>
-        [...g.map(c => GLYPHS[c][line]).join('.')].map(p => (p === '#' ? traco : ' ')).join('').trimEnd()
+        [...g.map(c => GLYPHS[c][line]).join('.')].map(p => (p === '#' ? dash : ' ')).join('').trimEnd()
     ).join('\n')).join('\n\n');
 }
 
@@ -151,14 +151,14 @@ async function cmdAscii({ msg, opts, quotedMsg }) {
         }
     }
 
-    let traco = getSetting('ascii.defaultChar');
+    let dash = getSetting('ascii.defaultChar');
     if (opts.given.has('char')) {
         const c = opts.opt.char ?? '';
         if ([...c].length !== 1) return msg.reply(t('ascii.char'));
-        traco = c;
+        dash = c;
     }
 
-    const art = generateAscii(textAlt, { largura: widthAlt, traco });
+    const art = generateAscii(textAlt, { width: widthAlt, dash });
     if (!art) return msg.reply(t('ascii.nothing'));
 
     return msg.reply(`\`\`\`\n${art}\n\`\`\``);

@@ -32,7 +32,7 @@ const { t } = require('./i18n');
  * Media (cache/media) is not included.
  *
  * Reasons: 'automático' (the daily one, setting 'backup.hour'), 'manual' (/backup -now)
- * and 'antes de restaurar'. The automatic ones and those from before a restore beyond the
+ * and 'before de restore'. The automatic ones and those from before a restore beyond the
  * 'backup.keep' most recent ones are deleted; the manual ones stay until a /backup -rm.
  */
 const PREFIX = 'zapbot-';
@@ -44,16 +44,16 @@ const tar = promisify(execFile);
 const MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024;
 
 const REASONS = {
-    automatico: 'automático',
+    automatic: 'automático',
     manual: 'manual',
-    restaurar: 'antes de restaurar'
+    restore: 'antes de restaurar'
 };
 
 // The reason is stored in Portuguese (MOTIVOS): on screen, in the current language
 const REASONS_IN_SCREEN = {
-    [REASONS.automatico]: 'adm.backup.reasonAuto',
+    [REASONS.automatic]: 'adm.backup.reasonAuto',
     [REASONS.manual]: 'adm.backup.reasonManual',
-    [REASONS.restaurar]: 'adm.backup.reasonRestore'
+    [REASONS.restore]: 'adm.backup.reasonRestore'
 };
 const reasonText = (reasonAlt) => (REASONS_IN_SCREEN[reasonAlt] ? t(REASONS_IN_SCREEN[reasonAlt]) : reasonAlt);
 
@@ -65,35 +65,35 @@ async function sendBackupPerEmail(b, emails) {
     }
     await sendFilePerEmail({
         para: emails,
-        assunto: t('adm.backup.emailSubject', { quando: fmtWhen(b.criadoEm) }),
-        texto: t('adm.backup.emailBody', {
-            quando: fmtWhen(b.criadoEm), motivo: reasonText(b.motivo), versao: b.versao, dir: BACKUP_DIR, nome: b.nome
+        subject: t('adm.backup.emailSubject', { when: fmtWhen(b.createdAt) }),
+        text: t('adm.backup.emailBody', {
+            when: fmtWhen(b.createdAt), reason: reasonText(b.reason), version: b.version, dir: BACKUP_DIR, name: b.name
         }),
-        arquivo: b.arquivo,
-        nomeArquivo: `${b.nome}.db.gz`
+        file: b.file,
+        fileName: `${b.name}.db.gz`
     });
 }
 
 async function sendBackupOnChat(b, id) {
-    await client.sendMessage(id, MessageMedia.fromFilePath(b.arquivo), {
+    await client.sendMessage(id, MessageMedia.fromFilePath(b.file), {
         sendMediaAsDocument: true,
-        caption: t('adm.backup.caption', { quando: fmtWhen(b.criadoEm), motivo: reasonText(b.motivo) })
+        caption: t('adm.backup.caption', { when: fmtWhen(b.createdAt), reason: reasonText(b.reason) })
     });
 }
 
 async function sendBackupAutomatic(b, valueAlt) {
     const list = /^-to(?:\s|$)/.test(valueAlt) ? extractDestinations(valueAlt) : null;
-    if (list?.resto) throw new Error(t('adm.backup.toUsage'));
-    const texts = list ? list.destinos : [valueAlt.replace(/^(["'/])(.*)\1$/, '$2')];
+    if (list?.rest) throw new Error(t('adm.backup.toUsage'));
+    const texts = list ? list.destinations : [valueAlt.replace(/^(["'/])(.*)\1$/, '$2')];
     const destinations = [];
     const failures = [];
 
     for (const textAlt of texts) {
         try {
-            const d = await resolverDestination(textAlt, { aceitaEmail: true });
-            if (d.erro) throw new Error(d.erro);
+            const d = await resolverDestination(textAlt, { acceptsEmail: true });
+            if (d.error) throw new Error(d.error);
             // Without someone to pick a number: an ambiguous name does not win a coin toss.
-            if (d.opcoes) throw new Error(t('adm.backup.ambiguous'));
+            if (d.options) throw new Error(t('adm.backup.ambiguous'));
             if (!destinations.some(x => d.email ? x.email === d.email : x.id === d.id)) destinations.push(d);
         } catch (err) {
             failures.push(`${textAlt ?? t('adm.backup.emptyTo')}: ${err.message}`);
@@ -111,7 +111,7 @@ async function sendBackupAutomatic(b, valueAlt) {
             .catch(err => failures.push(`${describeDestination(d)}: ${err.message}`));
     }
     if (failures.length) throw new Error(failures.join('; '));
-    printInfo(`Daily backup ${b.nome} sent to ${valueAlt}`);
+    printInfo(`Daily backup ${b.name} sent to ${valueAlt}`);
 }
 
 // Database tables (without SQLite's internal ones)
@@ -145,7 +145,7 @@ async function contactsPhotos() {
 // Free name for a backup created now (Brasília time in the name)
 function nameNew(nowAlt) {
     const p = partsInBrasilia(nowAlt);
-    const base = `${PREFIX}${p.ano}${two(p.mes)}${two(p.dia)}-${two(p.h)}${two(p.m)}${two(p.s)}`;
+    const base = `${PREFIX}${p.year}${two(p.mes)}${two(p.day)}-${two(p.h)}${two(p.m)}${two(p.s)}`;
 
     let nameAlt = base;
     for (let i = 2; fs.existsSync(path.join(BACKUP_DIR, nameAlt + EXT)); i++) nameAlt = `${base}-${i}`;
@@ -154,7 +154,7 @@ function nameNew(nowAlt) {
 
 /**
  * The backups, from newest to oldest.
- * @returns {Promise<Array<{nome, arquivo, bytes, criadoEm, motivo, versao, entradas}>>}
+ * @returns {Promise<Array<{name, file, bytes, createdAt, reason, version, inputs}>>}
  */
 async function listBackups() {
     if (!fs.existsSync(BACKUP_DIR)) return [];
@@ -171,28 +171,28 @@ async function listBackups() {
         const meta = await fs.readJson(path.join(BACKUP_DIR, `${nameAlt}.json`)).catch(() => ({}));
 
         list.push({
-            nome: nameAlt,
-            arquivo: fileAlt,
+            name: nameAlt,
+            file: fileAlt,
             bytes: stat.size,
-            criadoEm: meta.criadoEm ?? stat.mtimeMs,
-            motivo: meta.motivo ?? '?',
-            versao: meta.versao ?? '?',
-            entradas: meta.entradas ?? null,
+            createdAt: meta.createdAt ?? stat.mtimeMs,
+            reason: meta.reason ?? '?',
+            version: meta.version ?? '?',
+            inputs: meta.inputs ?? null,
             ...(fs.existsSync(fileNotes)
-                ? { arquivoNotas: fileNotes, bytesNotas: (await fs.stat(fileNotes)).size, imagens: meta.imagens ?? null }
+                ? { notesFile: fileNotes, notesBytes: (await fs.stat(fileNotes)).size, images: meta.images ?? null }
                 : {}),
             ...(fs.existsSync(fileContacts)
-                ? { arquivoContatos: fileContacts, bytesContatos: (await fs.stat(fileContacts)).size, fotos: meta.fotos ?? null }
+                ? { contactsFile: fileContacts, contactsBytes: (await fs.stat(fileContacts)).size, photos: meta.photos ?? null }
                 : {})
         });
     }
 
-    return list.sort((a, b) => b.criadoEm - a.criadoEm || b.nome.localeCompare(a.nome));
+    return list.sort((a, b) => b.createdAt - a.createdAt || b.name.localeCompare(a.name));
 }
 
 /**
  * Creates a backup now.
- * @param {string} motivo  one of the MOTIVOS
+ * @param {string} reason  one of the MOTIVOS
  */
 async function createBackup(reasonAlt = REASONS.manual, nowAlt = Date.now()) {
     await dbReady;
@@ -218,7 +218,7 @@ async function createBackup(reasonAlt = REASONS.manual, nowAlt = Date.now()) {
             await tar('tar', ['-czf', path.join(BACKUP_DIR, nameAlt + EXT_CONTACTS), '-C', CONTACTS_DIR, '.']);
         }
         await fs.writeJson(path.join(BACKUP_DIR, `${nameAlt}.json`),
-            { criadoEm: nowAlt, motivo: reasonAlt, versao: versionWithCommit(), bytesBanco: bytesDb, entradas: inputs, imagens: images.length, fotos: photos.length },
+            { createdAt: nowAlt, reason: reasonAlt, version: versionWithCommit(), bytesDatabase: bytesDb, inputs, images: images.length, photos: photos.length },
             { spaces: 2 });
 
         printInfo(`Backup ${nameAlt} created (${reasonAlt})`);
@@ -227,47 +227,47 @@ async function createBackup(reasonAlt = REASONS.manual, nowAlt = Date.now()) {
     }
 
     await applyRetention();
-    return (await listBackups()).find(b => b.nome === nameAlt);
+    return (await listBackups()).find(b => b.name === nameAlt);
 }
 
 // Deletes the automatic ones and those from before a restore beyond the 'backup.keep' most recent
 async function applyRetention() {
     const keep = getSetting('backup.keep');
-    const disposable = (await listBackups()).filter(b => b.motivo !== REASONS.manual);
+    const disposable = (await listBackups()).filter(b => b.reason !== REASONS.manual);
 
     for (const b of disposable.slice(keep)) {
         await removeBackup(b);
-        printInfo(`Backup ${b.nome} removed (retention: ${keep})`);
+        printInfo(`Backup ${b.name} removed (retention: ${keep})`);
     }
 }
 
 async function removeBackup(b) {
-    await fs.remove(b.arquivo);
-    await fs.remove(path.join(BACKUP_DIR, b.nome + EXT_NOTES));
-    await fs.remove(path.join(BACKUP_DIR, b.nome + EXT_CONTACTS));
-    await fs.remove(path.join(BACKUP_DIR, `${b.nome}.json`));
+    await fs.remove(b.file);
+    await fs.remove(path.join(BACKUP_DIR, b.name + EXT_NOTES));
+    await fs.remove(path.join(BACKUP_DIR, b.name + EXT_CONTACTS));
+    await fs.remove(path.join(BACKUP_DIR, `${b.name}.json`));
 }
 
 // Deletes all the backups (/cache -backup and /cache -all)
 async function deleteAllBackups() {
     const list = await listBackups();
     for (const b of list) await removeBackup(b);
-    return { backups: list.length, bytes: list.reduce((s, b) => s + b.bytes + (b.bytesNotas ?? 0) + (b.bytesContatos ?? 0), 0) };
+    return { backups: list.length, bytes: list.reduce((s, b) => s + b.bytes + (b.notesBytes ?? 0) + (b.contactsBytes ?? 0), 0) };
 }
 
 /**
  * Restores a backup over the current database. First, makes a backup of the state
- * current ('antes de restaurar'). Copies table by table, only the columns that
+ * current ('before de restore'). Copies table by table, only the columns that
  * exist in both databases (a backup from an earlier version works too), and
  * reloads the settings.
- * @returns {Promise<{ seguranca: object, entradas: object }>}
+ * @returns {Promise<{ security: object, inputs: object }>}
  */
 async function restoreBackup(b) {
     await dbReady;
-    const security = await createBackup(REASONS.restaurar);
-    const copy = path.join(TMP_DIR, `restaurar-${b.nome}.db`);
+    const security = await createBackup(REASONS.restore);
+    const copy = path.join(TMP_DIR, `restaurar-${b.name}.db`);
 
-    await pipeline(fs.createReadStream(b.arquivo), zlib.createGunzip(), fs.createWriteStream(copy));
+    await pipeline(fs.createReadStream(b.file), zlib.createGunzip(), fs.createWriteStream(copy));
     await dbRun('ATTACH DATABASE ? AS bk', [copy]);
 
     try {
@@ -296,21 +296,21 @@ async function restoreBackup(b) {
     }
 
     // The backup images go back to NOTES_DIR (those already there that did not come stay)
-    if (b.arquivoNotas) {
+    if (b.notesFile) {
         await fs.ensureDir(NOTES_DIR);
-        await tar('tar', ['-xzf', b.arquivoNotas, '-C', NOTES_DIR]);
+        await tar('tar', ['-xzf', b.notesFile, '-C', NOTES_DIR]);
     }
 
     // The /contacts photos too (those already there that did not come stay)
-    if (b.arquivoContatos) {
+    if (b.contactsFile) {
         await fs.ensureDir(CONTACTS_DIR);
-        await tar('tar', ['-xzf', b.arquivoContatos, '-C', CONTACTS_DIR]);
+        await tar('tar', ['-xzf', b.contactsFile, '-C', CONTACTS_DIR]);
     }
 
     await loadSettings();
-    printInfo(`Backup ${b.nome} restored (the previous state is in ${security.nome})`);
+    printInfo(`Backup ${b.name} restored (the previous state is in ${security.name})`);
 
-    return { seguranca: security, entradas: await countInputs() };
+    return { security, inputs: await countInputs() };
 }
 
 /*
@@ -328,15 +328,15 @@ async function checkBackupDaily(nowAlt = Date.now()) {
 
     const sameDay = (ms) => {
         const p = partsInBrasilia(ms);
-        return p.ano === today.ano && p.mes === today.mes && p.dia === today.dia;
+        return p.year === today.year && p.mes === today.mes && p.day === today.day;
     };
 
     doingBackup = true;
     try {
-        const jaDone = (await listBackups()).some(b => b.motivo === REASONS.automatico && sameDay(b.criadoEm));
+        const jaDone = (await listBackups()).some(b => b.reason === REASONS.automatic && sameDay(b.createdAt));
         if (jaDone) return null;
 
-        const b = await createBackup(REASONS.automatico, nowAlt);
+        const b = await createBackup(REASONS.automatic, nowAlt);
         const destination = getSetting('backup.to').trim();
         if (destination) {
             try {
@@ -344,13 +344,13 @@ async function checkBackupDaily(nowAlt = Date.now()) {
             } catch (err) {
                 printError('Sending the daily backup failed:', err.message);
                 await alertPerEmail(t('adm.backup.sendFailAlertSubject'),
-                    t('adm.backup.sendFailAlert', { nome: b.nome, erro: err.message }));
+                    t('adm.backup.sendFailAlert', { name: b.name, error: err.message }));
             }
         }
         return b;
     } catch (err) {
         printError('Daily backup failed:', err.message);
-        alertPerEmail(t('adm.backup.failAlertSubject'), t('adm.backup.failAlert', { erro: err.message }));
+        alertPerEmail(t('adm.backup.failAlertSubject'), t('adm.backup.failAlert', { error: err.message }));
         return null;
     } finally {
         doingBackup = false;
@@ -361,11 +361,11 @@ async function checkBackupDaily(nowAlt = Date.now()) {
 function nextBackupDaily(nowAlt = Date.now(), doneToday = false) {
     const p = partsInBrasilia(nowAlt);
     const hour = getSetting('backup.hour');
-    const today = instantInBrasilia(p.ano, p.mes, p.dia, hour, 0);
+    const today = instantInBrasilia(p.year, p.mes, p.day, hour, 0);
 
     if (!doneToday && nowAlt < today) return today;
     if (!doneToday) return nowAlt; // already past the time: goes out on the next check
-    return instantInBrasilia(p.ano, p.mes, p.dia + 1, hour, 0);
+    return instantInBrasilia(p.year, p.mes, p.day + 1, hour, 0);
 }
 
 // Called in app.js

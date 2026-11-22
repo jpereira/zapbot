@@ -20,9 +20,9 @@ const uintAbi = (n) => word(BigInt(n).toString(16));
 
 // Return decoding: the i-th word as a number, signed integer or address
 const wordIn = (hex, i) => hex.replace(/^0x/, '').slice(i * 64, (i + 1) * 64);
-const uintDe = (hex, i = 0) => BigInt(`0x${wordIn(hex, i) || '0'}`);
-function intDe(hex, i = 0) {
-    const n = uintDe(hex, i);
+const uintFrom = (hex, i = 0) => BigInt(`0x${wordIn(hex, i) || '0'}`);
+function intFrom(hex, i = 0) {
+    const n = uintFrom(hex, i);
     return n >= 1n << 255n ? n - (1n << 256n) : n;
 }
 const addressAlt = (hex, i = 0) => `0x${wordIn(hex, i).slice(24)}`;
@@ -31,13 +31,13 @@ const addressAlt = (hex, i = 0) => `0x${wordIn(hex, i).slice(24)}`;
 function text(hex) {
     const h = hex.replace(/^0x/, '');
     if (h.length === 64) return Buffer.from(h, 'hex').toString('utf8').replace(/\0+$/, '');
-    const size = Number(uintDe(h, 1));
+    const size = Number(uintFrom(h, 1));
     return Buffer.from(h.slice(128, 128 + size * 2), 'hex').toString('utf8');
 }
 
 /**
  * Several calls in a few requests (the public RPC limits the number of requests).
- * @param {Array<{ to: string, data: string, from?: string }>} chamadas
+ * @param {Array<{ to: string, data: string, from?: string }>} calls
  * @returns {Promise<string[]>} the return (hex) of each one, in order
  */
 async function ethCall(calls) {
@@ -65,9 +65,9 @@ module.exports = {
     addressAbi,
     addressAlt,
     ethCall,
-    intDe,
+    intFrom,
     isAddressEvm,
     text,
     uintAbi,
-    uintDe
+    uintFrom
 };

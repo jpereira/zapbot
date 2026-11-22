@@ -24,7 +24,7 @@ async function cmdWalissu({ msg }) {
     }
 
     try {
-        const cves = await searchCvesRecent({ dias: 2, max: 50 });
+        const cves = await searchCvesRecent({ days: 2, max: 50 });
         const cve = cves[Math.floor(Math.random() * cves.length)];
 
         if (!cve) {

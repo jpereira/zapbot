@@ -76,20 +76,20 @@ async function sendGif(msg, b64, captionAlt, cmd) {
  * @param {object} o
  * @param {object} o.msg
  * @param {string} o.cmd        the command that called ("/draw", "/gpt"): notice, log and errors
- * @param {string} o.pedido     what the user typed, without the options
+ * @param {string} o.request     what the user typed, without the options
  * @param {object} [o.quotedMsg]  the replied message: its text goes into the request and its photo is the base
  * @param {{ frames?: number, frameMs?: number } | null} [o.gif]  asks for the GIF (whatever is missing comes from the settings)
- * @param {Array<{ nome: string, imagem: object }>} [o.perfis]  the -p profile photos: they go along with the base photo
+ * @param {Array<{ name: string, image: object }>} [o.profiles]  the -p profile photos: they go along with the base photo
  * @param {string} o.withoutRequest  the reply when there is nothing to draw
  */
-async function drawAlt({ msg, cmd, pedido: request, quotedMsg = null, gif = null, perfis: profiles = [], semPedido: withoutRequest }) {
+async function drawAlt({ msg, cmd, request, quotedMsg = null, gif = null, profiles = [], noRequest: withoutRequest }) {
     const base = await referencePhoto(msg, quotedMsg, cmd);
-    if (base?.erro) {
-        await msg.reply(base.erro);
+    if (base?.error) {
+        await msg.reply(base.error);
         return;
     }
     // The message photo first and then the profile ones (the context tells the AI which is which)
-    const images = [base?.imagem, ...profiles.map(p => p.imagem)].filter(Boolean);
+    const images = [base?.image, ...profiles.map(p => p.image)].filter(Boolean);
     const photo = images.length ? images : null;
 
     // Replying to a message, its text (on a photo, the caption) goes before the request
@@ -103,10 +103,10 @@ async function drawAlt({ msg, cmd, pedido: request, quotedMsg = null, gif = null
         frames: gif.frames ?? getSetting('gpt.gif.frames'),
         frameMs: gif.frameMs ?? getSetting('gpt.gif.frameMs')
     };
-    const context = imagesContext({ comFotoDaMensagem: Boolean(base?.imagem), perfis: profiles });
+    const context = imagesContext({ withMessagePhoto: Boolean(base?.image), profiles });
     const withContext = (x) => [x, context].filter(Boolean).join('\n\n');
     const prompt = animation && photo
-        ? withContext(t('draw.animatePrompt', { texto: textAlt || t('draw.animateDefault') }))
+        ? withContext(t('draw.animatePrompt', { text: textAlt || t('draw.animateDefault') }))
         : withContext(textAlt);
     const captionAlt = `${animation ? '🎞️' : '🎨'} ${textAlt.length > CAPTION_MAX ? `${textAlt.slice(0, CAPTION_MAX)}…` : textAlt}`.trim();
 
@@ -114,7 +114,7 @@ async function drawAlt({ msg, cmd, pedido: request, quotedMsg = null, gif = null
     try {
         const b64 = await generateImage({
             cmd, prompt, gif: animation,
-            imagens: photo ? await Promise.all(photo.map(image => photoInPng({ imagem: image }))) : []
+            images: photo ? await Promise.all(photo.map(image => photoInPng({ image }))) : []
         });
         // Media does not become an edit of the notice: it says the result comes below (and stays), and the media goes out afterward
         await completeNotice(msg, notice, t(animation ? 'draw.gifBelow' : 'draw.imageBelow'));
@@ -125,7 +125,7 @@ async function drawAlt({ msg, cmd, pedido: request, quotedMsg = null, gif = null
         const messageAlt = err.response?.data?.error?.message ?? '';
         await completeNotice(msg, notice, await modelError(err, animation ? GIF_MODEL : IMAGE_MODEL, cmd) ||
             (animation && /gif|preview/i.test(messageAlt)
-                ? t('draw.gifDenied', { mensagem: messageAlt })
+                ? t('draw.gifDenied', { message: messageAlt })
                 : errorOpenAi(err, cmd)));
     }
 }
@@ -134,13 +134,13 @@ async function drawAlt({ msg, cmd, pedido: request, quotedMsg = null, gif = null
 function readInteger(valueAlt, { min, max }, nameAlt) {
     if (valueAlt == null) return null;
     const n = Number(valueAlt);
-    if (!Number.isInteger(n) || n < min || n > max) throw new Error(t('draw.intRange', { nome: nameAlt, min, max }));
+    if (!Number.isInteger(n) || n < min || n > max) throw new Error(t('draw.intRange', { name: nameAlt, min, max }));
     return n;
 }
 
 async function draw({ msg, args, opts, quotedMsg, chatId, isGroup }) {
     if (opts?.given.has('model')) {
-        await swapModel(msg, opts.opt.model, opts, { cmd: '/draw', icone: '🎨', usos: DRAW_USES, padrao: IMAGE_USAGE });
+        await swapModel(msg, opts.opt.model, opts, { cmd: '/draw', icon: '🎨', uses: DRAW_USES, fallback: IMAGE_USAGE });
         return;
     }
 
@@ -172,13 +172,13 @@ async function draw({ msg, args, opts, quotedMsg, chatId, isGroup }) {
     const withP = opts?.given.has('profile');
     const profile = withP ? await textReadProfile(args) : readProfileImplicit(request);
     if (withP || profile) {
-        for (const item of profile?.itens ?? []) request = request.replace(item, '');
+        for (const item of profile?.items ?? []) request = request.replace(item, '');
         request = request.replace(/\s{2,}/g, ' ').trim();
-        profiles = await resolverProfiles({ msg, quotedMsg, chatId, isGroup, itens: profile?.itens ?? [], cmd: '/draw' });
+        profiles = await resolverProfiles({ msg, quotedMsg, chatId, isGroup, items: profile?.items ?? [], cmd: '/draw' });
         if (!profiles) return;
     }
 
-    await drawAlt({ msg, cmd: '/draw', pedido: request, quotedMsg, gif, perfis: profiles, semPedido: commandUsage('/draw') });
+    await drawAlt({ msg, cmd: '/draw', request, quotedMsg, gif, profiles, noRequest: commandUsage('/draw') });
 }
 
 // The -status|-s (or the gpt.status setting) shows the call usage in the footer

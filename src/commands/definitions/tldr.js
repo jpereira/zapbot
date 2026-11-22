@@ -16,13 +16,13 @@ module.exports = {
             opts: ['chat', 'c'],
             values: ['<name>'],
             desc: 'Summarizes another chat: the group or contact name, /regex/ or @contact. If several match, lists them and waits for the number.',
-            outrosChats: true
+            otherChats: true
         },
         {
             opts: ['private'],
             values: [],
             desc: 'Sends it to your private chat.',
-            outrosChats: true
+            otherChats: true
         },
         optionStatus('/tldr -s 2h'),
         {
@@ -30,7 +30,7 @@ module.exports = {
             desc: 'A duration, like in /cron (30m, 2h, 1d, 1h30m, 2d4h): the messages from that time until now; a number (300): the last 300 (max tldr.maxMsgs). Default: the last 100. Replying to a message (without a period or -c): from the replied message until now.'
         }
     ],
-    estrito: 'primeira',
-    delegavel: true,
+    strict: 'primeira',
+    isDelegable: true,
     role: ADMIN // delegable: spends the owner's API, current chat only
 };

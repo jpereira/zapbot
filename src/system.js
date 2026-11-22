@@ -10,7 +10,7 @@ const fs = require('fs');
 const os = require('os');
 const packageJson = require('../package.json');
 
-const { estado: stateAlt } = require('./state');
+const { state: stateAlt } = require('./state');
 const { client } = require('./client');
 const { BIN_CHROMIUM, BIN_FFMPEG, BIN_YT, BOT_START_TIME } = require('./constants');
 const { dbGet, dbReady } = require('./db');
@@ -63,14 +63,14 @@ function wwebjsVersion() {
  */
 const NEWS_TTL_MS = 6 * 60 * 60 * 1000;
 const WWEBJS_REPO = 'wwebjs/whatsapp-web.js';
-let news = { em: 0, dados: null };
+let news = { em: 0, data: null };
 
 const fetchIt = (url) => axios.get(url, { timeout: VERSION_TIMEOUT_MS, headers: { 'User-Agent': 'zapbot' } })
     .then(r => r.data)
     .catch(() => null);
 
 async function searchNews(nowAlt = Date.now()) {
-    if (news.dados && nowAlt - news.em < NEWS_TTL_MS) return news.dados;
+    if (news.data && nowAlt - news.em < NEWS_TTL_MS) return news.data;
 
     const commit = wwebjsCommitComplete();
     const [pypi, release, comparison] = await Promise.all([
@@ -84,11 +84,11 @@ async function searchNews(nowAlt = Date.now()) {
         wwebjs: release?.tag_name?.replace(/^v/, '') ?? null,
         commitsNoMain: Number.isInteger(comparison?.ahead_by) ? comparison.ahead_by : null
     };
-    news = { em: nowAlt, dados: dataAlt };
+    news = { em: nowAlt, data: dataAlt };
     return dataAlt;
 }
 
-const cleanNews = () => { news = { em: 0, dados: null }; };
+const cleanNews = () => { news = { em: 0, data: null }; };
 
 // 1 (a > b), -1 or 0, number by number: "2026.08.19" and "2026.8.19" are the same
 function compareVersions(a, b) {
@@ -137,19 +137,19 @@ async function infoText() {
         searchNews()
     ]);
 
-    const memoria = process.memoryUsage();
+    const memory = process.memoryUsage();
     const total = os.totalmem();
-    const livre = os.freemem();
+    const free = os.freemem();
     const cpus = os.cpus();
-    const carga = os.loadavg().map(n => n.toFixed(2)).join(' · ');
+    const load = os.loadavg().map(n => n.toFixed(2)).join(' · ');
 
     return t('sistema.info', {
-        versao: botVersion(),
+        version: botVersion(),
         zapbot: versionWithCommit(),
         node: process.version,
         v8: process.versions.v8,
         wwebjs: `${wwebjsVersion()}${wwebjsNote(freshAlt2)}`,
-        whatsappWeb: whatsappWeb ?? (stateAlt.pronto ? notFound() : t('sistema.naoConectado')),
+        whatsappWeb: whatsappWeb ?? (stateAlt.ready ? notFound() : t('sistema.naoConectado')),
         sqlite: sqlite ?? notFound(),
         chromium,
         ytDlp: `${ytDlp ?? notFound()}${versionNote(ytDlp, freshAlt2.ytDlp)}`,
@@ -157,12 +157,12 @@ async function infoText() {
         uname: uname ?? `${os.type()} ${os.release()} ${os.arch()}`,
         host: `${os.hostname()}${inDocker() ? ' (Docker)' : ''}`,
         cpu: `${cpus.length}× ${cpus[0]?.model?.trim() ?? os.arch()}`,
-        carga,
-        memUsada: humanSize(total - livre),
+        load,
+        memUsed: humanSize(total - free),
         memTotal: humanSize(total),
-        memBot: humanSize(memoria.rss),
-        sistemaNoAr: getBotUptime(Date.now() - os.uptime() * 1000),
-        botNoAr: getBotUptime(BOT_START_TIME),
+        memBot: humanSize(memory.rss),
+        systemUp: getBotUptime(Date.now() - os.uptime() * 1000),
+        botUp: getBotUptime(BOT_START_TIME),
         pid: process.pid
     });
 }

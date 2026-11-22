@@ -68,7 +68,7 @@ describe('definições dos comandos', () => {
             const fileAlt = path.join(bot.ROOT, 'src/locales/pt_BR/definitions', `${c.cmd.slice(1)}.json`);
             assert.ok(fs.existsSync(fileAlt), `sem ${path.relative(bot.ROOT, fileAlt)}`);
             const pt = JSON.parse(fs.readFileSync(fileAlt, 'utf8'));
-            for (const campo of ['summary', 'usage', 'help']) assert.equal(typeof pt[campo], 'string', `${c.cmd}: ${campo}`);
+            for (const field of ['summary', 'usage', 'help']) assert.equal(typeof pt[field], 'string', `${c.cmd}: ${field}`);
             assert.equal((pt.ex ?? []).length, (c.ex ?? []).length, `${c.cmd}: ex`);
             assert.equal(pt.cmd_opts.length, (c.cmd_opts ?? []).length, `${c.cmd}: cmd_opts`);
             (c.cmd_opts ?? []).forEach((o, i) => {
@@ -80,7 +80,7 @@ describe('definições dos comandos', () => {
                 assert.equal((p.ex ?? []).length, (o.ex ?? []).length, `${whereAlt}: ex`);
                 assert.equal(typeof p.desc, 'string', `${whereAlt}: desc`);
             });
-            assert.deepEqual(Object.keys(pt.protocolos ?? {}), Object.keys(c.protocolos ?? {}), `${c.cmd}: protocolos`);
+            assert.deepEqual(Object.keys(pt.protocols ?? {}), Object.keys(c.protocols ?? {}), `${c.cmd}: protocolos`);
         }
     });
 
@@ -102,8 +102,8 @@ describe('definições dos comandos', () => {
         for (const lang of LANGUAGES) {
             await setSetting('zapbot.lang', lang);
             for (const c of activeCommands()) {
-                for (const protocol of [undefined, ...Object.keys(c.protocolos ?? {})]) {
-                    const textAlt = formatCommandHelp(c, { protocolo: protocol });
+                for (const protocol of [undefined, ...Object.keys(c.protocols ?? {})]) {
+                    const textAlt = formatCommandHelp(c, { protocol });
                     assert.doesNotMatch(textAlt, /\$\{|undefined|\[object/, `${lang} ${c.cmd}`);
                     assert.ok(textAlt.startsWith('Usage: '), `${lang} ${c.cmd}`);
                 }

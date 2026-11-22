@@ -42,7 +42,7 @@ function language() {
 }
 
 /**
- * @param {string} chave
+ * @param {string} key
  * @param {Record<string, string|number>} [vars]  values of the {placeholders}; `n` picks the plural form
  * @param {string} [lang]  forces the language (default: the setting's)
  */

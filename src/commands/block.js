@@ -15,7 +15,7 @@ const { wait } = require('../util/format');
  * or +number; replying to a message, whoever wrote it)
  * /block (or -l)        → the blocked ones, numbered for /unblock <no.>
  * /unblock <person|no.>  → unblocks (the person as in /block, or the list no.)
- * /unblock -all (-a)    → desbloqueia todos
+ * /unblock -all (-a)    → desbloqueia all
  * The list comes from WhatsApp: whoever you blocked on the phone also shows up.
  * Groups cannot be blocked.
  */
@@ -51,12 +51,12 @@ async function blocked(c) {
     const phoneAlt = jid?.endsWith('@c.us') ? jid.split('@')[0] : null;
     const phoneAlt2 = jid && jid !== id ? await client.getContactById(jid).catch(() => null) : null;
     const nameAlt = scheduleName(phoneAlt2) || scheduleName(c) || contactName(phoneAlt2) || contactName(c);
-    return { id, telefone: phoneAlt, nome: nameAlt };
+    return { id, phone: phoneAlt, name: nameAlt };
 }
 
 // "Fulano · +5521...", "+5521..." or, with no known name or phone, the internal id
-const describe = (b) => (b.nome ? `${b.nome}${b.telefone ? ` · +${b.telefone}` : ''}`
-    : b.telefone ? `+${b.telefone}` : `${b.id.split('@')[0]} _(${t('grp.block.internalId')})_`);
+const describe = (b) => (b.name ? `${b.name}${b.phone ? ` · +${b.phone}` : ''}`
+    : b.phone ? `+${b.phone}` : `${b.id.split('@')[0]} _(${t('grp.block.internalId')})_`);
 
 /*
  * The blocked ones: with a name (in order), then only with a phone, then only with the
@@ -65,9 +65,9 @@ const describe = (b) => (b.nome ? `${b.nome}${b.telefone ? ` · +${b.telefone}` 
  */
 async function blockedAlt() {
     const list = await Promise.all((await client.getBlockedContacts()).map(blocked));
-    const group = (b) => (b.nome ? 0 : b.telefone ? 1 : 2);
+    const group = (b) => (b.name ? 0 : b.phone ? 1 : 2);
     return list.sort((a, b) => group(a) - group(b) ||
-        (a.nome ?? a.telefone ?? a.id).localeCompare(b.nome ?? b.telefone ?? b.id, 'pt-BR'));
+        (a.name ?? a.phone ?? a.id).localeCompare(b.name ?? b.phone ?? b.id, 'pt-BR'));
 }
 
 async function listAlt(msg) {
@@ -86,28 +86,28 @@ async function listAlt(msg) {
 
 /**
  * The person: the one from the text (looked up as in -to, contacts only) or, without it, whoever
- * escreveu a mensagem respondida.
- * @returns {Promise<{ id: string, nome: string } | null>} null: already replied the error
+ * escreveu a message respondida.
+ * @returns {Promise<{ id: string, name: string } | null>} null: already replied the error
  */
 async function readPerson(msg, textAlt, quotedMsg, cmd) {
     if (textAlt) {
         const d = await resolverOrChoose(msg, textAlt, {
-            tipo: 'contato',
-            semEmail: t('grp.block.noEmail', { cmd })
+            type: 'contato',
+            noEmail: t('grp.block.noEmail', { cmd })
         });
         if (!d) return null;
-        if (d.grupo) {
-            await msg.reply(t('grp.block.isGroup', { name: d.nome, cmd }));
+        if (d.group) {
+            await msg.reply(t('grp.block.isGroup', { name: d.name, cmd }));
             return null;
         }
         return d;
     }
 
-    if (quotedMsg.fromMe) return { id: client.info.wid._serialized, nome: t('grp.block.you') };
+    if (quotedMsg.fromMe) return { id: client.info.wid._serialized, name: t('grp.block.you') };
 
     const id = quotedMsg.author || quotedMsg.from;
     const contactAlt = await client.getContactById(id).catch(() => null);
-    return { id, nome: contactAlt ? nameAltAlt(contactAlt) : id.split('@')[0] };
+    return { id, name: contactAlt ? nameAltAlt(contactAlt) : id.split('@')[0] };
 }
 
 /*
@@ -140,7 +140,7 @@ async function lidDe(id) {
 }
 
 // Is any of the ids in WhatsApp's blocked list? Waits a bit before the no (as in /unblock)
-async function inList(ids, { esperarSeNao: waitSeNot = false } = {}) {
+async function inList(ids, { waitUnless: waitSeNot = false } = {}) {
     const is = async () => (await client.getBlockedContacts()).some(c => ids.includes(c.id._serialized));
     if (await is() || !waitSeNot) return is();
     await wait(WAIT_CHECK_MS);
@@ -163,13 +163,13 @@ async function blockA(person) {
         const contactAlt = await client.getContactById(lid ?? person.id);
         await contactAlt.block();
 
-        if (!(await inList(ids, { esperarSeNao: true }))) return t('grp.block.notBlocked');
+        if (!(await inList(ids, { waitUnless: true }))) return t('grp.block.notBlocked');
     } catch (err) {
-        printError(`/block: ${person.nome} (${person.id}):`, err.message);
+        printError(`/block: ${person.name} (${person.id}):`, err.message);
         return t('grp.block.refused', { error: err.message });
     }
 
-    printInfo(`/block: ${person.nome} (${person.id}) blocked`);
+    printInfo(`/block: ${person.name} (${person.id}) blocked`);
     return 'bloqueado';
 }
 
@@ -178,16 +178,16 @@ const tipBlock = () => t('grp.block.hint');
 
 // One person: the usual reply
 async function replyA(msg, person, r) {
-    await msg.reply(r === 'bloqueado' ? t('grp.block.blocked', { name: person.nome, hint: tipBlock() })
-        : r === 'ja' ? t('grp.block.already', { name: person.nome })
+    await msg.reply(r === 'bloqueado' ? t('grp.block.blocked', { name: person.name, hint: tipBlock() })
+        : r === 'ja' ? t('grp.block.already', { name: person.name })
             : r === OWN ? t('grp.block.cantSelf')
-                : t('grp.block.cantBlock', { name: person.nome, reason: r }));
+                : t('grp.block.cantBlock', { name: person.name, reason: r }));
 }
 
 // Several: a single summary, per result
 async function replySeveral(msg, results) {
     const group = (keyAlt, list, withReason = false) => (list.length
-        ? `${t(keyAlt, { n: list.length })}\n${list.map(({ pessoa: person, r }) => `👤 ${person.nome}${withReason ? `: ${r === OWN ? t('grp.block.selfReason') : r}` : ''}`).join('\n')}`
+        ? `${t(keyAlt, { n: list.length })}\n${list.map(({ person, r }) => `👤 ${person.name}${withReason ? `: ${r === OWN ? t('grp.block.selfReason') : r}` : ''}`).join('\n')}`
         : null);
 
     const partsAlt = [
@@ -221,8 +221,8 @@ async function cmdBlock({ msg, opts, quotedMsg }) {
     const results = [];
     for (const item of items) {
         const person = await readPerson(msg, item, null, '/block');
-        if (!person || results.some(x => x.pessoa.id === person.id)) continue;
-        results.push({ pessoa: person, r: await blockA(person) });
+        if (!person || results.some(x => x.person.id === person.id)) continue;
+        results.push({ person, r: await blockA(person) });
     }
     if (results.length) await replySeveral(msg, results);
 }
@@ -256,11 +256,11 @@ async function unblockById(id) {
  * stays on the list, and the bot would count it as unblocked. So: unblocks,
  * checks WhatsApp's list, unblocks again whoever remained (by the exact id
  * of the list) and checks again; whoever still remains is a failure.
- * @param {object[]} lista  the blocked ones ({ id, telefone, nome }, from bloqueados())
- * @returns {Promise<Array<{ b: object, motivo: string }>>} the failures
+ * @param {object[]} list  the blocked ones ({ id, phone, name }, from bloqueados())
+ * @returns {Promise<Array<{ b: object, reason: string }>>} the failures
  */
 async function unblock(list) {
-    const failures = new Map();  // id → motivo
+    const failures = new Map();  // id → reason
     for (const b of list) {
         try {
             const contactAlt = await client.getContactById(b.id);
@@ -278,12 +278,12 @@ async function unblock(list) {
     stayed = await stillBlocked(stayed);
     for (const b of stayed) failures.set(b.id, t('grp.block.notUnblocked'));
 
-    return list.filter(b => failures.has(b.id)).map(b => ({ b, motivo: failures.get(b.id) }));
+    return list.filter(b => failures.has(b.id)).map(b => ({ b, reason: failures.get(b.id) }));
 }
 
 /*
  * /unblock -all: one by one; whoever fails does not hold up the others. As in /get, the
- * "⏳ Desbloqueando…" vira o resultado (o WhatsApp edita a mensagem).
+ * "⏳ Desbloqueando…" vira o result (o WhatsApp edita a message).
  */
 async function unblockAll(msg) {
     const list = await blockedAlt();
@@ -301,7 +301,7 @@ async function unblockAll(msg) {
     printInfo(`/unblock -all: ${ok} unblocked, ${failures.length} failures`);
     await completeNotice(msg, notice, t('grp.block.unblockedCount', { n: ok === 1 ? 1 : 2, count: ok }) +
         (failures.length ? '\n\n' + t('grp.block.unblockFailures', { n: failures.length }) + '\n' +
-            failures.map(f => `• ${describe(f.b)}: ${f.motivo}`).join('\n') : ''));
+            failures.map(f => `• ${describe(f.b)}: ${f.reason}`).join('\n') : ''));
 }
 
 // The phone of an id (the @lid becomes the phone, if WhatsApp knows); null: I do not know
@@ -339,13 +339,13 @@ async function cmdUnblock({ msg, opts, quotedMsg }) {
             return;
         }
         nameAlt = describe(b);
-        target = current.find(x => x.id === b.id || (b.telefone && x.telefone === b.telefone));
+        target = current.find(x => x.id === b.id || (b.phone && x.phone === b.phone));
     } else {
         const person = await readPerson(msg, textAlt, quotedMsg, '/unblock');
         if (!person) return;
         const phoneAlt = await phoneAlt3(person.id);
-        nameAlt = person.nome;
-        target = current.find(x => x.id === person.id || (phoneAlt && x.telefone === phoneAlt));
+        nameAlt = person.name;
+        target = current.find(x => x.id === person.id || (phoneAlt && x.phone === phoneAlt));
     }
 
     if (!target) {
@@ -355,7 +355,7 @@ async function cmdUnblock({ msg, opts, quotedMsg }) {
 
     const [failure] = await unblock([target]);
     if (failure) {
-        await msg.reply(t('grp.block.cantUnblock', { name: nameAlt, reason: failure.motivo }));
+        await msg.reply(t('grp.block.cantUnblock', { name: nameAlt, reason: failure.reason }));
         return;
     }
     printInfo(`/unblock: ${nameAlt} (${target.id}) unblocked`);

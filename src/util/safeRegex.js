@@ -51,7 +51,7 @@ function regexDangerous(source) {
         if (c === '\\') { // escape (e.g.: \d): skips the pair and checks whether a quantifier follows
             i += 2;
             const q = readQuantifier(source, i);
-            if (q) { if (stack.length) stack[stack.length - 1].temRepeticao = true; i += q; }
+            if (q) { if (stack.length) stack[stack.length - 1].hasRepetition = true; i += q; }
             continue;
         }
 
@@ -64,20 +64,20 @@ function regexDangerous(source) {
             }
             i++;
             const q = readQuantifier(source, i);
-            if (q) { if (stack.length) stack[stack.length - 1].temRepeticao = true; i += q; }
+            if (q) { if (stack.length) stack[stack.length - 1].hasRepetition = true; i += q; }
             continue;
         }
 
-        if (c === '(') { stack.push({ temRepeticao: false }); i++; continue; }
+        if (c === '(') { stack.push({ hasRepetition: false }); i++; continue; }
 
         if (c === ')') {
-            const group = stack.pop() ?? { temRepeticao: false };
+            const group = stack.pop() ?? { hasRepetition: false };
             i++;
             const q = readQuantifier(source, i);
             if (q) {
                 // A repeating quantifier over a group that already repeats inside → dangerous
-                if (group.temRepeticao) return true;
-                if (stack.length) stack[stack.length - 1].temRepeticao = true;
+                if (group.hasRepetition) return true;
+                if (stack.length) stack[stack.length - 1].hasRepetition = true;
                 i += q;
             }
             continue;
@@ -86,7 +86,7 @@ function regexDangerous(source) {
         // Common atom (one character); if a repeating quantifier comes, the current group repeats
         i++;
         const q = readQuantifier(source, i);
-        if (q) { if (stack.length) stack[stack.length - 1].temRepeticao = true; i += q; }
+        if (q) { if (stack.length) stack[stack.length - 1].hasRepetition = true; i += q; }
     }
 
     return false;

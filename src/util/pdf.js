@@ -23,7 +23,7 @@ const WIDTHS = [
     333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556,
     556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584
 ];
-const NEGRITO = 1.06;  // Helvetica-Bold is a bit wider: spare for safety
+const BOLD = 1.06;  // Helvetica-Bold is a bit wider: spare for safety
 
 const SWAPS = { '“': '"', '”': '"', '‘': "'", '’': "'", '–': '-', '—': '-', '…': '...', '•': '\x95', '\t': '    ' };
 
@@ -60,39 +60,39 @@ const ICONS = {
         `${x + t} ${y + t * 0.5} l ${x + t * 0.6} ${y + t * 0.85} l ${x + t * 0.05} ${y + t * 0.85} l h f ` +
         `1 g ${circle(x + t * 0.25, y + t * 0.5, t * 0.08)}f Q\n`,
     // 🕐 clock
-    relogio: (x, y, t) => `q 0.35 0.35 0.35 RG 1 g ${(t * 0.09).toFixed(2)} w ${circle(x + t / 2, y + t / 2, t * 0.42)}B ` +
+    clock: (x, y, t) => `q 0.35 0.35 0.35 RG 1 g ${(t * 0.09).toFixed(2)} w ${circle(x + t / 2, y + t / 2, t * 0.42)}B ` +
         `${x + t / 2} ${y + t / 2} m ${x + t / 2} ${y + t * 0.78} l S ${x + t / 2} ${y + t / 2} m ${x + t * 0.72} ${y + t / 2} l S Q\n`,
     // 📝 sheet with lines
-    nota: (x, y, t) => `q 0.45 0.45 0.45 RG 1 g ${(t * 0.07).toFixed(2)} w ${x + t * 0.15} ${y + t * 0.05} ${t * 0.7} ${t * 0.9} re B ` +
+    note: (x, y, t) => `q 0.45 0.45 0.45 RG 1 g ${(t * 0.07).toFixed(2)} w ${x + t * 0.15} ${y + t * 0.05} ${t * 0.7} ${t * 0.9} re B ` +
         `0.2 0.45 0.75 RG ${[0.3, 0.5, 0.7].map(h => `${x + t * 0.28} ${y + t * h} m ${x + t * 0.72} ${y + t * h} l S `).join('')}Q\n`
 };
 
-function width(textAlt, size, negrito = false) {
+function width(textAlt, size, bold = false) {
     let w = 0;
     for (const c of textAlt) {
         const base = c.normalize('NFD')[0];
         const cod = base.charCodeAt(0);
         w += cod >= 32 && cod <= 126 ? WIDTHS[cod - 32] : 556;
     }
-    return (w * size * (negrito ? NEGRITO : 1)) / 1000;
+    return (w * size * (bold ? BOLD : 1)) / 1000;
 }
 
 // Breaks a paragraph into the words that fit `max` points (a huge word is cut)
-function lineBreak(paragraph, size, max, negrito = false) {
+function lineBreak(paragraph, size, max, bold = false) {
     const linesAlt = [];
     let current = '';
 
     for (let word of paragraph.split(' ')) {
-        while (width(word, size, negrito) > max) {
+        while (width(word, size, bold) > max) {
             let n = word.length;
-            while (n > 1 && width(word.slice(0, n), size, negrito) > max) n--;
+            while (n > 1 && width(word.slice(0, n), size, bold) > max) n--;
             if (current) linesAlt.push(current);
             linesAlt.push(word.slice(0, n));
             current = '';
             word = word.slice(n);
         }
         const test = current ? `${current} ${word}` : word;
-        if (current && width(test, size, negrito) > max) {
+        if (current && width(test, size, bold) > max) {
             linesAlt.push(current);
             current = word;
         } else {
@@ -107,64 +107,64 @@ const escape = (t) => t.replace(/[\\()]/g, '\\$&');
 
 /*
  * @param {object}   o
- * @param {string}   o.titulo     header, on the left
- * @param {string}   o.direita    header, on the right (date/time)
- * @param {string}   o.rodape     footer, on the left ("Página X de Y" goes on the right)
- * @param {object[]} o.blocos     { texto, tipo: 'titulo' | 'texto' | 'negrito' | 'meta' | 'espaco', icone?: 'link' | 'tag' | 'relogio' | 'nota' } or
+ * @param {string}   o.title     header, on the left
+ * @param {string}   o.right    header, on the right (date/time)
+ * @param {string}   o.footer     footer, on the left ("Página X de Y" goes on the right)
+ * @param {object[]} o.blocks     { text, type: 'title' | 'text' | 'bold' | 'meta' | 'space', icon?: 'link' | 'tag' | 'clock' | 'note' } or
  * { type: 'image', jpeg: Buffer, width, height } (RGB JPEG, in pixels)
  * @returns {Buffer}
  */
-function generatePdf({ titulo: title, direita: right = '', rodape: footer = '', blocos: blocks }) {
+function generatePdf({ title, right = '', footer = '', blocks }) {
     const STYLES = {
-        titulo: { fonte: 'F2', tamanho: 13, entre: 18, antes: 14, cor: '0.1 0.3 0.5' },
-        texto: { fonte: 'F1', tamanho: 10.5, entre: 14, antes: 0, cor: '0 0 0' },
-        negrito: { fonte: 'F2', tamanho: 10.5, entre: 14, antes: 0, cor: '0 0 0' },
-        meta: { fonte: 'F1', tamanho: 8.5, entre: 11, antes: 0, cor: '0.45 0.45 0.45' }
+        title: { source: 'F2', size: 13, between: 18, before: 14, color: '0.1 0.3 0.5' },
+        text: { source: 'F1', size: 10.5, between: 14, before: 0, color: '0 0 0' },
+        bold: { source: 'F2', size: 10.5, between: 14, before: 0, color: '0 0 0' },
+        meta: { source: 'F1', size: 8.5, between: 11, before: 0, color: '0.45 0.45 0.45' }
     };
     const pages = [[]];
     let y = TOP_BODY;
 
-    const imageHeight = (b) => b.altura * Math.min(1, IMAGE_MAX_L / b.largura, IMAGE_MAX_A / b.altura);
+    const imageHeight = (b) => b.height * Math.min(1, IMAGE_MAX_L / b.width, IMAGE_MAX_A / b.height);
 
     for (const [indexAlt, b] of blocks.entries()) {
-        if (b.tipo === 'espaco') {
-            y -= b.altura ?? 8;
+        if (b.type === 'space') {
+            y -= b.height ?? 8;
             continue;
         }
-        if (b.tipo === 'imagem') {
-            const scale = Math.min(1, IMAGE_MAX_L / b.largura, IMAGE_MAX_A / b.altura);
-            const [w, h] = [b.largura * scale, b.altura * scale];
+        if (b.type === 'image') {
+            const scale = Math.min(1, IMAGE_MAX_L / b.width, IMAGE_MAX_A / b.height);
+            const [w, h] = [b.width * scale, b.height * scale];
             if (y - h < BASE_BODY && y !== TOP_BODY) {
                 pages.push([]);
                 y = TOP_BODY;
             }
             y -= h;
-            pages.at(-1).push({ imagem: b, x: MARGIN, y, w, h });
+            pages.at(-1).push({ image: b, x: MARGIN, y, w, h });
             y -= 6;
             continue;
         }
-        const e = STYLES[b.tipo ?? 'texto'];
-        const indent = b.recuo ?? 0;
-        const linesAlt = clean(b.texto).split('\n')
-            .flatMap(p => lineBreak(p, e.tamanho, WIDTH - 2 * MARGIN - indent - (b.icone && ICONS[b.icone] ? e.tamanho + 3 : 0), e.fonte === 'F2'));
+        const e = STYLES[b.type ?? 'text'];
+        const indent = b.indent ?? 0;
+        const linesAlt = clean(b.text).split('\n')
+            .flatMap(p => lineBreak(p, e.size, WIDTH - 2 * MARGIN - indent - (b.icon && ICONS[b.icon] ? e.size + 3 : 0), e.source === 'F2'));
 
-        const shift = b.icone && ICONS[b.icone] ? e.tamanho + 3 : 0;
-        y -= e.antes;
+        const shift = b.icon && ICONS[b.icon] ? e.size + 3 : 0;
+        y -= e.before;
         // A title is never left alone at the end of the page (nor the text before an image)
-        const image = blocks[indexAlt + 1]?.tipo === 'imagem' ? imageHeight(blocks[indexAlt + 1]) + 6 : 0;
-        if (y - e.entre * (b.tipo === 'titulo' ? 3 : 1) - image < BASE_BODY && y !== TOP_BODY) {
+        const image = blocks[indexAlt + 1]?.type === 'image' ? imageHeight(blocks[indexAlt + 1]) + 6 : 0;
+        if (y - e.between * (b.type === 'title' ? 3 : 1) - image < BASE_BODY && y !== TOP_BODY) {
             pages.push([]);
             y = TOP_BODY;
         }
         for (const [i, line] of linesAlt.entries()) {
-            if (y - e.entre < BASE_BODY) {
+            if (y - e.between < BASE_BODY) {
                 pages.push([]);
                 y = TOP_BODY;
             }
-            y -= e.entre;
+            y -= e.between;
             // The icon only on the first line of the block; the text always aligned after it
-            if (i === 0 && shift) pages.at(-1).push({ icone: b.icone, tamanho: e.tamanho, x: MARGIN + indent, y: y - 1.5 });
-            if (line) pages.at(-1).push({ ...e, x: MARGIN + indent + shift, y, texto: line });
+            if (i === 0 && shift) pages.at(-1).push({ icon: b.icon, size: e.size, x: MARGIN + indent, y: y - 1.5 });
+            if (line) pages.at(-1).push({ ...e, x: MARGIN + indent + shift, y, text: line });
         }
     }
 
@@ -181,15 +181,15 @@ function generatePdf({ titulo: title, direita: right = '', rodape: footer = '', 
     freshAlt('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
 
     // Each image becomes a single object, even if the page cites it
-    for (const it of pages.flat().filter(x => x.imagem)) {
-        const b = it.imagem;
-        b.objeto ??= freshAlt(`<< /Type /XObject /Subtype /Image /Width ${b.largura} /Height ${b.altura} ` +
+    for (const it of pages.flat().filter(x => x.image)) {
+        const b = it.image;
+        b.object ??= freshAlt(`<< /Type /XObject /Subtype /Image /Width ${b.width} /Height ${b.height} ` +
             `/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${b.jpeg.length} >>\n` +
             `stream\n${b.jpeg.toString('latin1')}\nendstream`);
     }
 
-    const textAlt = (sourceAlt, tam, cor, x, y, t) =>
-        `BT /${sourceAlt} ${tam} Tf ${cor} rg ${x.toFixed(2)} ${y.toFixed(2)} Td (${escape(t)}) Tj ET\n`;
+    const textAlt = (sourceAlt, tam, color, x, y, t) =>
+        `BT /${sourceAlt} ${tam} Tf ${color} rg ${x.toFixed(2)} ${y.toFixed(2)} Td (${escape(t)}) Tj ET\n`;
     const lineHorizontal = (y) => `0.7 0.7 0.7 RG 0.5 w ${MARGIN} ${y} m ${WIDTH - MARGIN} ${y} l S\n`;
     const children = [];
 
@@ -198,18 +198,18 @@ function generatePdf({ titulo: title, direita: right = '', rodape: footer = '', 
         c += textAlt('F1', 9, '0.4 0.4 0.4', WIDTH - MARGIN - width(dir, 9), HEIGHT - 45, dir);
         c += lineHorizontal(HEIGHT - 55);
         for (const it of items) {
-            if (it.icone) c += ICONS[it.icone](it.x, it.y, it.tamanho);
-            else if (it.imagem) c += `q ${it.w.toFixed(2)} 0 0 ${it.h.toFixed(2)} ${it.x} ${it.y.toFixed(2)} cm /Im${it.imagem.objeto} Do Q\n`;
-            else c += textAlt(it.fonte, it.tamanho, it.cor, it.x, it.y, it.texto);
+            if (it.icon) c += ICONS[it.icon](it.x, it.y, it.size);
+            else if (it.image) c += `q ${it.w.toFixed(2)} 0 0 ${it.h.toFixed(2)} ${it.x} ${it.y.toFixed(2)} cm /Im${it.image.object} Do Q\n`;
+            else c += textAlt(it.source, it.size, it.color, it.x, it.y, it.text);
         }
         c += lineHorizontal(52);
-        const pag = t('pdf.pagina', { n: i + 1, total });
+        const pageLabel = t('pdf.pagina', { n: i + 1, total });
         c += textAlt('F1', 8, '0.4 0.4 0.4', MARGIN, 38, rod);
-        c += textAlt('F1', 8, '0.4 0.4 0.4', WIDTH - MARGIN - width(pag, 8), 38, pag);
+        c += textAlt('F1', 8, '0.4 0.4 0.4', WIDTH - MARGIN - width(pageLabel, 8), 38, pageLabel);
 
         const bytes = Buffer.from(c, 'latin1');
         const content = freshAlt(`<< /Length ${bytes.length} >>\nstream\n${bytes.toString('latin1')}endstream`);
-        const used = [...new Set(items.filter(x => x.imagem).map(x => x.imagem.objeto))];
+        const used = [...new Set(items.filter(x => x.image).map(x => x.image.object))];
         const images = used.length ? ` /XObject << ${used.map(o => `/Im${o} ${o} 0 R`).join(' ')} >>` : '';
         const page = freshAlt(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${WIDTH} ${HEIGHT}] ` +
             `/Resources << /Font << /F1 3 0 R /F2 4 0 R >>${images} >> /Contents ${content} 0 R >>`);

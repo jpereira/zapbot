@@ -20,7 +20,7 @@ module.exports = {
         },
         {
             opts: ['a'],
-            sinais: ['+', '-'],
+            signs: ['+', '-'],
             values: ['[person...]'],
             desc: 'Adds (+a) and removes (-a) admins, who use all commands: /name/, @mention, or +number (not a group). Without a parameter, the person of the private chat where the command was typed. Owner only.',
             ex: ['/bot +a /Jorge Pereira/', '/bot -a'],
@@ -28,7 +28,7 @@ module.exports = {
         },
         {
             opts: ['u'],
-            sinais: ['+', '-'],
+            signs: ['+', '-'],
             values: ['[person|group...]'],
             desc: 'Adds (+u) and removes (-u) users for common commands: people, in any chat, and groups, anyone inside them. Typed in a group, the +u of a person applies only in that group (in private, they cannot use it). With nobody, the current chat: the group or the person of the private chat. Owner only.',
             ex: ['/bot +u /Maria Lucia/ /Family Group/', '/bot -u'],
@@ -36,7 +36,7 @@ module.exports = {
         },
         {
             opts: ['cmd'],
-            sinais: ['+', '-'],
+            signs: ['+', '-'],
             values: ['<commands>'],
             desc: 'The commands of a user (comma between them). With +u, it sets: +u +cmd /a,/b, only those; +u -cmd /a, all but that one. Alone, +cmd allows and -cmd removes (whoever is not a user gets in with only those); +cmd all allows all again. In the list, below the person: → Apenas: ... /help and /whois always go through. Owner only.',
             ex: [
@@ -48,7 +48,7 @@ module.exports = {
         },
         {
             opts: ['limit'],
-            sinais: ['+', '-'],
+            signs: ['+', '-'],
             values: ['<N[/period]|commands>'],
             desc: 'Usage limit of a user per command, together with +cmd: +cmd /gpt +limit 5/day (5 per day), +limit 20/month, +limit 5 (5 in total, no renewal). -limit /gpt (or all) removes it. Only successful calls count: help, usage and errors do not. The owner and admins have no limit. See /usage.',
             ex: [

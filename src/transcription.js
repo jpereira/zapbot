@@ -20,15 +20,15 @@ const transcriptionCommand = (fileAlt) => [BIN_PYTHON, ...transcriptionArgs(file
 
 /**
  * Transcribes an audio file with the model from the transcribe.model setting.
- * @param {string} arquivo
- * @returns {Promise<{ texto: string, idioma: string, duracao: number }>}
+ * @param {string} file
+ * @returns {Promise<{ text: string, language: string, duration: number }>}
  */
 async function transcribeFile(fileAlt) {
     const outputAlt = await captureOutput(BIN_PYTHON, transcriptionArgs(fileAlt), TRANSCRIPTION_TIMEOUT_MS);
 
     // faster-whisper may write warnings before: the JSON is the last line
     const json = JSON.parse(outputAlt.split('\n').at(-1));
-    return { texto: json.text, idioma: json.language, duracao: json.duration };
+    return { text: json.text, language: json.language, duration: json.duration };
 }
 
 module.exports = { transcriptionCommand, transcribeFile };

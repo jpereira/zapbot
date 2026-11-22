@@ -15,22 +15,22 @@ const DAY = 86400_000;
 beforeEach(() => bot.restart());
 
 async function deleted(textAlt, optionsAlt = {}) {
-    const msg = bot.createMessage({ texto: textAlt, de: OTHERAlt.jid, ...optionsAlt });
+    const msg = bot.createMessage({ text: textAlt, de: OTHERAlt.jid, ...optionsAlt });
     await bot.deliver(msg);
-    return bot.apagar(msg);
+    return bot.erase(msg);
 }
 
 describe('/bot -status', () => {
     test('relatório das últimas 24 h, com cada contagem', async () => {
         await bot.setSetting('watch.rules', 'pix\nboleto');
-        await bot.deliver(bot.createMessage({ texto: 'manda o pix', de: OTHERAlt.jid }));
-        await bot.deliver(bot.createMessage({ texto: 'outro pix', de: OTHERAlt.jid }));
-        await bot.deliver(bot.createMessage({ texto: 'paga o boleto', de: OTHERAlt.jid }));
+        await bot.deliver(bot.createMessage({ text: 'manda o pix', de: OTHERAlt.jid }));
+        await bot.deliver(bot.createMessage({ text: 'outro pix', de: OTHERAlt.jid }));
+        await bot.deliver(bot.createMessage({ text: 'paga o boleto', de: OTHERAlt.jid }));
 
         await deleted('uma');
         await deleted('duas');
         await deleted('meu status', { chat: 'status@broadcast' });
-        const edited = bot.createMessage({ texto: 'a', de: OTHERAlt.jid });
+        const edited = bot.createMessage({ text: 'a', de: OTHERAlt.jid });
         await bot.deliver(edited);
         await bot.edit(edited, 'b');
 
@@ -75,7 +75,7 @@ describe('/bot -status', () => {
         // Does not appear in the /cron schedule, nor count toward the limit
         assert.match((await bot.replyAlt('/cron'))[0], /📅 Nada agendado/);
 
-        // Trocar a hora substitui; formatos aceitos
+        // Trocar a hour substitui; formats aceitos
         await bot.replyAlt('/bot -status às 18h30');
         const items = await bot.dbAll("SELECT * FROM schedules WHERE kind = 'status'");
         assert.equal(items.length, 1);
@@ -83,9 +83,9 @@ describe('/bot -status', () => {
 
         // At once: the report goes to your private chat, and the next one is left for tomorrow
         await bot.dbRun("UPDATE schedules SET due_at = ? WHERE kind = 'status'", [Date.now() - 1000]);
-        const beforeAlt = bot.client.enviadas.length;
+        const beforeAlt = bot.client.sent.length;
         await checkSchedule();
-        const [sentAlt] = bot.client.enviadas.slice(beforeAlt);
+        const [sentAlt] = bot.client.sent.slice(beforeAlt);
         assert.equal(sentAlt.chatId, OWNER.jid);
         assert.match(sentAlt.content, /^📊 \*Status do ZapBot/);
         const [next] = await bot.dbAll("SELECT due_at FROM schedules WHERE kind = 'status'");
@@ -119,9 +119,9 @@ describe('/bot -status', () => {
 
             // At once: to Fulano and by email (without WhatsApp formatting)
             await bot.dbRun("UPDATE schedules SET due_at = ? WHERE kind = 'status'", [Date.now() - 1000]);
-            const beforeAlt = bot.client.enviadas.length;
+            const beforeAlt = bot.client.sent.length;
             await checkSchedule();
-            const sentAlt3 = bot.client.enviadas.slice(beforeAlt);
+            const sentAlt3 = bot.client.sent.slice(beforeAlt);
             assert.deepEqual(sentAlt3.map(e => e.chatId), [OTHERAlt.jid]);
             assert.match(sentAlt3[0].content, /^📊 \*Status do ZapBot/);
             assert.equal(bot.emails.at(-1).to, 'eu@exemplo.com');
@@ -130,10 +130,10 @@ describe('/bot -status', () => {
 
             // Without a time: sends now, without the list of who uses it
             await bot.setSetting('bot.users', ['5521911111111']);
-            const nowAlt = await bot.executar('/bot -s -to /Fulano/');
+            const nowAlt = await bot.execute('/bot -s -to /Fulano/');
             assert.equal(nowAlt[0].chatId, OTHERAlt.jid);
-            assert.doesNotMatch(nowAlt[0].texto, /Usuários/);
-            assert.equal(nowAlt[1].texto, '📊 Status enviado em 👤 Fulano.');
+            assert.doesNotMatch(nowAlt[0].text, /Usuários/);
+            assert.equal(nowAlt[1].text, '📊 Status enviado em 👤 Fulano.');
 
             // Errors: -to without -status, -to with off
             assert.match((await bot.replyAlt('/bot -to /Fulano/'))[0], /❌ O -to é do -status/);

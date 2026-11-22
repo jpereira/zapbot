@@ -30,14 +30,14 @@ const WEEK_EN = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 // Brasília date and time at an instant: { year, month (1-12), day, h, m, s, weekday (0=sun) }
 function partsInBrasilia(ms) {
     const p = Object.fromEntries(formatter.formatToParts(new Date(ms)).map(x => [x.type, x.value]));
-    return { ano: +p.year, mes: +p.month, dia: +p.day, h: +p.hour, m: +p.minute, s: +p.second, semana: WEEK_EN[p.weekday] };
+    return { year: +p.year, mes: +p.month, day: +p.day, h: +p.hour, m: +p.minute, s: +p.second, week: WEEK_EN[p.weekday] };
 }
 
 // Instant (ms) of a Brasília date and time. The day may go past the end of the month (Date.UTC normalizes).
 function instantInBrasilia(year, mes, day, h, m) {
     const asUtc = Date.UTC(year, mes - 1, day, h, m);
     const p = partsInBrasilia(asUtc);
-    const offset = Date.UTC(p.ano, p.mes - 1, p.dia, p.h, p.m) - asUtc; // negative: Brasília behind UTC
+    const offset = Date.UTC(p.year, p.mes - 1, p.day, p.h, p.m) - asUtc; // negative: Brasília behind UTC
     return asUtc - offset;
 }
 
@@ -69,8 +69,8 @@ function readDuration(token) {
  * sexta [18h] | seg [8:00]       → the next weekday (today, if the time has not passed)
  * 25/12 [10:00] | 25/12/2027 [10h] → the date (without a year: the next one; without a time: 9h)
  * @param {string[]} palavras
- * @param {number} [agora]
- * @returns {{ ms: number, usadas: number } | null}  usadas: how many words the "when" took
+ * @param {number} [now]
+ * @returns {{ ms: number, used: number } | null}  used: how many words the "when" took
  */
 function readWhen(words, nowAlt = Date.now()) {
     const [first, monday, third] = words.map(withoutAccents);
@@ -79,46 +79,46 @@ function readWhen(words, nowAlt = Date.now()) {
     // This long from now, explicit: "+2h", "em 2h", "daqui 2h", "daqui a 2h"
     if (first.startsWith('+')) {
         const duration = readDuration(first.slice(1));
-        return duration ? { ms: nowAlt + duration, usadas: 1 } : null;
+        return duration ? { ms: nowAlt + duration, used: 1 } : null;
     }
     if (first === 'em' || first === 'daqui' || first === 'in') {
-        const comA = first === 'daqui' && monday === 'a';
-        const duration = readDuration(comA ? third : monday);
-        if (duration) return { ms: nowAlt + duration, usadas: comA ? 3 : 2 };
+        const withA = first === 'daqui' && monday === 'a';
+        const duration = readDuration(withA ? third : monday);
+        if (duration) return { ms: nowAlt + duration, used: withA ? 3 : 2 };
     }
 
     // "6h" and "07h" alone are a time of day; "30m", "1d" and "1h30m", a duration
     const duration = /^\d{1,2}h$/.test(first) && readHour(first) ? null : readDuration(first);
-    if (duration) return { ms: nowAlt + duration, usadas: 1 };
+    if (duration) return { ms: nowAlt + duration, used: 1 };
 
     const today = partsInBrasilia(nowAlt);
     const hourNext = monday !== undefined ? readHour(monday) : null;
-    const withHour = (h) => ({ hora: h ?? HOUR_DEFAULT, usadas: h ? 2 : 1 });
+    const withHour = (h) => ({ hour: h ?? HOUR_DEFAULT, used: h ? 2 : 1 });
 
     // Only the time ("18:30", "18h30" or "às 18h"): today, or tomorrow if it has passed
     const withAs = (first === 'as' || first === 'at') && hourNext;
     const soHour = withAs ? hourNext : readHour(first);
     if (soHour) {
-        let ms = instantInBrasilia(today.ano, today.mes, today.dia, soHour.h, soHour.m);
-        if (ms <= nowAlt) ms = instantInBrasilia(today.ano, today.mes, today.dia + 1, soHour.h, soHour.m);
-        return { ms, usadas: withAs ? 2 : 1 };
+        let ms = instantInBrasilia(today.year, today.mes, today.day, soHour.h, soHour.m);
+        if (ms <= nowAlt) ms = instantInBrasilia(today.year, today.mes, today.day + 1, soHour.h, soHour.m);
+        return { ms, used: withAs ? 2 : 1 };
     }
 
     if (first === 'hoje' || first === 'amanha' || first === 'today' || first === 'tomorrow') {
-        const { hora: hour, usadas: used } = withHour(hourNext);
-        const day = today.dia + (first === 'amanha' || first === 'tomorrow' ? 1 : 0);
-        return { ms: instantInBrasilia(today.ano, today.mes, day, hour.h, hour.m), usadas: used };
+        const { hour, used } = withHour(hourNext);
+        const day = today.day + (first === 'amanha' || first === 'tomorrow' ? 1 : 0);
+        return { ms: instantInBrasilia(today.year, today.mes, day, hour.h, hour.m), used };
     }
 
     if (first in WEEK_DAYS) {
-        const { hora: hour, usadas: used } = withHour(hourNext);
-        let missing = (WEEK_DAYS[first] - today.semana + 7) % 7;
-        let ms = instantInBrasilia(today.ano, today.mes, today.dia + missing, hour.h, hour.m);
+        const { hour, used } = withHour(hourNext);
+        let missing = (WEEK_DAYS[first] - today.week + 7) % 7;
+        let ms = instantInBrasilia(today.year, today.mes, today.day + missing, hour.h, hour.m);
         if (ms <= nowAlt) {
             missing += 7;
-            ms = instantInBrasilia(today.ano, today.mes, today.dia + missing, hour.h, hour.m);
+            ms = instantInBrasilia(today.year, today.mes, today.day + missing, hour.h, hour.m);
         }
-        return { ms, usadas: used };
+        return { ms, used };
     }
 
     const data = first.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2}|\d{4}))?$/);
@@ -126,15 +126,15 @@ function readWhen(words, nowAlt = Date.now()) {
         const [day, mes] = [Number(data[1]), Number(data[2])];
         if (mes < 1 || mes > 12 || day < 1 || day > 31) return null;
 
-        const { hora: hour, usadas: used } = withHour(hourNext);
-        const year = data[3] ? Number(data[3].length === 2 ? `20${data[3]}` : data[3]) : today.ano;
+        const { hour, used } = withHour(hourNext);
+        const year = data[3] ? Number(data[3].length === 2 ? `20${data[3]}` : data[3]) : today.year;
         let ms = instantInBrasilia(year, mes, day, hour.h, hour.m);
 
         // 31/02 viraria 03/03: data inexistente
-        if (partsInBrasilia(ms).dia !== day) return null;
+        if (partsInBrasilia(ms).day !== day) return null;
         if (!data[3] && ms <= nowAlt) ms = instantInBrasilia(year + 1, mes, day, hour.h, hour.m);
 
-        return { ms, usadas: used };
+        return { ms, used };
     }
 
     return null;
@@ -145,8 +145,8 @@ const two = (n) => String(n).padStart(2, '0');
 // "qua 01/10 18:30" (with the year, if it is not the current one)
 function fmtWhen(ms, nowAlt = Date.now()) {
     const p = partsInBrasilia(ms);
-    const year = p.ano !== partsInBrasilia(nowAlt).ano ? `/${p.ano}` : '';
-    return `${t(`quando.dia${p.semana}`)} ${two(p.dia)}/${two(p.mes)}${year} ${two(p.h)}:${two(p.m)}`;
+    const year = p.year !== partsInBrasilia(nowAlt).year ? `/${p.year}` : '';
+    return `${t(`quando.dia${p.week}`)} ${two(p.day)}/${two(p.mes)}${year} ${two(p.h)}:${two(p.m)}`;
 }
 
 /*
@@ -154,9 +154,9 @@ function fmtWhen(ms, nowAlt = Date.now()) {
  * (daily, weekly) and the day of the month (monthly; in a month without the day, the last day).
  */
 const REPETITIONS = {
-    daily: { get rotulo() { return t('quando.todoDia'); }, dias: 1 },
-    weekly: { get rotulo() { return t('quando.todaSemana'); }, dias: 7 },
-    monthly: { get rotulo() { return t('quando.todoMes'); }, meses: 1 }
+    daily: { get label() { return t('quando.todoDia'); }, days: 1 },
+    weekly: { get label() { return t('quando.todaSemana'); }, days: 7 },
+    monthly: { get label() { return t('quando.todoMes'); }, months: 1 }
 };
 
 // What is typed in -repeat (pt or en, whole or the letter) → the REPETICOES key; null if it is not one
@@ -171,12 +171,12 @@ function nextRepetition(ms, repeatAlt, dayOriginal) {
     const r = REPETITIONS[repeatAlt];
     const p = partsInBrasilia(ms);
 
-    if (r.dias) return instantInBrasilia(p.ano, p.mes, p.dia + r.dias, p.h, p.m);
+    if (r.days) return instantInBrasilia(p.year, p.mes, p.day + r.days, p.h, p.m);
 
     const mes = p.mes === 12 ? 1 : p.mes + 1;
-    const year = p.mes === 12 ? p.ano + 1 : p.ano;
+    const year = p.mes === 12 ? p.year + 1 : p.year;
     const lastDay = new Date(Date.UTC(year, mes, 0)).getUTCDate();
-    return instantInBrasilia(year, mes, Math.min(dayOriginal ?? p.dia, lastDay), p.h, p.m);
+    return instantInBrasilia(year, mes, Math.min(dayOriginal ?? p.day, lastDay), p.h, p.m);
 }
 
 module.exports = {

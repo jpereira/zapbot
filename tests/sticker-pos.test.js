@@ -42,7 +42,7 @@ test('imagem: o resize do sharp usa a posição do -pos', async () => {
 });
 
 test('/sticker -pos: valida o valor e não vale com -txt', async () => {
-    const quoted = bot.createMessage({ de: bot.OTHERAlt.jid, midia: { mimetype: 'image/png', data: 'AA==' } });
-    assert.match((await bot.replyAlt('/sticker -pos lado', { citada: quoted }))[0], /-pos: "lado" não vale\. Use topo, meio ou baixo/);
+    const quoted = bot.createMessage({ de: bot.OTHERAlt.jid, media: { mimetype: 'image/png', data: 'AA==' } });
+    assert.match((await bot.replyAlt('/sticker -pos lado', { quoted }))[0], /-pos: "lado" não vale\. Use topo, meio ou baixo/);
     assert.match((await bot.replyAlt('/sticker -pos topo -txt oi'))[0], /não vale com -txt/);
 });

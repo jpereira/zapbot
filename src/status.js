@@ -4,7 +4,7 @@
 
 const fs = require('fs');
 
-const { estado: stateAlt } = require('./state');
+const { state: stateAlt } = require('./state');
 const { listBackups, reasonText } = require('./backup');
 const { client } = require('./client');
 const { BOT_START_TIME, CACHE_DIR, DAY_MS, DB_PATH, MEDIA_DIR } = require('./constants');
@@ -33,9 +33,9 @@ const size = (p) => (fs.existsSync(p) ? (fs.statSync(p).isDirectory() ? getDirSi
 
 /**
  * The report of the last 24 h. /bot puts its state at the top (botState)
- * and the users list below (usuarios); the daily send goes without the list.
+ * and the users list below (users); the daily send goes without the list.
  */
-async function statusText(nowAlt = Date.now(), { estadoDoBot: botState = '', usuarios: usersAlt = '' } = {}) {
+async function statusText(nowAlt = Date.now(), { botState = '', users: usersAlt = '' } = {}) {
     await dbReady;
     const since = nowAlt - DAY_MS;
     const account = async (sql, params) => (await dbGet(sql, params)).n;
@@ -64,7 +64,7 @@ async function statusText(nowAlt = Date.now(), { estadoDoBot: botState = '', usu
     const muted = await account('SELECT COUNT(*) AS n FROM mutes', []);
 
     const [lastBackup] = await listBackups();
-    const connected = stateAlt.autenticadoEm ? getBotUptime(stateAlt.autenticadoEm) : t('uptime.notConnected');
+    const connected = stateAlt.authenticatedAt ? getBotUptime(stateAlt.authenticatedAt) : t('uptime.notConnected');
     const db = size(DB_PATH);
 
     let textAlt = t('status.title', { version: botVersion(), when: fmtWhen(nowAlt, nowAlt) }) + '\n\n' +
@@ -88,7 +88,7 @@ async function statusText(nowAlt = Date.now(), { estadoDoBot: botState = '', usu
         (totalIgnored ? ` _(${ignored.map(r => `${LABELS[r.kind] ?? r.kind} ${fmtInA(r.n)}`).join(', ')})_` : '') +
         (muted ? ` · ${plural(muted, t('status.mutedOne'), t('status.mutedMany'))}` : '') + '\n' +
         t('status.lastBackup', {
-            value: lastBackup ? `${fmtWhen(lastBackup.criadoEm, nowAlt)} (${reasonText(lastBackup.motivo)})` : t('status.none')
+            value: lastBackup ? `${fmtWhen(lastBackup.createdAt, nowAlt)} (${reasonText(lastBackup.reason)})` : t('status.none')
         });
 
     // Below, the users (only in /bot) and, at the end, the daily send
@@ -128,7 +128,7 @@ const itemHour = (s) => {
 
 /**
  * Schedules the daily status at the time (Brasília). Replaces the previous one.
- * @param {object[]} [destinos]  those from -to ([] = your private chat); without them, the previous ones stay
+ * @param {object[]} [destinations]  those from -to ([] = your private chat); without them, the previous ones stay
  * @returns {Promise<number>} the next send (ms)
  */
 async function scheduleStatusDaily({ h, m }, nowAlt = Date.now(), destinations) {
@@ -137,8 +137,8 @@ async function scheduleStatusDaily({ h, m }, nowAlt = Date.now(), destinations) 
         ? destinationsForSave(destinations)
         : (await schedulingDaily())?.recipients ?? null;
     const today = partsInBrasilia(nowAlt);
-    let next = instantInBrasilia(today.ano, today.mes, today.dia, h, m);
-    if (next <= nowAlt) next = instantInBrasilia(today.ano, today.mes, today.dia + 1, h, m);
+    let next = instantInBrasilia(today.year, today.mes, today.day, h, m);
+    if (next <= nowAlt) next = instantInBrasilia(today.year, today.mes, today.day + 1, h, m);
 
     await dbRun('DELETE FROM schedules WHERE kind = ?', [KIND]);
     await dbRun(

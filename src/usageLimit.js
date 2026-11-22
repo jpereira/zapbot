@@ -26,7 +26,7 @@ const SYNONYMS = {
 const withoutAccent = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 /**
- * "5", "5/day", "5/dia", "5/sem", "20/mês" → { max, period }; invalid: throws.
+ * "5", "5/day", "5/day", "5/no", "20/mês" → { max, period }; invalid: throws.
  */
 function readLimit(textAlt) {
     const m = String(textAlt).trim().match(/^(\d+)(?:\/(\S+))?$/);
@@ -35,22 +35,22 @@ function readLimit(textAlt) {
     if (max < 1 || max > 100000) throw new Error(t('usage.badMax', { v: textAlt }));
     const period = m[2] ? SYNONYMS[withoutAccent(m[2])] : 'total';
     if (!period) throw new Error(t('usage.badPeriod', { v: m[2] }));
-    return { max, periodo: period };
+    return { max, period };
 }
 
 // The stored form: "5" (total) or "5/day"
-const recordLimit = ({ max, periodo: period }) => (period === 'total' ? `${max}` : `${max}/${period}`);
+const recordLimit = ({ max, period }) => (period === 'total' ? `${max}` : `${max}/${period}`);
 
 // "5 per day", "5 in total"
-const describeLimit = ({ max, periodo: period }) => `${max} ${t(`usage.period.${period}`)}`;
+const describeLimit = ({ max, period }) => `${max} ${t(`usage.period.${period}`)}`;
 
-// "item=/gpt:5/day,/tldr:3" → [item, Map(cmd → { max, periodo })]
+// "item=/gpt:5/day,/tldr:3" → [item, Map(cmd → { max, period })]
 function readLine(line) {
     const i = line.lastIndexOf('=');
     const byCommand = new Map();
-    for (const par of line.slice(i + 1).split(',').filter(Boolean)) {
-        const j = par.indexOf(':');
-        byCommand.set(par.slice(0, j), readLimit(par.slice(j + 1)));
+    for (const pair of line.slice(i + 1).split(',').filter(Boolean)) {
+        const j = pair.indexOf(':');
+        byCommand.set(pair.slice(0, j), readLimit(pair.slice(j + 1)));
     }
     return [line.slice(0, i), byCommand];
 }
@@ -64,13 +64,13 @@ const allAlt2 = () => new Map(getSetting('bot.users.limits').map(readLine));
 async function recordLimitAlt(item, cmd, limitAlt) {
     const { setSetting } = require('./settings');
     const map = allAlt2();
-    const dele = map.get(item) ?? new Map();
-    if (limitAlt) dele.set(cmd, limitAlt);
-    else dele.delete(cmd);
+    const own = map.get(item) ?? new Map();
+    if (limitAlt) own.set(cmd, limitAlt);
+    else own.delete(cmd);
 
     const other = getSetting('bot.users.limits').filter(l => readLine(l)[0] !== item);
-    const line = dele.size
-        ? [`${item}=${[...dele].map(([c, l]) => `${c}:${recordLimit(l)}`).join(',')}`]
+    const line = own.size
+        ? [`${item}=${[...own].map(([c, l]) => `${c}:${recordLimit(l)}`).join(',')}`]
         : [];
     await setSetting('bot.users.limits', [...other, ...line]);
 }
@@ -81,13 +81,13 @@ const limitsAlt = (item) => allAlt2().get(item) ?? new Map();
  * The items that apply to whoever typed, from the most specific to the broadest: the person only in this group,
  * the person and the whole group (a group limit is collective).
  */
-function itemsAlt({ numero: numberAlt, chatId, isGroup }) {
+function itemsAlt({ number: numberAlt, chatId, isGroup }) {
     return [isGroup && numberAlt && `${numberAlt}:${chatId}`, numberAlt, isGroup && chatId].filter(Boolean);
 }
 
 /**
  * The limit that applies to this command: the most specific item's that has one.
- * @returns {{ item: string, max: number, periodo: string, cmd: string } | null}
+ * @returns {{ item: string, max: number, period: string, cmd: string } | null}
  */
 function limitApplicable(who, cmd) {
     const map = allAlt2();
@@ -102,21 +102,21 @@ function limitApplicable(who, cmd) {
 function windowStart(period, nowAlt = Date.now()) {
     if (period === 'total') return 0;
     const p = partsInBrasilia(nowAlt);
-    if (period === 'day') return instantInBrasilia(p.ano, p.mes, p.dia, 0, 0);
-    if (period === 'week') return instantInBrasilia(p.ano, p.mes, p.dia - ((p.semana + 6) % 7), 0, 0); // segunda
-    return instantInBrasilia(p.ano, p.mes, 1, 0, 0);
+    if (period === 'day') return instantInBrasilia(p.year, p.mes, p.day, 0, 0);
+    if (period === 'week') return instantInBrasilia(p.year, p.mes, p.day - ((p.week + 6) % 7), 0, 0); // segunda
+    return instantInBrasilia(p.year, p.mes, 1, 0, 0);
 }
 
 // When the current window ends (null: does not renew)
 function windowEnd(period, nowAlt = Date.now()) {
     if (period === 'total') return null;
     const p = partsInBrasilia(nowAlt);
-    if (period === 'day') return instantInBrasilia(p.ano, p.mes, p.dia + 1, 0, 0);
-    if (period === 'week') return instantInBrasilia(p.ano, p.mes, p.dia - ((p.semana + 6) % 7) + 7, 0, 0);
-    return instantInBrasilia(p.ano, p.mes + 1, 1, 0, 0);
+    if (period === 'day') return instantInBrasilia(p.year, p.mes, p.day + 1, 0, 0);
+    if (period === 'week') return instantInBrasilia(p.year, p.mes, p.day - ((p.week + 6) % 7) + 7, 0, 0);
+    return instantInBrasilia(p.year, p.mes + 1, 1, 0, 0);
 }
 
-async function countUses({ item, cmd, periodo: period }, nowAlt = Date.now()) {
+async function countUses({ item, cmd, period }, nowAlt = Date.now()) {
     const r = await dbGet('SELECT COUNT(*) AS n FROM usage_log WHERE item = ? AND cmd = ? AND used_at >= ?',
         [item, cmd, windowStart(period, nowAlt)]);
     return r.n;
@@ -132,15 +132,15 @@ const serialize = (fn) => {
 
 /**
  * Reserves a use (counts right away) if there is still one; otherwise returns how long is left to wait.
- * @returns {Promise<{ ok: true, id: number, usados: number } | { ok: false, usados: number, renova: number|null }>}
+ * @returns {Promise<{ ok: true, id: number, used: number } | { ok: false, used: number, renews: number|null }>}
  */
 function reserve(limitAlt, { chatId, params }, nowAlt = Date.now()) {
     return serialize(async () => {
         const used = await countUses(limitAlt, nowAlt);
-        if (used >= limitAlt.max) return { ok: false, usados: used, renova: windowEnd(limitAlt.periodo, nowAlt) };
+        if (used >= limitAlt.max) return { ok: false, used, renews: windowEnd(limitAlt.period, nowAlt) };
         const r = await dbRun('INSERT INTO usage_log (item, cmd, used_at, chat, params) VALUES (?, ?, ?, ?, ?)',
             [limitAlt.item, limitAlt.cmd, nowAlt, chatId ?? null, String(params ?? '').slice(0, 200)]);
-        return { ok: true, id: r.lastID, usados: used + 1 };
+        return { ok: true, id: r.lastID, used: used + 1 };
     });
 }
 
@@ -148,13 +148,13 @@ const giveBack = (id) => dbRun('DELETE FROM usage_log WHERE id = ?', [id]);
 
 // An item's most recent uses (newest to oldest)
 const lastUses = (items, cmd = null, n = 15) => dbAll(
-    `SELECT item, cmd, used_at AS quando, chat, params FROM usage_log WHERE item IN (${items.map(() => '?').join(',')})` +
+    `SELECT item, cmd, used_at AS "when", chat, params FROM usage_log WHERE item IN (${items.map(() => '?').join(',')})` +
     `${cmd ? ' AND cmd = ?' : ''} ORDER BY used_at DESC, id DESC LIMIT ?`,
     [...items, ...(cmd ? [cmd] : []), n]);
 
 /**
  * The limits of whoever typed, here, with each one's usage.
- * @returns {Promise<Array<{ item, cmd, max, periodo, usados, renova }>>}
+ * @returns {Promise<Array<{ item, cmd, max, period, used, renews }>>}
  */
 async function limitsWithUsage(who, nowAlt = Date.now()) {
     const seen = new Set();
@@ -164,7 +164,7 @@ async function limitsWithUsage(who, nowAlt = Date.now()) {
             if (seen.has(cmd)) continue; // the most specific wins
             seen.add(cmd);
             const limitAlt = { item, cmd, ...l };
-            list.push({ ...limitAlt, usados: await countUses(limitAlt, nowAlt), renova: windowEnd(l.periodo, nowAlt) });
+            list.push({ ...limitAlt, used: await countUses(limitAlt, nowAlt), renews: windowEnd(l.period, nowAlt) });
         }
     }
     return list.sort((a, b) => a.cmd.localeCompare(b.cmd));
@@ -172,14 +172,14 @@ async function limitsWithUsage(who, nowAlt = Date.now()) {
 
 // "3/5 per day" + when it renews
 function usageLine(l) {
-    const renew = l.renova ? t('usage.renews', { quando: fmtWhen(l.renova) }) : '';
-    return `${l.cmd}  ${l.usados}/${l.max} ${t(`usage.period.${l.periodo}`)}${renew}`;
+    const renew = l.renews ? t('usage.renews', { when: fmtWhen(l.renews) }) : '';
+    return `${l.cmd}  ${l.used}/${l.max} ${t(`usage.period.${l.period}`)}${renew}`;
 }
 
 // The commands that can have a limit: the common-user ones and the delegable admin ones
 const commandLimitable = (cmd) => {
     const c = botConfig.commands.find(x => x.cmd === cmd);
-    return Boolean(c) && (c.role === 'user' || (c.role === 'admin' && c.delegavel));
+    return Boolean(c) && (c.role === 'user' || (c.role === 'admin' && c.isDelegable));
 };
 
 // A failure message (the command did not do what was asked): does not spend the limit
@@ -187,12 +187,12 @@ const isFailure = (content) => typeof content === 'string' &&
     /^\s*(?:[❌⚠🚫🔒⌛]|```\s*(?:Usage|Uso):|(?:Usage|Uso):)/u.test(content);
 
 /**
- * Runs `executar` respecting the `cmds` limits for whoever typed. Reserves first, returns it if the command
+ * Runs `execute` respecting the `cmds` limits for whoever typed. Reserves first, returns it if the command
  * fail (exception, only error messages or a free option) and, at the end, shows how much is left (usage.footer).
  * @returns {Promise<boolean>} false: blocked (the notice was already sent)
  */
-async function withLimit({ msg, quem: who, cmds, gratis = false, params = '' }, run) {
-    const limits = gratis ? [] : cmds.map(c => limitApplicable(who, c)).filter(Boolean);
+async function withLimit({ msg, who, cmds, free = false, params = '' }, run) {
+    const limits = free ? [] : cmds.map(c => limitApplicable(who, c)).filter(Boolean);
     if (!limits.length) {
         await run();
         return true;
@@ -204,12 +204,12 @@ async function withLimit({ msg, quem: who, cmds, gratis = false, params = '' }, 
         if (!r.ok) {
             for (const x of reserves) await giveBack(x.id);
             await msg.reply(t('usage.exceeded', {
-                cmd: l.cmd, used: r.usados, limit: describeLimit(l),
-                renews: r.renova ? t('usage.renewsLong', { quando: fmtWhen(r.renova) }) : t('usage.noRenew')
+                cmd: l.cmd, used: r.used, limit: describeLimit(l),
+                renews: r.renews ? t('usage.renewsLong', { when: fmtWhen(r.renews) }) : t('usage.noRenew')
             }));
             return false;
         }
-        reserves.push({ ...r, limite: l });
+        reserves.push({ ...r, limit: l });
     }
 
     // What the command replies decides whether it was a use: the LAST reply counts (the "⏳ Processando..." is edited
@@ -220,7 +220,7 @@ async function withLimit({ msg, quem: who, cmds, gratis = false, params = '' }, 
     let failed = false;
     let replies = [];
     try {
-        ({ respostas: replies } = await collect(run));
+        ({ answers: replies } = await collect(run));
     } catch (err) {
         failed = true;
         throw err;
@@ -233,7 +233,7 @@ async function withLimit({ msg, quem: who, cmds, gratis = false, params = '' }, 
     if (!failed && getSetting('usage.footer')) {
         for (const r of reserves) {
             await original(t('usage.footer', {
-                cmd: r.limite.cmd, left: r.limite.max - r.usados, limit: describeLimit(r.limite)
+                cmd: r.limit.cmd, left: r.limit.max - r.used, limit: describeLimit(r.limit)
             }), undefined, { linkPreview: false }).catch(() => {});
         }
     }
@@ -243,7 +243,7 @@ async function withLimit({ msg, quem: who, cmds, gratis = false, params = '' }, 
 /**
  * Everyone's usage (/usage -all): per person (or group) and per command, in the history window
  * (usage.logDays). Only commands with a limit leave a trace in the table.
- * @returns {Promise<{ dias: number, total: number, pessoas: Array<{ chave: string, grupo: boolean, total: number, porCmd: Map<string, number> }>, porCmd: Map<string, number> }>}
+ * @returns {Promise<{ days: number, total: number, people: Array<{ key: string, group: boolean, total: number, byCmd: Map<string, number> }>, byCmd: Map<string, number> }>}
  */
 async function allConsumption(nowAlt = Date.now()) {
     const daysAlt = getSetting('usage.logDays');
@@ -259,15 +259,15 @@ async function allConsumption(nowAlt = Date.now()) {
         // "phone:group" is the person in that group: adds to the person
         const group = item.endsWith('@g.us') && !item.includes(':');
         const keyAlt = group ? item : item.split(':')[0];
-        const p = people.get(keyAlt) ?? { chave: keyAlt, grupo: group, total: 0, porCmd: new Map() };
+        const p = people.get(keyAlt) ?? { key: keyAlt, group, total: 0, byCmd: new Map() };
         p.total += n;
-        p.porCmd.set(cmd, (p.porCmd.get(cmd) ?? 0) + n);
+        p.byCmd.set(cmd, (p.byCmd.get(cmd) ?? 0) + n);
         people.set(keyAlt, p);
         byCmd.set(cmd, (byCmd.get(cmd) ?? 0) + n);
         total += n;
     }
 
-    return { dias: daysAlt, total, pessoas: [...people.values()].sort((a, b) => b.total - a.total), porCmd: byCmd };
+    return { days: daysAlt, total, people: [...people.values()].sort((a, b) => b.total - a.total), byCmd };
 }
 
 // Deletes the uses older than 'usage.logDays' (called in the daily cleanup)
@@ -293,6 +293,6 @@ module.exports = {
     cleanUsesOld,
     usageLine,
     recordLimit,
-    todos: allAlt2,
+    all: allAlt2,
     lastUses
 };

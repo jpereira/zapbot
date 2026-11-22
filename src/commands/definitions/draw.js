@@ -55,7 +55,7 @@ module.exports = {
             ex: ['/draw an astronaut cat in watercolor', '/draw put a hat on it (replying to a photo)']
         }
     ],
-    estrito: 'primeira',
-    delegavel: true,
+    strict: 'primeira',
+    isDelegable: true,
     role: ADMIN // delegable: spends the owner's OpenAI account (-model is owner and admins only)
 };

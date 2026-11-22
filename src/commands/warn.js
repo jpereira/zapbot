@@ -40,21 +40,21 @@ const isAdmin = (p) => Boolean(p?.isAdmin || p?.isSuperAdmin);
 function readTargetAndReason(textAlt) {
     const t0 = String(textAlt ?? '').trim();
     const m = t0.match(PERSON_IN_START);
-    if (!m) return { pessoa: '', motivo: t0 };
-    return { pessoa: m[1], motivo: t0.slice(m[0].length).trim() };
+    if (!m) return { person: '', reason: t0 };
+    return { person: m[1], reason: t0.slice(m[0].length).trim() };
 }
 
 // The person (from the text or the replied message) already as a group participant; null: already replied the error
-async function targetInGroup({ msg, grupo: group, pessoaTexto: personText, quotedMsg, cmd }) {
+async function targetInGroup({ msg, group, personText, quotedMsg, cmd }) {
     const person = await readPerson(msg, withoutDelimiters(personText), personText ? null : quotedMsg, cmd);
     if (!person) return null;
 
     const participant = await participantAlt(group, person.id);
     if (!participant) {
-        await msg.reply(t('grp.admin.notMember', { name: person.nome }));
+        await msg.reply(t('grp.admin.notMember', { name: person.name }));
         return null;
     }
-    return { pessoa: person, participante: participant, chave: participant.id.user };
+    return { person, participant, key: participant.id.user };
 }
 
 async function totalDe(chatId, keyAlt) {
@@ -63,9 +63,9 @@ async function totalDe(chatId, keyAlt) {
 
 /**
  * Adds a warning and, if it reached the limit, removes the person. Used by /warn and by whoever warns on their own (/antilink).
- * @returns {Promise<{ n: number, max: number, removida: boolean, semAdmin: boolean }>}
+ * @returns {Promise<{ n: number, max: number, removed: boolean, noAdmin: boolean }>}
  */
-async function notify({ grupo: group, participante: participant, nome: nameAlt, motivo: reasonAlt, por: by }) {
+async function notify({ group, participant, name: nameAlt, reason: reasonAlt, by }) {
     await dbReady;
     const chatId = group.id._serialized;
     const keyAlt = participant.id.user;
@@ -74,51 +74,51 @@ async function notify({ grupo: group, participante: participant, nome: nameAlt, 
 
     const n = await totalDe(chatId, keyAlt);
     const max = getSetting('warn.max');
-    const r = { n, max, removida: false, semAdmin: false };
+    const r = { n, max, removed: false, noAdmin: false };
     if (!max || n < max) return r;
 
     const eu = await participantAlt(group, client.info.wid._serialized);
-    if (!isAdmin(eu)) return { ...r, semAdmin: true };
+    if (!isAdmin(eu)) return { ...r, noAdmin: true };
 
     try {
         const res = await group.removeParticipants([participant.id._serialized]);
         if (res?.status && res.status !== 200) throw new Error(`status ${res.status}`);
         await dbRun('DELETE FROM warns WHERE chat_id = ? AND person = ?', [chatId, keyAlt]);
-        return { ...r, removida: true };
+        return { ...r, removed: true };
     } catch (err) {
         printError('/warn: not removed:', err.message);
-        return { ...r, semAdmin: true };
+        return { ...r, noAdmin: true };
     }
 }
 
 function noticeText(nameAlt, reasonAlt, r) {
     const base = t('grp.warn.warned', { name: nameAlt, n: r.n, max: r.max || '∞', reason: reasonAlt ? t('grp.warn.reason', { reason: reasonAlt }) : '' });
-    if (r.removida) return `${base}\n${t('grp.warn.removed', { name: nameAlt, max: r.max })}`;
-    if (r.semAdmin) return `${base}\n${t('grp.warn.noAdmin', { name: nameAlt, max: r.max })}`;
+    if (r.removed) return `${base}\n${t('grp.warn.removed', { name: nameAlt, max: r.max })}`;
+    if (r.noAdmin) return `${base}\n${t('grp.warn.noAdmin', { name: nameAlt, max: r.max })}`;
     return base;
 }
 
 async function listAlt(msg, group, target) {
     const chatId = group.id._serialized;
     if (target) {
-        const linesAlt = await dbAll('SELECT reason, created_at FROM warns WHERE chat_id = ? AND person = ? ORDER BY id', [chatId, target.chave]);
+        const linesAlt = await dbAll('SELECT reason, created_at FROM warns WHERE chat_id = ? AND person = ? ORDER BY id', [chatId, target.key]);
         if (!linesAlt.length) {
-            await msg.reply(t('grp.warn.noneOf', { name: target.pessoa.nome }));
+            await msg.reply(t('grp.warn.noneOf', { name: target.person.name }));
             return;
         }
         const items = linesAlt.map((l, i) => `${i + 1}. ${fmtWhen(l.created_at)}${l.reason ? ` · ${l.reason}` : ''}`).join('\n');
-        await msg.reply(t('grp.warn.listOf', { name: target.pessoa.nome, n: linesAlt.length, max: getSetting('warn.max') || '∞', list: items }));
+        await msg.reply(t('grp.warn.listOf', { name: target.person.name, n: linesAlt.length, max: getSetting('warn.max') || '∞', list: items }));
         return;
     }
 
     const by = await dbAll(
-        'SELECT person, MAX(person_name) AS nome, COUNT(*) AS n FROM warns WHERE chat_id = ? GROUP BY person ORDER BY n DESC, MAX(created_at) DESC',
+        'SELECT person, MAX(person_name) AS name, COUNT(*) AS n FROM warns WHERE chat_id = ? GROUP BY person ORDER BY n DESC, MAX(created_at) DESC',
         [chatId]);
     if (!by.length) {
         await msg.reply(t('grp.warn.none'));
         return;
     }
-    const items = by.map((p, i) => `${i + 1}. ${p.nome || `+${p.person}`} — ${p.n}/${getSetting('warn.max') || '∞'}`).join('\n');
+    const items = by.map((p, i) => `${i + 1}. ${p.name || `+${p.person}`} — ${p.n}/${getSetting('warn.max') || '∞'}`).join('\n');
     await msg.reply(t('grp.warn.list', { n: by.length, list: items }));
 }
 
@@ -133,7 +133,7 @@ async function cmdWarn({ msg, opts, quotedMsg, isGroup, senderNumber }) {
     const textAlt = opts.argv.join(' ').trim();
     const listing = opts.given.has('list');
     const zeroing = opts.given.has('clear');
-    const { pessoa: personText, motivo: reasonAlt } = readTargetAndReason(textAlt);
+    const { person: personText, reason: reasonAlt } = readTargetAndReason(textAlt);
 
     // Nobody: -l lists the whole group; the other forms need a person
     if (!personText && !quotedMsg) {
@@ -145,7 +145,7 @@ async function cmdWarn({ msg, opts, quotedMsg, isGroup, senderNumber }) {
         return;
     }
 
-    const target = await targetInGroup({ msg, grupo: group, pessoaTexto: personText, quotedMsg, cmd: '/warn' });
+    const target = await targetInGroup({ msg, group, personText, quotedMsg, cmd: '/warn' });
     if (!target) return;
 
     if (listing) {
@@ -154,23 +154,23 @@ async function cmdWarn({ msg, opts, quotedMsg, isGroup, senderNumber }) {
     }
 
     if (zeroing) {
-        const n = await totalDe(group.id._serialized, target.chave);
-        await dbRun('DELETE FROM warns WHERE chat_id = ? AND person = ?', [group.id._serialized, target.chave]);
-        await msg.reply(t(n ? 'grp.warn.cleared' : 'grp.warn.noneOf', { name: target.pessoa.nome, n }));
+        const n = await totalDe(group.id._serialized, target.key);
+        await dbRun('DELETE FROM warns WHERE chat_id = ? AND person = ?', [group.id._serialized, target.key]);
+        await msg.reply(t(n ? 'grp.warn.cleared' : 'grp.warn.noneOf', { name: target.person.name, n }));
         return;
     }
 
-    if (target.pessoa.id === client.info.wid._serialized) {
+    if (target.person.id === client.info.wid._serialized) {
         await msg.reply(t('grp.warn.self'));
         return;
     }
-    if (isAdmin(target.participante)) {
-        await msg.reply(t('grp.warn.isAdmin', { name: target.pessoa.nome }));
+    if (isAdmin(target.participant)) {
+        await msg.reply(t('grp.warn.isAdmin', { name: target.person.name }));
         return;
     }
 
-    const r = await notify({ grupo: group, participante: target.participante, nome: target.pessoa.nome, motivo: reasonAlt, por: senderNumber || 'dono' });
-    await msg.reply(noticeText(target.pessoa.nome, reasonAlt, r));
+    const r = await notify({ group, participant: target.participant, name: target.person.name, reason: reasonAlt, by: senderNumber || 'dono' });
+    await msg.reply(noticeText(target.person.name, reasonAlt, r));
 }
 
 module.exports = { notify, cmdWarn, readTargetAndReason, noticeText };

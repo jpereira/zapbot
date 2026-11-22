@@ -40,7 +40,7 @@ function inviteCode(textAlt) {
 async function listAlt(msg) {
     const chats = (await client.getChats()).filter(c => c.isGroup && c.name);
     chats.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
-    lastList = chats.map(c => ({ id: c.id._serialized, nome: c.name }));
+    lastList = chats.map(c => ({ id: c.id._serialized, name: c.name }));
 
     if (!chats.length) {
         await msg.reply(t('grp.join.noGroups'));
@@ -98,10 +98,10 @@ async function leave(target) {
     try {
         await chat.leave();
     } catch (e) {
-        printError(`[LEAVE] did not leave "${target.nome}":`, e.message);
+        printError(`[LEAVE] did not leave "${target.name}":`, e.message);
         return e.message || t('grp.refused');
     }
-    printInfo(`[LEAVE] left "${target.nome}"`);
+    printInfo(`[LEAVE] left "${target.name}"`);
     return null;
 }
 
@@ -132,7 +132,7 @@ async function cmdLeave({ msg, opts }) {
                 continue;
             }
         } else {
-            target = await resolverOrChoose(msg, item, { tipo: 'grupo' });
+            target = await resolverOrChoose(msg, item, { type: 'grupo' });
             if (!target) continue;  // the error was already replied
         }
         if (!targets.some(a => a.id === target.id)) targets.push(target);
@@ -141,13 +141,13 @@ async function cmdLeave({ msg, opts }) {
     const left = [];
     for (const target of targets) {
         const errorAlt = await leave(target);
-        if (errorAlt) errors.push(t('grp.leave.failed', { name: target.nome, reason: errorAlt }));
+        if (errorAlt) errors.push(t('grp.leave.failed', { name: target.name, reason: errorAlt }));
         else left.push(target);
     }
 
     const linesAlt = [
-        left.length === 1 && targets.length === 1 ? t('grp.leave.left', { name: left[0].nome })
-            : left.length && t('grp.leave.leftMany', { n: left.length === 1 ? 1 : 2, count: left.length, list: left.map(g => `👥 ${g.nome}`).join('\n') }),
+        left.length === 1 && targets.length === 1 ? t('grp.leave.left', { name: left[0].name })
+            : left.length && t('grp.leave.leftMany', { n: left.length === 1 ? 1 : 2, count: left.length, list: left.map(g => `👥 ${g.name}`).join('\n') }),
         ...errors
     ].filter(Boolean);
     // When leaving the group where the command was given, the reply may have nowhere left to go

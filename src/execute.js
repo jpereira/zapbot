@@ -26,8 +26,8 @@ const READERS_OWN = {
  * the saved command's options: only -h/-help is read here.
  */
 function readOptions(command, args) {
-    const livre = command.argumentosLivres && !ASKED_HELP.test(args);
-    const opts = GetOptFromCommand(livre ? '' : args, command);
+    const free = command.freeArguments && !ASKED_HELP.test(args);
+    const opts = GetOptFromCommand(free ? '' : args, command);
     READERS_OWN[command.cmd]?.(opts, args);
     return opts;
 }
@@ -35,20 +35,20 @@ function readOptions(command, args) {
 /*
  * Runs the command with "typing..." lit: many take a while (downloading, querying, cleaning the email,
  * asking ChatGPT) and without this the chat seems stuck. Applies to every typed command, except the
- * that declare `digitando: false` (the instant ones, like /ping).
+ * that declare `typing: false` (the instant ones, like /ping).
  *
  * WhatsApp deletes the notice when the bot sends a message (the "⏳ Limpando..." in the middle) and also
- * after a few seconds. So it is resent every `cada` ms until the command ends.
- * @param {number} [o.cada]  the resend interval (only the tests change it)
+ * after a few seconds. So it is resent every `each` ms until the command ends.
+ * @param {number} [o.each]  the resend interval (only the tests change it)
  */
-async function withTyping(msg, command, run, { cada: each = 3000 } = {}) {
+async function withTyping(msg, command, run, { each = 3000 } = {}) {
     let chat = null;
     const getChat = () => (chat ? Promise.resolve(chat) : msg.getChat().then(c => (chat = c)));
 
     // Like a person: reads (blue ✓✓) before replying. Also applies to instant ones (/ping)
     if (getSetting('commands.seen')) await getChat().then(c => c.sendSeen?.()).catch(() => {});
 
-    if (command.digitando === false) return run();
+    if (command.typing === false) return run();
 
     const type = () => getChat()
         .then(c => c.sendStateTyping())
@@ -71,11 +71,11 @@ const askedMask = (command, opts) => Boolean(command.mask && opts.opt.mask);
 
 // "❌ Opção desconhecida: -x" with the syntax, or null (only in commands with "strict: true")
 function optionsError(command, opts) {
-    if (!opts.desconhecidas.length) return null;
-    const list = opts.desconhecidas.join(' ');
+    if (!opts.unknown.length) return null;
+    const list = opts.unknown.join(' ');
     // /gpt and /tldr (strict: 'primeira') only suggest the help; the others show the syntax
-    if (command.estrito === 'primeira') return t('executar.opcaoDesconhecidaAjuda', { lista: list, cmd: command.cmd });
-    return t('executar.opcaoDesconhecidaSintaxe', { lista: list, sintaxe: getCommandSyntax(command.cmd) });
+    if (command.strict === 'primeira') return t('executar.opcaoDesconhecidaAjuda', { list, cmd: command.cmd });
+    return t('executar.opcaoDesconhecidaSintaxe', { list, syntax: getCommandSyntax(command.cmd) });
 }
 
 /**
@@ -84,7 +84,7 @@ function optionsError(command, opts) {
  * (change the /gpt model, delete data...);
  * otherChats: true   the option (or the argument, in { argv }) looks at other chats: a user who
  * received the command sees only the current chat.
- * @param {string|null} nivel  the typist's: owner, admin or user (src/roles.js)
+ * @param {string|null} level  the typist's: owner, admin or user (src/roles.js)
  */
 function denial(command, opts, level) {
     for (const o of command.cmd_opts ?? []) {
@@ -93,7 +93,7 @@ function denial(command, opts, level) {
         if (o.role && !answer(level, o.role)) {
             return t(o.role === ROLES.OWNER ? 'executar.soDonoOpcao' : 'executar.soAdminOpcao', { opt: o.opts[0], cmd: command.cmd });
         }
-        if (o.outrosChats && !answer(level, ROLES.ADMIN)) return t('executar.soAdminOutrosChats');
+        if (o.otherChats && !answer(level, ROLES.ADMIN)) return t('executar.soAdminOutrosChats');
     }
     return null;
 }
@@ -106,15 +106,15 @@ function denial(command, opts, level) {
  * @param {object} o.opts
  * @param {object} [o.quotedMsg]
  * @param {{ chatId: string, chatName: string, isGroup: boolean }} o.chat
- * @param {{ nivel: string, admin: boolean, podeUsar: Function, senderContact?: object,
- * senderName?: string, senderNumber?: string }} o.quem  who runs (level: owner, admin
+ * @param {{ level: string, admin: boolean, canUse: Function, senderContact?: object,
+ * senderName?: string, senderNumber?: string }} o.who  who runs (level: owner, admin
  * or user; admin is the owner or an admin)
  */
-function assembleContext({ msg, args, opts, quotedMsg = null, chat, quem: who }) {
+function assembleContext({ msg, args, opts, quotedMsg = null, chat, who }) {
     return {
         msg, args, opts, quotedMsg,
         chatId: chat.chatId, chatName: chat.chatName, isGroup: Boolean(chat.isGroup),
-        nivel: who.nivel, admin: who.admin, podeUsar: who.podeUsar ?? (() => true),
+        level: who.level, admin: who.admin, canUse: who.canUse ?? (() => true),
         senderContact: who.senderContact ?? null, senderName: who.senderName, senderNumber: who.senderNumber
     };
 }

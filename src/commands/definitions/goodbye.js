@@ -39,6 +39,6 @@ module.exports = {
             desc: 'The message ({name} = the person, {group} = the group name; up to 1000 characters). It can have several lines.'
         }
     ],
-    delegavel: true,
+    isDelegable: true,
     role: ADMIN // Each group's farewell (src/greetings.js)
 };

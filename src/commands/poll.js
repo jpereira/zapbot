@@ -75,7 +75,7 @@ async function cmdPoll({ msg, args, chatId, chatName, quotedMsg }) {
 
     // Registered right at creation: -r works before the first vote
     if (sent?.id?._serialized) {
-        await registerPoll({ id: sent.id._serialized, chatId, chatName, pergunta: question, opcoes: optionsAlt, multi });
+        await registerPoll({ id: sent.id._serialized, chatId, chatName, question, options: optionsAlt, multi });
     }
 }
 

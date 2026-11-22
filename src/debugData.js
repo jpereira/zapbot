@@ -4,8 +4,8 @@
 const SENSITIVE = /key|pass|secret|token|authorization|cookie/i;
 
 function settingsLoaded() {
-    const modulo = require.cache[require.resolve('./settings')];
-    return modulo?.loaded ? modulo.exports : null;
+    const module = require.cache[require.resolve('./settings')];
+    return module?.loaded ? module.exports : null;
 }
 
 function configureDebug() {

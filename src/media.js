@@ -15,26 +15,26 @@ const { THUMBNAIL_MAX_BYTES, THUMBNAIL_TIMEOUT_MS } = require('./constants');
  * order until the webp fits WhatsApp's limit (STICKER_ANIMATED_MAX_BYTES).
  */
 const ATTEMPTS_STICKER = [
-    { qualidade: 75, fps: 15 },
-    { qualidade: 50, fps: 12 },
-    { qualidade: 30, fps: 10 },
-    { qualidade: 20, fps: 8 }
+    { quality: 75, fps: 15 },
+    { quality: 50, fps: 12 },
+    { quality: 30, fps: 10 },
+    { quality: 20, fps: 8 }
 ];
 
 /*
  * Where the sticker's square crop goes (-pos): at the top, middle (default) or bottom. In
- * image wider than tall, top = left and bottom = right. `fator` is the fraction of the leftover
+ * image wider than tall, top = left and bottom = right. `factor` is the fraction of the leftover
  * that is left out before the crop (0, 0.5 or 1); `sharp`, the resize position.
  */
 const POSITIONS = {
-    topo: { fator: 0, sharp: 'left top' },
-    meio: { fator: 0.5, sharp: 'centre' },
-    baixo: { fator: 1, sharp: 'right bottom' }
+    topo: { factor: 0, sharp: 'left top' },
+    middle: { factor: 0.5, sharp: 'centre' },
+    baixo: { factor: 1, sharp: 'right bottom' }
 };
-const SYNONYMS = { topo: 'topo', cima: 'topo', top: 'topo', meio: 'meio', centro: 'meio', middle: 'meio',
+const SYNONYMS = { topo: 'topo', cima: 'topo', top: 'topo', middle: 'meio', centro: 'meio', middle: 'meio',
     center: 'meio', baixo: 'baixo', bottom: 'baixo' };
 
-/** "topo" | "cima" | "top" → 'topo' (same for middle and bottom); no value → 'meio'; invalid → null */
+/** "topo" | "cima" | "top" → 'topo' (same for middle and bottom); no value → 'middle'; invalid → null */
 const readPosition = (valueAlt) => (valueAlt == null ? 'meio' : SYNONYMS[String(valueAlt).trim().toLowerCase()] ?? null);
 
 /**
@@ -42,12 +42,12 @@ const readPosition = (valueAlt) => (valueAlt == null ? 'meio' : SYNONYMS[String(
  */
 function argsDoFfmpeg(opts, originalFile, outputFile, sticker = ATTEMPTS_STICKER[0]) {
     const isSticker = opts.opt.sticker;  // -sticker  | -st
-    const { fator: factor } = POSITIONS[readPosition(opts.opt.pos) ?? 'meio']; // -pos
+    const { factor } = POSITIONS[readPosition(opts.opt.pos) ?? 'meio']; // -pos
     const isAudio   = opts.opt.audio;    // -audio    | -a
     const startSec  = opts.opt.startSec; // -startSec | -ss
     const endSec    = opts.opt.endSec;   // -endSec   | -es
     // The input is a local file downloaded from the internet: ffmpeg must not open
-    // rede nem outros protocolos a partir dele (playlists/concat maliciosos)
+    // network nem others protocols a partir own (playlists/concat maliciosos)
     const args      = ['-y', '-protocol_whitelist', 'file'];
 
     if (startSec != null) {
@@ -81,7 +81,7 @@ function argsDoFfmpeg(opts, originalFile, outputFile, sticker = ATTEMPTS_STICKER
             '-an',
             '-c:v', 'libwebp',
             '-lossless', '0',
-            '-q:v', String(sticker.qualidade),
+            '-q:v', String(sticker.quality),
             '-compression_level', '6',
             '-loop', '0',
             outputFile

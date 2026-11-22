@@ -7,19 +7,19 @@ const { test, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { OWNER, GROUP, OTHERAlt } = bot;
-const CICLANO = { jid: '5521922222222@c.us', nome: 'Ciclano' };
+const CICLANO = { jid: '5521922222222@c.us', name: 'Ciclano' };
 
 beforeEach(async () => {
     await bot.restart();
-    bot.createContact(CICLANO.jid, CICLANO.nome);
+    bot.createContact(CICLANO.jid, CICLANO.name);
     bot.createGroup(GROUP, 'Família', [OWNER.jid, OTHERAlt.jid, CICLANO.jid]);
 });
 
 // The whatsapp-web.js event (GroupNotification) and what the bot sent because of it
 async function event(nameAlt, recipientIds, chatId = GROUP) {
-    const beforeAlt = bot.client.enviadas.length;
+    const beforeAlt = bot.client.sent.length;
     for (const h of bot.client.listeners(nameAlt)) await h({ chatId, recipientIds });
-    return bot.client.enviadas.slice(beforeAlt);
+    return bot.client.sent.slice(beforeAlt);
 }
 
 test('sem configurar, entrar e sair não manda nada', async () => {
@@ -76,8 +76,8 @@ test('/welcome -off desliga', async () => {
 });
 
 test('/welcome -test manda como ficaria, com você no lugar de quem entra, sem gravar', async () => {
-    const [e] = await bot.executar('/welcome -test Oi {name}, bem-vindo ao {group}', { de: OWNER.jid });
-    assert.equal(e.texto, `Oi @${OWNER.user}, bem-vindo ao Família`);
+    const [e] = await bot.execute('/welcome -test Oi {name}, bem-vindo ao {group}', { de: OWNER.jid });
+    assert.equal(e.text, `Oi @${OWNER.user}, bem-vindo ao Família`);
     assert.deepEqual(e.options.mentions, [OWNER.jid]);
     assert.match((await bot.replyAlt('/welcome'))[0], /Este grupo não tem mensagem/);
 });

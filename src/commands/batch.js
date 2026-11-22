@@ -33,7 +33,7 @@ async function separateBlocks(textAlt) {
         }
     }
 
-    return { blocos: blocks.map(b => b.replace(/\s+$/, '')), sobra: leftOver };
+    return { blocks: blocks.map(b => b.replace(/\s+$/, '')), leftover: leftOver };
 }
 
 // Reads -stop (-s) / -dry (-d) / -quiet (-q) only from the 1st line, before the commands (the rest belongs to the blocks)
@@ -45,7 +45,7 @@ function readOptions(args) {
         optionsAlt[nameAlt === 'stop' || nameAlt === 's' ? 'stop' : nameAlt === 'quiet' || nameAlt === 'q' ? 'quiet' : 'dry'] = true;
         rest = rest.slice(m[0].length);
     }
-    return { opcoes: optionsAlt, texto: rest };
+    return { options: optionsAlt, text: rest };
 }
 
 // The block's msg: the same, but the texts the command replies are stored for the summary
@@ -66,34 +66,34 @@ async function runBlock(line, context) {
     const resolved = await resolverAlias(line);
     const command = resolved?.command;
 
-    if (!command) return { ok: false, respostas: [t('adm.batch.unknown')] };
-    if (command.cmd === '/batch') return { ok: false, respostas: [t('adm.batch.nested')] };
+    if (!command) return { ok: false, answers: [t('adm.batch.unknown')] };
+    if (command.cmd === '/batch') return { ok: false, answers: [t('adm.batch.nested')] };
 
     const msg = blockMsg(context.msg, line, replies);
     const args = resolved.args ?? line.slice(line.split(/\s+/, 1)[0].length).trim();
 
-    if (resolved.texto) {
+    if (resolved.text) {
         await textRunAlias(msg, { ...resolved, quiet: true }, {
             chatId: context.chatId, chatName: context.chatName, isGroup: context.isGroup,
-            quem: {
-                nivel: context.nivel, admin: true, podeUsar: () => true, senderContact: context.senderContact,
+            who: {
+                level: context.level, admin: true, canUse: () => true, senderContact: context.senderContact,
                 senderName: context.senderName, senderNumber: context.senderNumber
             }
         });
     } else {
         const handler = HANDLERS[command.cmd];
-        if (!handler) return { ok: false, respostas: [t('adm.batch.notImplemented', { cmd: command.cmd })] };
+        if (!handler) return { ok: false, answers: [t('adm.batch.notImplemented', { cmd: command.cmd })] };
         await handler({ ...context, msg, args, opts: commandReadOptions(command, args), quotedMsg: null });
     }
 
-    return { ok: !replies.some(r => r.startsWith('❌') || r.startsWith('⚠️')), respostas: replies };
+    return { ok: !replies.some(r => r.startsWith('❌') || r.startsWith('⚠️')), answers: replies };
 }
 
 const top = (line) => summarizeText(line.replace(/\s+/g, ' '), 50);
 
 async function cmdBatch(context) {
     const { msg, args, quotedMsg } = context;
-    const { opcoes: optionsAlt, texto: typed } = readOptions(args);
+    const { options: optionsAlt, text: typed } = readOptions(args);
     const textAlt = typed || (quotedMsg?.body ?? '').trim();
 
     if (!textAlt) {
@@ -101,7 +101,7 @@ async function cmdBatch(context) {
         return;
     }
 
-    const { blocos: blocks, sobra: leftOver } = await separateBlocks(textAlt);
+    const { blocks, leftover: leftOver } = await separateBlocks(textAlt);
     if (!blocks.length) {
         await msg.reply(t('adm.batch.noCommand'));
         return;
@@ -115,7 +115,7 @@ async function cmdBatch(context) {
 
     if (optionsAlt.dry) {
         const linesAlt = blocks.map((b, i) => `${i + 1}. ${top(b)}${b.includes('\n') ? t('adm.batch.extraLines', { n: b.split('\n').length - 1 }) : ''}`);
-        await msg.reply(t('adm.batch.dry', { n: blocks.length, linhas: linesAlt.join('\n'), aviso: notice }), undefined, WITHOUT_PREVIEW);
+        await msg.reply(t('adm.batch.dry', { n: blocks.length, lines: linesAlt.join('\n'), notice }), undefined, WITHOUT_PREVIEW);
         return;
     }
 
@@ -129,18 +129,18 @@ async function cmdBatch(context) {
             r = await runBlock(block, context);
         } catch (err) {
             printError(`/batch: error in block ${i + 1}:`, err?.message || err);
-            r = { ok: false, respostas: [err?.message || String(err)] };
+            r = { ok: false, answers: [err?.message || String(err)] };
         }
 
         if (!r.ok) failures++;
-        if (!r.ok && optionsAlt.quiet) printInfo(`/batch -quiet: block ${i + 1} failed (${top(block)}):`, r.respostas.join(' | '));
-        const reply = r.respostas.filter(x => !x.includes('```')).join('\n').trim();
-        contents.push(...r.respostas.filter(x => x.includes('```')));
+        if (!r.ok && optionsAlt.quiet) printInfo(`/batch -quiet: block ${i + 1} failed (${top(block)}):`, r.answers.join(' | '));
+        const reply = r.answers.filter(x => !x.includes('```')).join('\n').trim();
+        contents.push(...r.answers.filter(x => x.includes('```')));
         const detail = reply ? `\n   ↳ ${summarizeText(reply.replace(/\n+/g, ' · '), MAX_REPLY)}` : '';
         linesAlt.push(`${r.ok ? '✅' : '❌'} ${i + 1} · ${top(block)}${detail}`);
 
         if (!r.ok && optionsAlt.stop) {
-            if (i + 1 < blocks.length) linesAlt.push(t('adm.batch.stopped', { i: i + 1, resto: blocks.length - i - 1 }));
+            if (i + 1 < blocks.length) linesAlt.push(t('adm.batch.stopped', { i: i + 1, rest: blocks.length - i - 1 }));
             break;
         }
     }
@@ -148,7 +148,7 @@ async function cmdBatch(context) {
     // -quiet: without the summary (what the commands send outside the summary, like media, goes out the same)
     if (!optionsAlt.quiet) {
         const ok = blocks.length - failures;
-        await msg.reply(t('adm.batch.summary', { ok, n: blocks.length, linhas: linesAlt.join('\n'), aviso: notice }), undefined, WITHOUT_PREVIEW);
+        await msg.reply(t('adm.batch.summary', { ok, n: blocks.length, lines: linesAlt.join('\n'), notice }), undefined, WITHOUT_PREVIEW);
     }
     for (const c of contents) await msg.reply(c);
 }

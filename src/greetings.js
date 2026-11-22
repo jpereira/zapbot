@@ -11,8 +11,8 @@ const { t } = require('./i18n');
 const { printError, printInfo } = require('./log');
 
 const TYPES = {
-    welcome: { evento: 'group_join', padrao: 'saudacoes.welcomeDefault' },
-    goodbye: { evento: 'group_leave', padrao: 'saudacoes.goodbyeDefault' }
+    welcome: { event: 'group_join', fallback: 'saudacoes.welcomeDefault' },
+    goodbye: { event: 'group_leave', fallback: 'saudacoes.goodbyeDefault' }
 };
 
 const MAX_CHARACTERS = 1000;
@@ -39,8 +39,8 @@ async function deleteGreeting(chatId, type) {
 }
 
 // The final text: {name} and {group} replaced (the language default, with no text of its own)
-function assembleText(type, greeting, { nome: nameAlt, grupo: group }) {
-    const modelAlt = greeting.text ?? t(TYPES[type].padrao);
+function assembleText(type, greeting, { name: nameAlt, group }) {
+    const modelAlt = greeting.text ?? t(TYPES[type].fallback);
     return modelAlt.replace(/\{name\}/g, nameAlt).replace(/\{group\}/g, group);
 }
 
@@ -53,7 +53,7 @@ async function nameAltAlt(id, mention) {
 
 /**
  * Sends the group greeting to each person in the event (if the group has one turned on).
- * @param {'welcome'|'goodbye'} tipo
+ * @param {'welcome'|'goodbye'} type
  * @param {{ chatId: string, recipientIds?: string[] }} notificacao  the whatsapp-web.js GroupNotification
  */
 async function greet(type, notification) {
@@ -68,7 +68,7 @@ async function greet(type, notification) {
 
         const group = (await groupResolverName(chatId).catch(() => null)) ?? chatId.split('@')[0];
         for (const id of people) {
-            const textAlt = assembleText(type, greeting, { nome: await nameAltAlt(id, type === 'welcome'), grupo: group });
+            const textAlt = assembleText(type, greeting, { name: await nameAltAlt(id, type === 'welcome'), group });
             await client.sendMessage(chatId, textAlt, type === 'welcome' ? { mentions: [id] } : {});
             printInfo(`/${type}: ${id} in ${group}`);
         }
@@ -77,7 +77,7 @@ async function greet(type, notification) {
     }
 }
 
-for (const [type, { evento: event }] of Object.entries(TYPES)) {
+for (const [type, { event }] of Object.entries(TYPES)) {
     client.on(event, (notification) => greet(type, notification));
 }
 

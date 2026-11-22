@@ -20,7 +20,7 @@ const METADATA_TIMEOUT_MS = 90 * 1000;
  * The photos (URL of the largest of each item) and the text of a post. Items with video are left out: they belong to the normal download.
  * @param {string} url
  * @param {string[]} argsDeCookies  the yt-dlp cookies (cache/cookies.txt), if any
- * @returns {Promise<{ fotos: string[], texto: string, total: number }>}
+ * @returns {Promise<{ photos: string[], text: string, total: number }>}
  */
 async function postPhotos(url, argsDeCookies = []) {
     const outputAlt = await captureOutput(BIN_YT, [
@@ -34,9 +34,9 @@ async function postPhotos(url, argsDeCookies = []) {
         .map((it) => it.thumbnails?.at(-1)?.url)
         .filter(Boolean);
     return {
-        fotos: photos.slice(0, PHOTOS_MAX),
+        photos: photos.slice(0, PHOTOS_MAX),
         total: photos.length,
-        texto: String(post.description ?? items[0]?.description ?? '').trim()
+        text: String(post.description ?? items[0]?.description ?? '').trim()
     };
 }
 

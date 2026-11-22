@@ -39,6 +39,6 @@ module.exports = {
             ex: ['-l Maria', '-l /Maria/', '-l +5521999999999']
         }
     ],
-    role: ADMIN, // vigia contatos
+    role: ADMIN, // vigia contacts
     cron: false
 };

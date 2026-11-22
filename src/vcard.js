@@ -20,14 +20,14 @@ function double(line) {
 
 /**
  * @param {object} c
- * @param {string} c.telefone  digits only, with the country code
- * @param {string} c.nome
- * @param {string} [c.recado]  the WhatsApp "about" (becomes NOTE)
- * @param {string} [c.empresa]
- * @param {Buffer} [c.foto]    JPEG
- * @param {number} [c.quando]  ms (REV)
+ * @param {string} c.phone  digits only, with the country code
+ * @param {string} c.name
+ * @param {string} [c.note]  the WhatsApp "about" (becomes NOTE)
+ * @param {string} [c.company]
+ * @param {Buffer} [c.photo]    JPEG
+ * @param {number} [c.when]  ms (REV)
  */
-function assembleVcard({ telefone: phoneAlt, nome: nameAlt, recado: message, empresa: company, foto: photo, quando: when = Date.now() }) {
+function assembleVcard({ phone: phoneAlt, name: nameAlt, note: message, company, photo, when = Date.now() }) {
     const linesAlt = [
         'BEGIN:VCARD',
         'VERSION:3.0',

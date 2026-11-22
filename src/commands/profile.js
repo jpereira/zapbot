@@ -49,7 +49,7 @@ async function dataAlt(id) {
     }
     const nameAlt = contacts.map(scheduleName).find(Boolean) || contacts.map(contactName).find(Boolean) || null;
 
-    return { telefone: phoneAlt, nome: nameAlt, ids: [...new Set([jid, id].filter(Boolean))] };
+    return { phone: phoneAlt, name: nameAlt, ids: [...new Set([jid, id].filter(Boolean))] };
 }
 
 // The photo as media, or null (no photo, private photo or the download failed)
@@ -72,8 +72,8 @@ async function photoAlt(ids) {
 }
 
 async function showProfile(msg, person) {
-    const { telefone: phoneAlt, nome: nameAlt, ids } = await dataAlt(person.id);
-    const label = nameAlt ?? person.nome ?? (phoneAlt ? `+${phoneAlt}` : person.id.split('@')[0]);
+    const { phone: phoneAlt, name: nameAlt, ids } = await dataAlt(person.id);
+    const label = nameAlt ?? person.name ?? (phoneAlt ? `+${phoneAlt}` : person.id.split('@')[0]);
     const contactAlt = t('profile.contact', { label: label + (phoneAlt ? ` <+${phoneAlt}>` : '') });
 
     const photo = await photoAlt(ids);
@@ -95,8 +95,8 @@ async function messageAlt(ids) {
 }
 
 async function showMessage(msg, person) {
-    const { telefone: phoneAlt, nome: nameAlt, ids } = await dataAlt(person.id);
-    const label = nameAlt ?? person.nome ?? (phoneAlt ? `+${phoneAlt}` : person.id.split('@')[0]);
+    const { phone: phoneAlt, name: nameAlt, ids } = await dataAlt(person.id);
+    const label = nameAlt ?? person.name ?? (phoneAlt ? `+${phoneAlt}` : person.id.split('@')[0]);
     const who = label + (phoneAlt ? ` <+${phoneAlt}>` : '');
 
     const message = await messageAlt(ids);

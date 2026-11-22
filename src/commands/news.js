@@ -23,7 +23,7 @@ const NEWS_CATEGORIES = {
     get brazil() { return t('news.brazil'); }
 };
 
-const ENTITIES_XML = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+const ENTITIES_XML = { amp: '&', lt: '<', gt: '>', quot: '"', after: "'", nbsp: ' ' };
 
 // A single pass: "&amp;lt;" becomes "&lt;" (and not "<"), as it should
 const decodeEntities = (s) => String(s ?? '')
@@ -45,12 +45,12 @@ async function readFeed(url) {
 
     return [...xml.matchAll(/<item\b[\s\S]*?<\/item>/g)]
         .map(([item]) => ({
-            fonte: sourceAlt,
-            titulo: tagXml(item, 'title'),
+            source: sourceAlt,
+            title: tagXml(item, 'title'),
             link: tagXml(item, 'link'),
             data: Date.parse(tagXml(item, 'pubDate')) || 0
         }))
-        .filter(i => i.titulo)
+        .filter(i => i.title)
         .sort((a, b) => b.data - a.data);
 }
 
@@ -99,7 +99,7 @@ async function cmdNews({ msg, opts }) {
     }
 
     const linesAlt = items.map((i, n) =>
-        `${n + 1}. *${i.titulo}*\n_${i.fonte}${i.data ? ` · ${formatData(i.data)}` : ''}_${i.link ? `\n${i.link}` : ''}`);
+        `${n + 1}. *${i.title}*\n_${i.source}${i.data ? ` · ${formatData(i.data)}` : ''}_${i.link ? `\n${i.link}` : ''}`);
 
     const title = categories.length === 1 ? NEWS_CATEGORIES[categories[0]] : t('news.title');
 

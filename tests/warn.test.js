@@ -7,14 +7,14 @@ const { test, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { OWNER, GROUP, OTHERAlt } = bot;
-const CICLANO = { jid: '5521922222222@c.us', nome: 'Ciclano' };
+const CICLANO = { jid: '5521922222222@c.us', name: 'Ciclano' };
 
 let group;
 let removed;
 
 beforeEach(async () => {
     await bot.restart();
-    bot.createContact(CICLANO.jid, CICLANO.nome);
+    bot.createContact(CICLANO.jid, CICLANO.name);
     group = bot.createGroup(GROUP, 'Família', [{ jid: OWNER.jid, isAdmin: true }, { jid: OTHERAlt.jid, isAdmin: true }, CICLANO.jid]);
     removed = [];
     group.removeParticipants = async (ids) => { removed.push(ids); return { status: 200 }; };
@@ -25,8 +25,8 @@ const notices = () => bot.dbAll('SELECT person, reason FROM warns ORDER BY id');
 test('/warn soma um aviso com o motivo, por número, nome ou respondendo', async () => {
     assert.deepEqual(await bot.replyAlt('/warn +5521922222222 mandou link'), ['⚠️ *Aviso 1/3* para Ciclano: mandou link']);
     assert.deepEqual(await bot.replyAlt('/warn /Ciclano/'), ['⚠️ *Aviso 2/3* para Ciclano']);
-    const quoted = bot.createMessage({ texto: 'oi', de: CICLANO.jid });
-    assert.deepEqual(await bot.replyAlt('/warn fora do assunto', { citada: quoted }), ['⚠️ *Aviso 3/3* para Ciclano: fora do assunto'].map(x => x + '\n🚪 Ciclano chegou a 3 avisos e foi removido do grupo.'));
+    const quoted = bot.createMessage({ text: 'oi', de: CICLANO.jid });
+    assert.deepEqual(await bot.replyAlt('/warn fora do assunto', { quoted }), ['⚠️ *Aviso 3/3* para Ciclano: fora do assunto'].map(x => x + '\n🚪 Ciclano chegou a 3 avisos e foi removido do grupo.'));
     assert.deepEqual(removed, [[CICLANO.jid]]);
     assert.deepEqual(await notices(), [], 'removido: a contagem zera');
 });
@@ -52,8 +52,8 @@ test('no limite sem o bot ser admin: avisa que não conseguiu remover e mantém 
 
 test('admins do grupo e o bot não levam aviso; fora de grupo e sem ninguém', async () => {
     assert.match((await bot.replyAlt(`/warn +${OTHERAlt.user}`))[0], /Fulano é admin do grupo: não leva aviso/);
-    const my = bot.createMessage({ texto: 'oi', fromMe: true });
-    assert.deepEqual(await bot.replyAlt('/warn', { citada: my }), ['❌ Eu não me aviso. 🙂']);
+    const my = bot.createMessage({ text: 'oi', fromMe: true });
+    assert.deepEqual(await bot.replyAlt('/warn', { quoted: my }), ['❌ Eu não me aviso. 🙂']);
     assert.match((await bot.replyAlt('/warn'))[0], /Usage: \/warn/);
     assert.match((await bot.replyAlt('/warn +5521999999999', { chat: OWNER.jid }))[0], /grupos/);
     assert.deepEqual(await notices(), []);
@@ -74,8 +74,8 @@ test('-l lista o grupo e, com uma pessoa, cada aviso com o motivo; -c zera', asy
 
 test('lerAlvoEMotivo: a pessoa no começo e o resto é o motivo', () => {
     const { readTargetAndReason } = bot.src('commands/warn');
-    assert.deepEqual(readTargetAndReason('@Fulano mandou link'), { pessoa: '@Fulano', motivo: 'mandou link' });
-    assert.deepEqual(readTargetAndReason('/Fulano de Tal/ spam'), { pessoa: '/Fulano de Tal/', motivo: 'spam' });
-    assert.deepEqual(readTargetAndReason('+5521999999999'), { pessoa: '+5521999999999', motivo: '' });
-    assert.deepEqual(readTargetAndReason('só o motivo'), { pessoa: '', motivo: 'só o motivo' });
+    assert.deepEqual(readTargetAndReason('@Fulano mandou link'), { person: '@Fulano', reason: 'mandou link' });
+    assert.deepEqual(readTargetAndReason('/Fulano de Tal/ spam'), { person: '/Fulano de Tal/', reason: 'spam' });
+    assert.deepEqual(readTargetAndReason('+5521999999999'), { person: '+5521999999999', reason: '' });
+    assert.deepEqual(readTargetAndReason('só o motivo'), { person: '', reason: 'só o motivo' });
 });

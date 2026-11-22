@@ -1,7 +1,7 @@
 /*
  * /invite command: the group invite link (the bot must be an admin of it).
- *   /invite        → o link atual
- *   /invite -revoke → invalida o link atual e gera outro
+ *   /invite        → o link current
+ *   /invite -revoke → invalida o link current e gera outro
  */
 
 const { t } = require('../i18n');

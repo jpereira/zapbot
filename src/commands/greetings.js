@@ -1,6 +1,6 @@
 /*
  * /welcome and /goodbye commands: each group's join and leave message (see src/greetings.js).
- *   /welcome               → mostra a deste grupo
+ *   /welcome               → show a deste group
  * /welcome <text>       → turns on with this text ({name} = the person, {group} = the group)
  * /welcome -on           → turns on with the default text
  *   /welcome -off          → desliga
@@ -38,7 +38,7 @@ async function cmdGreeting(type, cmd, { msg, args, opts, chatId, isGroup, sender
         const group = (await groupResolverName(chatId).catch(() => null)) ?? chatId.split('@')[0];
         const who = msg.author || client.info.wid._serialized;
         const nameAlt = type === 'welcome' ? `@${who.split('@')[0]}` : senderName;
-        await msg.reply(assembleText(type, current, { nome: nameAlt, grupo: group }), null, type === 'welcome' ? { mentions: [who] } : {});
+        await msg.reply(assembleText(type, current, { name: nameAlt, group }), null, type === 'welcome' ? { mentions: [who] } : {});
         return;
     }
 

@@ -12,19 +12,19 @@ const { t } = require('./i18n');
 let filterText;
 let filter;
 
-function highlightMatches(line, regex, cor) {
+function highlightMatches(line, regex, color) {
     const global = new RegExp(regex.source, regex.flags.replace(/g/g, '') + 'g');
     let outputAlt = '';
     let start = 0;
     for (const match of line.matchAll(global)) {
         if (!match[0]) continue; // An empty regex paints nothing, nor holds the terminal in a loop.
-        outputAlt += cor(line.slice(start, match.index)) + colors.red.bold(match[0]);
+        outputAlt += color(line.slice(start, match.index)) + colors.red.bold(match[0]);
         start = match.index + match[0].length;
     }
-    return outputAlt + cor(line.slice(start));
+    return outputAlt + color(line.slice(start));
 }
 
-function emitLog(line, cor) {
+function emitLog(line, color) {
     const cfg = configureDebug();
     const context = contextDebug();
     const detail = cfg.enabled && cfg.level >= 1 && context.chatId
@@ -39,15 +39,15 @@ function emitLog(line, cor) {
         filter.lastIndex = 0;
         if (!filter.test(line)) return;
     }
-    console.log(applyFilter ? highlightMatches(line, filter, cor) : cor(line));
-    if (cfg.enabled && cfg.copyTo && !context.semRastro) {
+    console.log(applyFilter ? highlightMatches(line, filter, color) : color(line));
+    if (cfg.enabled && cfg.copyTo && !context.noTrace) {
         require('./debugCopy').copyLog(line);
     }
 }
 
 function printDebugLevel(level, ...args) {
     const cfg = configureDebug();
-    if (!cfg.enabled || cfg.level < level || contextDebug().semRastro) return;
+    if (!cfg.enabled || cfg.level < level || contextDebug().noTrace) return;
     const safe = args.map(a => dataDebug(a));
     emitLog(`[${getTimestamp()}] [DEBUG${level}] [${getCaller()}] ` +
         util.formatWithOptions({ depth: 4, maxArrayLength: 40 }, ...safe), colors.white);
@@ -116,7 +116,7 @@ function printCall(who, call, chat) {
  *   [!] ⚠️ 'Jorge' executed unknown command: '/tapioca'
  *   [DEBUG0] ⚠️ 'Fulano' executed unknown command: '/tapioca'
  */
-function printCommandUnknown(who, call, { doDono: owner }) {
+function printCommandUnknown(who, call, { ofOwner: owner }) {
     const textAlt = `⚠️ '${who}' executed unknown command: '${call}'`;
     if (owner) emitLog(`[${getTimestamp()}] [!] ${textAlt}`, colors.yellow);
     else if (configureDebug().enabled) {

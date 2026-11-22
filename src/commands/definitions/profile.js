@@ -21,7 +21,7 @@ module.exports = {
         {
             argv: ['[/contact/|@mention|+number]...'],
             desc: 'The people: an address book contact by name or part of it (a name with spaces goes between /.../ or quotes; if several match, you pick from the list), someone mentioned with @, or a number. With nobody, the one of the person in the private chat (in your own, yours), the group picture in a group, or the one of whoever wrote the replied message.',
-            outrosChats: true
+            otherChats: true
         },
         {
             opts: ['set', 's'],
@@ -39,6 +39,6 @@ module.exports = {
         }
     ],
     mask: true,
-    delegavel: true,
+    isDelegable: true,
     role: ADMIN // delegable: current chat only
 };

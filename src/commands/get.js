@@ -49,8 +49,8 @@ async function downloadMedia({ msg, opts, quotedMsg, senderName }, { cmd }) {
     }
 
     let media = null;
-    if (origin.citada) {
-        media = await downloadQuoted(msg, origin.citada);
+    if (origin.quoted) {
+        media = await downloadQuoted(msg, origin.quoted);
         if (!media) return;
         if (opts.opt.transcribe) {
             if (!isAudioOrVideo(media)) {
@@ -77,7 +77,7 @@ async function downloadMedia({ msg, opts, quotedMsg, senderName }, { cmd }) {
         }
         // Sticker from a link without video (article, photo post): the link preview
         const preview = opts.opt.sticker ? origin.doLink : null;
-        await converterAndSend({ msg, opts, senderName, url: origin.url, media, previa: preview });
+        await converterAndSend({ msg, opts, senderName, url: origin.url, media, preview });
     } finally {
         getInProgress--;
     }
@@ -201,8 +201,8 @@ async function optionsValid(msg, opts, cmd) {
 function mediaOrigin(opts, quotedMsg, msg) {
     if (opts.argv[0]) return { url: opts.argv[0] };
     // Without a reply: the message itself with the media and the command in the caption (image with "/sticker")
-    if (!quotedMsg) return msg?.hasMedia ? { citada: msg } : null;
-    if (quotedMsg.hasMedia) return { citada: quotedMsg };
+    if (!quotedMsg) return msg?.hasMedia ? { quoted: msg } : null;
+    if (quotedMsg.hasMedia) return { quoted: quotedMsg };
 
     const url = quotedMsg.links?.length ? quotedMsg.links[0].link : extractFirstUrl(quotedMsg.body);
     return url ? { url, doLink: quotedMsg } : null;
@@ -270,7 +270,7 @@ async function sendWithoutConverter(msg, media, opts) {
  * already downloaded (ffmpeg cuts).
  */
 function cacheFile(url, snippet) {
-    const keyAlt = `${url}|${snippet ? `${snippet.inicio}-${snippet.fim ?? 'inf'}` : 'inteiro'}`;
+    const keyAlt = `${url}|${snippet ? `${snippet.start}-${snippet.end ?? 'inf'}` : 'inteiro'}`;
     return path.join(TMP_DIR, `${crypto.createHash('sha1').update(keyAlt).digest('hex')}_original.mp4`);
 }
 
@@ -278,7 +278,7 @@ function cacheFile(url, snippet) {
 function searchInCache(url, snippet) {
     for (const candidateAlt of snippet ? [snippet, null] : [null]) {
         const fileAlt = cacheFile(url, candidateAlt);
-        if (fs.existsSync(fileAlt)) return { arquivo: fileAlt, trecho: candidateAlt };
+        if (fs.existsSync(fileAlt)) return { file: fileAlt, snippet: candidateAlt };
     }
     return null;
 }
@@ -297,7 +297,7 @@ async function checkUrl(url, senderName) {
     }
 }
 
-async function converterAndSend({ msg, opts, senderName, url, media, previa: preview }) {
+async function converterAndSend({ msg, opts, senderName, url, media, preview }) {
     // Random: with Date.now() two /get in the same millisecond would use the same files
     const id = crypto.randomUUID();
     let originalFile = null;
@@ -342,9 +342,9 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
             const inCacheAlt = useCache ? searchInCache(url, snippet) : null;
 
             if (inCacheAlt) {
-                originalFile = inCacheAlt.arquivo;
+                originalFile = inCacheAlt.file;
                 inCache = true;
-                if (inCacheAlt.trecho) optsFfmpeg = snippetOpts(opts, inCacheAlt.trecho);
+                if (inCacheAlt.snippet) optsFfmpeg = snippetOpts(opts, inCacheAlt.snippet);
                 printInfo(`> From the cache (get.cache.tmp), without downloading: ${path.basename(originalFile)}`);
             } else {
                 // With a cut, tries to download only the snippet; if the site does not allow it, downloads everything and ffmpeg cuts
@@ -438,8 +438,8 @@ async function converterAndSend({ msg, opts, senderName, url, media, previa: pre
         await completeNotice(msg, notice, t(isSticker ? 'get.stickerDone' : 'get.mediaDone'), { linkPreview: false });
     } catch (e) {
         // Photo-only post (carousel): without -a, -st or -t, the photos go to the chat, the last one with the post text
-        if (e.semMidia && url && !opts.opt.audio && !opts.opt.sticker && (await postSendPhotos(msg, notice, url))) return;
-        if (e.aoBaixar && preview && (await previewSticker(msg, preview, notice, e, opts.opt.pos))) return;
+        if (e.noMedia && url && !opts.opt.audio && !opts.opt.sticker && (await postSendPhotos(msg, notice, url))) return;
+        if (e.onDownload && preview && (await previewSticker(msg, preview, notice, e, opts.opt.pos))) return;
         printError(e.message);
         await completeNotice(msg, notice, formatErrorCommand(e), { linkPreview: false });
     } finally {
@@ -458,14 +458,14 @@ const FORMAT_AUDIO_LIGHT = 'worstaudio[language_preference>0]/worstaudio/worst';
 
 const mmss = (seg) => `${Math.floor(seg / 60)}:${String(Math.round(seg % 60)).padStart(2, '0')}`;
 
-// O WhatsApp aceita ~65 mil caracteres numa mensagem
+// O WhatsApp aceita ~65 mil caracteres numa message
 const TRANSCRIPTION_MAX_CHARACTERS = 60000;
 
 /**
  * /get -transcribe: the speech of the link (or of the replied video/audio) as text, transcribed
  * locally. From the link it downloads only the lowest-quality audio (it is the lightest and whisper
  * works at 16 kHz mono), converts to 16 kHz mono wav (with the -ss/-es cut) and transcribes.
- * O aviso "Processando" vira o texto.
+ * O notice "Processando" vira o text.
  */
 async function transcribeAndSend({ msg, opts, senderName, url, media }) {
     const id = crypto.randomUUID();
@@ -497,9 +497,9 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
         printInfo(`> Audio to transcribe: ${humanSize(fs.statSync(fileAlt).size)}`);
 
         // The cut (-ss/-es), with the time counted from the end resolved by the audio duration
-        let cortes = opts;
-        if (hasTimeNegative(opts)) cortes = resolverTimes(opts, await fileDuration(fileAlt));
-        const { startSec, endSec } = cortes.opt;
+        let cuts = opts;
+        if (hasTimeNegative(opts)) cuts = resolverTimes(opts, await fileDuration(fileAlt));
+        const { startSec, endSec } = cuts.opt;
         const ffmpegArgs = [
             '-y',
             ...(startSec != null ? ['-ss', String(startSec)] : []),
@@ -535,14 +535,14 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
             await msg.reply(textMsg, null, { linkPreview: false });
         }
 
-        const textAlt = r.texto.length > TRANSCRIPTION_MAX_CHARACTERS ? `${r.texto.slice(0, TRANSCRIPTION_MAX_CHARACTERS)}…` : r.texto;
-        printInfo(`> Transcribed (${r.idioma}, ${mmss(duration)}): ${r.texto.length} characters`);
+        const textAlt = r.text.length > TRANSCRIPTION_MAX_CHARACTERS ? `${r.text.slice(0, TRANSCRIPTION_MAX_CHARACTERS)}…` : r.text;
+        printInfo(`> Transcribed (${r.language}, ${mmss(duration)}): ${r.text.length} characters`);
         if (!textAlt) {
             await completeNotice(msg, notice, t('get.transcribeEmpty'), { linkPreview: false });
         } else if (opts.opt.summary) {
             await completeNotice(msg, notice, await speechSummary(r, duration, textAlt), { linkPreview: false });
         } else {
-            await completeNotice(msg, notice, t('get.transcribeResult', { lang: r.idioma, dur: mmss(duration), text: textAlt }), { linkPreview: false });
+            await completeNotice(msg, notice, t('get.transcribeResult', { lang: r.language, dur: mmss(duration), text: textAlt }), { linkPreview: false });
         }
     } catch (e) {
         printError(e.message);
@@ -573,16 +573,16 @@ async function speechSummary(r, duration, textAlt) {
     try {
         summary = await askOnChat({
             cmd: '/transcribe',
-            sistema: t('get.sumInstructions'),
-            texto: t('get.sumPrompt', { text: textAlt })
+            system: t('get.sumInstructions'),
+            text: t('get.sumPrompt', { text: textAlt })
         });
     } catch (err) {
         summary = errorOpenAi(err, '/transcribe');
     }
     // With the summary, the 60 thousand character cap applies to the sum
-    const head = t('get.transcribeSummary', { lang: r.idioma, dur: mmss(duration), summary: summary, text: '' });
+    const head = t('get.transcribeSummary', { lang: r.language, dur: mmss(duration), summary: summary, text: '' });
     const space = Math.max(1000, TRANSCRIPTION_MAX_CHARACTERS - head.length);
-    return t('get.transcribeSummary', { lang: r.idioma, dur: mmss(duration), summary: summary, text: textAlt.length > space ? `${textAlt.slice(0, space)}…` : textAlt });
+    return t('get.transcribeSummary', { lang: r.language, dur: mmss(duration), summary: summary, text: textAlt.length > space ? `${textAlt.slice(0, space)}…` : textAlt });
 }
 
 /*
@@ -590,7 +590,7 @@ async function speechSummary(r, duration, textAlt) {
  * in the ORIGINAL language: YouTube offers automatic dubs and worstaudio inverts the preference
  * of yt-dlp, picking exactly the dubbed one (the original's language_preference is 10, the rest is lower or
  * does not exist; on sites without that field the plain worstaudio applies). The speech
- * needs no more, and it is much less than the video. `saida` ends in .%(ext)s: yt-dlp
+ * needs no more, and it is much less than the video. `output` ends in .%(ext)s: yt-dlp
  * picks the extension.
  */
 async function downloadAudioLight(url, outputAlt, logCmd, logFile) {
@@ -626,18 +626,18 @@ function downloadSnippet(opts) {
     const start = Number(startSec ?? 0);
     // The sticker is at most 6 s: downloading more than that is a waste
     const end = sticker ? Math.min(Number(endSec ?? Infinity), start + 6) : endSec != null ? Number(endSec) : null;
-    return { inicio: start, fim: end === null ? null : Math.round(end * 1000) / 1000 };
+    return { start, end: end === null ? null : Math.round(end * 1000) / 1000 };
 }
 
 // The snippet file already starts at -ss: ffmpeg only limits the duration
-function snippetOpts(opts, { inicio: start, fim: end }) {
+function snippetOpts(opts, { start, end }) {
     const endSec = end === null ? null : String(Math.round((end - start) * 1000) / 1000);
     return { ...opts, opt: { ...opts.opt, startSec: null, endSec } };
 }
 
 /**
- * Downloads the URL with yt-dlp; with `trecho`, only that (cut at the exact time).
- * @returns {Promise<string>} o comando executado
+ * Downloads the URL with yt-dlp; with `snippet`, only that (cut at the exact time).
+ * @returns {Promise<string>} o command executado
  */
 async function downloadWithYtDlp(url, originalFile, logCmd, snippet = null, logFile = null) {
     // --no-playlist: a playlist link would download everything; --max-filesize: does not fill the disk
@@ -647,7 +647,7 @@ async function downloadWithYtDlp(url, originalFile, logCmd, snippet = null, logF
         ...argsDeCookies(),
         '--no-playlist',
         '--max-filesize', `${getSetting('get.maxDownloadMB')}M`,
-        ...(snippet ? ['--download-sections', `*${snippet.inicio}-${snippet.fim ?? 'inf'}`, '--force-keyframes-at-cuts'] : []),
+        ...(snippet ? ['--download-sections', `*${snippet.start}-${snippet.end ?? 'inf'}`, '--force-keyframes-at-cuts'] : []),
         '-o', originalFile,
         '--', url
     ];
@@ -679,10 +679,10 @@ async function postSendPhotos(msg, notice, url) {
         printInfo(`> Post photos: could not get the data (${err.message})`);
         return false;
     }
-    if (!post.fotos.length) return false;
+    if (!post.photos.length) return false;
 
     const photos = [];
-    for (const [i, photo] of post.fotos.entries()) {
+    for (const [i, photo] of post.photos.entries()) {
         try {
             photos.push(await downloadPhoto(photo, i + 1));
         } catch (err) {
@@ -697,10 +697,10 @@ async function postSendPhotos(msg, notice, url) {
     for (const [i, photo] of photos.entries()) {
         const last = i === photos.length - 1;
         let captionAlt = t('get.photoCaption', { i: i + 1, total: photos.length });
-        if (last && post.texto) {
+        if (last && post.text) {
             const space = CAPTION_MAX - captionAlt.length - 2;
-            captionAlt += `\n\n${post.texto.length > space ? `${post.texto.slice(0, space - 1)}…` : post.texto}`;
-            if (post.texto.length > space) rest = post.texto.slice(space - 1);
+            captionAlt += `\n\n${post.text.length > space ? `${post.text.slice(0, space - 1)}…` : post.text}`;
+            if (post.text.length > space) rest = post.text.slice(space - 1);
         }
         await msg.reply(photo, null, { linkPreview: false, caption: captionAlt });
         if (!last) await wait(PHOTOS_PAUSE_MS);
@@ -726,19 +726,19 @@ function withoutMediaInLink(fileLog) {
 function downloadError(logFile, inner, cmd) {
     const errorAlt = errorOnDownload(t(withoutMediaInLink(logFile) ? 'get.noMediaInLink' : 'get.downloadFailed', { bin: BIN_YT }), { cause: inner });
     errorAlt.cmd = cmd;
-    errorAlt.semMidia = withoutMediaInLink(logFile);
+    errorAlt.noMedia = withoutMediaInLink(logFile);
     return errorAlt;
 }
 
 // Fails before having the video: a link's sticker can still come from the preview
 function errorOnDownload(messageAlt, optionsAlt) {
-    return Object.assign(new Error(messageAlt, optionsAlt), { aoBaixar: true });
+    return Object.assign(new Error(messageAlt, optionsAlt), { onDownload: true });
 }
 
 /*
  * The link video did not come: the sticker comes from the preview WhatsApp shows
  * to the link (as /sticker did before downloading the video).
- * @returns {Promise<boolean>} true = a figurinha foi enviada
+ * @returns {Promise<boolean>} true = a figurinha foi sent
  */
 async function previewSticker(msg, quoted, notice, reasonAlt, pos) {
     try {

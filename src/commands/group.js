@@ -4,7 +4,7 @@
  * /group -admins         → the admins
  * /group -name <text>   → changes the name            /group -desc [text] → changes the description (without text: deletes)
  * /group -pic            → the group photo, from the replied image or from the message itself
- *   /group -rmpic          → tira a foto
+ *   /group -rmpic          → tira a photo
  * /group -send admins|all [-for 30m]  → who can send messages (with -for, reopens by itself)
  * /group -edit admins|all             → who can change name, description and photo
  * /group -add admins|all              → who can add people
@@ -23,7 +23,7 @@ const { fmtWhen, readDuration } = require('../util/when');
 const isAdmin = (p) => Boolean(p?.isAdmin || p?.isSuperAdmin);
 const TEXT_NAMES = ['name', 'desc'];
 
-// "admins" | "all" (also accepts "todos" and "admin", as people say) → true = admins only; another value: null
+// "admins" | "all" (also accepts "all" and "admin", as people say) → true = admins only; another value: null
 function readWho(valueAlt) {
     const v = String(valueAlt ?? '').trim().toLowerCase();
     if (['admins', 'admin'].includes(v)) return true;
@@ -100,7 +100,7 @@ async function cmdGroup({ msg, opts, quotedMsg, isGroup }) {
             await msg.reply(t('grp.group.badWho', { name: nameAlt, value: opts.opt[nameAlt] ?? '' }));
             return;
         }
-        actions.push({ nome: nameAlt, soAdmins });
+        actions.push({ name: nameAlt, soAdmins });
     }
     let ms = null;
     if (opts.given.has('for')) {
@@ -109,7 +109,7 @@ async function cmdGroup({ msg, opts, quotedMsg, isGroup }) {
             await msg.reply(t('grp.group.badTime', { value: opts.opt.for ?? '' }));
             return;
         }
-        if (!actions.some((a) => a.nome === 'send' && a.soAdmins)) {
+        if (!actions.some((a) => a.name === 'send' && a.soAdmins)) {
             await msg.reply(t('grp.group.forNeedsSend'));
             return;
         }
@@ -167,7 +167,7 @@ async function cmdGroup({ msg, opts, quotedMsg, isGroup }) {
     }
     if (opts.given.has('rmpic') && await attempt('rmpic', () => group.deletePicture())) replies.push(t('grp.group.picRemoved'));
 
-    for (const { nome: nameAlt, soAdmins } of actions) {
+    for (const { name: nameAlt, soAdmins } of actions) {
         const fn = { send: 'setMessagesAdminsOnly', edit: 'setInfoAdminsOnly', add: 'setAddMembersAdminsOnly' }[nameAlt];
         if (!(await attempt(nameAlt, () => group[fn](soAdmins)))) continue;
 

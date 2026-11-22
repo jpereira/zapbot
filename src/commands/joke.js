@@ -42,7 +42,7 @@ function restartJokes() {
 }
 
 async function cmdJoke({ msg }) {
-    const { pergunta: question, resposta: reply } = nextJoke();
+    const { question, answer: reply } = nextJoke();
     await msg.reply(`${question}\n\n... ${reply} 🥁`);
 }
 

@@ -15,7 +15,7 @@ const widthAlt = (textAlt) => Array.from(textAlt).length;
 // "**Nome**" or "`x`" inside a table cell: without the markup, which does not render there
 const cellClean = (textAlt) => textAlt.replace(/\*\*|__|`/g, '').trim();
 
-const isSeparator = (celulas) => celulas.length > 0 && celulas.every(c => /^:?-+:?$/.test(c));
+const isSeparator = (cells) => cells.length > 0 && cells.every(c => /^:?-+:?$/.test(c));
 
 // A Markdown table (the lines that start with "|") → the aligned code block
 function tableInCode(linesAlt) {
@@ -26,8 +26,8 @@ function tableInCode(linesAlt) {
     const line = (cel) => cel.map((c, i) => c + ' '.repeat(widths[i] - widthAlt(c))).join('  ').trimEnd();
 
     const [header, ...rest] = dataAlt;
-    const traco = widths.map(n => '-'.repeat(n)).join('  ');
-    return '```\n' + [line(header), traco, ...rest.map(line)].join('\n') + '\n```';
+    const dash = widths.map(n => '-'.repeat(n)).join('  ');
+    return '```\n' + [line(header), dash, ...rest.map(line)].join('\n') + '\n```';
 }
 
 // The text's tables (outside code blocks) become code blocks
@@ -69,7 +69,7 @@ function prose(textAlt) {
 }
 
 /**
- * @param {string} texto  Markdown
+ * @param {string} text  Markdown
  * @returns {string}  the same text in WhatsApp formatting
  */
 function paraWhatsapp(textAlt) {

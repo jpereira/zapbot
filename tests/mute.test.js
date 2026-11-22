@@ -11,23 +11,23 @@ const { OWNER, GROUP, OTHERAlt } = bot;
 const { readMuted } = bot.src('commands/mute');
 
 const L200 = '120363000000000200@g.us';
-const CICLANO = { jid: '5521922222222@c.us', nome: 'Ciclano' };
+const CICLANO = { jid: '5521922222222@c.us', name: 'Ciclano' };
 
 beforeEach(async () => {
     await bot.restart();
     bot.createGroup(L200, 'Grupo sobre L200', [OWNER.jid, OTHERAlt.jid, CICLANO.jid]);
-    bot.createContact(CICLANO.jid, CICLANO.nome);
+    bot.createContact(CICLANO.jid, CICLANO.name);
 });
 
 // Someone sends a message and deletes it; returns the notices that arrived
 async function deleted(textAlt, optionsAlt = {}) {
-    const msg = bot.createMessage({ texto: textAlt, de: OTHERAlt.jid, ...optionsAlt });
+    const msg = bot.createMessage({ text: textAlt, de: OTHERAlt.jid, ...optionsAlt });
     await bot.deliver(msg);
-    return bot.apagar(msg);
+    return bot.erase(msg);
 }
 
 async function edited(textAlt, freshAlt, optionsAlt = {}) {
-    const msg = bot.createMessage({ texto: textAlt, de: OTHERAlt.jid, ...optionsAlt });
+    const msg = bot.createMessage({ text: textAlt, de: OTHERAlt.jid, ...optionsAlt });
     await bot.deliver(msg);
     return bot.edit(msg, freshAlt);
 }
@@ -36,12 +36,12 @@ const hits = () => bot.dbAll('SELECT target_id, kind FROM mute_hits ORDER BY id'
 
 describe('/mute', () => {
     test('lerMudo: opções antes do alvo; /nome/ e aspas', () => {
-        assert.deepEqual([...readMuted('-d -e /Grupo L200/').colunas], ['deleted', 'edited']);
-        assert.equal(readMuted('-d -e /Grupo L200/').alvo, 'Grupo L200');
-        assert.equal(readMuted('-a "Grupo L200"').alvo, 'Grupo L200');
-        assert.deepEqual([...readMuted('-all x').colunas], ['deleted', 'edited', 'status', 'reaction']);
+        assert.deepEqual([...readMuted('-d -e /Grupo L200/').columns], ['deleted', 'edited']);
+        assert.equal(readMuted('-d -e /Grupo L200/').target, 'Grupo L200');
+        assert.equal(readMuted('-a "Grupo L200"').target, 'Grupo L200');
+        assert.deepEqual([...readMuted('-all x').columns], ['deleted', 'edited', 'status', 'reaction']);
         assert.equal(readMuted('-rm 2').rm, '2');
-        assert.match(readMuted('-x y').erro, /Opção desconhecida: -x/);
+        assert.match(readMuted('-x y').error, /Opção desconhecida: -x/);
     });
 
     test('-d num grupo: as apagadas dali não avisam, mas ficam guardadas; as de outros grupos avisam', async () => {
@@ -59,7 +59,7 @@ describe('/mute', () => {
 
     test('-for <tempo>: silêncio temporário que acaba sozinho; sem o -for, fica sem prazo', async () => {
         const [reply] = await bot.replyAlt('/mute -d -for 2h /Grupo L200/');
-        assert.match(reply, /^🔇 \*Silenciado:\* 👥 Grupo sobre L200 — apagadas · até \w{3} \d\d\/\d\d \d\d:\d\d\n/);
+        assert.match(reply, /^🔇 \*Silenciado:\* 👥 Grupo sobre L200 — apagadas · até \S{3} \d\d\/\d\d \d\d:\d\d\n/);
         const { expires_at: end } = await bot.dbGet('SELECT expires_at FROM mutes WHERE target_id = ?', [L200]);
         assert.ok(Math.abs(end - (Date.now() + 2 * 3600_000)) < 60_000);
 
@@ -90,10 +90,10 @@ describe('/mute', () => {
         assert.deepEqual(await deleted('meu status', { chat: 'status@broadcast' }), []);
         assert.deepEqual((await hits()).map(h => h.kind), ['apagada', 'editada', 'status']);
 
-        // Outra pessoa continua avisando
-        const msg = bot.createMessage({ texto: 'do ciclano', de: CICLANO.jid });
+        // Outra person continua avisando
+        const msg = bot.createMessage({ text: 'do ciclano', de: CICLANO.jid });
         await bot.deliver(msg);
-        assert.equal((await bot.apagar(msg)).length, 1);
+        assert.equal((await bot.erase(msg)).length, 1);
     });
 
     test('-s só os status; silenciar de novo soma; a lista mostra os ignorados', async () => {
@@ -167,11 +167,11 @@ describe('/mute', () => {
         bot.createContact('5521933333333@c.us', 'Jorge Pereira');
         bot.createContact('5511944444444@c.us', 'Jorge Silva');
 
-        const commandAlt = bot.executar('/mute -a jorge', { de: OTHERAlt.jid });
+        const commandAlt = bot.execute('/mute -a jorge', { de: OTHERAlt.jid });
         for (let i = 0; i < 50; i++) await new Promise(setImmediate);
 
         assert.deepEqual(await bot.replyAlt('1'), [], 'o dono respondendo: mensagem comum');
-        await bot.executar('2', { de: OTHERAlt.jid });
+        await bot.execute('2', { de: OTHERAlt.jid });
         await commandAlt;
         assert.deepEqual((await bot.dbAll('SELECT target_id FROM mutes')).map(m => m.target_id), ['5511944444444@c.us']);
     });
@@ -181,13 +181,13 @@ describe('/mute', () => {
         bot.createContact('5521933333333@c.us', 'Jorge Pereira');
         bot.createContact('5511944444444@c.us', 'Jorge Silva');
 
-        const commandAlt = bot.executar('/mute -a jorge');
+        const commandAlt = bot.execute('/mute -a jorge');
         for (let i = 0; i < 50; i++) await new Promise(setImmediate);
         t.mock.timers.tick(bot.src('choices').CHOICE_MS);
 
         const r = await commandAlt;
         assert.equal(r.length, 1, 'sem mensagem nova');
-        assert.equal(r[0].texto, '⌛ Nenhum nº escolhido para "jorge" em 2 minutos: nada foi feito.');
+        assert.equal(r[0].text, '⌛ Nenhum nº escolhido para "jorge" em 2 minutos: nada foi feito.');
         assert.equal(r[0].editada, true);
         assert.deepEqual(await bot.dbAll('SELECT * FROM mutes'), []);
         assert.deepEqual(await bot.replyAlt('1'), []);
@@ -195,7 +195,7 @@ describe('/mute', () => {
 
     test('alvo por menção (@ no WhatsApp): o LID vira o telefone', async () => {
         bot.client.lids.set('100000000000002@lid', CICLANO.jid);
-        assert.match((await bot.replyAlt('/mute -a @100000000000002', { mencoes: ['100000000000002@lid'] }))[0], /^🔇 \*Silenciado:\* 👤 Ciclano — /);
+        assert.match((await bot.replyAlt('/mute -a @100000000000002', { mentions: ['100000000000002@lid'] }))[0], /^🔇 \*Silenciado:\* 👤 Ciclano — /);
         assert.deepEqual((await bot.dbAll('SELECT target_id FROM mutes')).map(m => m.target_id), [CICLANO.jid]);
     });
 
@@ -207,7 +207,7 @@ describe('/mute', () => {
     test('respondendo um aviso: de onde ele veio (a pessoa no privado e no status, o grupo, a comunidade)', async () => {
         // The reply to the notice (the notice is a message from you, in your private chat)
         const replying = (line, notice) => bot.replyAlt(line, {
-            chat: OWNER.jid, citada: bot.createMessage({ texto: notice.texto, chat: OWNER.jid, id: notice.id.id })
+            chat: OWNER.jid, quoted: bot.createMessage({ text: notice.text, chat: OWNER.jid, id: notice.id.id })
         });
 
         // In Fulano's private chat: him
@@ -218,7 +218,7 @@ describe('/mute', () => {
         const [group] = await deleted('oi', { chat: L200, de: CICLANO.jid });
         assert.match((await replying('/mute -s', group))[0], /^🔇 \*Silenciado:\* 👥 Grupo sobre L200 — status/);
 
-        // Num status: a pessoa
+        // Num status: a person
         const [doStatus] = await deleted('meu status', { chat: 'status@broadcast', de: CICLANO.jid });
         assert.match((await replying('/mute -s', doStatus))[0], /^🔇 \*Silenciado:\* 👤 Ciclano — status/);
 
@@ -233,16 +233,16 @@ describe('/mute', () => {
 
         // Old notice (without the stored origin): the person of "📱 Número"
         await bot.replyAlt('/unmute -all');
-        const oldAlt2 = { texto: '❌ *MENSAGEM APAGADA DETECTADA*\n\n👤 *Nome:* Ciclano\n📱 *Número:* +5521922222222', id: { id: 'VELHO1' } };
+        const oldAlt2 = { text: '❌ *MENSAGEM APAGADA DETECTADA*\n\n👤 *Nome:* Ciclano\n📱 *Número:* +5521922222222', id: { id: 'VELHO1' } };
         assert.match((await replying('/mute -d', oldAlt2))[0], /^🔇 \*Silenciado:\* 👤 Ciclano — apagadas/);
 
         // Someone's message (not a notice): whoever sent it
-        const someone = bot.createMessage({ texto: 'oi', de: OTHERAlt.jid, chat: L200 });
-        assert.match((await bot.replyAlt('/mute -e', { chat: L200, citada: someone }))[0], /^🔇 \*Silenciado:\* 👤 Fulano — editadas/);
+        const someone = bot.createMessage({ text: 'oi', de: OTHERAlt.jid, chat: L200 });
+        assert.match((await bot.replyAlt('/mute -e', { chat: L200, quoted: someone }))[0], /^🔇 \*Silenciado:\* 👤 Fulano — editadas/);
 
         // A message of yours that is not a notice: does not know whose it is
-        const my = bot.createMessage({ texto: 'nada', chat: OWNER.jid });
-        assert.match((await bot.replyAlt('/mute', { chat: OWNER.jid, citada: my }))[0], /^❌ Não sei de quem é essa mensagem/);
+        const my = bot.createMessage({ text: 'nada', chat: OWNER.jid });
+        assert.match((await bot.replyAlt('/mute', { chat: OWNER.jid, quoted: my }))[0], /^❌ Não sei de quem é essa mensagem/);
     });
 
     test('aviso de edição sem registro: grupo estilizado antes do contato homônimo', async () => {
@@ -251,24 +251,24 @@ describe('/mute', () => {
         bot.createContact(OTHERAlt.jid, nameAlt);
         const [notice] = await edited('Melhor e mais fácil', 'Melhor é mais fácil', { chat: L200 });
         await bot.dbRun('DELETE FROM alerts');
-        const quoted = bot.createMessage({ texto: notice.texto, chat: OWNER.jid });
+        const quoted = bot.createMessage({ text: notice.text, chat: OWNER.jid });
 
-        assert.match((await bot.replyAlt('/mute', { chat: OWNER.jid, citada: quoted }))[0], /👥/);
+        assert.match((await bot.replyAlt('/mute', { chat: OWNER.jid, quoted }))[0], /👥/);
         assert.deepEqual(await bot.dbAll('SELECT target_id, is_group FROM mutes'), [
             { target_id: L200, is_group: 1 }
         ]);
         assert.match((await bot.replyAlt('/mute -l'))[0], /1\. 👥/);
         assert.deepEqual(await edited('a', 'b', { chat: L200, de: CICLANO.jid }), []);
         assert.equal((await edited('a', 'b', { chat: GROUP })).length, 1);
-        assert.match((await bot.replyAlt('/unmute', { chat: OWNER.jid, citada: quoted }))[0], /👥/);
+        assert.match((await bot.replyAlt('/unmute', { chat: OWNER.jid, quoted }))[0], /👥/);
         assert.equal((await edited('c', 'd', { chat: L200 })).length, 1);
     });
 
     test('origem registrada identifica o grupo mesmo com cabeçalho desatualizado', async () => {
         const [notice] = await edited('a', 'b', { chat: L200 });
-        const textAlt = notice.texto.replace('Grupo sobre L200', 'Nome não encontrado');
-        const quoted = bot.createMessage({ texto: textAlt, chat: OWNER.jid, id: notice.id.id });
-        assert.match((await bot.replyAlt('/mute', { chat: OWNER.jid, citada: quoted }))[0],
+        const textAlt = notice.text.replace('Grupo sobre L200', 'Nome não encontrado');
+        const quoted = bot.createMessage({ text: textAlt, chat: OWNER.jid, id: notice.id.id });
+        assert.match((await bot.replyAlt('/mute', { chat: OWNER.jid, quoted }))[0],
             /👥 Grupo sobre L200/);
         assert.deepEqual(await bot.dbAll('SELECT target_id FROM mutes'), [{ target_id: L200 }]);
     });
@@ -276,10 +276,10 @@ describe('/mute', () => {
     test('nome ambíguo do grupo: a escolha oferece grupos, mesmo com contato homônimo', async () => {
         bot.createContact(OTHERAlt.jid, 'L200');
         bot.createGroup(GROUP, 'L200 amigos', [OWNER.jid]);
-        const quoted = bot.createMessage({ chat: OWNER.jid, texto:
+        const quoted = bot.createMessage({ chat: OWNER.jid, text:
             '✏️ MENSAGEM EDITADA DETECTADA\n\n👥 *Grupo:* L200\n' +
             '👤 *Nome:* Fulano\n📱 *Número:* +5521911111111' });
-        const replies = await bot.replyChoosing('/mute', 2, { chat: OWNER.jid, citada: quoted });
+        const replies = await bot.replyChoosing('/mute', 2, { chat: OWNER.jid, quoted });
         assert.match(replies[0], /corresponde a 2 grupos/);
         assert.doesNotMatch(replies[0], /👤/);
         assert.deepEqual(await bot.dbAll('SELECT target_id, is_group FROM mutes'), [
@@ -288,37 +288,37 @@ describe('/mute', () => {
     });
 
     test('grupo no corpo da mensagem editada não altera o alvo do aviso privado', async () => {
-        const quoted = bot.createMessage({ chat: OWNER.jid, texto:
+        const quoted = bot.createMessage({ chat: OWNER.jid, text:
             '✏️ MENSAGEM EDITADA DETECTADA\n\n👤 Nome: Fulano\n' +
             '📱 Número: +5521911111111\n📅 Enviada em: 06/10/2026\n' +
             '💬 Depois: "texto\n👥 Grupo: Grupo sobre L200"' });
-        await bot.replyAlt('/mute', { chat: OWNER.jid, citada: quoted });
+        await bot.replyAlt('/mute', { chat: OWNER.jid, quoted });
         assert.deepEqual(await bot.dbAll('SELECT target_id FROM mutes'), [{ target_id: OTHERAlt.jid }]);
     });
 
     test('grupo não encontrado no cabeçalho: não silencia o número do autor', async () => {
-        const quoted = bot.createMessage({ chat: OWNER.jid, texto:
+        const quoted = bot.createMessage({ chat: OWNER.jid, text:
             '✏️ MENSAGEM EDITADA DETECTADA\n\n👥 Grupo: Grupo inexistente\n' +
             '👤 Nome: Fulano\n📱 Número: +5521911111111' });
-        assert.match((await bot.replyAlt('/mute', { chat: OWNER.jid, citada: quoted }))[0],
+        assert.match((await bot.replyAlt('/mute', { chat: OWNER.jid, quoted }))[0],
             /Nenhum grupo com "Grupo inexistente"/);
         assert.deepEqual(await bot.dbAll('SELECT * FROM mutes'), []);
     });
 
     test('aviso sem número: busca o nome somente nos contatos', async () => {
         bot.createGroup(L200, 'Ciclano', [OWNER.jid]);
-        const quoted = bot.createMessage({ chat: OWNER.jid, texto:
+        const quoted = bot.createMessage({ chat: OWNER.jid, text:
             '✏️ MENSAGEM EDITADA DETECTADA\n\n👤 Nome: Ciclano\n📱 Número: Número indisponível' });
-        assert.match((await bot.replyAlt('/mute', { chat: OWNER.jid, citada: quoted }))[0], /👤 Ciclano/);
+        assert.match((await bot.replyAlt('/mute', { chat: OWNER.jid, quoted }))[0], /👤 Ciclano/);
         assert.deepEqual(await bot.dbAll('SELECT target_id, is_group FROM mutes'), [
             { target_id: CICLANO.jid, is_group: 0 }
         ]);
     });
 
     test('mensagem comum com cabeçalho citado: silencia quem a mandou', async () => {
-        const quoted = bot.createMessage({ chat: L200, de: OTHERAlt.jid, texto:
+        const quoted = bot.createMessage({ chat: L200, de: OTHERAlt.jid, text:
             '👥 Grupo: Grupo sobre L200\n👤 Nome: Ciclano\n📱 Número: +5521922222222' });
-        await bot.replyAlt('/mute', { chat: L200, citada: quoted });
+        await bot.replyAlt('/mute', { chat: L200, quoted });
         assert.deepEqual(await bot.dbAll('SELECT target_id FROM mutes'), [
             { target_id: OTHERAlt.jid }
         ]);
@@ -338,7 +338,7 @@ describe('/mute', () => {
 
         // Replying to Ciclano's notice
         assert.deepEqual(await bot.replyAlt('/unmute', {
-            chat: OWNER.jid, citada: bot.createMessage({ texto: notice.texto, chat: OWNER.jid, id: notice.id.id })
+            chat: OWNER.jid, quoted: bot.createMessage({ text: notice.text, chat: OWNER.jid, id: notice.id.id })
         }), ['🔊 Os avisos de 👤 Ciclano voltam.']);
 
         // -all (and -a); with nothing, the list

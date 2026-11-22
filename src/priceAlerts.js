@@ -4,7 +4,7 @@
 
 const axios = require('axios');
 
-const { estado: stateAlt } = require('./state');
+const { state: stateAlt } = require('./state');
 const { findCommand } = require('./commands/base');
 const { QUOTE_TIMEOUT_MS, searchQuote, fmtPriceCrypto, fmtReal, fmtChange } = require('./quotes');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
@@ -39,12 +39,12 @@ const { formatData, plural } = require('./util/format');
 const ALERT_TYPES = {
     crypto: {
         cmd: '/crypto',
-        suportada: (sym) => Boolean(CRYPTO_SUPPORTED[sym]),
-        icone: (sym) => CRYPTO_SUPPORTED[sym],
-        par: (sym) => `${sym}/USDT`,
+        supported: (sym) => Boolean(CRYPTO_SUPPORTED[sym]),
+        icon: (sym) => CRYPTO_SUPPORTED[sym],
+        pair: (sym) => `${sym}/USDT`,
         fmt: (v) => `$${fmtPriceCrypto(v)}`,
-        exemplo: 'BTC < 90000',
-        precos: async (syms) => {
+        example: 'BTC < 90000',
+        prices: async (syms) => {
             const { data } = await axios.get('https://api.binance.com/api/v3/ticker/price', {
                 params: { symbols: JSON.stringify(syms.map(sym => `${sym}USDT`)) },
                 timeout: QUOTE_TIMEOUT_MS
@@ -52,24 +52,24 @@ const ALERT_TYPES = {
             return Object.fromEntries(data.map(d => [d.symbol.replace(/USDT$/, ''), Number(d.price)]));
         }
     },
-    // Currencies against the real (USD, EUR, GBP, USDT), stocks, ETFs and indexes (/stocks): currencies in reais, the rest in
-    // asset currency (reais on B3 tickers, ".SA"; dollars on the others)
+    // Currencies against the real (USD, EUR, GBP, USDT), stocks, ETFs and indexes (/stocks): currencies in brl, the rest in
+    // asset currency (brl on B3 tickers, ".SA"; dollars on the others)
     acao: {
         cmd: '/stocks',
-        suportada: (sym) => Boolean(QUOTE_SUPPORTED[sym] || normalizeTicker(sym)),
-        icone: (sym) => QUOTE_SUPPORTED[sym]?.icone ?? '🏢',
-        par: (sym) => (QUOTE_SUPPORTED[sym] ? `${sym}/BRL` : sym),
+        supported: (sym) => Boolean(QUOTE_SUPPORTED[sym] || normalizeTicker(sym)),
+        icon: (sym) => QUOTE_SUPPORTED[sym]?.icon ?? '🏢',
+        pair: (sym) => (QUOTE_SUPPORTED[sym] ? `${sym}/BRL` : sym),
         fmt: (v, sym) => (QUOTE_SUPPORTED[sym] ? fmtReal(v) : fmtPrice(v, sym?.endsWith('.SA') ? 'BRL' : 'USD')),
-        exemplo: 'USD > 5.30',
-        precos: async (syms) => Object.fromEntries(
-            await Promise.all(syms.map(async (sym) => [sym, (QUOTE_SUPPORTED[sym] ? await searchQuote(sym) : await quoteAction(sym)).atual]))
+        example: 'USD > 5.30',
+        prices: async (syms) => Object.fromEntries(
+            await Promise.all(syms.map(async (sym) => [sym, (QUOTE_SUPPORTED[sym] ? await searchQuote(sym) : await quoteAction(sym)).current]))
         )
     }
 };
 
 const OPERATORS = {
-    '>': { testar: (price, target) => price > target, get texto() { return t('alerts.above'); }, icone: '📈' },
-    '<': { testar: (price, target) => price < target, get texto() { return t('alerts.below'); }, icone: '📉' }
+    '>': { test: (price, target) => price > target, get text() { return t('alerts.above'); }, icon: '📈' },
+    '<': { test: (price, target) => price < target, get text() { return t('alerts.below'); }, icon: '📉' }
 };
 
 // "5.30", "5,30" or "90000" (without a thousands separator)
@@ -80,14 +80,14 @@ function readValueAlert(textAlt) {
 
 /**
  * Reads "USD > 5.30", "USD>5,30" or "btc < 90000".
- * @returns {{sym: string, op: string, alvo: number} | null}
+ * @returns {{sym: string, op: string, target: number} | null}
  */
 function readRuleAlert(textAlt) {
     const m = String(textAlt).trim().match(/^([a-z0-9.^=-]+?)\s*([<>])\s*([\d.,]+)$/i);
     if (!m) return null;
 
     const target = readValueAlert(m[3]);
-    return target ? { sym: m[1].toUpperCase(), op: m[2], alvo: target } : null;
+    return target ? { sym: m[1].toUpperCase(), op: m[2], target } : null;
 }
 
 const listAlerts = (kind) =>
@@ -104,9 +104,9 @@ const MESSAGE = /(^|\s)-msg(?=\s|$)([\s\S]*)$/;
 
 function extractMessage(textAlt) {
     const m = textAlt.match(MESSAGE);
-    if (!m) return { mensagem: null, informado: false, resto: textAlt };
+    if (!m) return { message: null, given: false, rest: textAlt };
     const rest = textAlt.slice(0, m.index).trim();
-    return { mensagem: m[2].trim() || null, informado: true, resto: rest };
+    return { message: m[2].trim() || null, given: true, rest };
 }
 
 // The -msg message, indented below the alert (in the list and in the confirmation)
@@ -115,7 +115,7 @@ const messageLine = (a) => (a.message ? `\n   💬 ${a.message.replace(/\n/g, '\
 function describeAlert(kind, a) {
     const type = ALERT_TYPES[kind];
     const destinations = alertDestinations(a);
-    return `${type.icone(a.symbol)} ${type.par(a.symbol)} ${OPERATORS[a.op].texto} *${type.fmt(a.target, a.symbol)}*` +
+    return `${type.icon(a.symbol)} ${type.pair(a.symbol)} ${OPERATORS[a.op].text} *${type.fmt(a.target, a.symbol)}*` +
         (destinations.length ? ` → ${describeDestinations(destinations)}` : '');
 }
 
@@ -126,9 +126,9 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
      * Destinations and message are extracted before the price rule, preserving
      * all the -to and the -msg free text.
      */
-    const { destinos: destinationsText, informado: withDestination, resto: withoutDestination } =
+    const { destinations: destinationsText, given: withDestination, rest: withoutDestination } =
         extractDestinations(args);
-    const { mensagem: messageAlt, informado: withMessage, resto: rest } = extractMessage(withoutDestination);
+    const { message: messageAlt, given: withMessage, rest } = extractMessage(withoutDestination);
     const opts = GetOptFromCommand(rest, findCommand(type.cmd));
 
     // The notices use your account (in your private chat or in the -to chats): owner and admins only
@@ -173,24 +173,24 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
     const ruleText = opts.argv.join(' ').trim();
 
     if (!ruleText && withDestination) {
-        await msg.reply(t('alerts.toOnlyCreate', { cmd: type.cmd, example: type.exemplo }));
+        await msg.reply(t('alerts.toOnlyCreate', { cmd: type.cmd, example: type.example }));
         return;
     }
 
     if (!ruleText && withMessage) {
-        await msg.reply(t('alerts.msgOnlyCreate', { cmd: type.cmd, example: type.exemplo }));
+        await msg.reply(t('alerts.msgOnlyCreate', { cmd: type.cmd, example: type.example }));
         return;
     }
 
     if (withMessage && !messageAlt) {
-        await msg.reply(t('alerts.msgEmpty', { cmd: type.cmd, example: type.exemplo }));
+        await msg.reply(t('alerts.msgEmpty', { cmd: type.cmd, example: type.example }));
         return;
     }
 
     // Without a rule: lists
     if (!ruleText) {
         if (!alerts.length) {
-            await msg.reply(t('alerts.none', { cmd: type.cmd, example: type.exemplo }));
+            await msg.reply(t('alerts.none', { cmd: type.cmd, example: type.example }));
             return;
         }
 
@@ -207,11 +207,11 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
     const rule = readRuleAlert(ruleText);
 
     if (!rule) {
-        await msg.reply(t('alerts.invalidRule', { rule: ruleText, cmd: type.cmd, example: type.exemplo }));
+        await msg.reply(t('alerts.invalidRule', { rule: ruleText, cmd: type.cmd, example: type.example }));
         return;
     }
 
-    if (!type.suportada(rule.sym)) {
+    if (!type.supported(rule.sym)) {
         await msg.reply(t('alerts.unsupported', { sym: rule.sym, cmd: type.cmd }));
         return;
     }
@@ -220,7 +220,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
     let destinations = [];
 
     if (withDestination) {
-        destinations = await resolverDestinations(msg, destinationsText, { aceitaEmail: true });
+        destinations = await resolverDestinations(msg, destinationsText, { acceptsEmail: true });
         if (!destinations) return;
     }
 
@@ -234,7 +234,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
 
     let price;
     try {
-        price = (await type.precos([rule.sym]))[rule.sym];
+        price = (await type.prices([rule.sym]))[rule.sym];
         if (!Number.isFinite(price)) throw new Error('sem preço');
     } catch (err) {
         printError(`${type.cmd} -alert: price of ${rule.sym}:`, err.message);
@@ -245,8 +245,8 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
     const op = OPERATORS[rule.op];
 
     // Already fulfilled: it would fire right away, which is not what you want from an alert
-    if (op.testar(price, rule.alvo)) {
-        await msg.reply(t('alerts.alreadyMet', { pair: type.par(rule.sym), op: op.texto, target: type.fmt(rule.alvo, rule.sym), price: type.fmt(price, rule.sym) }));
+    if (op.test(price, rule.target)) {
+        await msg.reply(t('alerts.alreadyMet', { pair: type.pair(rule.sym), op: op.text, target: type.fmt(rule.target, rule.sym), price: type.fmt(price, rule.sym) }));
         return;
     }
 
@@ -255,12 +255,12 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
         `INSERT INTO price_alerts (kind, symbol, op, target, price_at_creation, created_at, dest_id, dest_name, dest_is_group, dest_email,
             recipients, message)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [kind, rule.sym, rule.op, rule.alvo, price, Date.now(), c.dest_id, c.dest_name, c.dest_is_group, c.dest_email,
+        [kind, rule.sym, rule.op, rule.target, price, Date.now(), c.dest_id, c.dest_name, c.dest_is_group, c.dest_email,
             recipientsDe(destinations), messageAlt]
     );
 
     await msg.reply(t('alerts.created', {
-        alert: describeAlert(kind, { symbol: rule.sym, op: rule.op, target: rule.alvo }) +
+        alert: describeAlert(kind, { symbol: rule.sym, op: rule.op, target: rule.target }) +
             messageLine({ message: messageAlt }),
         price: type.fmt(price, rule.sym),
         where: destinations.length ? t('alerts.whereIn', { dest: describeDestinations(destinations) }) : t('alerts.wherePrivate'),
@@ -276,8 +276,8 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
 let lastCheckAlerts = 0;
 let checkingAlerts = false;
 
-async function priceCheckAlerts({ forcar: force = false } = {}) {
-    if (checkingAlerts || !stateAlt.pronto) return;
+async function priceCheckAlerts({ force = false } = {}) {
+    if (checkingAlerts || !stateAlt.ready) return;
     if (!force && Date.now() - lastCheckAlerts < getSetting('alert.intervalMin') * 60 * 1000) return;
 
     checkingAlerts = true;
@@ -293,7 +293,7 @@ async function priceCheckAlerts({ forcar: force = false } = {}) {
 
             let prices;
             try {
-                prices = await type.precos([...new Set(typeAlt.map(a => a.symbol))]);
+                prices = await type.prices([...new Set(typeAlt.map(a => a.symbol))]);
             } catch (err) {
                 printError(`${type.cmd} alerts: failed to fetch prices:`, err.message);
                 continue;
@@ -301,7 +301,7 @@ async function priceCheckAlerts({ forcar: force = false } = {}) {
 
             for (const a of typeAlt) {
                 const price = prices[a.symbol];
-                if (!Number.isFinite(price) || !OPERATORS[a.op].testar(price, a.target)) continue;
+                if (!Number.isFinite(price) || !OPERATORS[a.op].test(price, a.target)) continue;
 
                 // Removes BEFORE notifying: if the send fails, the notice does not repeat on every check
                 await dbRun('DELETE FROM price_alerts WHERE id = ?', [a.id]);
@@ -312,16 +312,16 @@ async function priceCheckAlerts({ forcar: force = false } = {}) {
                 await sendToDestinations(destinations,
                     (a.message ? `${a.message}\n\n` : '') +
                     t('alerts.fired', {
-                        opIcon: OPERATORS[a.op].icone,
-                        icon: type.icone(a.symbol),
-                        pair: type.par(a.symbol),
-                        op: OPERATORS[a.op].texto,
+                        opIcon: OPERATORS[a.op].icon,
+                        icon: type.icon(a.symbol),
+                        pair: type.pair(a.symbol),
+                        op: OPERATORS[a.op].text,
                         target: type.fmt(a.target, a.symbol),
                         price: type.fmt(price, a.symbol),
                         change: changeAlt ? t('alerts.sinceCreation', { change: changeAlt }) : '',
                         date: formatData(a.created_at)
                     }),
-                    { assunto: t('alerts.subject', { pair: type.par(a.symbol), op: OPERATORS[a.op].texto, target: type.fmt(a.target, a.symbol) }) }
+                    { subject: t('alerts.subject', { pair: type.pair(a.symbol), op: OPERATORS[a.op].text, target: type.fmt(a.target, a.symbol) }) }
                 ).catch(err => printError('Price alert: failed to notify:', err.message));
 
                 printInfo(`Price alert triggered: ${a.symbol} ${a.op} ${a.target} (now ${price})` +

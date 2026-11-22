@@ -1,7 +1,7 @@
 /*
  * /forward command: forwards messages (text, media, location...) to the recipients.
  * /forward /Fulano de Tal/ @Maria Beltrano   → the replied message, to contacts and groups
- * /forward -to fulano@exemplo.com            → email (several -to work)
+ * /forward -to fulano@example.com            → email (several -to work)
  * /forward -1 /Fulano/                       → without a reply: the message right above (-1)
  * /forward -1 -4 -6 /Fulano/                 → the messages at positions -1, -4 and -6 (also -1,-4,-6)
  * /forward -3..-1 /Fulano/                   → from -3 to -1, in sequence
@@ -10,7 +10,7 @@
  * Only sends if all recipients are found. The "forwarded by ZapBot" header (setting
  * forward.header) and the status (the notice and the list of who received it, setting forward.status) come on; -quiet|-q
  * removes both (only the failures) and -status|-s forces both. With several messages, the header goes only once.
- * /forward /Fulano/ #grupo Text for everyone   → the typed text goes at the start; with a reply, its message below
+ * /forward /Fulano/ #group Text for everyone   → the typed text goes at the start; with a reply, its message below
  */
 
 const { commandUsage } = require('./base');
@@ -32,7 +32,7 @@ async function content(m) {
 
     if (m.hasMedia) {
         mediaAlt = await m.downloadMedia().catch(() => null);
-        if (!mediaAlt?.data) return { erro: t('forward.download') };
+        if (!mediaAlt?.data) return { error: t('forward.download') };
     } else if (type === 'location' && m.location) {
         const { latitude, longitude, description } = m.location;
         textAlt = [description, `https://maps.google.com/?q=${latitude},${longitude}`].filter(Boolean).join('\n');
@@ -40,14 +40,14 @@ async function content(m) {
         textAlt = `📊 ${m.pollName}\n${(m.pollOptions ?? []).map(o => `• ${o.name ?? o}`).join('\n')}`;
     }
 
-    if (!textAlt && !mediaAlt) return { erro: t('forward.empty') };
-    return { texto: textAlt, midia: mediaAlt, tipo: type };
+    if (!textAlt && !mediaAlt) return { error: t('forward.empty') };
+    return { text: textAlt, media: mediaAlt, type };
 }
 
 // Audio, voice note and sticker do not accept a caption: the text goes before, in another message
 const WITHOUT_CAPTION = new Set(['audio', 'ptt', 'sticker']);
 
-async function sendOnChat(id, { texto: textAlt, midia: mediaAlt, tipo: type }) {
+async function sendOnChat(id, { text: textAlt, media: mediaAlt, type }) {
     if (!mediaAlt) {
         await client.sendMessage(id, textAlt);
     } else if (WITHOUT_CAPTION.has(type)) {
@@ -60,15 +60,15 @@ async function sendOnChat(id, { texto: textAlt, midia: mediaAlt, tipo: type }) {
 
 // A single email, with the header (if any), the texts in sequence and all the media attached
 async function sendPerEmail(email, contents, header) {
-    const attachments = contents.filter(c => c.midia).map(({ midia: mediaAlt }, i) => {
+    const attachments = contents.filter(c => c.media).map(({ media: mediaAlt }, i) => {
         const extension = String(mediaAlt.mimetype ?? '').split(';')[0].split('/')[1] || 'bin';
         return { filename: mediaAlt.filename || `anexo${i ? `-${i + 1}` : ''}.${extension}`, content: Buffer.from(mediaAlt.data, 'base64'), contentType: mediaAlt.mimetype };
     });
     await sendEmail({
         para: email.split(/\s*,\s*/),
-        assunto: t('forward.subject'),
-        texto: [header, ...contents.map(c => c.texto)].filter(Boolean).join('\n\n') || t('forward.noText'),
-        anexos: attachments
+        subject: t('forward.subject'),
+        text: [header, ...contents.map(c => c.text)].filter(Boolean).join('\n\n') || t('forward.noText'),
+        attachments
     });
 }
 
@@ -76,18 +76,18 @@ async function sendPerEmail(email, contents, header) {
  * The positions right at the start of the command: -1, -1 -4 -6, -1,-4,-6, -3..-1 (and mixes). Returns the positions
  * (1 = the message right above) and the rest of the text.
  */
-const SELECAO = /^(?:-\d+(?:\.\.-?\d+)?(?:\s*,\s*|\s+|$))+/;
+const SELECTION = /^(?:-\d+(?:\.\.-?\d+)?(?:\s*,\s*|\s+|$))+/;
 
 function readPositions(textAlt) {
-    const m = textAlt.match(SELECAO);
-    if (!m) return { posicoes: [], resto: textAlt };
+    const m = textAlt.match(SELECTION);
+    if (!m) return { positions: [], rest: textAlt };
 
     const positions = new Set();
-    for (const [, de, ate] of m[0].matchAll(/-(\d+)(?:\.\.-?(\d+))?/g)) {
-        const [a, b] = [Number(de), Number(ate ?? de)];
+    for (const [, de, until] of m[0].matchAll(/-(\d+)(?:\.\.-?(\d+))?/g)) {
+        const [a, b] = [Number(de), Number(until ?? de)];
         for (let p = Math.min(a, b); p <= Math.max(a, b); p++) positions.add(p);
     }
-    return { posicoes: [...positions].sort((x, y) => x - y), resto: textAlt.slice(m[0].length).trim() };
+    return { positions: [...positions].sort((x, y) => x - y), rest: textAlt.slice(m[0].length).trim() };
 }
 
 // They are not people's messages: WhatsApp notices (joined, left...), calls, deleted ones
@@ -96,48 +96,48 @@ const SYSTEM_TYPES = new Set(['gp2', 'notification', 'notification_template', 'e
 /**
  * The messages at the requested positions (1 = the one right above the command), oldest to newest.
  * Skips WhatsApp notices and what the bot itself sent (replies, status).
- * @returns {Promise<{ mensagens: object[] } | { erro: string }>}
+ * @returns {Promise<{ messages: object[] } | { error: string }>}
  */
 async function messagesAbove(msg, positions) {
     const greater = positions.at(-1);
-    let buscadas;
+    let searched;
     try {
         const chat = await msg.getChat();
-        buscadas = await chat.fetchMessages({ limit: Math.min(greater + 50, 300) });
+        searched = await chat.fetchMessages({ limit: Math.min(greater + 50, 300) });
     } catch (err) {
         printError('/forward: could not read the chat messages:', err.message);
-        return { erro: t('forward.fetchFailed', { error: err.message }) };
+        return { error: t('forward.fetchFailed', { error: err.message }) };
     }
 
     // Only what came before the command
     const idCommand = msg.id?._serialized;
-    const beforeAlt = buscadas.findIndex(m => m.id?._serialized === idCommand);
-    const candidatas = (beforeAlt >= 0 ? buscadas.slice(0, beforeAlt) : buscadas)
+    const beforeAlt = searched.findIndex(m => m.id?._serialized === idCommand);
+    const candidates = (beforeAlt >= 0 ? searched.slice(0, beforeAlt) : searched)
         .filter(m => !SYSTEM_TYPES.has(m.type) && !sentByBot(m));
 
     const chosen = [];
     for (const p of positions) {
-        const m = candidatas[candidatas.length - p];
-        if (!m) return { erro: t('forward.notEnough', { n: candidatas.length, pos: p }) };
+        const m = candidates[candidates.length - p];
+        if (!m) return { error: t('forward.notEnough', { n: candidates.length, pos: p }) };
         chosen.push({ pos: p, m });
     }
     // From oldest (larger position) to newest
-    return { mensagens: chosen.reverse() };
+    return { messages: chosen.reverse() };
 }
 
 // The resolved loose ones plus those from the lists, without repeats; over forward.maxRecipients, it does not send.
 // Whoever in a #list is the command's own chat (the conversation the message came from) stays out:
 // .ignored says who. The loose ones you typed always count.
 async function recipients(msg, texts, listsAlt) {
-    const avulsos = texts.length ? await resolverDestinations(msg, texts, { aceitaEmail: true }) : [];
-    if (!avulsos) return null;
+    const standalone = texts.length ? await resolverDestinations(msg, texts, { acceptsEmail: true }) : [];
+    if (!standalone) return null;
 
     const chatCurrent = String(msg.id?.remote ?? msg.from ?? '').split('@')[0];
     const isOChat = (d) => Boolean(chatCurrent) && d.id?.split('@')[0] === chatCurrent;
-    const ignored = listsAlt.filter(d => isOChat(d) && !avulsos.some(a => a.id === d.id));
+    const ignored = listsAlt.filter(d => isOChat(d) && !standalone.some(a => a.id === d.id));
 
     const allAlt2 = listsAlt.filter(d => !ignored.includes(d));
-    for (const d of avulsos) if (!allAlt2.some(x => (x.email ?? x.id) === (d.email ?? d.id))) allAlt2.push(d);
+    for (const d of standalone) if (!allAlt2.some(x => (x.email ?? x.id) === (d.email ?? d.id))) allAlt2.push(d);
 
     if (!allAlt2.length && ignored.length) {
         await msg.reply(t('forward.onlyThisChat', { list: ignored.map(describeDestination).join(', ') }));
@@ -149,7 +149,7 @@ async function recipients(msg, texts, listsAlt) {
         await msg.reply(t('forward.tooManyRecipients', { n: allAlt2.length, max }));
         return null;
     }
-    allAlt2.ignorados = ignored;
+    allAlt2.ignored = ignored;
     return allAlt2;
 }
 
@@ -167,8 +167,8 @@ function separateText(rest, jaHasDestination) {
         items.push(m[0]);
         s = s.slice(m[0].length).trimStart();
     }
-    if (items.length || jaHasDestination) return { destinatarios: items.join(' '), texto: s };
-    return { destinatarios: String(rest ?? '').trim(), texto: '' };
+    if (items.length || jaHasDestination) return { recipients: items.join(' '), text: s };
+    return { recipients: String(rest ?? '').trim(), text: '' };
 }
 
 async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
@@ -184,33 +184,33 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
     const withHeader = !silent && !withoutHeader && (forceStatus || getSetting('forward.header'));
     const withStatus = !silent && (forceStatus || getSetting('forward.status'));
     const withoutQuiet = typed.replace(/(^|\s)-(?:quiet|q|status|s|dry|d|nohdr)(?=\s|$)/g, ' ').trim();
-    const { posicoes: positions, resto: withoutPositions } = readPositions(withoutQuiet);
+    const { positions, rest: withoutPositions } = readPositions(withoutQuiet);
 
     // The -to (emails and also chats) and, in the rest, the recipients: /Name/, "Name", @mention, +number, words
-    const { destinos: porTo, resto: withoutTo } = extractDestinations(withoutPositions);
+    const { destinations: byTo, rest: withoutTo } = extractDestinations(withoutPositions);
 
     // The #lists (whole name) become the saved members; the rest are loose recipients
     const lists = await expandLists(withoutTo);
-    if (lists.erro) {
-        await msg.reply(lists.erro);
+    if (lists.error) {
+        await msg.reply(lists.error);
         return;
     }
 
     // After the explicit recipients (/Name/, "Name", @mention, +number, email, #list, -to) whatever is left is the
     // text to send: goes at the start, and the replied message below. Only loose words remain a name.
-    const { destinatarios: restDestinations, texto: textExtra } = separateText(lists.resto, lists.destinos.length > 0 || porTo.length > 0);
-    const texts = [...textPeople(restDestinations).map(withoutDelimiters), ...porTo];
+    const { recipients: restDestinations, text: textExtra } = separateText(lists.rest, lists.destinations.length > 0 || byTo.length > 0);
+    const texts = [...textPeople(restDestinations).map(withoutDelimiters), ...byTo];
 
-    if (!texts.length && !lists.destinos.length) {
+    if (!texts.length && !lists.destinations.length) {
         await msg.reply(commandUsage('/forward'));
         return;
     }
     // -dry: only validates the recipients (the error for whoever was not found is already replied), without sending
     if (simulation) {
-        const foundAlt6 = await recipients(msg, texts, lists.destinos);
+        const foundAlt6 = await recipients(msg, texts, lists.destinations);
         if (!foundAlt6) return;
-        const note = foundAlt6.ignorados?.length
-            ? `\n\n${t('forward.dryIgnored', { list: foundAlt6.ignorados.map(describeDestination).join(', ') })}` : '';
+        const note = foundAlt6.ignored?.length
+            ? `\n\n${t('forward.dryIgnored', { list: foundAlt6.ignored.map(describeDestination).join(', ') })}` : '';
         await msg.reply(t('forward.dry', { n: foundAlt6.length, list: foundAlt6.map(describeDestination).join('\n') }) + note);
         return;
     }
@@ -233,7 +233,7 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
     }
 
     // Only sends if all are found (the error for whoever failed was already replied)
-    const destinations = await recipients(msg, texts, lists.destinos);
+    const destinations = await recipients(msg, texts, lists.destinations);
     if (!destinations) return;
 
     // Notifies right away whoever is going (downloading the media and sending may take a while) and, when it ends, that same
@@ -245,18 +245,18 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
     let origin = quotedMsg || positions.length ? [{ pos: null, m: quotedMsg }] : [];
     if (positions.length) {
         const r = await messagesAbove(msg, positions);
-        if (r.erro) {
-            await completeNotice(msg, notice, r.erro);
+        if (r.error) {
+            await completeNotice(msg, notice, r.error);
             return;
         }
-        origin = r.mensagens;
+        origin = r.messages;
     }
 
-    const contents = origin.length ? [] : [{ texto: textExtra, midia: null, tipo: 'chat' }];
+    const contents = origin.length ? [] : [{ text: textExtra, media: null, type: 'chat' }];
     for (const { pos, m } of origin) {
         const c = await content(m);
-        if (c.erro) {
-            await completeNotice(msg, notice, pos ? t('forward.errorAt', { pos, error: c.erro }) : c.erro);
+        if (c.error) {
+            await completeNotice(msg, notice, pos ? t('forward.errorAt', { pos, error: c.error }) : c.error);
             return;
         }
         contents.push(c);
@@ -265,26 +265,26 @@ async function cmdForward({ msg, args: typed, opts, quotedMsg }) {
     // One message: the header opens the text (or the caption), then the typed text and below, after a line in
     // blank, the replied message's body. Several: the header and the typed text go once, before all of them
     const header = withHeader ? t('forward.header') : '';
-    let headerAparte = '';
+    let separateHeader = '';
     if (contents.length === 1) {
-        const body = origin.length ? contents[0].texto : '';
-        const meio = origin.length ? [textExtra, body].filter(Boolean).join('\n\n') : textExtra;
-        contents[0].texto = [header, meio].filter(Boolean).join('\n\n');
+        const body = origin.length ? contents[0].text : '';
+        const middle = origin.length ? [textExtra, body].filter(Boolean).join('\n\n') : textExtra;
+        contents[0].text = [header, middle].filter(Boolean).join('\n\n');
     } else {
-        headerAparte = [header, textExtra].filter(Boolean).join('\n\n');
+        separateHeader = [header, textExtra].filter(Boolean).join('\n\n');
     }
     const pause = getSetting('forward.delayMs');
 
     const linesAlt = [];
     let failed = 0;
     for (const d of destinations) {
-        const nameAlt = d.email ?? d.nome;
+        const nameAlt = d.email ?? d.name;
         const who = describeDestination(d);
         try {
             if (d.email) {
-                await sendPerEmail(d.email, contents, headerAparte);
+                await sendPerEmail(d.email, contents, separateHeader);
             } else {
-                if (headerAparte) await client.sendMessage(d.id, headerAparte);
+                if (separateHeader) await client.sendMessage(d.id, separateHeader);
                 for (const [i, c] of contents.entries()) {
                     if (i && pause) await wait(pause);
                     await sendOnChat(d.id, c);

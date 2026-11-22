@@ -26,7 +26,7 @@ const { fmtWhen, readDuration } = require('../util/when');
  * -rm <no.|all> undoes it (the same as /unmute).
  *
  * /unmute <target|no.>  → undoes the mute (the target as in /mute, or the list no.)
- * /unmute -all (-a)  → desfaz todos
+ * /unmute -all (-a)  → desfaz all
  */
 const OPTIONS = {
     d: 'deleted', deleted: 'deleted',
@@ -36,28 +36,28 @@ const OPTIONS = {
     a: 'all', all: 'all'
 };
 const COLUMNS = ['deleted', 'edited', 'status', 'reaction'];
-const labels = () => Object.fromEntries(Object.values(TYPES).map(type => [type.coluna, type.rotulo]));
+const labels = () => Object.fromEntries(Object.values(TYPES).map(type => [type.column, type.label]));
 const examples = () => t('grp.mute.examples');
 
 const describe = (m) => {
     const label = labels();
     const o = COLUMNS.filter(c => m[c]).map(c => label[c]).join(', ');
-    return m.expires_at ? o + t('grp.mute.until', { quando: fmtWhen(m.expires_at) }) : o;
+    return m.expires_at ? o + t('grp.mute.until', { when: fmtWhen(m.expires_at) }) : o;
 };
 
 // "🏘️ Comunidade", "👥 Grupo" or "👤 Pessoa"
 function describeTarget(target) {
-    const nameAlt = target.nome ?? target.target_name;
-    if (target.comunidade || target.is_community) return `🏘️ ${nameAlt}`;
-    return describeDestination({ nome: nameAlt, grupo: target.grupo ?? target.is_group });
+    const nameAlt = target.name ?? target.target_name;
+    if (target.community || target.is_community) return `🏘️ ${nameAlt}`;
+    return describeDestination({ name: nameAlt, group: target.group ?? target.is_group });
 }
 
 /**
  * "-d -e /Grupo L200/" → { columns, target }. The options come before the target.
- * @returns {{ colunas: Set<string>, alvo: string, rm?: string, list?: boolean } | { erro: string }}
+ * @returns {{ columns: Set<string>, target: string, rm?: string, list?: boolean } | { error: string }}
  */
 function readMuted(args) {
-    const r = { colunas: new Set(), alvo: '' };
+    const r = { columns: new Set(), target: '' };
     let rest = String(args ?? '').trim();
 
     for (;;) {
@@ -75,22 +75,22 @@ function readMuted(args) {
             // -for 2h: the silence ends by itself
             const v = rest.match(/^(\S+)/);
             const ms = v ? readDuration(v[1]) : null;
-            if (!ms) return { erro: t('grp.mute.badTime', { value: v?.[1] ?? '' }) };
+            if (!ms) return { error: t('grp.mute.badTime', { value: v?.[1] ?? '' }) };
             r.ms = ms;
             rest = rest.slice(v[0].length).trim();
         } else if (nameAlt === 'l' || nameAlt === 'list') {
             r.list = true;
         } else if (OPTIONS[nameAlt] === 'all') {
-            COLUMNS.forEach(c => r.colunas.add(c));
+            COLUMNS.forEach(c => r.columns.add(c));
         } else if (OPTIONS[nameAlt]) {
-            r.colunas.add(OPTIONS[nameAlt]);
+            r.columns.add(OPTIONS[nameAlt]);
         } else {
-            return { erro: t('grp.mute.unknownOption', { name: nameAlt }) };
+            return { error: t('grp.mute.unknownOption', { name: nameAlt }) };
         }
     }
 
     // The target: /name with space/, "in quotes" or the rest as it came
-    r.alvo = withoutDelimiters(rest);
+    r.target = withoutDelimiters(rest);
     return r;
 }
 
@@ -105,7 +105,7 @@ async function person(sender) {
     const id = /^\d+$/.test(sender) ? `${sender}@c.us` : sender;
     const contactAlt = await client.getContactById(id).catch(() => null);
     const nameAlt = contactName(contactAlt) || `+${id.split('@')[0]}`;
-    return { id, nome: nameAlt, grupo: false };
+    return { id, name: nameAlt, group: false };
 }
 
 // A group; a community's announcements group becomes the community
@@ -114,7 +114,7 @@ async function group(chatId) {
     const meta = chat?.groupMetadata ?? {};
     const nameAlt = await groupResolverName(chatId).catch(() => null) || chat?.name || chatId;
     const community = Boolean(meta.isParentGroup || meta.defaultSubgroup);
-    return { id: chatId, nome: nameAlt, grupo: true, comunidade: community };
+    return { id: chatId, name: nameAlt, group: true, community };
 }
 
 /**
@@ -122,7 +122,7 @@ async function group(chatId) {
  * edited, status, /show): the person (private and status), the group or the
  * community. Without the stored origin, reads the group before the person's number or name.
  * Someone's message: that person.
- * @returns {Promise<object|{ erro: string }|null>} null: replied nothing
+ * @returns {Promise<object|{ error: string }|null>} null: replied nothing
  */
 async function replyTarget(msg, quotedMsg) {
     if (!quotedMsg) return null;
@@ -139,13 +139,13 @@ async function replyTarget(msg, quotedMsg) {
         )[0];
         const nameGroup = header.match(/^👥\s+\*?(?:Grupo|Group):\*?\s*(.+)$/m)?.[1]?.trim();
         if (nameGroup) {
-            const target = await resolverOrChoose(msg, nameGroup, { tipo: 'grupo' });
+            const target = await resolverOrChoose(msg, nameGroup, { type: 'grupo' });
             return target ? group(target.id) : null;
         }
         const numberAlt = header.match(/^📱\s+\*?(?:Número|Number):\*?\s*\+(\d{10,15})\s*$/m)?.[1];
         if (numberAlt) return person(numberAlt);
         const nameAlt = header.match(/^👤\s+\*?(?:Nome|Name):\*?\s*(.+)$/m)?.[1]?.trim();
-        if (nameAlt) return resolverOrChoose(msg, nameAlt, { tipo: 'contato' });
+        if (nameAlt) return resolverOrChoose(msg, nameAlt, { type: 'contato' });
     }
 
     if (!quotedMsg.fromMe) {
@@ -153,7 +153,7 @@ async function replyTarget(msg, quotedMsg) {
         const phoneAlt = author?.endsWith('@lid') ? await resolveLidToPhone(author) : author;
         if (phoneAlt) return person(phoneAlt.split('@')[0]);
     }
-    return { erro: t('grp.mute.unknownMessage', { examples: examples() }) };
+    return { error: t('grp.mute.unknownMessage', { examples: examples() }) };
 }
 
 /**
@@ -163,14 +163,14 @@ async function replyTarget(msg, quotedMsg) {
 async function readTarget(msg, textAlt, quotedMsg, commandAlt) {
     if (textAlt) {
         return resolverOrChoose(msg, textAlt, {
-            semEmail: t(commandAlt === '/mute' ? 'grp.mute.noEmailMute' : 'grp.mute.noEmailUnmute', { cmd: commandAlt })
+            noEmail: t(commandAlt === '/mute' ? 'grp.mute.noEmailMute' : 'grp.mute.noEmailUnmute', { cmd: commandAlt })
         });
     }
 
     const target = await replyTarget(msg, quotedMsg);
     if (quotedMsg && !target) return null;
-    if (target?.erro) {
-        await msg.reply(target.erro);
+    if (target?.error) {
+        await msg.reply(target.error);
         return null;
     }
     return target ?? undefined;
@@ -179,7 +179,7 @@ async function readTarget(msg, textAlt, quotedMsg, commandAlt) {
 async function listAlt(msg) {
     await cleanExpired();
     const mutes = await dbAll(
-        `SELECT m.*, (SELECT COUNT(*) FROM mute_hits h WHERE h.target_id = m.target_id) AS ignoradas
+        `SELECT m.*, (SELECT COUNT(*) FROM mute_hits h WHERE h.target_id = m.target_id) AS ignored
            FROM mutes m ORDER BY m.id`
     );
 
@@ -189,12 +189,12 @@ async function listAlt(msg) {
     }
 
     const linesAlt = mutes.map((m, i) => `${i + 1}. ${describeTarget(m)} — ${describe(m)}` +
-        (m.ignoradas ? ` _(${t('grp.mute.ignored', { n: m.ignoradas === 1 ? 1 : 2, count: m.ignoradas })})_` : ''));
+        (m.ignored ? ` _(${t('grp.mute.ignored', { n: m.ignored === 1 ? 1 : 2, count: m.ignored })})_` : ''));
 
     await msg.reply(t('grp.mute.list', { n: mutes.length, list: linesAlt.join('\n') }));
 }
 
-// Desfaz todos (o /unmute -all e o /mute -rm all)
+// Desfaz all (o /unmute -all e o /mute -rm all)
 async function undoAll(msg) {
     const { n } = await dbGet('SELECT COUNT(*) AS n FROM mutes');
     await dbRun('DELETE FROM mutes');
@@ -219,8 +219,8 @@ async function cmdMute({ msg, args, quotedMsg }) {
     await cleanExpired();
     const r = readMuted(args);
 
-    if (r.erro) {
-        await msg.reply(`${r.erro}\n\n${commandUsage('/mute')}`);
+    if (r.error) {
+        await msg.reply(`${r.error}\n\n${commandUsage('/mute')}`);
         return;
     }
 
@@ -232,12 +232,12 @@ async function cmdMute({ msg, args, quotedMsg }) {
     }
 
     // Without a target and without replying to anything: the list
-    if (r.list || (!r.alvo && !quotedMsg && !r.colunas.size)) {
+    if (r.list || (!r.target && !quotedMsg && !r.columns.size)) {
         await listAlt(msg);
         return;
     }
 
-    const destination = await readTarget(msg, r.alvo, quotedMsg, '/mute');
+    const destination = await readTarget(msg, r.target, quotedMsg, '/mute');
     if (destination === null) return;
     if (!destination) {
         await msg.reply(t('grp.mute.needTarget', { examples: examples() }));
@@ -245,11 +245,11 @@ async function cmdMute({ msg, args, quotedMsg }) {
     }
 
     // Only the target (/mute /Grupo L200/, or replying): mutes everything, like -a
-    if (!r.colunas.size) COLUMNS.forEach(c => r.colunas.add(c));
+    if (!r.columns.size) COLUMNS.forEach(c => r.columns.add(c));
 
     // Muting again adds to what was there
     const beforeAlt = await dbGet('SELECT * FROM mutes WHERE target_id = ?', [destination.id]);
-    const flags = Object.fromEntries(COLUMNS.map(c => [c, r.colunas.has(c) || beforeAlt?.[c] ? 1 : 0]));
+    const flags = Object.fromEntries(COLUMNS.map(c => [c, r.columns.has(c) || beforeAlt?.[c] ? 1 : 0]));
     // -for: the new deadline; without it, the silence has no deadline (even if it was temporary)
     flags.expires_at = r.ms ? Date.now() + r.ms : null;
 
@@ -261,7 +261,7 @@ async function cmdMute({ msg, args, quotedMsg }) {
             target_name = excluded.target_name, is_community = excluded.is_community,
             deleted = excluded.deleted, edited = excluded.edited, status = excluded.status,
             reaction = excluded.reaction, expires_at = excluded.expires_at`,
-        [destination.id, destination.nome, destination.grupo ? 1 : 0, destination.comunidade ? 1 : 0,
+        [destination.id, destination.name, destination.group ? 1 : 0, destination.community ? 1 : 0,
             flags.deleted, flags.edited, flags.status, flags.reaction, Date.now(), flags.expires_at]
     );
 
@@ -272,7 +272,7 @@ async function cmdUnmute({ msg, args, opts, quotedMsg }) {
     await dbReady;
     await cleanExpired();
 
-    // -all (-a): todos
+    // -all (-a): all
     if (opts.opt.all) {
         await undoAll(msg);
         return;

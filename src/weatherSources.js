@@ -37,12 +37,12 @@ async function queryMet({ latitude, longitude }) {
     if (d?.air_temperature == null) return null;
 
     return {
-        fonte: 'MET Norway',
-        tipo: 'agora',
+        source: 'MET Norway',
+        type: 'agora',
         temp: d.air_temperature,
-        umidade: d.relative_humidity,
-        vento: d.wind_speed == null ? null : d.wind_speed * 3.6, // m/s → km/h
-        direcao: d.wind_from_direction
+        humidity: d.relative_humidity,
+        wind: d.wind_speed == null ? null : d.wind_speed * 3.6, // m/s → km/h
+        direction: d.wind_from_direction
     };
 }
 
@@ -56,7 +56,7 @@ async function queryCptec(local, today) {
     const keyAlt = `${withoutAccents(local.name).toLowerCase()}|${uf}`;
     if (!citiesCptec.has(keyAlt)) {
         const { data } = await axios.get(`${BRASILAPI_CPTEC}/cidade/${encodeURIComponent(local.name)}`, { timeout: TIMEOUT_MS });
-        const city = (Array.isArray(data) ? data : []).find(c => c.estado === uf && withoutAccents(c.nome).toLowerCase() === withoutAccents(local.name).toLowerCase());
+        const city = (Array.isArray(data) ? data : []).find(c => c.state === uf && withoutAccents(c.name).toLowerCase() === withoutAccents(local.name).toLowerCase());
         if (!city) return null; // never guesses another city
         citiesCptec.set(keyAlt, city.id);
     }
@@ -66,7 +66,7 @@ async function queryCptec(local, today) {
     const day = data?.clima?.find(c => c.data === todayDate);
     if (!day) return null;
 
-    return { fonte: 'CPTEC/INPE', tipo: 'dia', min: day.min, max: day.max, descricao: day.condicao_desc };
+    return { source: 'CPTEC/INPE', type: 'dia', min: day.min, max: day.max, description: day.condition_desc };
 }
 
 /**

@@ -43,7 +43,7 @@ function requireSmtpWithoutPause() {
     throw err;
 }
 
-const pauseSeEauth = (err) => {
+const pauseIfEauth = (err) => {
     if (err.code === 'EAUTH') eauthUntil = Date.now() + EAUTH_PAUSE_MS;
 };
 
@@ -53,7 +53,7 @@ transporter.sendMail = async (...args) => {
     try {
         return await sendMailOriginal(...args);
     } catch (err) {
-        pauseSeEauth(err);
+        pauseIfEauth(err);
         throw err;
     }
 };
@@ -65,7 +65,7 @@ async function checkSmtp() {
     try {
         await transporter.verify();
     } catch (err) {
-        pauseSeEauth(err);
+        pauseIfEauth(err);
         throw err;
     }
 }
@@ -89,12 +89,12 @@ const smtpConfigured = () => ['QRCODE_EMAIL_SMTP_HOST', 'QRCODE_EMAIL_SMTP_USER'
 const escapeHtml = (t) => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 /**
- * @param {string} evento    title (goes in the subject), e.g.: '🔴 Desconectado'
- * @param {string} detalhes  texto livre (motivo, stack...)
+ * @param {string} event    title (goes in the subject), e.g.: '🔴 Desconectado'
+ * @param {string} detalhes  text free (reason, stack...)
  * @param {object} [o]
- * @param {boolean} [o.forcar] ignores the minimum interval (crash, shutdown)
+ * @param {boolean} [o.force] ignores the minimum interval (crash, shutdown)
  */
-async function alertPerEmail(event, details = '', { forcar: force = false } = {}) {
+async function alertPerEmail(event, details = '', { force = false } = {}) {
     try {
         // Before the database loads, getSetting returns the default (on)
         if (!getSetting('email.alerts') || !smtpConfigured()) return;
@@ -145,9 +145,9 @@ const smtpForSend = () => ['QRCODE_EMAIL_SMTP_HOST', 'QRCODE_EMAIL_SMTP_USER'].e
  * attachments. Throws the SMTP error for whoever called to reply in the chat.
  * @param {object} o
  * @param {string[]} o.para
- * @param {Array<{filename: string, path: string}>} [o.anexos]
+ * @param {Array<{filename: string, path: string}>} [o.attachments]
  */
-async function sendEmail({ para, assunto: subject, texto: textAlt, anexos: attachments = [] }) {
+async function sendEmail({ para, subject, text: textAlt, attachments = [] }) {
     if (!smtpForSend()) throw new Error(t('email.naoConfigurado'));
 
     const antiPhishing = process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-';
@@ -163,8 +163,8 @@ async function sendEmail({ para, assunto: subject, texto: textAlt, anexos: attac
 }
 
 // A file as an attachment (e.g.: /backup -send)
-const sendFilePerEmail = ({ para, assunto: subject, texto: textAlt, arquivo: fileAlt, nomeArquivo: nameFile }) =>
-    sendEmail({ para, assunto: subject, texto: textAlt, anexos: [{ filename: nameFile, path: fileAlt }] });
+const sendFilePerEmail = ({ para, subject, text: textAlt, file: fileAlt, fileName: nameFile }) =>
+    sendEmail({ para, subject, text: textAlt, attachments: [{ filename: nameFile, path: fileAlt }] });
 
 // Waits for the email to go out, but does not block shutdown if SMTP does not respond
 async function leaveAlertBefore(event, details, ms) {
@@ -172,7 +172,7 @@ async function leaveAlertBefore(event, details, ms) {
 
     try {
         await Promise.race([
-            alertPerEmail(event, details, { forcar: true }),
+            alertPerEmail(event, details, { force: true }),
             new Promise(r => { limitAlt = setTimeout(r, ms); })
         ]);
     } finally {

@@ -27,23 +27,23 @@ const PACK_NAME = /^[A-Za-z0-9._-]{1,100}$/;
 const WA_HD_MAX_PX = 4096; // largest side accepted by WhatsApp with sendMediaAsHd
 const HTTP_TIMEOUT_MS = 15000;
 
-let allOsPacksCache = { at: 0, nomes: [] };
+let allOsPacksCache = { at: 0, names: [] };
 
 const draw = (list) => list[Math.floor(Math.random() * list.length)];
 
 // Full list of packs (~800 KB): downloaded at most once a day
 async function allOsPacks() {
-    if (Date.now() - allOsPacksCache.at < DAY_MS) return allOsPacksCache.nomes;
+    if (Date.now() - allOsPacksCache.at < DAY_MS) return allOsPacksCache.names;
 
     const { data } = await axios.get(`${SIXTEEN_API}/pack`, { timeout: 30000, maxContentLength: 20 * 1024 * 1024 });
-    allOsPacksCache = { at: Date.now(), nomes: data.map(p => p.name).filter(n => PACK_NAME.test(n)) };
+    allOsPacksCache = { at: Date.now(), names: data.map(p => p.name).filter(n => PACK_NAME.test(n)) };
 
-    return allOsPacksCache.nomes;
+    return allOsPacksCache.names;
 }
 
 // Forgets the full list (the tests start without it)
 function restartPacks() {
-    allOsPacksCache = { at: 0, nomes: [] };
+    allOsPacksCache = { at: 0, names: [] };
 }
 
 async function yearPacks(year) {
@@ -58,7 +58,7 @@ async function readPack(pack) {
         if (!data?.name) return null;
 
         const arts = (data.files ?? []).filter(f => PIXELART_EXT.test(f.filename) && !/^FILE_ID\./i.test(f.filename));
-        return { nome: data.name, ano: data.year, artes: arts };
+        return { name: data.name, year: data.year, arts };
     } catch (err) {
         if (err.response?.status === 404) return null;
         throw err;
@@ -70,13 +70,13 @@ function readSauce(buf) {
     const i = buf.lastIndexOf('SAUCE00');
     if (i < 0 || buf.length - i < 128) return null;
 
-    const campo = (ini, tam) => buf.subarray(i + ini, i + ini + tam).toString('latin1').replace(/\0/g, '').trim();
-    const data = campo(82, 8);
+    const field = (marker, tam) => buf.subarray(i + marker, i + marker + tam).toString('latin1').replace(/\0/g, '').trim();
+    const data = field(82, 8);
 
     return {
-        titulo: campo(7, 35),
-        autor: campo(42, 20),
-        grupo: campo(62, 20),
+        title: field(7, 35),
+        author: field(42, 20),
+        group: field(62, 20),
         data: /^\d{8}$/.test(data) ? `${data.slice(6, 8)}/${data.slice(4, 6)}/${data.slice(0, 4)}` : ''
     };
 }
@@ -100,7 +100,7 @@ async function preparePixelArt(png) {
         partsAlt.push(h === heightAlt ? base : await sharp(base).extract({ left: 0, top, width: width * scale, height: h }).png().toBuffer());
     }
 
-    return { partes: partsAlt, cortada: heightAlt > partsAlt.length * WA_HD_MAX_PX };
+    return { parts: partsAlt, cut: heightAlt > partsAlt.length * WA_HD_MAX_PX };
 }
 
 async function cmdPixelArt({ msg, opts }) {
@@ -133,7 +133,7 @@ async function cmdPixelArt({ msg, opts }) {
 
         // Drawing among many packs, some only have executables/texts: tries others
         let pack = null;
-        for (let attemptAlt = 0; attemptAlt < 5 && !pack?.artes.length; attemptAlt++) {
+        for (let attemptAlt = 0; attemptAlt < 5 && !pack?.arts.length; attemptAlt++) {
             pack = await readPack(draw(candidates));
             if (candidates.length === 1) break;
         }
@@ -143,30 +143,30 @@ async function cmdPixelArt({ msg, opts }) {
             return;
         }
 
-        if (!pack.artes.length) {
-            await msg.reply(t('pixelart.noArt', { pack: pack.nome }));
+        if (!pack.arts.length) {
+            await msg.reply(t('pixelart.noArt', { pack: pack.name }));
             return;
         }
 
-        const art = draw(pack.artes);
+        const art = draw(pack.arts);
         const fileAlt = encodeURIComponent(art.filename);
-        const page = `${SIXTEEN_URL}/pack/${pack.nome}/${fileAlt}`;
+        const page = `${SIXTEEN_URL}/pack/${pack.name}/${fileAlt}`;
 
-        const { data: png } = await axios.get(`${SIXTEEN_URL}/pack/${pack.nome}/x1/${fileAlt}.png`, {
+        const { data: png } = await axios.get(`${SIXTEEN_URL}/pack/${pack.name}/x1/${fileAlt}.png`, {
             responseType: 'arraybuffer', timeout: HTTP_TIMEOUT_MS, maxContentLength: 20 * 1024 * 1024
         });
 
         // SAUCE is optional: without it the art comes out with only the file name
-        const sauce = await axios.get(`${SIXTEEN_URL}/pack/${pack.nome}/raw/${fileAlt}`, { responseType: 'arraybuffer', timeout: HTTP_TIMEOUT_MS })
+        const sauce = await axios.get(`${SIXTEEN_URL}/pack/${pack.name}/raw/${fileAlt}`, { responseType: 'arraybuffer', timeout: HTTP_TIMEOUT_MS })
             .then(({ data }) => readSauce(Buffer.from(data)))
             .catch(() => null);
 
-        const { partes: partsAlt, cortada: cut } = await preparePixelArt(Buffer.from(png));
+        const { parts: partsAlt, cut } = await preparePixelArt(Buffer.from(png));
 
-        const authorship = [sauce?.autor, sauce?.grupo].filter(Boolean).join(' / ');
-        let captionAlt = `🎨 *${sauce?.titulo || art.filename}*\n`;
+        const authorship = [sauce?.author, sauce?.group].filter(Boolean).join(' / ');
+        let captionAlt = `🎨 *${sauce?.title || art.filename}*\n`;
         if (authorship) captionAlt += `👤 ${authorship}\n`;
-        captionAlt += `📦 ${pack.nome} (${sauce?.data || pack.ano})\n🔗 ${page}`;
+        captionAlt += `📦 ${pack.name} (${sauce?.data || pack.year})\n🔗 ${page}`;
         if (partsAlt.length > 1) captionAlt += `${t('pixelart.part1', { total: partsAlt.length })}${cut ? t('pixelart.cropped') : ''}`;
 
         for (const [i, part] of partsAlt.entries()) {

@@ -44,7 +44,7 @@ function noteCvss(cve) {
 }
 
 /*
- * The `max` most recently published CVEs in the last `dias`, newest first
+ * The `max` most recently published CVEs in the last `days`, newest first
  * to the oldest. The NVD sorts from oldest to newest and has no
  * reverse ordering: one query counts the total and the other fetches only the end.
  */
@@ -60,7 +60,7 @@ async function searchFinal(filter, max) {
     return { total: totalResults, cves: vulnerabilities.map(v => v.cve).reverse() };
 }
 
-async function searchCvesRecent({ dias: daysAlt, max, critical = false }) {
+async function searchCvesRecent({ days: daysAlt, max, critical = false }) {
     const end = new Date();
     const filter = {
         pubStartDate: nvdData(new Date(end.getTime() - daysAlt * DAY_MS)),
@@ -159,7 +159,7 @@ async function cmdCve({ msg, opts }) {
     }
 
     try {
-        const cves = await searchCvesRecent({ dias: daysAlt, max, critical });
+        const cves = await searchCvesRecent({ days: daysAlt, max, critical });
 
         if (!cves.length) {
             await msg.reply(t(critical ? 'cve.noneCritical' : 'cve.noneRecent', { period: periodDays(daysAlt) }));

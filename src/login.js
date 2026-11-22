@@ -17,20 +17,20 @@ const MAX_ERRORS = 5;
 const BLOCK_MS = 15 * 60 * 1000;
 const PASSWORD_MIN = 8;
 
-// numero → { erros, ate }
+// number → { errors, until }
 const attempts = new Map();
 
-const hash = (password, sal) => crypto.scryptSync(password, sal, 32);
+const hash = (password, salt) => crypto.scryptSync(password, salt, 32);
 
 function createHash(password) {
-    const sal = crypto.randomBytes(8);
-    return `scrypt$${sal.toString('hex')}$${hash(password, sal).toString('hex')}`;
+    const salt = crypto.randomBytes(8);
+    return `scrypt$${salt.toString('hex')}$${hash(password, salt).toString('hex')}`;
 }
 
 function checkPassword(password, saved) {
-    const [alg, sal, expected] = String(saved ?? '').split('$');
-    if (alg !== 'scrypt' || !sal || !expected) return false;
-    const a = hash(password, Buffer.from(sal, 'hex'));
+    const [alg, salt, expected] = String(saved ?? '').split('$');
+    if (alg !== 'scrypt' || !salt || !expected) return false;
+    const a = hash(password, Buffer.from(salt, 'hex'));
     const b = Buffer.from(expected, 'hex');
     return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
@@ -58,25 +58,25 @@ const hideInDb = (id) =>
 
 /**
  * Tries the login of an outsider. Returns the reply text.
- * @param {{ numero: string, nome: string, senha: string, isGroup: boolean }} o
+ * @param {{ number: string, name: string, password: string, isGroup: boolean }} o
  */
-async function tryLogin({ numero: numberAlt, nome: nameAlt, senha: password, isGroup }) {
+async function tryLogin({ number: numberAlt, name: nameAlt, password, isGroup }) {
     if (isGroup) return t('login.soPrivado');
     const saved = getSetting('bot.login');
     if (!saved) return t('login.desativado');
     if (!numberAlt) return t('login.semNumero');
     if (!password) return t('login.uso');
 
-    const tent = attempts.get(numberAlt) ?? { erros: 0, ate: 0 };
-    if (tent.ate > Date.now()) return t('login.muitasTentativas', { min: Math.ceil((tent.ate - Date.now()) / 60000) });
+    const tent = attempts.get(numberAlt) ?? { errors: 0, until: 0 };
+    if (tent.until > Date.now()) return t('login.muitasTentativas', { min: Math.ceil((tent.until - Date.now()) / 60000) });
 
     if (!checkPassword(password, saved)) {
-        tent.erros += 1;
-        if (tent.erros >= MAX_ERRORS) {
-            tent.erros = 0;
-            tent.ate = Date.now() + BLOCK_MS;
+        tent.errors += 1;
+        if (tent.errors >= MAX_ERRORS) {
+            tent.errors = 0;
+            tent.until = Date.now() + BLOCK_MS;
             await notifyOwner(t('login.bloqueadoTitulo'),
-                t('login.bloqueadoCorpo', { nome: nameAlt, numero: numberAlt, erros: MAX_ERRORS, min: BLOCK_MS / 60000 }));
+                t('login.bloqueadoCorpo', { name: nameAlt, number: numberAlt, errors: MAX_ERRORS, min: BLOCK_MS / 60000 }));
         }
         attempts.set(numberAlt, tent);
         printInfo(`/bot -login: wrong password from ${nameAlt} (+${numberAlt})`);
@@ -87,14 +87,14 @@ async function tryLogin({ numero: numberAlt, nome: nameAlt, senha: password, isG
     const admins = getSetting('bot.admins');
     if (admins.includes(numberAlt)) return t('login.jaAdmin');
     await setSetting('bot.admins', [...admins, numberAlt]);
-    await notifyOwner(t('login.novoAdminTitulo'), t('login.novoAdminCorpo', { nome: nameAlt, numero: numberAlt }));
+    await notifyOwner(t('login.novoAdminTitulo'), t('login.novoAdminCorpo', { name: nameAlt, number: numberAlt }));
     return t('login.pronto');
 }
 
 async function notifyOwner(title, details) {
     printInfo(`${title}: ${details.split('\n')[0]}`);
     await messageToSelf(`${title}\n${details}`);
-    await alertPerEmail(title, details, { forcar: true });
+    await alertPerEmail(title, details, { force: true });
 }
 
 module.exports = { checkPassword, createHash, definePassword, hideInDb, loginPassword, tryLogin };

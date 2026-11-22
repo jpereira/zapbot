@@ -21,12 +21,12 @@ const { compileRuleWatch } = require('./watch/rules');
  * setSetting() validates, saves to the database and to memory. Changeable through /set.
  *
  * Each key declares: default (stored on the first boot, without overwriting the
- * existente), type (boolean | number | string | list), desc e, opcionalmente,
+ * existing), type (boolean | number | string | list), desc e, opcionalmente,
  * min/max (number), item() to normalize/validate each item of a list,
  * separator (list whose items may have spaces/commas: e.g. '\n', one per line),
- * lista() (list: checks the whole list, after the items; item() may
+ * list() (list: checks the whole list, after the items; item() may
  * return null to make a word disappear, like bot.users' "false"),
- * allowEmpty (string that may be empty), validar() (string: throws Error if
+ * allowEmpty (string that may be empty), validate() (string: throws Error if
  * invalid) and secret (value masked in /set and in the logs).
  */
 // A phone with country code (bot.admins and bot.users): "+55 (21) 99999-9999" → "5521999999999"
@@ -59,14 +59,14 @@ function userItem(v) {
 function userCommand(v) {
     const nameAlt = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
     const command = botConfig.commands.find(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt));
-    if (!command) throw new Error(t('adm.settings.unknownCommand', { nome: nameAlt }));
-    if (command.role !== ROLES.USER && !command.delegavel) {
+    if (!command) throw new Error(t('adm.settings.unknownCommand', { name: nameAlt }));
+    if (command.role !== ROLES.USER && !command.isDelegable) {
         throw new Error(t(command.role === ROLES.OWNER ? 'adm.settings.ownerOnlyCmd' : 'adm.settings.adminOnlyCmd', { cmd: command.cmd }));
     }
     return command.cmd;
 }
 
-// item() of the /news feed lists and validar() of the /defi RPCs
+// item() of the /news feed lists and validate() of the /defi RPCs
 function validateUrlFeed(v) {
     if (!isValidHttpUrl(v)) throw new Error(t('adm.settings.badUrl', { v }));
     return v;
@@ -166,7 +166,7 @@ const SETTINGS_SCHEMA = {
         default: '#',
         type: 'string',
         desc: 'Caractere do traço das letras do /ascii quando -char não é informado.',
-        validar: (v) => {
+        validate: (v) => {
             if ([...v].length !== 1) throw new Error(t('adm.settings.oneChar'));
             return v;
         }
@@ -221,7 +221,7 @@ const SETTINGS_SCHEMA = {
         type: 'list',
         desc: 'Quem usa os comandos comuns (os não-admin), além do dono e do bot.admins: false (ninguém, o padrão), true (todos) ou pessoas e grupos (num grupo, todos ali usam, mas só dentro dele); uma pessoa só num grupo fica como telefone:grupo. Só o dono altera; pelo /set vale o nome (/set bot.users /Maria Lucia/ /Grupo Familia/), e o /bot +u|-u é o atalho.',
         item: userItem,
-        lista: (items) => {
+        list: (items) => {
             if (items.includes('all') && items.length > 1) {
                 throw new Error(t('adm.settings.trueMixed'));
             }
@@ -262,10 +262,10 @@ const SETTINGS_SCHEMA = {
             const target = userItem(m[1]);
             if (!target || target === 'all') throw new Error(t('adm.settings.badItem', { item: m[1] }));
             const { readLimit, recordLimit } = require('./usageLimit');
-            const pairs = m[2].split(',').filter(Boolean).map((par) => {
-                const i = par.indexOf(':');
+            const pairs = m[2].split(',').filter(Boolean).map((pair) => {
+                const i = pair.indexOf(':');
                 if (i < 1) throw new Error(t('usage.settingFormat', { v }));
-                return `${userCommand(par.slice(0, i))}:${recordLimit(readLimit(par.slice(i + 1)))}`;
+                return `${userCommand(pair.slice(0, i))}:${recordLimit(readLimit(pair.slice(i + 1)))}`;
             });
             return `${target}=${pairs.join(',')}`;
         }
@@ -321,7 +321,7 @@ const SETTINGS_SCHEMA = {
             // Names of earlier versions (stored in the database) that became another command
             const nameAlt = COMMANDS_RENAMED[typed] ?? typed;
             const command = botConfig.commands.find(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt));
-            if (!command) throw new Error(t('adm.settings.unknownCommand', { nome: nameAlt }));
+            if (!command) throw new Error(t('adm.settings.unknownCommand', { name: nameAlt }));
             if (command.cmd === '/set') throw new Error(t('adm.settings.setNotDisabled'));
             return command.cmd;
         }
@@ -375,7 +375,7 @@ const SETTINGS_SCHEMA = {
         default: '',
         type: 'string', allowEmpty: true,
         desc: 'Chat que recebe a cópia dos logs; configure pelo /debug -copy-to. Vazio: só console.',
-        validar: (v) => {
+        validate: (v) => {
             if (!/^[\d-]+@(c\.us|g\.us|lid)$/.test(v)) {
                 throw new Error(t('adm.settings.copyToHint'));
             }
@@ -391,7 +391,7 @@ const SETTINGS_SCHEMA = {
         default: '',
         type: 'string', allowEmpty: true,
         desc: 'Filtro /regex/flags dos logs durante o debug. Vazio: sem filtro; /debug -off limpa.',
-        validar: (v) => { compileFilterDebug(v); return v; }
+        validate: (v) => { compileFilterDebug(v); return v; }
     },
     'debug.level': {
         default: 0,
@@ -411,7 +411,7 @@ const SETTINGS_SCHEMA = {
         default: '',
         type: 'string',
         allowEmpty: true,
-        validar: (v) => {
+        validate: (v) => {
             if (!/^0x[0-9a-fA-F]{40}$/.test(v)) throw new Error(t('adm.settings.badWallet', { v }));
             return v;
         },
@@ -432,41 +432,41 @@ const SETTINGS_SCHEMA = {
     'defi.aptos.indexer': {
         default: 'https://api.mainnet.aptoslabs.com/v1/graphql',
         type: 'string',
-        validar: validateUrlFeed,
+        validate: validateUrlFeed,
         desc: 'Indexador GraphQL da Aptos usado pelo /defi na Liquidswap (acha as posições guardadas como fungible asset).'
     },
     'defi.aptos.rpc': {
         default: 'https://api.mainnet.aptoslabs.com/v1',
         type: 'string',
         secret: true,
-        validar: validateUrlFeed,
+        validate: validateUrlFeed,
         desc: 'API REST do fullnode da Aptos usada pelo /defi na Liquidswap (a pública limita as consultas).'
     },
     'defi.base.rpc': {
         default: 'https://mainnet.base.org',
         type: 'string',
         secret: true,
-        validar: validateUrlFeed,
+        validate: validateUrlFeed,
         desc: 'RPC da Base usado pelo /defi aave, quando BASE_RPC_URL não está no config/.env (o público limita as consultas).'
     },
     'defi.ethereum.rpc': {
         default: 'https://ethereum-rpc.publicnode.com',
         type: 'string',
         secret: true,
-        validar: validateUrlFeed,
+        validate: validateUrlFeed,
         desc: 'RPC da Ethereum usado pelo /defi aave, quando ETHEREUM_RPC_URL não está no config/.env (o público limita as consultas).'
     },
     'defi.hyperevm.rpc': {
         default: 'https://rpc.hyperliquid.xyz/evm',
         type: 'string',
         secret: true,
-        validar: validateUrlFeed,
+        validate: validateUrlFeed,
         desc: 'RPC da HyperEVM usado pelo /defi no Project X (o público limita as consultas).'
     },
     'defi.morpho.api': {
         default: 'https://api.morpho.org/graphql',
         type: 'string',
-        validar: validateUrlFeed,
+        validate: validateUrlFeed,
         desc: 'API GraphQL oficial do Morpho, usada pelo /defi morpho.'
     },
     'defi.morpho.chains': {
@@ -482,7 +482,7 @@ const SETTINGS_SCHEMA = {
         default: '',
         type: 'string',
         allowEmpty: true,
-        validar: (v) => {
+        validate: (v) => {
             if (!/^0x[0-9a-fA-F]{40}$/.test(v)) throw new Error(t('adm.settings.badWallet', { v }));
             return v;
         },
@@ -492,7 +492,7 @@ const SETTINGS_SCHEMA = {
         default: 'https://api.mainnet-beta.solana.com',
         type: 'string',
         secret: true,
-        validar: validateUrlFeed,
+        validate: validateUrlFeed,
         desc: 'RPC da Solana usado pelo /defi (o público limita as consultas; um RPC próprio costuma ter a chave na URL).'
     },
     'email.alerts': {
@@ -584,7 +584,7 @@ const SETTINGS_SCHEMA = {
     'gpt.api.model': {
         default: 'gpt-4o-mini',
         type: 'string',
-        opcoes: OPENAI_MODELS,
+        options: OPENAI_MODELS,
         desc: 'Modelo do /gpt, usado quando OPENAI_MODEL não está no config/.env (o /gpt -m lista os aceitos).'
     },
     'gpt.credit.since': {
@@ -592,7 +592,7 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         allowEmpty: true,
         desc: 'Data (AAAA-MM-DD) da compra dos créditos da OpenAI: o /gpt -usage soma o gasto desde ela para mostrar $usado/$total.',
-        validar: (v) => {
+        validate: (v) => {
             if (v && (!/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(v)))) throw new Error(t('adm.settings.dateFormat'));
             return v;
         }
@@ -670,7 +670,7 @@ const SETTINGS_SCHEMA = {
     'gpt.tts.voice': {
         default: 'onyx',
         type: 'string',
-        opcoes: OPENAI_VOICES,
+        options: OPENAI_VOICES,
         desc: 'A voz do /gpt -voice: alloy, ash, ballad, coral, echo, fable, nova, onyx, sage, shimmer ou verse.'
     },
     'mcp.enabled': {
@@ -917,7 +917,7 @@ const SETTINGS_SCHEMA = {
         desc: 'Fontes extras do /weather, além da Open-Meteo (a principal): met (MET Norway) e cptec (CPTEC/INPE, só Brasil). Vazio: só a Open-Meteo.',
         item: (v) => {
             const f = v.toLowerCase();
-            if (!['met', 'cptec'].includes(f)) throw new Error(t('adm.settings.unsupported', { s: v, lista: 'met, cptec' }));
+            if (!['met', 'cptec'].includes(f)) throw new Error(t('adm.settings.unsupported', { s: v, list: 'met, cptec' }));
             return f;
         }
     },
@@ -929,8 +929,8 @@ const SETTINGS_SCHEMA = {
     'zapbot.lang': {
         default: 'en_US',
         type: 'string',
-        opcoes: ['en_US', 'pt_BR'],
-        normalizar: (v) => ({ en: 'en_US', en_us: 'en_US', pt: 'pt_BR', pt_br: 'pt_BR' })[v.toLowerCase().replace('-', '_')] ?? v,
+        options: ['en_US', 'pt_BR'],
+        normalize: (v) => ({ en: 'en_US', en_us: 'en_US', pt: 'pt_BR', pt_br: 'pt_BR' })[v.toLowerCase().replace('-', '_')] ?? v,
         desc: 'Idioma do bot (ajuda, respostas, avisos, datas e números): en_US (padrão) ou pt_BR. Ex.: /set zapbot.lang pt_BR.'
     }
 };
@@ -963,13 +963,13 @@ function validateSetting(key, value) {
 
         case 'string': {
             let s = String(value ?? '').trim();
-            if (schema.normalizar) s = schema.normalizar(s);
+            if (schema.normalize) s = schema.normalize(s);
             if (!s && schema.allowEmpty) return s;
             // API keys go over 100 (OpenAI's sk-proj- ones are ~164)
             const max = schema.secret ? 500 : 100;
             if (!s || s.length > max) throw new Error(t('adm.settings.length', { max }));
-            if (schema.opcoes && !schema.opcoes.includes(s)) throw new Error(t('adm.settings.unsupported', { s, lista: schema.opcoes.join(', ') }));
-            return schema.validar ? schema.validar(s) : s;
+            if (schema.options && !schema.options.includes(s)) throw new Error(t('adm.settings.unsupported', { s, list: schema.options.join(', ') }));
+            return schema.validate ? schema.validate(s) : s;
         }
 
         case 'list': {
@@ -978,11 +978,11 @@ function validateSetting(key, value) {
                 : String(value ?? '').split(schema.separator ?? /[\s,]+/);
             const list = items.map(v => v.trim()).filter(Boolean)
                 .map(schema.item ?? (v => v)).filter(v => v !== null);
-            return schema.lista ? schema.lista([...new Set(list)]) : [...new Set(list)];
+            return schema.list ? schema.list([...new Set(list)]) : [...new Set(list)];
         }
     }
 
-    throw new Error(t('adm.settings.badType', { tipo: schema.type }));
+    throw new Error(t('adm.settings.badType', { type: schema.type }));
 }
 
 /*
@@ -990,12 +990,12 @@ function validateSetting(key, value) {
  * in a new version): validates item by item and keeps the valid ones. If it is not a
  * list, null (the default applies).
  */
-function listWithoutOsInvalid(key, valueSalvo) {
+function listWithoutOsInvalid(key, valueSaved) {
     if (SETTINGS_SCHEMA[key]?.type !== 'list') return null;
 
     let items;
     try {
-        items = JSON.parse(valueSalvo);
+        items = JSON.parse(valueSaved);
     } catch {
         return null;
     }

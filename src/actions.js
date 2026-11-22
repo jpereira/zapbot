@@ -47,18 +47,18 @@ async function quoteAction(ticker) {
 
     return {
         ticker: r.meta.symbol ?? ticker,
-        nome: r.meta.longName ?? r.meta.shortName ?? null,
-        bolsa: r.meta.fullExchangeName ?? r.meta.exchangeName ?? null,
-        moeda: r.meta.currency ?? 'USD',
-        atual: r.meta.regularMarketPrice,
-        abertura: valid(q.open[n - 1]),
-        fechamento: closingAlt,
+        name: r.meta.longName ?? r.meta.shortName ?? null,
+        exchange: r.meta.fullExchangeName ?? r.meta.exchangeName ?? null,
+        currency: r.meta.currency ?? 'USD',
+        current: r.meta.regularMarketPrice,
+        opening: valid(q.open[n - 1]),
+        closing: closingAlt,
         max: valid(r.meta.regularMarketDayHigh) ?? valid(q.high[n - 1]),
         min: valid(r.meta.regularMarketDayLow) ?? valid(q.low[n - 1]),
         volume: valid(r.meta.regularMarketVolume),
         max52: valid(r.meta.fiftyTwoWeekHigh),
         min52: valid(r.meta.fiftyTwoWeekLow),
-        fonte: 'Yahoo Finance'
+        source: 'Yahoo Finance'
     };
 }
 

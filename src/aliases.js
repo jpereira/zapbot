@@ -13,7 +13,7 @@ const { roleMoreRestricted } = require('./roles');
 const { findCommandAlt, withTargets, commandsInText, assembleText } = require('./textCommands');
 const { t } = require('./i18n');
 
-const textIsAlias = (salvo) => !salvo.startsWith('/');
+const textIsAlias = (saved) => !saved.startsWith('/');
 
 
 /*
@@ -24,19 +24,19 @@ const textIsAlias = (salvo) => !salvo.startsWith('/');
 // ${N:...} the dash works like the ":-" of the default plus the "-" of a value that starts with "-".
 const fixDash = (textAlt) => String(textAlt).replace(/(\$\{[1-9]\d*:)[—–]/g, '$1--');
 
-function applyParams(salvo, args) {
-    salvo = fixDash(salvo);
+function applyParams(saved, args) {
+    saved = fixDash(saved);
     const typed = args.split(/\s+/).filter(Boolean);
     const used = new Set();
     // $N or ${N:-default value} (the default applies when argument N was not typed)
-    const commandAlt = salvo.replace(/\$(?:([1-9]\d*)|\{([1-9]\d*)(?::-([^}]*))?\})/g, (_, n1, n2, defaults) => {
+    const commandAlt = saved.replace(/\$(?:([1-9]\d*)|\{([1-9]\d*)(?::-([^}]*))?\})/g, (_, n1, n2, defaults) => {
         const n = Number(n1 ?? n2);
         used.add(n - 1);
         return typed[n - 1] ?? defaults ?? '';
     }).trim();
     // Without $N, what is left is the typed text as it came (line breaks stay, e.g. in /notes)
-    if (!used.size) return { comando: commandAlt, sobras: args };
-    return { comando: commandAlt, sobras: typed.filter((_, i) => !used.has(i)).join(' ') };
+    if (!used.size) return { command: commandAlt, leftovers: args };
+    return { command: commandAlt, leftovers: typed.filter((_, i) => !used.has(i)).join(' ') };
 }
 
 // Is the name a command or a saved alias (exact, no completing from the start)?
@@ -54,36 +54,36 @@ async function resolverAlias(textAlt) {
     await dbReady;
     const alias = await dbGet('SELECT * FROM command_aliases WHERE name = ?', [nameAlt]);
     if (!alias) return byPrefix(nameAlt, args);
-    return resolverSalvo(alias, nameAlt, args);
+    return resolveSaved(alias, nameAlt, args);
 }
 
 // A saved alias (the database row) already found: text or command with the $Ns applied
-async function resolverSalvo(alias, nameAlt, args) {
+async function resolveSaved(alias, nameAlt, args) {
     /*
      * Text alias: a fake command with the alias name, for the flow
      * normal (bot off, flood); the permissions are those of each {/command}
      * (targets), and those that no longer exist are left out (they come out as ⚠️).
      */
     if (textIsAlias(alias.command)) {
-        const foundAlt4 = await Promise.all(commandsInText(alias.command).map(c => findCommandAlt(c.linha)));
+        const foundAlt4 = await Promise.all(commandsInText(alias.command).map(c => findCommandAlt(c.line)));
         const targets = foundAlt4.map(a => a?.command).filter(Boolean);
         return {
-            command: { cmd: nameAlt, role: roleMoreRestricted(targets.map(c => c.role)), alvos: targets.map(c => c.cmd) },
-            alias: nameAlt, texto: alias.command, args, quiet: Boolean(alias.quiet)
+            command: { cmd: nameAlt, role: roleMoreRestricted(targets.map(c => c.role)), targets: targets.map(c => c.cmd) },
+            alias: nameAlt, text: alias.command, args, quiet: Boolean(alias.quiet)
         };
     }
 
-    const { comando: commandAlt, sobras: leftovers } = applyParams(alias.command, args);
+    const { command: commandAlt, leftovers } = applyParams(alias.command, args);
     const [destination] = commandAlt.split(/\s+/);
     const target = findCommand(destination);
     if (!target) return null;
     const argsFinal = [commandAlt.slice(destination.length).trim(), leftovers].filter(Boolean).join(' ');
-    return { command: await withTargets(target, argsFinal), alias: nameAlt, destino: destination, args: argsFinal, quiet: Boolean(alias.quiet) };
+    return { command: await withTargets(target, argsFinal), alias: nameAlt, destination, args: argsFinal, quiet: Boolean(alias.quiet) };
 }
 
 /*
  * Neither a command nor an alias: the start of a command or a saved alias (/wa, /watc
- * → /watch). A single candidate runs; more than one comes back as "possiveis" for the bot to list.
+ * → /watch). A single candidate runs; more than one comes back as "candidates" for the bot to list.
  */
 async function byPrefix(nameAlt, args) {
     const start = nameAlt.toLowerCase();
@@ -93,29 +93,29 @@ async function byPrefix(nameAlt, args) {
         [start.length, start])).filter(a => !names.has(a.name));
 
     if (commands.length + saved.length === 1) {
-        if (commands.length) return { command: commands[0], args, prefixo: nameAlt };
-        const r = await resolverSalvo(saved[0], saved[0].name, args);
-        return r && { ...r, prefixo: nameAlt };
+        if (commands.length) return { command: commands[0], args, prefix: nameAlt };
+        const r = await resolveSaved(saved[0], saved[0].name, args);
+        return r && { ...r, prefix: nameAlt };
     }
     // Each alias enters with the target's permissions (targets), so the bot filters the list
     const deAlias = (await Promise.all(saved.map(async a => {
-        const c = (await resolverSalvo(a, a.name, ''))?.command;
-        return c && { ...c, cmd: a.name, alvos: c.alvos ?? [c.cmd] };
+        const c = (await resolveSaved(a, a.name, ''))?.command;
+        return c && { ...c, cmd: a.name, targets: c.targets ?? [c.cmd] };
     }))).filter(Boolean);
     const possible = [...commands, ...deAlias];
-    return possible.length ? { possiveis: possible } : null;
+    return possible.length ? { candidates: possible } : null;
 }
 
 /*
  * Runs a text alias in the chat where it was called, with the permissions of whoever
  * called, and replies a single message (and the media, afterward).
  */
-async function textRunAlias(msg, resolved, { chatId, chatName, isGroup, quem: who }) {
-    const commands = commandsInText(resolved.texto).map(c => c.linha);
+async function textRunAlias(msg, resolved, { chatId, chatName, isGroup, who }) {
+    const commands = commandsInText(resolved.text).map(c => c.line);
     if (!resolved.quiet) await msg.reply(`🔗 Alias ${resolved.alias} -> ${commands.join(', ')}`, undefined, { linkPreview: false });
 
-    const { texto: textAlt, midias: mediaAltAlt } = await assembleText(resolved.texto,
-        { chat_id: chatId, chat_name: chatName, is_group: isGroup }, { onde: '/alias', quem: who });
+    const { text: textAlt, mediaItems: mediaAltAlt } = await assembleText(resolved.text,
+        { chat_id: chatId, chat_name: chatName, is_group: isGroup }, { where: '/alias', who });
 
     if (textAlt) await msg.reply(textAlt);
     for (const { content, options } of mediaAltAlt) await msg.reply(content, undefined, { caption: options?.caption });
@@ -127,7 +127,7 @@ async function listAliases(msg, can = () => true) {
     const aliases = [];
     for (const a of allAlt2) {
         // The destination or the text's {/command}s (which may be other aliases)
-        const linesAlt = textIsAlias(a.command) ? commandsInText(a.command).map(c => c.linha) : [a.command];
+        const linesAlt = textIsAlias(a.command) ? commandsInText(a.command).map(c => c.line) : [a.command];
         // The disabled ones too (the alias stays listed); an alias inside the text counts by its target
         const targets = await Promise.all(linesAlt.map(async line => {
             const nameAlt = line.split(/\s+/, 1)[0].toLowerCase();

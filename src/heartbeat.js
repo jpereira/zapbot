@@ -27,7 +27,7 @@ const packageJson = require('../package.json');
 const { client } = require('./client');
 const { restartClient } = require('./connection');
 const { alertPerEmail } = require('./email');
-const { estado: stateAlt } = require('./state');
+const { state: stateAlt } = require('./state');
 const { t } = require('./i18n');
 const { printError, printInfo } = require('./log');
 
@@ -56,29 +56,29 @@ async function getStateWithTimeout(ms) {
 
 /**
  * The bot's current situation.
- * @returns {Promise<{saudavel: boolean, estado: string}>}
+ * @returns {Promise<{healthy: boolean, state: string}>}
  */
 async function evaluateHealth() {
-    if (stateAlt.reiniciando) {
+    if (stateAlt.restarting) {
         restartingSince ??= Date.now();
         const locked = Date.now() - restartingSince > RESTART_MAX_MS;
-        return { saudavel: !locked, estado: locked ? 'reinício travado' : 'reiniciando' };
+        return { healthy: !locked, state: locked ? 'reinício travado' : 'reiniciando' };
     }
 
     restartingSince = null;
 
-    if (!stateAlt.pronto) {
-        const statusAlt = stateAlt.tentativas
-            ? `reconectando (${stateAlt.tentativas} falhas seguidas)`
+    if (!stateAlt.ready) {
+        const statusAlt = stateAlt.attempts
+            ? `reconectando (${stateAlt.attempts} falhas seguidas)`
             : 'aguardando conexão';
-        return { saudavel: true, estado: statusAlt };
+        return { healthy: true, state: statusAlt };
     }
 
     try {
         const state = await getStateWithTimeout(GETSTATE_TIMEOUT_MS);
-        return { saudavel: state === 'CONNECTED', estado: String(state ?? 'desconhecido') };
+        return { healthy: state === 'CONNECTED', state: String(state ?? 'desconhecido') };
     } catch (err) {
-        return { saudavel: false, estado: err.message };
+        return { healthy: false, state: err.message };
     }
 }
 
@@ -89,9 +89,9 @@ function recordHeartbeat(statusAlt) {
     fs.writeFileSync(temporary, JSON.stringify({
         epoch: Date.now(),
         em: new Date().toISOString(),
-        estado: statusAlt,
+        state: statusAlt,
         pid: process.pid,
-        versao: packageJson.version
+        version: packageJson.version
     }));
     fs.renameSync(temporary, HEARTBEAT_FILE);
 }
@@ -99,26 +99,26 @@ function recordHeartbeat(statusAlt) {
 async function matchHeart() {
     const statusAlt = await evaluateHealth();
 
-    if (statusAlt.saudavel) {
+    if (statusAlt.healthy) {
         failuresConsecutive = 0;
 
         try {
-            recordHeartbeat(statusAlt.estado);
+            recordHeartbeat(statusAlt.state);
         } catch (err) {
             printError(`Heartbeat: could not write ${HEARTBEAT_FILE}:`, err.message);
         }
         return statusAlt;
     }
 
-    printError(`Heartbeat: no beat (${statusAlt.estado}).`);
+    printError(`Heartbeat: no beat (${statusAlt.state}).`);
 
     // Only the connection that does not respond is restarted here; a stuck restart is left to Docker
-    if (stateAlt.pronto && !stateAlt.reiniciando && ++failuresConsecutive >= FAILURES_FOR_RESTART) {
+    if (stateAlt.ready && !stateAlt.restarting && ++failuresConsecutive >= FAILURES_FOR_RESTART) {
         failuresConsecutive = 0;
         printInfo('Heartbeat: WhatsApp did not respond in 3 checks in a row, restarting the client.');
         alertPerEmail(t('heartbeat.semRespostaTitulo'),
-            t('heartbeat.semRespostaCorpo', { n: FAILURES_FOR_RESTART, estado: statusAlt.estado }));
-        await restartClient(`heartbeat: ${statusAlt.estado}`);
+            t('heartbeat.semRespostaCorpo', { n: FAILURES_FOR_RESTART, state: statusAlt.state }));
+        await restartClient(`heartbeat: ${statusAlt.state}`);
     }
 
     return statusAlt;

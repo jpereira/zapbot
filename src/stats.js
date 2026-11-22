@@ -16,9 +16,9 @@ function dayAndHour(ms) {
 
 /**
  * Adds 1 to the sender's counter (msgs, media, deleted or edited).
- * @param {object} c { chatId, chatName, isGroup, senderId, senderName, quando (ms), campos: {msgs, media, deleted, edited} }
+ * @param {object} c { chatId, chatName, isGroup, senderId, senderName, when (ms), fields: {msgs, media, deleted, edited} }
  */
-async function countStats({ chatId, chatName, isGroup, senderId, senderName, quando: when = Date.now(), campos: fields }) {
+async function countStats({ chatId, chatName, isGroup, senderId, senderName, when = Date.now(), fields }) {
     if (!getSetting('stats.enable')) return;
     if (!chatId || chatId === 'status@broadcast' || !senderId) return;
     // Your private chat receives the bot alerts: it is not a conversation

@@ -14,17 +14,17 @@ const { unescape } = require('../util/format');
 const { printError } = require('../log');
 
 // The -theme|-t option only counts at the start (the rest is code, which may have "-t" in the middle)
-const TEMA_IN_START = /^\s*-(?:theme|t)\s+(\S+)\s*/;
+const THEME_IN_START = /^\s*-(?:theme|t)\s+(\S+)\s*/;
 
 async function cmdCarbon({ msg, args, quotedMsg }) {
     let textAlt = unescape(String(args ?? ''));
-    let tema = 'dark';
+    let theme = 'dark';
 
-    const m = textAlt.match(TEMA_IN_START);
+    const m = textAlt.match(THEME_IN_START);
     if (m) {
-        tema = m[1].toLowerCase();
+        theme = m[1].toLowerCase();
         textAlt = textAlt.slice(m[0].length);
-        if (!THEMES[tema]) {
+        if (!THEMES[theme]) {
             await msg.reply(t('carbon.badTheme', { theme: m[1], themes: Object.keys(THEMES).join(', ') }));
             return;
         }
@@ -37,7 +37,7 @@ async function cmdCarbon({ msg, args, quotedMsg }) {
     }
 
     try {
-        const png = await generateImage(textAlt, tema);
+        const png = await generateImage(textAlt, theme);
         await msg.reply(new MessageMedia('image/png', png.toString('base64'), 'carbon.png'));
     } catch (err) {
         printError('/carbon:', err.message);

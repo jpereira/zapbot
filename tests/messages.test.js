@@ -26,7 +26,7 @@ describe('gravação', () => {
         const contactAlt = bot.createContact(jid, 'Beltrano da Agenda');
         contactAlt.pushname = 'beltrano_99';
         const msg = bot.createMessage({
-            texto: 'oi', chat: jid, de: jid,
+            text: 'oi', chat: jid, de: jid,
             extras: { _data: { notifyName: 'beltrano_99', chat: { name: 'beltrano_99' } } }
         });
         await bot.deliver(msg);
@@ -37,7 +37,7 @@ describe('gravação', () => {
     });
 
     test('grava a mensagem com remetente, chat e nome do grupo', async () => {
-        await bot.deliver(bot.createMessage({ texto: 'oi grupo', de: OTHERAlt.jid, id: 'M1' }));
+        await bot.deliver(bot.createMessage({ text: 'oi grupo', de: OTHERAlt.jid, id: 'M1' }));
         const row = await bot.dbGet("SELECT * FROM messages WHERE id = 'M1'");
 
         assert.equal(row.body, 'oi grupo');
@@ -45,17 +45,17 @@ describe('gravação', () => {
         assert.equal(row.chat_name, 'Família');
         assert.equal(row.is_group, 1);
         assert.equal(row.sender_number, OTHERAlt.user);
-        assert.equal(row.sender_name, OTHERAlt.nome);
+        assert.equal(row.sender_name, OTHERAlt.name);
     });
 
     test('grava a mídia em cache/media e a localização', async () => {
-        await bot.deliver(bot.createMessage({ de: OTHERAlt.jid, id: 'FOTO', tipo: 'image', midia: { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') } }));
+        await bot.deliver(bot.createMessage({ de: OTHERAlt.jid, id: 'FOTO', type: 'image', media: { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') } }));
         const photo = await bot.dbGet("SELECT * FROM messages WHERE id = 'FOTO'");
         assert.equal(photo.has_media, 1);
         assert.match(photo.media_path, /media.*FOTO\.jpeg$/);
         assert.equal(require('fs').readFileSync(photo.media_path, 'utf8'), 'jpg');
 
-        await bot.deliver(bot.createMessage({ de: OTHERAlt.jid, id: 'LOC', tipo: 'location', extras: { location: { latitude: -22.9, longitude: -43.1 } } }));
+        await bot.deliver(bot.createMessage({ de: OTHERAlt.jid, id: 'LOC', type: 'location', extras: { location: { latitude: -22.9, longitude: -43.1 } } }));
         const loc = await bot.dbGet("SELECT * FROM messages WHERE id = 'LOC'");
         assert.deepEqual([loc.location_lat, loc.location_lng], [-22.9, -43.1]);
     });
@@ -67,7 +67,7 @@ describe('gravação', () => {
         for (const de of [OWNER.jid, OTHERAlt.jid]) {
             const id = `LOC-${de}`;
             const replies = await bot.deliver(bot.createMessage({
-                texto: textAlt, de, id, tipo: 'location',
+                text: textAlt, de, id, type: 'location',
                 extras: { location: { latitude: -22.91472544, longitude: -43.10812451 } }
             }));
             assert.deepEqual(replies, []);
@@ -81,15 +81,15 @@ describe('gravação', () => {
     });
 
     test('mídia que falha ao baixar é gravada sem mídia', async () => {
-        const msg = bot.createMessage({ de: OTHERAlt.jid, id: 'RUIM', midia: {} });
+        const msg = bot.createMessage({ de: OTHERAlt.jid, id: 'RUIM', media: {} });
         msg.downloadMedia = async () => { throw new Error('falhou'); };
-        await bot.deliver(msg, { erroEsperado: true });
+        await bot.deliver(msg, { expectedError: true });
         assert.equal((await bot.dbGet("SELECT has_media FROM messages WHERE id = 'RUIM'")).has_media, 0);
     });
 
     test('from_me marca as suas mensagens (no privado o remetente gravado é o outro participante)', async () => {
-        await bot.deliver(bot.createMessage({ texto: 'minha', chat: bot.OTHERAlt.jid, id: 'MINHA' }));
-        await bot.deliver(bot.createMessage({ texto: 'dele', chat: bot.OTHERAlt.jid, de: bot.OTHERAlt.jid, id: 'DELE' }));
+        await bot.deliver(bot.createMessage({ text: 'minha', chat: bot.OTHERAlt.jid, id: 'MINHA' }));
+        await bot.deliver(bot.createMessage({ text: 'dele', chat: bot.OTHERAlt.jid, de: bot.OTHERAlt.jid, id: 'DELE' }));
 
         const rows = await bot.dbAll("SELECT id, sender_jid, from_me FROM messages WHERE id IN ('MINHA', 'DELE') ORDER BY id");
         assert.deepEqual(rows, [
@@ -112,7 +112,7 @@ describe('comandos', () => {
     });
 
     test('resposta do bot é um reply da mensagem do comando', async () => {
-        const [r] = await bot.executar('/ping', { id: 'CMD1' });
+        const [r] = await bot.execute('/ping', { id: 'CMD1' });
         assert.equal(r.chatId, GROUP);
         assert.match(r.options.quotedMessageId, /CMD1$/);
     });
@@ -147,7 +147,7 @@ describe('comandos', () => {
     test('o log diz quem executou o comando e onde (no privado de outra pessoa, é você)', async () => {
         const ran = () => bot.logs.filter(l => / executed '/.test(l)).at(-1);
 
-        bot.client.contatos.set(OTHERAlt.jid, { id: { _serialized: OTHERAlt.jid, user: OTHERAlt.user }, number: OTHERAlt.user, name: OTHERAlt.nome });
+        bot.client.contacts.set(OTHERAlt.jid, { id: { _serialized: OTHERAlt.jid, user: OTHERAlt.user }, number: OTHERAlt.user, name: OTHERAlt.name });
         await bot.replyAlt('/ping', { chat: OTHERAlt.jid });
         assert.match(ran(), /\[\+\] 'Dono' executed '\/ping' in 'Fulano'$/);
 
@@ -156,8 +156,8 @@ describe('comandos', () => {
     });
 
     test('no privado, o nome do chat é o do outro participante, também nas suas mensagens', async () => {
-        await bot.deliver(bot.createMessage({ texto: 'oi, Fulano', chat: OTHERAlt.jid, extras: { _data: { notifyName: 'Dono' } } }));
-        await bot.deliver(bot.createMessage({ texto: 'oi, Dono', chat: OTHERAlt.jid, de: OTHERAlt.jid }));
+        await bot.deliver(bot.createMessage({ text: 'oi, Fulano', chat: OTHERAlt.jid, extras: { _data: { notifyName: 'Dono' } } }));
+        await bot.deliver(bot.createMessage({ text: 'oi, Dono', chat: OTHERAlt.jid, de: OTHERAlt.jid }));
 
         const names = await bot.dbAll('SELECT body, chat_name, from_me FROM messages ORDER BY timestamp, rowid');
         assert.deepEqual(names, [
@@ -192,8 +192,8 @@ describe('comandos', () => {
     test('resposta do próprio bot começando com "/" não vira comando', async () => {
         // /noffa echoes the text: without the mark, "/ping" would come back as an owner command
         await bot.client.sendMessage(GROUP, '/ping');
-        const msg = bot.createMessage({ texto: '/ping' });
-        assert.deepEqual((await bot.deliver(msg)).map(e => e.texto), []);
+        const msg = bot.createMessage({ text: '/ping' });
+        assert.deepEqual((await bot.deliver(msg)).map(e => e.text), []);
 
         // The mark is consumed: the owner typing /ping afterward works
         assert.deepEqual(await bot.replyAlt('/ping'), ['pong']);
@@ -207,8 +207,8 @@ describe('comando desconhecido', () => {
     test('do dono em qualquer chat: responde citando a mensagem e sugerindo /help', async () => {
         for (const chat of [OWNER.jid, OTHERAlt.jid, GROUP]) {
             const beforeAlt = bot.logs.length;
-            const [r] = await bot.executar('/orca prjx', { chat, id: 'INVALIDO' });
-            assert.equal(r.texto, "⚠️ Comando '/orca prjx' desconhecido, tente: /help");
+            const [r] = await bot.execute('/orca prjx', { chat, id: 'INVALIDO' });
+            assert.equal(r.text, "⚠️ Comando '/orca prjx' desconhecido, tente: /help");
             assert.equal(r.chatId, chat);
             assert.match(r.options.quotedMessageId, /INVALIDO$/);
             assert.equal(unknown(beforeAlt).length, 1);
@@ -227,10 +227,10 @@ describe('comando desconhecido', () => {
         for (const keyAlt of ['bot.admins', 'bot.users']) {
             await bot.setSetting(keyAlt, [OTHERAlt.user]);
             for (const chat of [GROUP, OTHERAlt.jid]) {
-                const [r] = await bot.executar('/orca prjx', {
+                const [r] = await bot.execute('/orca prjx', {
                     chat, de: OTHERAlt.jid, id: 'PERMITIDO'
                 });
-                assert.equal(r.texto, "⚠️ Comando '/orca prjx' desconhecido, tente: /help");
+                assert.equal(r.text, "⚠️ Comando '/orca prjx' desconhecido, tente: /help");
                 assert.equal(r.chatId, chat);
                 assert.match(r.options.quotedMessageId, /PERMITIDO$/);
             }
@@ -418,10 +418,10 @@ describe('permissões', () => {
 
     test('role admin/owner com debug ligado avisa no seu privado', async () => {
         await bot.setSetting('debug.enabled', true);
-        const r = await bot.executar('/debug', { de: OTHERAlt.jid });
+        const r = await bot.execute('/debug', { de: OTHERAlt.jid });
         assert.equal(r.length, 1);
         assert.equal(r[0].chatId, `${process.env.PHONE_NUMBER}@c.us`);
-        assert.match(r[0].texto, /Fulano tentou executar \/debug dentro de Família, mas sem permissão/);
+        assert.match(r[0].text, /Fulano tentou executar \/debug dentro de Família, mas sem permissão/);
     });
 
     test('bot.admins: o admin extra usa os comandos admin, também com o bot.users false e nas checagens do dono', async () => {
@@ -466,7 +466,7 @@ describe('permissões', () => {
         bot.createContact('5521966666666@c.us', 'Fulano Da Silva');
         bot.client.lids.set(LID, '5521966666666@c.us');
 
-        assert.deepEqual(await bot.replyAlt('/set -a bot.admins @100000000000002', { mencoes: [LID] }),
+        assert.deepEqual(await bot.replyAlt('/set -a bot.admins @100000000000002', { mentions: [LID] }),
             ['✅ *bot.admins* + 5521966666666 (Fulano Da Silva)\n= 5521966666666 (Fulano Da Silva)']);
 
         // "@número" typed, not as a mention: refused
@@ -640,12 +640,12 @@ describe('permissões', () => {
             await bot.setSetting('bot.users.cmds', ['5521922222222=/noffa']);
             await bot.setSetting('bot.paused', true);
         };
-        // [paused, admins, users, regras]
+        // [paused, admins, users, rules]
         const readAll = () => [bot.getSetting('bot.paused'), bot.getSetting('bot.admins'), bot.getSetting('bot.users'),
             bot.getSetting('bot.users.cmds')];
         const INTACT = [true, ['5521911111111'], [GROUP, '5521922222222'], ['5521922222222=/noffa']];
-        // Waits (with a limit) for the question to go out, after `desde` sent messages
-        const left = (since, question) => bot.client.enviadas.slice(since).some(e => e.content === question);
+        // Waits (with a limit) for the question to go out, after `since` sent messages
+        const left = (since, question) => bot.client.sent.slice(since).some(e => e.content === question);
         const waitQuestion = async (since, question) => {
             for (let i = 0; i < 1000 && !left(since, question); i++) await new Promise(setImmediate);
             assert.ok(left(since, question), 'a pergunta saiu');
@@ -653,43 +653,43 @@ describe('permissões', () => {
 
         // -r: asks; before yes nothing changes; yes removes the users and the limits, and keeps the admins and the on/off
         await touch();
-        const light = bot.executar('/bot -r');
+        const light = bot.execute('/bot -r');
         await waitQuestion(0, QUESTION_LIGHT);
         assert.deepEqual(readAll(), INTACT, 'antes do sim, nada muda');
-        await bot.executar('sim');
+        await bot.execute('sim');
         await light;
-        assert.ok(bot.client.enviadas.at(-1).content.startsWith(LIGHT));
+        assert.ok(bot.client.sent.at(-1).content.startsWith(LIGHT));
         assert.deepEqual(readAll(), [true, ['5521911111111'], [], []]);
 
         // -r force: asks as well (with the stronger warning); yes puts everything back to default
         await touch();
-        const sinceForce = bot.client.enviadas.length;
-        const complete = bot.executar('/bot -r force');
+        const sinceForce = bot.client.sent.length;
+        const complete = bot.execute('/bot -r force');
         await waitQuestion(sinceForce, QUESTION_FORCE);
         assert.deepEqual(readAll(), INTACT, 'o force também espera o sim');
-        await bot.executar('sim');
+        await bot.execute('sim');
         await complete;
-        assert.equal(bot.client.enviadas.at(-1).content, DEFAULT);
+        assert.equal(bot.client.sent.at(-1).content, DEFAULT);
         assert.deepEqual(readAll(), [false, [], [], []]);
 
         // "no" cancels
         await touch();
-        const since = bot.client.enviadas.length;
-        const cancel = bot.executar('/bot -reset force');
+        const since = bot.client.sent.length;
+        const cancel = bot.execute('/bot -reset force');
         await waitQuestion(since, QUESTION_FORCE);
-        await bot.executar('não');
+        await bot.execute('não');
         await cancel;
-        assert.equal(bot.client.enviadas.at(-1).content, '👍 Nada mudou.');
+        assert.equal(bot.client.sent.at(-1).content, '👍 Nada mudou.');
         assert.deepEqual(readAll(), INTACT);
 
         // Without a reply within 10 s: nothing changes, and the question becomes the notice (no other message)
         t.mock.timers.enable({ apis: ['setTimeout'] });
-        const expireBefore = bot.client.enviadas.length;
-        const expires = bot.executar('/bot -r');
+        const expireBefore = bot.client.sent.length;
+        const expires = bot.execute('/bot -r');
         await bot.waitWithClock(t, expires);
-        assert.equal(bot.client.enviadas.length, expireBefore + 1);
-        assert.equal(bot.client.enviadas.at(-1).content, '⌛ Nada mudou: sem *sim* em 10 s.');
-        assert.equal(bot.client.enviadas.at(-1).editada, true);
+        assert.equal(bot.client.sent.length, expireBefore + 1);
+        assert.equal(bot.client.sent.at(-1).content, '⌛ Nada mudou: sem *sim* em 10 s.');
+        assert.equal(bot.client.sent.at(-1).editada, true);
         assert.deepEqual(readAll(), INTACT);
         t.mock.timers.reset();
 
@@ -726,7 +726,7 @@ describe('permissões', () => {
         assert.deepEqual(await bot.replyAlt('/bot -lu', { chat: OTHERAlt.jid }),
             ['*Usuários* (1) neste chat\n• 👑 +a 🗣️ +u · 👤 Fulano · +5521911111111' + CAPTION + TIP('deste chat', 3)]);
 
-        // O status (/bot) traz a mesma lista
+        // O status (/bot) traz a mesma list
         assert.match((await bot.replyAlt('/bot'))[0], /\n\n\*Usuários\* \(2\) neste grupo\n• 👑 \+a 🗣️ \+u · 👤 Fulano/);
 
         // In a group where the person is there by LID (the internal id), they count as from the group
@@ -803,7 +803,7 @@ describe('permissões', () => {
         await bot.replyAlt('/bot +cmd /weather /Ciclano/', IN_PRIVATE);
         assert.deepEqual(rules(), [], 'liberar o único de fora: sem regra');
 
-        // -u tira a regra junto
+        // -u tira a rule junto
         await bot.replyAlt('/bot -cmd /weather /Ciclano/', IN_PRIVATE);
         await bot.replyAlt('/bot -u /Ciclano/', IN_PRIVATE);
         assert.deepEqual([bot.getSetting('bot.users'), rules()], [[], []]);
@@ -833,11 +833,11 @@ describe('permissões', () => {
         assert.ok(withoutRule && !withoutRule.startsWith('🚫'), `o /sticker respondeu: ${withoutRule}`);
 
         // -reset removes the rules too (after yes)
-        const reset = bot.executar('/bot -r');
-        for (let i = 0; i < 1000 && !bot.client.enviadas.at(-1)?.content.startsWith('⚠️ *Tirar todos'); i++) {
+        const reset = bot.execute('/bot -r');
+        for (let i = 0; i < 1000 && !bot.client.sent.at(-1)?.content.startsWith('⚠️ *Tirar todos'); i++) {
             await new Promise(setImmediate);
         }
-        await bot.executar('sim');
+        await bot.execute('sim');
         await reset;
         assert.deepEqual(bot.getSetting('bot.users.cmds'), []);
     });
@@ -872,8 +872,8 @@ describe('permissões', () => {
             '• 👑 +a · 👤 Fulano · +5521911111111\n' +
             '• 🚫 sem permissão · 👤 +5521•••••7777' + CAPTION +
             '\n🚫 sem permissão: o bot ignora os comandos dela' + FOOTER]);
-        const quoted = bot.createMessage({ texto: 'oi', de: OTHERAlt.jid });
-        assert.match((await bot.replyAlt('/whois', { citada: quoted }))[0], /^\*Quem é\?\* \(1\)\n• 👑 \+a · 👤 Fulano · \+5521911111111\n/);
+        const quoted = bot.createMessage({ text: 'oi', de: OTHERAlt.jid });
+        assert.match((await bot.replyAlt('/whois', { quoted }))[0], /^\*Quem é\?\* \(1\)\n• 👑 \+a · 👤 Fulano · \+5521911111111\n/);
 
         // The extra admin sees the others too; a group and an email are not people
         assert.match((await bot.replyAlt('/whois /Ciclano/', { de: OTHERAlt.jid }))[0], /• 🚫 sem permissão · 👤 Ciclano · \+5521•••••2222\n/);
@@ -900,7 +900,7 @@ describe('permissões', () => {
         // The others are not affected; another command counts separately
         assert.equal((await bot.replyAlt('/noffa oi', { de: CICLANO })).length, 1);
 
-        // Passado o intervalo, volta a usar
+        // Passado o interval, volta a usar
         t.mock.timers.tick(10_000);
         assert.equal((await bot.replyAlt('/noffa oi', { de: OTHERAlt.jid })).length, 1);
 
@@ -929,19 +929,19 @@ describe('contagem do /stats', () => {
     const count = () => bot.dbAll('SELECT sender_id, SUM(msgs) AS msgs, SUM(media) AS media FROM stats GROUP BY sender_id ORDER BY sender_id');
 
     test('conta mensagens novas por remetente, uma vez por id', async () => {
-        const msg = bot.createMessage({ texto: 'oi', de: OTHERAlt.jid, id: 'S1' });
+        const msg = bot.createMessage({ text: 'oi', de: OTHERAlt.jid, id: 'S1' });
         await bot.deliver(msg);
         await bot.deliver(msg); // resent on a reconnection
-        await bot.deliver(bot.createMessage({ texto: 'foto', de: OTHERAlt.jid, midia: { mimetype: 'image/png', data: 'AA==' } }));
+        await bot.deliver(bot.createMessage({ text: 'foto', de: OTHERAlt.jid, media: { mimetype: 'image/png', data: 'AA==' } }));
 
         assert.deepEqual(await count(), [{ sender_id: OTHERAlt.user, msgs: 2, media: 1 }]);
     });
 
     test('avisos do sistema e mensagens sem autor não contam (não viram um participante "Desconhecido")', async () => {
-        await bot.deliver(bot.createMessage({ tipo: 'notification_template', de: OTHERAlt.jid }));
-        await bot.deliver(bot.createMessage({ tipo: 'gp2', de: OTHERAlt.jid }));
-        await bot.deliver(bot.createMessage({ texto: 'sem autor', de: OTHERAlt.jid, extras: { author: undefined } }), { erroEsperado: true });
-        await bot.deliver(bot.createMessage({ texto: 'oi', de: OTHERAlt.jid }));
+        await bot.deliver(bot.createMessage({ type: 'notification_template', de: OTHERAlt.jid }));
+        await bot.deliver(bot.createMessage({ type: 'gp2', de: OTHERAlt.jid }));
+        await bot.deliver(bot.createMessage({ text: 'sem autor', de: OTHERAlt.jid, extras: { author: undefined } }), { expectedError: true });
+        await bot.deliver(bot.createMessage({ text: 'oi', de: OTHERAlt.jid }));
         assert.deepEqual(await count(), [{ sender_id: OTHERAlt.user, msgs: 1, media: 0 }]);
     });
 
@@ -953,25 +953,25 @@ describe('contagem do /stats', () => {
     });
 
     test('as respostas do bot não contam; as suas contam para o seu número', async () => {
-        await bot.executar('/ping'); // the "pong" goes out through your account...
-        await bot.deliver(bot.createMessage({ texto: 'pong' })); // ...and comes back through message_create
+        await bot.execute('/ping'); // the "pong" goes out through your account...
+        await bot.deliver(bot.createMessage({ text: 'pong' })); // ...and comes back through message_create
 
         assert.deepEqual(await count(), [{ sender_id: OWNER.user, msgs: 1, media: 0 }]);
     });
 
     test('no privado, as suas mensagens contam para você (não para o outro)', async () => {
-        await bot.deliver(bot.createMessage({ texto: 'oi', chat: OTHERAlt.jid, de: OWNER.jid }));
-        await bot.deliver(bot.createMessage({ texto: 'oi', chat: OTHERAlt.jid, de: OTHERAlt.jid }));
+        await bot.deliver(bot.createMessage({ text: 'oi', chat: OTHERAlt.jid, de: OWNER.jid }));
+        await bot.deliver(bot.createMessage({ text: 'oi', chat: OTHERAlt.jid, de: OTHERAlt.jid }));
 
         const byPerson = await count();
         assert.deepEqual(byPerson.map(p => [p.sender_id, p.msgs]), [[OWNER.user, 1], [OTHERAlt.user, 1]]);
     });
 
     test('status e o seu privado não contam; stats.enable off para de contar', async () => {
-        await bot.deliver(bot.createMessage({ texto: 'status', chat: 'status@broadcast', de: OTHERAlt.jid }));
-        await bot.deliver(bot.createMessage({ texto: 'nota', chat: OWNER.jid }));
+        await bot.deliver(bot.createMessage({ text: 'status', chat: 'status@broadcast', de: OTHERAlt.jid }));
+        await bot.deliver(bot.createMessage({ text: 'nota', chat: OWNER.jid }));
         await bot.setSetting('stats.enable', false);
-        await bot.deliver(bot.createMessage({ texto: 'oi', de: OTHERAlt.jid }));
+        await bot.deliver(bot.createMessage({ text: 'oi', de: OTHERAlt.jid }));
 
         assert.deepEqual(await count(), []);
     });

@@ -22,7 +22,7 @@ const WEATHER_WMO = {
 // At night, a clear or almost clear sky is not a sun
 const WEATHER_NIGHT = { 0: '🌙', 1: '🌙', 2: '☁️' };
 
-// [icon, description] from the WMO code, in the current language (daytime, unless `dia` is false)
+// [icon, description] from the WMO code, in the current language (daytime, unless `day` is false)
 function weatherWmo(codeAlt, day = true) {
     return codeAlt in WEATHER_WMO
         ? [day === false && codeAlt in WEATHER_NIGHT ? WEATHER_NIGHT[codeAlt] : WEATHER_WMO[codeAlt], t(`weather.wmo.${codeAlt}`)]
@@ -32,7 +32,7 @@ function weatherWmo(codeAlt, day = true) {
 const OPEN_METEO_GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 const OPEN_METEO_URL = 'https://api.open-meteo.com/v1/forecast';
 const TIME_COLD = 5;   // °C: "It's freezing!"
-const TIME_CALOR = 30; // °C: "So hot!"
+const TIME_HOT = 30; // °C: "So hot!"
 const DIVERGENCE = 3; // °C: from there /weather warns that the sources diverge
 const RAIN_LIKELY = 50; // %: the day counts toward the "rainy days" in the summary
 
@@ -103,19 +103,19 @@ function sourcesBlock(c, extras) {
     if (!extras.length) return '';
 
     const linesAlt = extras.map((e) => {
-        if (e.tipo === 'dia') return t('weather.srcDay', { name: e.fonte, max: measure(e.max, '°'), min: measure(e.min, '°'), desc: e.descricao ?? '' });
-        const dir = windDirection(e.direcao);
+        if (e.type === 'dia') return t('weather.srcDay', { name: e.source, max: measure(e.max, '°'), min: measure(e.min, '°'), desc: e.description ?? '' });
+        const dir = windDirection(e.direction);
         return t('weather.srcNow', {
-            name: e.fonte, temp: measure(e.temp, '°C'), humidity: measure(e.umidade, '%'),
-            wind: measure(e.vento, ' km/h') + (dir ? ` ${dir}` : '')
+            name: e.source, temp: measure(e.temp, '°C'), humidity: measure(e.humidity, '%'),
+            wind: measure(e.wind, ' km/h') + (dir ? ` ${dir}` : '')
         });
     });
 
     // Compares the temperature now; CPTEC gives the day's range, so the current one has to fit in it
     const differences = extras.flatMap((e) => {
         if (c.temperature_2m == null) return [];
-        if (e.tipo === 'agora' && e.temp != null) return [Math.abs(e.temp - c.temperature_2m)];
-        if (e.tipo === 'dia' && e.max != null && e.min != null) {
+        if (e.type === 'agora' && e.temp != null) return [Math.abs(e.temp - c.temperature_2m)];
+        if (e.type === 'dia' && e.max != null && e.min != null) {
             return [Math.max(0, e.min - c.temperature_2m, c.temperature_2m - e.max)];
         }
         return [];
@@ -160,17 +160,17 @@ function formatTime(local, { current: c, daily: d }, extras = []) {
         uv: uv != null ? `  ☀️ UV ${Math.round(uv)}` : ''
     }));
 
-    const nasce = hourAlt(d.sunrise?.[0]);
-    const poe = hourAlt(d.sunset?.[0]);
-    if (nasce && poe) linesAlt.push(t('weather.sun', { rise: nasce, set: poe }));
+    const rises = hourAlt(d.sunrise?.[0]);
+    const puts = hourAlt(d.sunset?.[0]);
+    if (rises && puts) linesAlt.push(t('weather.sun', { rise: rises, set: puts }));
 
     let textAlt = linesAlt.join('\n') + sourcesBlock(c, extras);
     if (temp <= TIME_COLD) textAlt += '\n\n' + t('weather.freezing');
-    if (temp >= TIME_CALOR) textAlt += '\n\n' + t('weather.hot');
+    if (temp >= TIME_HOT) textAlt += '\n\n' + t('weather.hot');
 
     // The data sources (Open-Meteo asks for attribution) and the reading time
     const hour = hourAlt(c.time);
-    const sourcesAlt = ['Open-Meteo', ...extras.map(e => e.fonte)].join(', ');
+    const sourcesAlt = ['Open-Meteo', ...extras.map(e => e.source)].join(', ');
     textAlt += '\n\n' + (hour ? t('weather.updated', { time: hour, source: sourcesAlt }) : t('weather.source', { source: sourcesAlt }));
 
     return textAlt;
@@ -208,25 +208,25 @@ function formatForecast({ daily: d }) {
 }
 
 /**
- * "7d Niteroi" → { dias: 7, cidade: 'Niteroi' }; "Niteroi" → { dias: null, cidade: 'Niteroi' }.
+ * "7d Niteroi" → { days: 7, city: 'Niteroi' }; "Niteroi" → { days: null, city: 'Niteroi' }.
  * The days (N or Nd) only count as the first argument.
  */
 function readArgumentsTime(args) {
     const m = args.trim().match(/^(\d+)d?(?:\s+|$)([\s\S]*)$/i);
-    return m ? { dias: Number(m[1]), cidade: m[2].trim() } : { dias: null, cidade: args.trim() };
+    return m ? { days: Number(m[1]), city: m[2].trim() } : { days: null, city: args.trim() };
 }
 
 async function cmdWeather({ msg, args }) {
     const request = readArgumentsTime(args);
     const max = getSetting('weather.maxDays');
 
-    if (request.dias !== null && (request.dias < 1 || request.dias > max)) {
-        await msg.reply(t('weather.invalidDays', { n: request.dias, max, api: TIME_DAYS_API }));
+    if (request.days !== null && (request.days < 1 || request.days > max)) {
+        await msg.reply(t('weather.invalidDays', { n: request.days, max, api: TIME_DAYS_API }));
         return;
     }
 
     // Without a city uses the weather.city setting
-    const city = request.cidade || getSetting('weather.city');
+    const city = request.city || getSetting('weather.city');
 
     try {
         const local = await geocodeCity(city);
@@ -237,11 +237,11 @@ async function cmdWeather({ msg, args }) {
         }
 
         // The extra sources go in parallel with Open-Meteo; today, in the city, picks the CPTEC day
-        const query = queryTime(local, request.dias ?? 1);
+        const query = queryTime(local, request.days ?? 1);
         const today = query.then(d => String(d.current?.time ?? d.daily?.time?.[0] ?? '').slice(0, 10));
         const [dataAlt, extras] = await Promise.all([query, querySources(local, today)]);
         let textAlt = formatTime(local, dataAlt, extras);
-        if (request.dias) textAlt += `\n\n${formatForecast(dataAlt)}`;
+        if (request.days) textAlt += `\n\n${formatForecast(dataAlt)}`;
 
         await msg.reply(textAlt);
     } catch (err) {

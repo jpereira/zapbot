@@ -24,9 +24,9 @@ const notes = () => bot.dbAll('SELECT id, text, alert_at FROM notes ORDER BY id'
 
 async function expire(id) {
     await bot.dbRun('UPDATE notes SET alert_at = ? WHERE id = ?', [Date.now() - 1000, id]);
-    const beforeAlt = bot.client.enviadas.length;
+    const beforeAlt = bot.client.sent.length;
     await checkNotes();
-    return bot.client.enviadas.slice(beforeAlt);
+    return bot.client.sent.slice(beforeAlt);
 }
 
 test('-add, -list e -rm (vários IDs, all e ID inexistente sem remover nada)', async () => {
@@ -65,9 +65,9 @@ test('-alert no -add: dispara uma vez no privado e a anotação continua', async
     assert.equal((await notes())[0].text, 'ligar pro João');
     assert.ok((await notes())[0].alert_at > Date.now());
 
-    const beforeAlt = bot.client.enviadas.length;
+    const beforeAlt = bot.client.sent.length;
     await checkNotes();
-    assert.equal(bot.client.enviadas.length, beforeAlt, 'ainda não venceu');
+    assert.equal(bot.client.sent.length, beforeAlt, 'ainda não venceu');
 
     const sentAlt2 = await expire(1);
     assert.equal(sentAlt2.length, 1);
@@ -157,9 +157,9 @@ test('-export gera o PDF (tudo ou só da #tag) com o nome por data/hora', async 
     await bot.replyAlt('/notes -a #Dúvidas Olhar sobre ETFs');
     await withoutTag('sem tag');
 
-    const beforeAlt = bot.client.enviadas.length;
+    const beforeAlt = bot.client.sent.length;
     await bot.replyAlt('/notes -export');
-    const allAlt = bot.client.enviadas.slice(beforeAlt).at(-1);
+    const allAlt = bot.client.sent.slice(beforeAlt).at(-1);
     assert.match(allAlt.content.filename, /^ZapBot_notes_\d{8}_\d{4}\.pdf$/);
     assert.equal(allAlt.content.mimetype, 'application/pdf');
     assert.equal(allAlt.options.sendMediaAsDocument, true);
@@ -170,7 +170,7 @@ test('-export gera o PDF (tudo ou só da #tag) com o nome por data/hora', async 
     assert.match(pdf, /%%EOF\n$/);
 
     await bot.replyAlt('/notes -e #casa');
-    const soHome = bot.client.enviadas.at(-1);
+    const soHome = bot.client.sent.at(-1);
     assert.match(soHome.content.filename, /^ZapBot_notes_tag-casa_\d{8}_\d{4}\.pdf$/);
     assert.doesNotMatch(Buffer.from(soHome.content.data, 'base64').toString('latin1'), /ETFs/);
 
@@ -181,9 +181,9 @@ test('-export gera o PDF (tudo ou só da #tag) com o nome por data/hora', async 
 test('respostas com link na anotação saem sem thumbnail (linkPreview: false)', async () => {
     const url = 'https://www.youtube.com/watch?v=lAt0lgxwnKM';
     const last = async (line) => {
-        const beforeAlt = bot.client.enviadas.length;
+        const beforeAlt = bot.client.sent.length;
         await bot.replyAlt(line);
-        return bot.client.enviadas.slice(beforeAlt).at(-1);
+        return bot.client.sent.slice(beforeAlt).at(-1);
     };
 
     for (const line of [`/notes #minhatag lembrar de ver ${url}`, `/notes -a #minhatag ver ${url} -alert +2h`,
@@ -198,25 +198,25 @@ test('respostas com link na anotação saem sem thumbnail (linkPreview: false)',
 });
 
 test('em resposta a uma mensagem: anota o texto dela com ↩️, com ou sem #tag', async () => {
-    const quoted = bot.createMessage({ de: bot.OWNER.jid, texto: 'ver https://exemplo.com/video' });
-    const withoutText = bot.createMessage({ de: bot.OWNER.jid, texto: '' });
+    const quoted = bot.createMessage({ de: bot.OWNER.jid, text: 'ver https://exemplo.com/video' });
+    const withoutText = bot.createMessage({ de: bot.OWNER.jid, text: '' });
 
     // The tag remains required, even in reply
-    assert.match((await bot.replyAlt('/notes', { citada: quoted }))[0], /Falta a #tag/);
-    assert.match((await bot.replyAlt('/notes -a -alert +2h', { citada: quoted }))[0], /Falta a #tag/);
-    assert.match((await bot.replyAlt('/notes #lembrete', { citada: quoted }))[0], /^📝 \*#1\* · #lembrete · ↩️ ver https:\/\/exemplo\.com\/video$/);
-    await bot.replyAlt('/notes -a #lembrete', { citada: quoted });
-    await bot.replyAlt('/notes -a #lembrete -alert +2h', { citada: quoted });
-    await bot.replyAlt('/notes #lembrete outro texto', { citada: quoted });
-    assert.deepEqual(await bot.dbAll('SELECT text, tag, alert_at IS NOT NULL AS alerta FROM notes ORDER BY id'), [
-        { text: '↩️ ver https://exemplo.com/video', tag: 'lembrete', alerta: 0 },
-        { text: '↩️ ver https://exemplo.com/video', tag: 'lembrete', alerta: 0 },
-        { text: '↩️ ver https://exemplo.com/video', tag: 'lembrete', alerta: 1 },
-        { text: 'outro texto', tag: 'lembrete', alerta: 0 }
+    assert.match((await bot.replyAlt('/notes', { quoted }))[0], /Falta a #tag/);
+    assert.match((await bot.replyAlt('/notes -a -alert +2h', { quoted }))[0], /Falta a #tag/);
+    assert.match((await bot.replyAlt('/notes #lembrete', { quoted }))[0], /^📝 \*#1\* · #lembrete · ↩️ ver https:\/\/exemplo\.com\/video$/);
+    await bot.replyAlt('/notes -a #lembrete', { quoted });
+    await bot.replyAlt('/notes -a #lembrete -alert +2h', { quoted });
+    await bot.replyAlt('/notes #lembrete outro texto', { quoted });
+    assert.deepEqual(await bot.dbAll('SELECT text, tag, alert_at IS NOT NULL AS alert FROM notes ORDER BY id'), [
+        { text: '↩️ ver https://exemplo.com/video', tag: 'lembrete', alert: 0 },
+        { text: '↩️ ver https://exemplo.com/video', tag: 'lembrete', alert: 0 },
+        { text: '↩️ ver https://exemplo.com/video', tag: 'lembrete', alert: 1 },
+        { text: 'outro texto', tag: 'lembrete', alert: 0 }
     ]);
 
-    assert.match((await bot.replyAlt('/notes #lembrete', { citada: withoutText }))[0], /não tem texto/);
-    assert.match((await bot.replyAlt('/notes -l', { citada: quoted }))[0], /ANOTAÇÕES/);
+    assert.match((await bot.replyAlt('/notes #lembrete', { quoted: withoutText }))[0], /não tem texto/);
+    assert.match((await bot.replyAlt('/notes -l', { quoted }))[0], /ANOTAÇÕES/);
     assert.equal((await notes()).length, 4);
 });
 
@@ -224,13 +224,13 @@ test('-to nas listas e no -export: manda nos destinos; no -rm é recusado', asyn
     await bot.replyAlt('/notes #casa comprar pão');
     await bot.replyAlt('/notes #duvidas ETFs');
     const sentAlt2 = async (line) => {
-        const beforeAlt = bot.client.enviadas.length;
+        const beforeAlt = bot.client.sent.length;
         const replies = await bot.replyAlt(line);
-        return { respostas: replies, novas: bot.client.enviadas.slice(beforeAlt).filter(e => e.chatId === L200) };
+        return { answers: replies, fresh: bot.client.sent.slice(beforeAlt).filter(e => e.chatId === L200) };
     };
 
     for (const line of ['/notes -l -to /Grupo sobre L200/']) {
-        const { respostas: replies, novas: freshAlt2 } = await sentAlt2(line);
+        const { answers: replies, fresh: freshAlt2 } = await sentAlt2(line);
         assert.equal(freshAlt2.length, 2, line); // one message per tag
         assert.match(freshAlt2[0].content, /#casa/);
         assert.match(freshAlt2[1].content, /#duvidas/);
@@ -239,13 +239,13 @@ test('-to nas listas e no -export: manda nos destinos; no -rm é recusado', asyn
     }
 
     const filtered = await sentAlt2('/notes -l #casa -to /Grupo sobre L200/');
-    assert.match(filtered.novas[0].content, /comprar pão/);
-    assert.doesNotMatch(filtered.novas[0].content, /ETFs/);
+    assert.match(filtered.fresh[0].content, /comprar pão/);
+    assert.doesNotMatch(filtered.fresh[0].content, /ETFs/);
 
     const pdf = await sentAlt2('/notes -e #duvidas -to /Grupo sobre L200/');
-    assert.match(pdf.novas[0].content.filename, /^ZapBot_notes_tag-duvidas_\d{8}_\d{4}\.pdf$/);
-    assert.equal(pdf.novas[0].options.sendMediaAsDocument, true);
-    assert.match(pdf.respostas.at(-1), /PDF das anotações enviado em/);
+    assert.match(pdf.fresh[0].content.filename, /^ZapBot_notes_tag-duvidas_\d{8}_\d{4}\.pdf$/);
+    assert.equal(pdf.fresh[0].options.sendMediaAsDocument, true);
+    assert.match(pdf.answers.at(-1), /PDF das anotações enviado em/);
 
     assert.match((await bot.replyAlt('/notes -rm #casa -to /Grupo sobre L200/'))[0], /-to não vale ao remover/);
     assert.equal((await notes()).length, 2);
@@ -258,7 +258,7 @@ test('-export -to e-mail: manda o PDF em anexo, sem mexer no chat', async () => 
     await bot.replyAlt('/notes #minhatag ver https://exemplo.com');
     await bot.replyAlt('/notes #outra nada a ver');
 
-    const beforeAlt = bot.client.enviadas.length;
+    const beforeAlt = bot.client.sent.length;
     const replies = await bot.replyAlt('/notes -e #minhatag -to jpereiran@gmail.com');
     const m = bot.emails.at(-1);
     assert.equal(m.to, 'jpereiran@gmail.com');
@@ -268,7 +268,7 @@ test('-export -to e-mail: manda o PDF em anexo, sem mexer no chat', async () => 
     assert.match(m.attachments[0].content.toString('latin1'), /^%PDF-1\.4/);
     assert.doesNotMatch(m.attachments[0].content.toString('latin1'), /nada a ver/);
     assert.match(replies.at(-1), /PDF das anotações enviado em .*jpereiran@gmail\.com/);
-    assert.equal(bot.client.enviadas.slice(beforeAlt).filter(e => e.content?.mimetype).length, 0);
+    assert.equal(bot.client.sent.slice(beforeAlt).filter(e => e.content?.mimetype).length, 0);
 });
 
 test('\\n digitado vira quebra de linha na anotação (\\\\n fica como texto)', async () => {
@@ -296,15 +296,15 @@ test('imagem: na própria mensagem ou em resposta, vai para o disco; -rm apaga o
     const fs = require('fs');
     const png = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
     const mediaAlt = { mimetype: 'image/png', data: png.toString('base64') };
-    const photo = (textAlt, extras = {}) => bot.createMessage({ de: bot.OWNER.jid, texto: textAlt, midia: mediaAlt, ...extras });
+    const photo = (textAlt, extras = {}) => bot.createMessage({ de: bot.OWNER.jid, text: textAlt, media: mediaAlt, ...extras });
 
-    const [r1] = await bot.replyAlt('/notes #minhatag Imagem de teste', { midia: mediaAlt });
+    const [r1] = await bot.replyAlt('/notes #minhatag Imagem de teste', { media: mediaAlt });
     assert.match(r1, /^📝 \*#1\* · #minhatag · 🖼️ · Imagem de teste$/);
 
-    await bot.replyAlt('/notes #lembrete', { citada: photo('legenda da foto') });  // reply, with a caption
-    assert.match((await bot.replyAlt('/notes', { midia: mediaAlt }))[0], /Falta a #tag/);    // the tag is required
-    await bot.replyAlt('/notes #solta', { midia: mediaAlt });                                // only the image
-    await bot.replyAlt('/notes #solta', { citada: photo('') });                     // reply, without a caption
+    await bot.replyAlt('/notes #lembrete', { quoted: photo('legenda da foto') });  // reply, with a caption
+    assert.match((await bot.replyAlt('/notes', { media: mediaAlt }))[0], /Falta a #tag/);    // the tag is required
+    await bot.replyAlt('/notes #solta', { media: mediaAlt });                                // only the image
+    await bot.replyAlt('/notes #solta', { quoted: photo('') });                     // reply, without a caption
 
     const linesAlt = await bot.dbAll('SELECT text, tag, media_path, media_mime FROM notes ORDER BY id');
     assert.deepEqual(linesAlt.map(n => [n.text, n.tag, n.media_mime]), [
@@ -337,7 +337,7 @@ test('qualquer mídia: documento, vídeo e áudio vão para o disco com o nome o
         ['voz', { mimetype: 'audio/ogg; codecs=opus', data: 'T2dnUw==' }, /🎵 áudio/]
     ];
     for (const [textAlt, mediaAlt] of mediaAltAlt) {
-        assert.match((await bot.replyAlt(`/notes #m ${textAlt}`, { midia: mediaAlt }))[0], /^📝 \*#\d+\* · #m · (📎|🎬|🎵)/);
+        assert.match((await bot.replyAlt(`/notes #m ${textAlt}`, { media: mediaAlt }))[0], /^📝 \*#\d+\* · #m · (📎|🎬|🎵)/);
     }
 
     const linesAlt = await bot.dbAll('SELECT text, tag, media_path, media_mime FROM notes ORDER BY id');
@@ -352,17 +352,17 @@ test('qualquer mídia: documento, vídeo e áudio vão para o disco com o nome o
 
     // -view sends the media with the original name; the audio (without a caption) carries the text separately
     const sentAfter = async (line) => {
-        const beforeAlt = bot.client.enviadas.length;
+        const beforeAlt = bot.client.sent.length;
         const texts = await bot.replyAlt(line);
-        return { textos: texts, enviadas: bot.client.enviadas.slice(beforeAlt) };
+        return { texts, sent: bot.client.sent.slice(beforeAlt) };
     };
-    const doc = (await sentAfter('/notes -v 1')).enviadas.at(-1);
+    const doc = (await sentAfter('/notes -v 1')).sent.at(-1);
     assert.equal(doc.content.filename, 'relatório final.pdf');
     assert.match(doc.options.caption, /#1\* · #m/);
 
     const audio = await sentAfter('/notes -v 3');
-    assert.equal(audio.enviadas.at(-1).options.caption, undefined);
-    assert.match(audio.textos.at(-1), /#3\* · #m/);
+    assert.equal(audio.sent.at(-1).options.caption, undefined);
+    assert.match(audio.texts.at(-1), /#3\* · #m/);
 
     await bot.replyAlt('/notes -rm all');
     assert.equal(linesAlt.some(n => fs.existsSync(n.media_path)), false);
@@ -370,11 +370,11 @@ test('qualquer mídia: documento, vídeo e áudio vão para o disco com o nome o
 
 test('-export: as imagens entram no PDF (JPEG), com a anotação como legenda; imagem inválida não derruba', async () => {
     const png = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
-    await bot.replyAlt('/notes #eleicao Narrativas polares', { midia: { mimetype: 'image/png', data: png.toString('base64') } });
-    await bot.replyAlt('/notes #eleicao quebrada', { midia: { mimetype: 'image/png', data: Buffer.from('nao e imagem').toString('base64') } });
+    await bot.replyAlt('/notes #eleicao Narrativas polares', { media: { mimetype: 'image/png', data: png.toString('base64') } });
+    await bot.replyAlt('/notes #eleicao quebrada', { media: { mimetype: 'image/png', data: Buffer.from('nao e imagem').toString('base64') } });
 
-    await bot.replyAlt('/notes -export', { erroEsperado: true });
-    const pdf = Buffer.from(bot.client.enviadas.at(-1).content.data, 'base64').toString('latin1');
+    await bot.replyAlt('/notes -export', { expectedError: true });
+    const pdf = Buffer.from(bot.client.sent.at(-1).content.data, 'base64').toString('latin1');
     assert.equal(pdf.match(/\/Subtype \/Image/g).length, 1);
     assert.match(pdf, /\/Filter \/DCTDecode/);
     assert.match(pdf, /\/Im5 5 0 R/);
@@ -392,7 +392,7 @@ test('-export: a descrição da tag vem embaixo do cabeçalho dela no PDF, só d
 
     const pdfDe = async (commandAlt) => {
         await bot.replyAlt(commandAlt);
-        return Buffer.from(bot.client.enviadas.at(-1).content.data, 'base64').toString('latin1');
+        return Buffer.from(bot.client.sent.at(-1).content.data, 'base64').toString('latin1');
     };
 
     const home = await pdfDe('/notes -export #casa');
@@ -410,12 +410,12 @@ test('-export: a descrição da tag vem embaixo do cabeçalho dela no PDF, só d
 test('-view: manda a imagem com o texto na legenda (e só o texto, sem imagem)', async () => {
     const png = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
     const mediaAlt = { mimetype: 'image/png', data: png.toString('base64') };
-    await bot.replyAlt('/notes #eleicao Narrativas', { midia: mediaAlt });
+    await bot.replyAlt('/notes #eleicao Narrativas', { media: mediaAlt });
     await bot.replyAlt('/notes #eleicao sem imagem');
 
-    const beforeAlt = bot.client.enviadas.length;
+    const beforeAlt = bot.client.sent.length;
     await bot.replyAlt('/notes -v 1');
-    const photo = bot.client.enviadas.slice(beforeAlt).at(-1);
+    const photo = bot.client.sent.slice(beforeAlt).at(-1);
     assert.match(photo.options.caption, /#1\* · #eleicao · .*\n\*Narrativas\*/);
     assert.ok(photo.content?.data || photo.content?.mimetype);
 
@@ -424,9 +424,9 @@ test('-view: manda a imagem com o texto na legenda (e só o texto, sem imagem)',
     assert.match((await bot.replyAlt('/notes -v 9'))[0], /9 não existe/);
     assert.match((await bot.replyAlt('/notes -v'))[0], /Usage: \/notes -v/);
 
-    const n = bot.client.enviadas.length;
+    const n = bot.client.sent.length;
     await bot.replyAlt('/notes -v 1 -to /Grupo sobre L200/');
-    const fresh = bot.client.enviadas.slice(n).find(e => e.chatId === L200);
+    const fresh = bot.client.sent.slice(n).find(e => e.chatId === L200);
     assert.match(fresh.options.caption, /Narrativas/);
     await bot.replyAlt('/notes -rm all');
 });
@@ -457,15 +457,15 @@ test('-search: texto (sem acento/maiúscula), /regex/flags, #tag, -to e erros', 
 
     assert.match((await bot.replyAlt('/notes -s /^ligar pro/i'))[0], /\(1\)/);
     assert.match((await bot.replyAlt('/notes -s duvidas'))[0], /ETFs/);            // casa a tag
-    assert.match((await bot.replyAlt('/notes -s #casa leite'))[0], /\(1\)/);        // tag + busca
+    assert.match((await bot.replyAlt('/notes -s #casa leite'))[0], /\(1\)/);        // tag + search
     assert.match((await bot.replyAlt('/notes -s #duvidas leite'))[0], /Nenhuma anotação em #duvidas com 🔎 leite/);
     assert.match((await bot.replyAlt('/notes -s "comprar pão"'))[0], /\(1\)/);
     assert.match((await bot.replyAlt('/notes -s /(x+)+y/'))[0], /risco de travar/);
     assert.match((await bot.replyAlt('/notes -s /[/'))[0], /regex inválida/);
 
-    const beforeAlt = bot.client.enviadas.length;
+    const beforeAlt = bot.client.sent.length;
     await bot.replyAlt('/notes -s etf -to /Grupo sobre L200/');
-    const fresh = bot.client.enviadas.slice(beforeAlt).find(e => e.chatId === L200);
+    const fresh = bot.client.sent.slice(beforeAlt).find(e => e.chatId === L200);
     assert.match(fresh.content, /ETFs/);
     assert.equal(fresh.options.linkPreview, false);
 });
@@ -527,7 +527,7 @@ test('tag parcial também no -export, no -alert (lista) e no -view; ambígua jun
     await bot.replyAlt('/notes #casa três');
 
     await bot.replyAlt('/notes -export #idei');
-    const pdf = Buffer.from(bot.client.enviadas.at(-1).content.data, 'base64').toString('latin1');
+    const pdf = Buffer.from(bot.client.sent.at(-1).content.data, 'base64').toString('latin1');
     assert.match(pdf, /\d+\. {2}um/);
     assert.match(pdf, /\d+\. {2}dois/);
     assert.doesNotMatch(pdf, /tr.s/);
@@ -556,7 +556,7 @@ test('-desc: tag parcial só vale se for uma; -move leva a descrição e não so
     await bot.replyAlt('/notes -m #ideia #ideias'); // #ideias already has a description: its own stays
     assert.match((await bot.replyAlt('/notes -d #ideias'))[0], /Coisas grandes/);
     assert.match((await bot.replyAlt('/notes'))[0], /#ideias: 2 · Coisas grandes/);
-    assert.match((await bot.replyAlt('/notes -d #ideia'))[0], /Coisas grandes/); // parcial agora acha a #ideias
+    assert.match((await bot.replyAlt('/notes -d #ideia'))[0], /Coisas grandes/); // parcial now acha a #ideias
     await bot.replyAlt('/notes -rm all');
 });
 
@@ -566,9 +566,9 @@ test('-update: troca o texto (e a tag, se vier) e mantém o alerta', async () =>
 
     assert.match((await bot.replyAlt('/notes -u 1 comprar pão e leite'))[0], /^✏️ \*#1\* · #casa · comprar pão e leite$/);
     assert.match((await bot.replyAlt('/notes -u #2 #estudo ver ETFs\\nde novo'))[0], /^✏️ \*#2\* · #estudo · ver ETFs de novo$/);
-    assert.deepEqual(await bot.dbAll('SELECT text, tag, alert_at IS NOT NULL AS alerta FROM notes ORDER BY id'), [
-        { text: 'comprar pão e leite', tag: 'casa', alerta: 1 },
-        { text: 'ver ETFs\nde novo', tag: 'estudo', alerta: 0 }
+    assert.deepEqual(await bot.dbAll('SELECT text, tag, alert_at IS NOT NULL AS alert FROM notes ORDER BY id'), [
+        { text: 'comprar pão e leite', tag: 'casa', alert: 1 },
+        { text: 'ver ETFs\nde novo', tag: 'estudo', alert: 0 }
     ]);
 
     assert.match((await bot.replyAlt('/notes -u 9 x'))[0], /ID 9 não existe/);
@@ -577,15 +577,15 @@ test('-update: troca o texto (e a tag, se vier) e mantém o alerta', async () =>
     assert.match((await bot.replyAlt('/notes -u 1 #so'))[0], /Usage: \/notes -u/);
 
     // In reply to a message, without text: uses its own, with ↩️
-    const quoted = bot.createMessage({ de: bot.OWNER.jid, texto: 'texto citado' });
-    await bot.replyAlt('/notes -u 1', { citada: quoted });
+    const quoted = bot.createMessage({ de: bot.OWNER.jid, text: 'texto citado' });
+    await bot.replyAlt('/notes -u 1', { quoted });
     assert.equal((await notes())[0].text, '↩️ texto citado');
 
     // -e is just -export
     await bot.replyAlt('/notes -e');
-    assert.match(bot.client.enviadas.at(-1).content.filename, /^ZapBot_notes_\d{8}_\d{4}\.pdf$/);
+    assert.match(bot.client.sent.at(-1).content.filename, /^ZapBot_notes_\d{8}_\d{4}\.pdf$/);
     await bot.replyAlt('/notes -e #estudo');
-    assert.match(bot.client.enviadas.at(-1).content.filename, /^ZapBot_notes_tag-estudo_/);
+    assert.match(bot.client.sent.at(-1).content.filename, /^ZapBot_notes_tag-estudo_/);
 });
 
 test('-alert com #tag: coloca o alerta em todas as anotações da tag (com -to), lista e tira por tag', async () => {

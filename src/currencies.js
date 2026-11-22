@@ -20,10 +20,10 @@ const CRYPTO_BRL_DIRECT = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'DOGE', 'ADA', 'AV
 
 // /stocks currencies, against the real. The enabled ones stay in the 'stocks.symbols' setting.
 const QUOTE_SUPPORTED = {
-    USD: { icone: '🇺🇸', get nome() { return t('stocks.name.USD'); }, fonte: 'fiat' },
-    EUR: { icone: '🇪🇺', get nome() { return t('stocks.name.EUR'); }, fonte: 'fiat' },
-    GBP: { icone: '🇬🇧', get nome() { return t('stocks.name.GBP'); }, fonte: 'fiat' },
-    USDT: { icone: '🪙', get nome() { return t('stocks.name.USDT'); }, fonte: 'binance' }
+    USD: { icon: '🇺🇸', get name() { return t('stocks.name.USD'); }, source: 'fiat' },
+    EUR: { icon: '🇪🇺', get name() { return t('stocks.name.EUR'); }, source: 'fiat' },
+    GBP: { icon: '🇬🇧', get name() { return t('stocks.name.GBP'); }, source: 'fiat' },
+    USDT: { icon: '🪙', get name() { return t('stocks.name.USDT'); }, source: 'binance' }
 };
 
 module.exports = {

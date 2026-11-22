@@ -17,7 +17,7 @@ const { formatData } = require('./util/format');
  */
 
 // Saves the poll, if it does not exist yet (coming from /poll or from the first vote)
-async function registerPoll({ id, chatId, chatName = null, pergunta: question, opcoes: optionsAlt, multi = false, criadaEm: createdIn = Date.now() }) {
+async function registerPoll({ id, chatId, chatName = null, question, options: optionsAlt, multi = false, createdAt: createdIn = Date.now() }) {
     await dbReady;
     await dbRun(
         `INSERT OR IGNORE INTO polls (id, chat_id, chat_name, question, options, multi, created_at)
@@ -48,10 +48,10 @@ client.on('vote_update', async (vote) => {
             id: pollId,
             chatId,
             chatName: chat?.name ?? null,
-            pergunta: pollAlt.pollName ?? '',
-            opcoes: (pollAlt.pollOptions ?? []).map(o => o.name),
+            question: pollAlt.pollName ?? '',
+            options: (pollAlt.pollOptions ?? []).map(o => o.name),
             multi: pollAlt.allowMultipleAnswers ?? false,
-            criadaEm: (pollAlt.timestamp ?? 0) * 1000 || Date.now()
+            createdAt: (pollAlt.timestamp ?? 0) * 1000 || Date.now()
         });
 
         const choices = (vote.selectedOptions ?? []).map(o => o.name);

@@ -10,6 +10,6 @@ module.exports = {
     aliases: [],
     summary: 'Joke: decorates the text with rainbow emojis',
     help: 'A joke: decorates the text with rainbow emojis (the reply says it is a joke). Accepts text or a reply to a message.',
-    digitando: false, // replies right away: without the "typing..."
+    typing: false, // replies right away: without the "typing..."
     role: USER
 };

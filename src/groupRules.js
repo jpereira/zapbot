@@ -41,24 +41,24 @@ function marksLimit(min, participants) {
 /**
  * Checks a group message against the two rules. Called by the messages event.
  * @param {object} o  like checkAntilink's
- * @returns {Promise<boolean>} true = a mensagem foi tratada (apagada)
+ * @returns {Promise<boolean>} true = a message foi tratada (apagada)
  */
-async function checkRules({ msg, chatId, body, dispensado: dismissed, senderName }) {
+async function checkRules({ msg, chatId, body, dismissed, senderName }) {
     if (dismissed || msg.fromMe || !chatId.endsWith('@g.us') || body.startsWith('/')) return false;
 
     const marked = msg.mentionedIds?.length ?? 0;
     if (marked >= TAG_MIN_MIN) {
-        const { modo: mode, dados: dataAlt } = await groupRule(chatId, 'antitag');
+        const { mode, data: dataAlt } = await groupRule(chatId, 'antitag');
         if (mode !== 'off') {
             const group = await msg.getChat().catch(() => null);
             if (group?.isGroup && marked >= marksLimit(dataAlt.min, group.participants.length)) {
                 const handled = await applyMode({
-                    msg, chatId, modo: mode, senderName,
+                    msg, chatId, mode, senderName,
                     tag: 'Antitag',
-                    detalhe: `${marked} marcações`,
-                    avisoApagada: t('antitag.deleted', { name: '{name}' }),
-                    avisoRemovida: t('antitag.removed', { name: '{name}' }),
-                    motivo: t('antitag.reason')
+                    detail: `${marked} marcações`,
+                    deletedNotice: t('antitag.deleted', { name: '{name}' }),
+                    removedNotice: t('antitag.removed', { name: '{name}' }),
+                    reason: t('antitag.reason')
                 });
                 if (handled) return true;
             }
@@ -66,17 +66,17 @@ async function checkRules({ msg, chatId, body, dispensado: dismissed, senderName
     }
 
     if (body) {
-        const { modo: mode, dados: dataAlt } = await groupRule(chatId, 'antibadword');
+        const { mode, data: dataAlt } = await groupRule(chatId, 'antibadword');
         if (mode !== 'off' && dataAlt.words?.length) {
             const foundAlt3 = wordsProhibited(body, dataAlt.words);
             if (foundAlt3.length) {
                 return applyMode({
-                    msg, chatId, modo: mode, senderName,
+                    msg, chatId, mode, senderName,
                     tag: 'Antibadword',
-                    detalhe: foundAlt3.join(', '),
-                    avisoApagada: t('antibadword.deleted', { name: '{name}' }),
-                    avisoRemovida: t('antibadword.removed', { name: '{name}' }),
-                    motivo: t('antibadword.reason')
+                    detail: foundAlt3.join(', '),
+                    deletedNotice: t('antibadword.deleted', { name: '{name}' }),
+                    removedNotice: t('antibadword.removed', { name: '{name}' }),
+                    reason: t('antibadword.reason')
                 });
             }
         }

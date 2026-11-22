@@ -57,6 +57,6 @@ module.exports = {
             ex: ['/group -send admins -for 30m']
         }
     ],
-    delegavel: true,
+    isDelegable: true,
     role: ADMIN // Touches the current group: delegable
 };

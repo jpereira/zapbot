@@ -20,6 +20,6 @@ module.exports = {
             cron: false
         }
     ],
-    delegavel: true,
+    isDelegable: true,
     role: ADMIN // Spends the OpenAI key: delegable, like /gpt
 };

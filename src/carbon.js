@@ -7,19 +7,19 @@ const sharp = require('sharp');
 
 const THEMES = {
     dark: {
-        fundo: '#7c5cff', janela: '#1e1e2e', barra: '#181825', texto: '#cdd6f4',
-        comentario: '#6c7086', texto_str: '#a6e3a1', numero: '#fab387', palavra: '#cba6f7'
+        background: '#7c5cff', window: '#1e1e2e', bar: '#181825', text: '#cdd6f4',
+        comment: '#6c7086', text_str: '#a6e3a1', number: '#fab387', word: '#cba6f7'
     },
     light: {
-        fundo: '#ffb86b', janela: '#fafafa', barra: '#ececec', texto: '#383a42',
-        comentario: '#a0a1a7', texto_str: '#50a14f', numero: '#b76b01', palavra: '#a626a4'
+        background: '#ffb86b', window: '#fafafa', bar: '#ececec', text: '#383a42',
+        comment: '#a0a1a7', text_str: '#50a14f', number: '#b76b01', word: '#a626a4'
     }
 };
 
 const SOURCE = 14;
 const WIDTH_CHAR = SOURCE * 0.6; // monospaced font
 const HEIGHT_LINE = 22;
-const MARGIN = 32;         // entre a imagem e a janela
+const MARGIN = 32;         // between a image e a window
 const FILLING = 24;  // inside the window
 const BAR = 40;
 const MAX_LINES = 60;
@@ -46,7 +46,7 @@ function codeLines(codeAlt) {
 }
 
 // The colored <tspan>s of a line
-function highlight(line, tema) {
+function highlight(line, theme) {
     let outputAlt = '';
     let last = 0;
     for (const m of line.matchAll(TOKEN)) {
@@ -54,22 +54,22 @@ function highlight(line, tema) {
         last = m.index + m[0].length;
 
         const [integer, comment, textAlt, numberAlt, word] = m;
-        if (comment) outputAlt += `<tspan fill="${tema.comentario}">${escape(integer)}</tspan>`;
-        else if (textAlt) outputAlt += `<tspan fill="${tema.texto_str}">${escape(integer)}</tspan>`;
-        else if (numberAlt) outputAlt += `<tspan fill="${tema.numero}">${escape(integer)}</tspan>`;
-        else if (WORDS.has(word)) outputAlt += `<tspan fill="${tema.palavra}">${escape(integer)}</tspan>`;
+        if (comment) outputAlt += `<tspan fill="${theme.comment}">${escape(integer)}</tspan>`;
+        else if (textAlt) outputAlt += `<tspan fill="${theme.text_str}">${escape(integer)}</tspan>`;
+        else if (numberAlt) outputAlt += `<tspan fill="${theme.number}">${escape(integer)}</tspan>`;
+        else if (WORDS.has(word)) outputAlt += `<tspan fill="${theme.word}">${escape(integer)}</tspan>`;
         else outputAlt += escape(integer);
     }
     return outputAlt + escape(line.slice(last));
 }
 
 /**
- * @param {string} codigo
- * @param {'dark'|'light'} [tema]
+ * @param {string} code
+ * @param {'dark'|'light'} [theme]
  * @returns {string}  o SVG
  */
-function assembleSvg(codeAlt, tema = 'dark') {
-    const colors = THEMES[tema] ?? THEMES.dark;
+function assembleSvg(codeAlt, theme = 'dark') {
+    const colors = THEMES[theme] ?? THEMES.dark;
     const linesAlt = codeLines(codeAlt);
     const columns = Math.max(20, ...linesAlt.map(l => l.length));
     const widthWindow = Math.ceil(columns * WIDTH_CHAR + 2 * FILLING);
@@ -82,16 +82,16 @@ function assembleSvg(codeAlt, tema = 'dark') {
         `xml:space="preserve">${highlight(l, colors)}</text>`).join('');
 
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${widthAlt}" height="${heightAlt}" viewBox="0 0 ${widthAlt} ${heightAlt}">` +
-        `<rect width="${widthAlt}" height="${heightAlt}" fill="${colors.fundo}"/>` +
-        `<rect x="${MARGIN}" y="${MARGIN}" width="${widthWindow}" height="${heightWindow}" rx="10" fill="${colors.janela}"/>` +
-        `<path d="M${MARGIN} ${MARGIN + BAR}V${MARGIN + 10}a10 10 0 0 1 10-10H${MARGIN + widthWindow - 10}a10 10 0 0 1 10 10V${MARGIN + BAR}z" fill="${colors.barra}"/>` +
+        `<rect width="${widthAlt}" height="${heightAlt}" fill="${colors.background}"/>` +
+        `<rect x="${MARGIN}" y="${MARGIN}" width="${widthWindow}" height="${heightWindow}" rx="10" fill="${colors.window}"/>` +
+        `<path d="M${MARGIN} ${MARGIN + BAR}V${MARGIN + 10}a10 10 0 0 1 10-10H${MARGIN + widthWindow - 10}a10 10 0 0 1 10 10V${MARGIN + BAR}z" fill="${colors.bar}"/>` +
         ['#ff5f56', '#ffbd2e', '#27c93f'].map((c, i) =>
             `<circle cx="${MARGIN + 22 + i * 20}" cy="${MARGIN + BAR / 2}" r="6" fill="${c}"/>`).join('') +
-        `<g font-family="FreeMono, DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="${SOURCE}" fill="${colors.texto}">${textAlt}</g>` +
+        `<g font-family="FreeMono, DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="${SOURCE}" fill="${colors.text}">${textAlt}</g>` +
         '</svg>';
 }
 
 /** @returns {Promise<Buffer>}  the PNG (at 2x, sharp on the phone) */
-const generateImage = (codeAlt, tema) => sharp(Buffer.from(assembleSvg(codeAlt, tema)), { density: 192 }).png().toBuffer();
+const generateImage = (codeAlt, theme) => sharp(Buffer.from(assembleSvg(codeAlt, theme)), { density: 192 }).png().toBuffer();
 
 module.exports = { MAX_COLUMNS, MAX_LINES, THEMES, generateImage, codeLines, assembleSvg };

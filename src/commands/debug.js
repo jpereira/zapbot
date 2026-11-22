@@ -22,23 +22,23 @@ async function cmdDebug({ msg, args, chatId, chatName }) {
         }
         if (Object.hasOwn(o, 'filter')) compileFilterDebug(o.filter ?? '');
     } catch (err) {
-        await msg.reply(t('adm.debug.error', { erro: err.message }));
+        await msg.reply(t('adm.debug.error', { error: err.message }));
         return;
     }
     const change = ['level', 'filter', 'copyTo'].some(k => Object.hasOwn(o, k));
     if (change && !isDebugMode() && !o.on) {
         const level = o.level ?? getSetting('debug.level');
-        await msg.reply(t('adm.debug.turnOnFirst', { nivel: level }));
+        await msg.reply(t('adm.debug.turnOnFirst', { level }));
         return;
     }
     let destination;
     if (Object.hasOwn(o, 'copyTo')) {
         destination = o.copyTo ? await resolverOrChoose(msg, o.copyTo, {
-            semEmail: t('adm.debug.copyNoEmail')
-        }) : { id: chatId, nome: chatName, grupo: chatId.endsWith('@g.us') };
+            noEmail: t('adm.debug.copyNoEmail')
+        }) : { id: chatId, name: chatName, group: chatId.endsWith('@g.us') };
         if (!destination) return;
     }
-    await withContextDebug({ semRastro: true }, async () => {
+    await withContextDebug({ noTrace: true }, async () => {
         if (o.off || o.on || change) cleanCopiesDebug();
         if (o.off) {
             await setSetting('debug.enabled', false);
@@ -55,15 +55,15 @@ async function cmdDebug({ msg, args, chatId, chatName }) {
         await msg.reply(t('adm.debug.disabled'));
         return;
     }
-    let textAlt = t('adm.debug.enabled', { nivel: getSetting('debug.level') });
-    if (getSetting('debug.filter')) textAlt += t('adm.debug.filter', { filtro: getSetting('debug.filter') });
+    let textAlt = t('adm.debug.enabled', { level: getSetting('debug.level') });
+    if (getSetting('debug.filter')) textAlt += t('adm.debug.filter', { filter: getSetting('debug.filter') });
     const id = getSetting('debug.copyTo');
     if (id) {
         if (!destination) {
             const chat = await client.getChatById(id).catch(() => null);
-            destination = { id, nome: chat?.name ?? id, grupo: id.endsWith('@g.us') };
+            destination = { id, name: chat?.name ?? id, group: id.endsWith('@g.us') };
         }
-        textAlt += t('adm.debug.copy', { destino: describeDestination(destination) });
+        textAlt += t('adm.debug.copy', { destination: describeDestination(destination) });
     }
     await msg.reply(textAlt);
 }

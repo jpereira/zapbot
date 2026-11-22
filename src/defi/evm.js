@@ -7,7 +7,7 @@
 const axios = require('axios');
 
 const { t } = require('../i18n');
-const { addressAbi, uintAbi, uintDe } = require('./hyperevm');
+const { addressAbi, uintAbi, uintFrom } = require('./hyperevm');
 
 const RPC_TIMEOUT_MS = 15000;
 
@@ -23,7 +23,7 @@ const BY_MULTICALL = 100;             // calls per eth_call: the RPC gas limit i
 class ErrorEvm extends Error {
     constructor(reasonAlt, detail = reasonAlt) {
         super(detail);
-        this.motivo = reasonAlt;
+        this.reason = reasonAlt;
     }
 }
 
@@ -33,7 +33,7 @@ const fill = (hex) => hex.padEnd(Math.ceil(hex.length / 64) * 64, '0');
 /**
  * An eth_call.
  * @param {string} url  o RPC
- * @param {string} rotulo  "RPC da Base", for the messages
+ * @param {string} label  "RPC da Base", for the messages
  * @returns {Promise<string>} the return, in hex
  */
 async function ethCall(url, { to, data }, label) {
@@ -79,7 +79,7 @@ async function ethCall(url, { to, data }, label) {
 }
 
 /*
- * aggregate3((address target, bool allowFailure, bytes callData)[]): a lista
+ * aggregate3((address target, bool allowFailure, bytes callData)[]): a list
  * dynamic of dynamic tuples, in the ABI format (offsets in bytes, each
  * field in 32).
  */
@@ -105,15 +105,15 @@ function encodeAggregate3(calls) {
 // O retorno: (bool success, bytes returnData)[]
 function decodeAggregate3(hex) {
     const h = bytesHex(hex);
-    const start = Number(uintDe(h, 0)) * 2;                 // where the list is
-    const n = Number(uintDe(h.slice(start), 0));
+    const start = Number(uintFrom(h, 0)) * 2;                 // where the list is
+    const n = Number(uintFrom(h.slice(start), 0));
     const base = start + 64;                                // after the size
 
     return Array.from({ length: n }, (_, i) => {
-        const element = base + Number(uintDe(h.slice(base), i)) * 2;
-        const ok = uintDe(h.slice(element), 0) === 1n;
-        const dataAlt = element + Number(uintDe(h.slice(element), 1)) * 2;
-        const size = Number(uintDe(h.slice(dataAlt), 0));
+        const element = base + Number(uintFrom(h.slice(base), i)) * 2;
+        const ok = uintFrom(h.slice(element), 0) === 1n;
+        const dataAlt = element + Number(uintFrom(h.slice(element), 1)) * 2;
+        const size = Number(uintFrom(h.slice(dataAlt), 0));
         return { ok, data: `0x${h.slice(dataAlt + 64, dataAlt + 64 + size * 2)}` };
     });
 }
@@ -121,7 +121,7 @@ function decodeAggregate3(hex) {
 /**
  * Several read calls in a few eth_calls (Multicall3). One that
  * a failure does not take down the others: it comes with ok = false.
- * @param {Array<{ to: string, data: string }>} chamadas
+ * @param {Array<{ to: string, data: string }>} calls
  * @returns {Promise<Array<{ ok: boolean, data: string }>>}
  */
 async function multicall(url, calls, label) {
@@ -153,17 +153,17 @@ async function multicall(url, calls, label) {
 // ABI string at word i (offset) of a return
 function textInWord(hex, i) {
     const h = bytesHex(hex);
-    const start = Number(uintDe(h, i)) * 2;
-    const size = Number(uintDe(h.slice(start), 0));
+    const start = Number(uintFrom(h, i)) * 2;
+    const size = Number(uintFrom(h.slice(start), 0));
     return Buffer.from(h.slice(start + 64, start + 64 + size * 2), 'hex').toString('utf8');
 }
 
 // A list of addresses (address[]) at word i
 function uintList(hex, i = 0) {
     const h = bytesHex(hex);
-    const start = Number(uintDe(h, i)) * 2;
-    const n = Number(uintDe(h.slice(start), 0));
-    return Array.from({ length: n }, (_, k) => uintDe(h.slice(start + 64), k));
+    const start = Number(uintFrom(h, i)) * 2;
+    const n = Number(uintFrom(h.slice(start), 0));
+    return Array.from({ length: n }, (_, k) => uintFrom(h.slice(start + 64), k));
 }
 
 // Encodes an address[] as a single argument

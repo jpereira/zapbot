@@ -52,7 +52,7 @@ function readPeriod(textAlt) {
     return ms ? { ms } : null;
 }
 
-// "2 horas", "1 dia e 12 horas", "30 minutos"
+// "2 hours", "1 day e 12 hours", "30 minutos"
 function byLong(ms) {
     const minutes = Math.round(ms / 60_000);
     const partsAlt = [
@@ -82,7 +82,7 @@ async function audioTranscription(r) {
         const textAlt = await transcribeAudio({
             cmd: '/tldr',
             audio: {
-                arquivo: `audio.${extension === 'oga' || extension === 'opus' ? 'ogg' : extension}`,
+                file: `audio.${extension === 'oga' || extension === 'opus' ? 'ogg' : extension}`,
                 mimetype: `audio/${extension === 'oga' || extension === 'opus' ? 'ogg' : extension}`,
                 data: fs.readFileSync(r.media_path).toString('base64')
             }
@@ -127,7 +127,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     const hoursSaved = getSetting('cache.messageRetentionHours');
     const saved = hoursSaved * HOUR_MS;
     if (period.ms > saved) {
-        notices.push(t('tldr.retention', { tempo: byLong(saved), horas: hoursSaved }));
+        notices.push(t('tldr.retention', { time: byLong(saved), hours: hoursSaved }));
         period.ms = saved;
     }
 
@@ -146,7 +146,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
         const target = await resolverTarget(msg, String(opts.opt.chat).trim(), { chats });
         if (!target) return;
         ids = target.ids;
-        nameAlt = target.nome;
+        nameAlt = target.name;
     }
 
     const params = [...ids];
@@ -183,7 +183,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     }
 
     if (rows.length < SUMMARY_MIN) {
-        await msg.reply(t('tldr.few', { total: rows.length, nome: nameAlt, horas: getSetting('cache.messageRetentionHours') }));
+        await msg.reply(t('tldr.few', { total: rows.length, name: nameAlt, hours: getSetting('cache.messageRetentionHours') }));
         return;
     }
 
@@ -200,19 +200,19 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     // What is being summarized: the amount, the time window or "since the replied message"
     const messages = t('tldr.messages', { n: linesAlt.length });
     const scope = sinceAReply
-        ? t('tldr.scopeReply', { mensagens: messages, nome: nameAlt, tempo: byLong(period.ms) })
+        ? t('tldr.scopeReply', { messages, name: nameAlt, time: byLong(period.ms) })
         : period.ms
-            ? t('tldr.scopePeriod', { mensagens: messages, nome: nameAlt, tempo: byLong(period.ms) })
-            : t('tldr.scopeLast', { mensagens: messages, nome: nameAlt });
-    const notice = await msg.reply(t('tldr.processing', { escopo: scope }), null, { linkPreview: false });
+            ? t('tldr.scopePeriod', { messages, name: nameAlt, time: byLong(period.ms) })
+            : t('tldr.scopeLast', { messages, name: nameAlt });
+    const notice = await msg.reply(t('tldr.processing', { scope }), null, { linkPreview: false });
     try {
         const summary = await askOnChat({
             cmd: '/tldr',
-            sistema: SUMMARY_INSTRUCTIONS(),
-            texto: t('tldr.prompt', { nome: nameAlt, total: linesAlt.length, linhas: linesAlt.join('\n') })
+            system: SUMMARY_INSTRUCTIONS(),
+            text: t('tldr.prompt', { name: nameAlt, total: linesAlt.length, lines: linesAlt.join('\n') })
         });
 
-        const textAlt = t('tldr.header', { nome: nameAlt, mensagens: messages, inicio: hour(first), fim: hour(last) }) +
+        const textAlt = t('tldr.header', { name: nameAlt, messages, start: hour(first), end: hour(last) }) +
             (notices.length ? `\n_(${notices.join('; ')})_` : '') +
             `\n\n${summary}${await consumptionFooter()}`;
 

@@ -86,8 +86,8 @@ test('alias de texto, comando de consulta e a mensagem respondida', async t => {
     assert.equal((await notes()).length, 1);
 
     // without text, /batch runs the replied message's text
-    const quoted = bot.createMessage({ de: bot.OWNER.jid, texto: '/notes #t primeira\n/notes #t segunda' });
-    const [resp] = await bot.replyAlt('/batch', { citada: quoted });
+    const quoted = bot.createMessage({ de: bot.OWNER.jid, text: '/notes #t primeira\n/notes #t segunda' });
+    const [resp] = await bot.replyAlt('/batch', { quoted });
     assert.match(resp, /2\/2 ok/);
     assert.deepEqual((await notes()).map(n => n.text), ['um', 'primeira', 'segunda']);
 });

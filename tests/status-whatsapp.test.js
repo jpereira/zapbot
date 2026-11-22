@@ -15,8 +15,8 @@ beforeEach(async () => {
 });
 
 // Only what the bot replied in the chat (what went to the Status stays out)
-const resp = async (line, optionsAlt) => (await bot.executar(line, optionsAlt)).filter(e => e.chatId !== STATUS).map(e => e.texto);
-const inStatus = () => bot.client.enviadas.filter(e => e.chatId === STATUS);
+const resp = async (line, optionsAlt) => (await bot.execute(line, optionsAlt)).filter(e => e.chatId !== STATUS).map(e => e.text);
+const inStatus = () => bot.client.sent.filter(e => e.chatId === STATUS);
 
 test('texto: vai para status@broadcast e confirma', async () => {
     const r = await resp('/status Bom dia, pessoal!');
@@ -32,8 +32,8 @@ test('sem texto nem mídia: explica; texto acima de 700 caracteres: recusa e nã
 });
 
 test('foto respondida: vai como mídia, com o texto de legenda', async () => {
-    const photo = bot.createMessage({ tipo: 'image', midia: { mimetype: 'image/jpeg', data: 'AAAA' } });
-    const r = await resp('/status Fim de semana', { citada: photo });
+    const photo = bot.createMessage({ type: 'image', media: { mimetype: 'image/jpeg', data: 'AAAA' } });
+    const r = await resp('/status Fim de semana', { quoted: photo });
     assert.deepEqual(r, ['📣 Postado no seu Status.']);
     const [e] = inStatus();
     assert.equal(e.content.data, 'AAAA');
@@ -41,8 +41,8 @@ test('foto respondida: vai como mídia, com o texto de legenda', async () => {
 });
 
 test('foto que não baixa: avisa e não posta', async () => {
-    const photo = bot.createMessage({ tipo: 'image', midia: { mimetype: 'image/jpeg', data: '' } });
-    assert.match((await resp('/status oi', { citada: photo }))[0], /Não consegui baixar/);
+    const photo = bot.createMessage({ type: 'image', media: { mimetype: 'image/jpeg', data: '' } });
+    assert.match((await resp('/status oi', { quoted: photo }))[0], /Não consegui baixar/);
     assert.equal(inStatus().length, 0);
 });
 

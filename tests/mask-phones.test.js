@@ -23,7 +23,7 @@ const textMasked = (textAlt) => {
 };
 
 async function messageAlt(textAlt, mediaAlt) {
-    const msg = bot.createMessage({ texto: textAlt, de: JID, tipo: mediaAlt ? 'image' : 'chat', midia: mediaAlt });
+    const msg = bot.createMessage({ text: textAlt, de: JID, type: mediaAlt ? 'image' : 'chat', media: mediaAlt });
     await bot.deliver(msg);
     return msg;
 }
@@ -39,7 +39,7 @@ describe('-mask / -m', () => {
 
     test('/show mascara autor e texto; o cache e o envio normal preservam o telefone', async () => {
         const msg = await messageAlt(`Ligue +${PHONE}`);
-        await bot.apagar(msg);
+        await bot.erase(msg);
         const [, r] = await bot.replyAlt('/show -mask');
         textMasked(r);
         assert.match(r, /Nome:\* Nome Sobrenome/);
@@ -62,8 +62,8 @@ describe('-mask / -m', () => {
     test('/show mascara legendas de mídia sem alterar o arquivo', async () => {
         const msg = await messageAlt(`Legenda +${PHONE}`,
             { mimetype: 'image/png', data: Buffer.from('png').toString('base64') });
-        await bot.apagar(msg);
-        const [, r] = await bot.executar('/show -m');
+        await bot.erase(msg);
+        const [, r] = await bot.execute('/show -m');
         textMasked(r.options.caption);
         assert.equal(r.content.data, Buffer.from('png').toString('base64'));
     });
@@ -76,8 +76,8 @@ describe('-mask / -m', () => {
         textMasked((await bot.replyAlt('/watch -s 1 -m'))[0]);
         assert.equal((await bot.dbGet('SELECT * FROM watch_hits WHERE message_id = ?',
             [msg.id.id])).sender_number, PHONE);
-        const [notice] = await bot.executar(`Outro contato +${PHONE}`, { de: JID });
-        assert.ok(notice.texto.includes(`+${PHONE}`));
+        const [notice] = await bot.execute(`Outro contato +${PHONE}`, { de: JID });
+        assert.ok(notice.text.includes(`+${PHONE}`));
     });
 
     test('-mask dentro da regex não ativa máscara; aspas de nomes são preservadas', async () => {
@@ -104,11 +104,11 @@ describe('-mask / -m', () => {
     test('execuções concorrentes mantêm a máscara isolada por mensagem', async () => {
         await bot.setSetting('bot.users', [bot.OTHERAlt.user]);
         await Promise.all([
-            bot.executar('/bot -list-users -mask', { chat: bot.OWNER.jid }),
-            bot.executar('/bot -list-users', { chat: bot.GROUP })
+            bot.execute('/bot -list-users -mask', { chat: bot.OWNER.jid }),
+            bot.execute('/bot -list-users', { chat: bot.GROUP })
         ]);
-        const private = bot.client.enviadas.find(e => e.chatId === bot.OWNER.jid).content;
-        const group = bot.client.enviadas.find(e => e.chatId === bot.GROUP).content;
+        const private = bot.client.sent.find(e => e.chatId === bot.OWNER.jid).content;
+        const group = bot.client.sent.find(e => e.chatId === bot.GROUP).content;
         assert.ok(!private.includes(bot.OTHERAlt.user));
         assert.ok(private.includes('+55219****11'));
         assert.ok(group.includes(bot.OTHERAlt.user));

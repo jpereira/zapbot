@@ -15,7 +15,7 @@ const { dbGet, dbReady, dbRun } = require('./db');
 const { t } = require('./i18n');
 const { MODES, applyMode } = require('./moderation');
 
-// http(s)://, www., WhatsApp invites and loose domains with common TLDs (arquivo.zip does not count)
+// http(s)://, www., WhatsApp invites and loose domains with common TLDs (file.zip does not count)
 const TLDS = 'com|net|org|io|me|gg|ly|co|app|dev|xyz|info|link|tv|ai|br|pt|us|uk|de|fr|es|it|ru|cn|in|club|shop|site|online|top|vip|cc|to|sh|gl|be';
 const LINK = new RegExp(
     `(?:https?:\\/\\/[^\\s<>"']+)|(?:www\\.[^\\s<>"']+)|(?:\\b[a-z0-9][a-z0-9-]*(?:\\.[a-z0-9-]+)*\\.(?:${TLDS})\\b(?:\\/[^\\s<>"']*)?)`,
@@ -55,10 +55,10 @@ async function groupConfig(chatId) {
     } catch {
         releasedAlt = [];
     }
-    return { modo: row?.mode ?? 'off', liberados: releasedAlt };
+    return { mode: row?.mode ?? 'off', allowed: releasedAlt };
 }
 
-async function recordConfig(chatId, { modo: mode, liberados: releasedAlt }) {
+async function recordConfig(chatId, { mode, allowed: releasedAlt }) {
     await dbReady;
     await dbRun(
         `INSERT INTO antilink (chat_id, mode, allow) VALUES (?, ?, ?)
@@ -73,29 +73,29 @@ async function recordConfig(chatId, { modo: mode, liberados: releasedAlt }) {
  * @param {object} o.msg
  * @param {string} o.chatId
  * @param {string} o.body
- * @param {boolean} o.dispensado   the owner or a bot admin: never caught
+ * @param {boolean} o.dismissed   the owner or a bot admin: never caught
  * @param {string} o.senderName
- * @returns {Promise<boolean>} true = a mensagem foi tratada (apagada)
+ * @returns {Promise<boolean>} true = a message foi tratada (apagada)
  */
-async function checkAntilink({ msg, chatId, body, dispensado: dismissed, senderName }) {
+async function checkAntilink({ msg, chatId, body, dismissed, senderName }) {
     if (dismissed || msg.fromMe || !chatId.endsWith('@g.us') || body.startsWith('/')) return false;
 
     const domains = domainsAlt(body);
     if (!domains.length) return false;
 
-    const { modo: mode, liberados: releasedAlt } = await groupConfig(chatId);
+    const { mode, allowed: releasedAlt } = await groupConfig(chatId);
     if (mode === 'off') return false;
 
     const bad = prohibited(domains, releasedAlt);
     if (!bad.length) return false;
 
     return applyMode({
-        msg, chatId, modo: mode, senderName,
+        msg, chatId, mode, senderName,
         tag: 'Antilink',
-        detalhe: bad.join(', '),
-        avisoApagada: t('antilink.deleted', { name: '{name}' }),
-        avisoRemovida: t('antilink.removed', { name: '{name}' }),
-        motivo: t('antilink.reason')
+        detail: bad.join(', '),
+        deletedNotice: t('antilink.deleted', { name: '{name}' }),
+        removedNotice: t('antilink.removed', { name: '{name}' }),
+        reason: t('antilink.reason')
     });
 }
 

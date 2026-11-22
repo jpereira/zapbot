@@ -1,7 +1,7 @@
 /*
  * Commands in the text (/cron and /alias): "Bitcoin now: {/crypto BTC}".
  * At build time, each {/command args} runs and its reply goes in its place.
- * The `onde` (e.g.: '/cron') only appears in the error messages.
+ * The `where` (e.g.: '/cron') only appears in the error messages.
  */
 
 const { ROLES, roleMoreRestricted } = require('./roles');
@@ -22,7 +22,7 @@ const { unescape } = require('./util/format');
  */
 const MARK = /\{(\/[^{}\n]+)\}/g;
 
-const commandsInText = (textAlt) => [...String(textAlt ?? '').matchAll(MARK)].map(m => ({ marca: m[0], linha: m[1].trim() }));
+const commandsInText = (textAlt) => [...String(textAlt ?? '').matchAll(MARK)].map(m => ({ mark: m[0], line: m[1].trim() }));
 
 /*
  * The typed "\n" becomes a line break, without the surrounding spaces: in the
@@ -35,7 +35,7 @@ const breakLines = (textAlt) => String(textAlt ?? '').replace(/[ \t]*\\n[ \t]*/g
  * Finds the command in a "/name args" line: the command itself or an alias of
  * saved command (with the $1, $2... applied). A text alias does not come in here
  * (an {/alias} inside the text itself could call itself).
- * @returns {Promise<{command, args, alias?}|{textoAlias: string}|null>}
+ * @returns {Promise<{command, args, alias?}|{aliasText: string}|null>}
  */
 async function findCommandAlt(line) {
     const caller = line.split(/\s+/, 1)[0].toLowerCase();
@@ -46,10 +46,10 @@ async function findCommandAlt(line) {
     await dbReady;
     const alias = await dbGet('SELECT command FROM command_aliases WHERE name = ?', [caller]);
     if (!alias) return null;
-    if (!alias.command.startsWith('/')) return { textoAlias: caller };
+    if (!alias.command.startsWith('/')) return { aliasText: caller };
 
     const { applyParams } = require('./aliases'); // in here: aliases imports this file
-    const { comando: commandAlt, sobras: leftovers } = applyParams(alias.command, rest);
+    const { command: commandAlt, leftovers } = applyParams(alias.command, rest);
     const destination = commandAlt.split(/\s+/, 1)[0];
     const target = findCommand(destination);
     if (!target) return null;
@@ -63,10 +63,10 @@ async function findCommandAlt(line) {
  */
 async function withTargets(command, textAlt) {
     if (command?.cmd !== '/me') return command;
-    const foundAlt4 = await Promise.all(commandsInText(textAlt).map(c => findCommandAlt(c.linha)));
+    const foundAlt4 = await Promise.all(commandsInText(textAlt).map(c => findCommandAlt(c.line)));
     const targets = foundAlt4.map(a => a?.command).filter(Boolean);
     return { ...command, role: roleMoreRestricted([command.role, ...targets.map(c => c.role)]),
-        alvos: [command.cmd, ...targets.map(c => c.cmd)] };
+        targets: [command.cmd, ...targets.map(c => c.cmd)] };
 }
 
 const allowed = () => activeCommands().filter(c => c.cron).map(c => c.cmd);
@@ -76,18 +76,18 @@ async function readCommand(line, whereAlt = '/cron', owner = false) {
     const caller = line.split(/\s+/, 1)[0].toLowerCase();
     const foundAlt2 = await findCommandAlt(line);
 
-    if (!foundAlt2) return { erro: t('cnt.naoExiste', { linha: line, caller }) };
-    if (foundAlt2.textoAlias) return { erro: t('cnt.aliasTexto', { linha: line, caller, onde: whereAlt }) };
+    if (!foundAlt2) return { error: t('cnt.naoExiste', { line, caller }) };
+    if (foundAlt2.aliasText) return { error: t('cnt.aliasTexto', { line, caller, where: whereAlt }) };
 
     const { command, args } = foundAlt2;
     if (!command.cron || (command.cron === 'dono' && !owner)) {
-        return { erro: t('cnt.naoRoda', { linha: line, cmd: command.cmd, onde: whereAlt, lista: allowed().join(', ') }) };
+        return { error: t('cnt.naoRoda', { line, cmd: command.cmd, where: whereAlt, list: allowed().join(', ') }) };
     }
 
     const opts = readOptions(command, args);
     const prohibited = (command.cmd_opts ?? []).find(o => (o.cron === false || (o.cron === 'dono' && !owner)) &&
         o.opts?.some(nameAlt => opts.given.has(nameAlt)));
-    if (prohibited) return { erro: t('cnt.opcaoNaoRoda', { linha: line, opt: prohibited.opts[0], cmd: command.cmd, onde: whereAlt }) };
+    if (prohibited) return { error: t('cnt.opcaoNaoRoda', { line, opt: prohibited.opts[0], cmd: command.cmd, where: whereAlt }) };
 
     return { command, args, opts };
 }
@@ -97,8 +97,8 @@ async function readCommand(line, whereAlt = '/cron', owner = false) {
  * @returns {Promise<string|null>} the error (of the first invalid one) or null
  */
 async function commandsError(textAlt, whereAlt = '/cron', owner = false) {
-    for (const { linha: line } of commandsInText(textAlt)) {
-        const { erro: errorAlt } = await readCommand(line, whereAlt, owner);
+    for (const { line } of commandsInText(textAlt)) {
+        const { error: errorAlt } = await readCommand(line, whereAlt, owner);
         if (errorAlt) return errorAlt;
     }
     return null;
@@ -133,35 +133,35 @@ function messageSynthetic(chatId, line, replies) {
 }
 
 /*
- * Runs a {/command}: the reply text and the media. Without `quem`, it runs as
+ * Runs a {/command}: the reply text and the media. Without `who`, it runs as
  * you (admin); with it, with the admin and the permissions of whoever runs.
  */
-async function runCommand(chatId, line, { chatName, isGroup, onde: whereAlt = '/cron', quem: who = null }) {
-    const { erro: errorAlt, command, args, opts } = await readCommand(line, whereAlt, !who); // without `quem`: runs as the owner
-    if (errorAlt) return { texto: t('cnt.naoRodaNo', { cmd: line.split(/\s+/, 1)[0], onde: whereAlt }), midias: [] };
+async function runCommand(chatId, line, { chatName, isGroup, where: whereAlt = '/cron', who = null }) {
+    const { error: errorAlt, command, args, opts } = await readCommand(line, whereAlt, !who); // without `who`: runs as the owner
+    if (errorAlt) return { text: t('cnt.naoRodaNo', { cmd: line.split(/\s+/, 1)[0], where: whereAlt }), mediaItems: [] };
 
     // The handler lives in commands/index, which loads /cron (and this file): only here, at the time
     const { HANDLERS } = require('./commands/index');
     const replies = [];
     const msg = messageSynthetic(chatId, line, replies);
 
-    const owner = { nivel: ROLES.OWNER, admin: true, senderName: client.info?.pushname || t('core.voce') };
-    const reject = optionsError(command, opts) ?? denial(command, opts, who?.nivel ?? owner.nivel);
-    if (reject) return { texto: reject, midias: [] };
+    const owner = { level: ROLES.OWNER, admin: true, senderName: client.info?.pushname || t('core.voce') };
+    const reject = optionsError(command, opts) ?? denial(command, opts, who?.level ?? owner.level);
+    if (reject) return { text: reject, mediaItems: [] };
 
     try {
         await HANDLERS[command.cmd](assembleContext({
-            msg, args, opts, chat: { chatId, chatName, isGroup }, quem: { ...owner, ...who }
+            msg, args, opts, chat: { chatId, chatName, isGroup }, who: { ...owner, ...who }
         }));
     } catch (err) {
         printError(`${whereAlt}: ${line} failed:`, err.message);
-        return { texto: `⚠️ ${command.cmd} falhou`, midias: [] };
+        return { text: `⚠️ ${command.cmd} falhou`, mediaItems: [] };
     }
 
     const texts = replies.filter(r => typeof r.content === 'string').map(r => r.content.trim());
     const mediaAltAlt = replies.filter(r => typeof r.content !== 'string');
     // Several replies (/defi sends one per position): separated by a blank line
-    return { texto: texts.join('\n\n'), midias: mediaAltAlt };
+    return { text: texts.join('\n\n'), mediaItems: mediaAltAlt };
 }
 
 /*
@@ -188,26 +188,26 @@ function fit(textAlt, mark, reply) {
  * and the commands executed (for the log). Without {/command}, the text as it is.
  * @param {object} s  the chat: chat_id, chat_name and is_group (the /cron columns)
  * @param {object} [o]
- * @param {string} [o.onde]  who asked, for the error messages ('/cron')
- * @param {object} [o.quem]  admin, canUse, senderName... of whoever runs (without it: you)
+ * @param {string} [o.where]  who asked, for the error messages ('/cron')
+ * @param {object} [o.who]  admin, canUse, senderName... of whoever runs (without it: you)
  */
-async function assembleText(textAlt, s, { onde: whereAlt, quem: who } = {}) {
+async function assembleText(textAlt, s, { where: whereAlt, who } = {}) {
     const commands = commandsInText(textAlt);
     // \-foo becomes -foo in the sent text; a text that is a command (starts with /) stays as it is
     const literal = (s) => (String(s).trimStart().startsWith('/') ? s : unescape(s));
-    if (!commands.length) return { texto: literal(textAlt), midias: [], comandos: [] };
+    if (!commands.length) return { text: literal(textAlt), mediaItems: [], commands: [] };
 
-    const ctx = { chatName: s.chat_name, isGroup: Boolean(s.is_group), onde: whereAlt, quem: who };
+    const ctx = { chatName: s.chat_name, isGroup: Boolean(s.is_group), where: whereAlt, who };
     const mediaAltAlt = [];
     let final = textAlt;
 
-    for (const { marca: mark, linha: line } of commands) {
+    for (const { mark, line } of commands) {
         const r = await runCommand(s.chat_id, line, ctx);
-        final = fit(final, mark, r.texto);
-        mediaAltAlt.push(...r.midias);
+        final = fit(final, mark, r.text);
+        mediaAltAlt.push(...r.mediaItems);
     }
 
-    return { texto: literal(final.trim()), midias: mediaAltAlt, comandos: commands.map(c => c.linha) };
+    return { text: literal(final.trim()), mediaItems: mediaAltAlt, commands: commands.map(c => c.line) };
 }
 
 // Sends the stored media, in order, to the chat

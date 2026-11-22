@@ -20,12 +20,12 @@ function open(host, port) {
     return new Promise((resolve, reject) => {
         const socket = tls.connect({ host, port, servername: host });
         let buffer = '';
-        let pending = null; // { tag, linhas, ok, erro }
+        let pending = null; // { tag, lines, ok, error }
         let tag = 0;
 
         const fail = (err) => {
             socket.destroy();
-            if (pending) pending.erro(err);
+            if (pending) pending.error(err);
             else reject(err);
         };
         socket.setTimeout(TIMEOUT_MS, () => fail(new Error(t('imap.semResposta', { s: TIMEOUT_MS / 1000 }))));
@@ -33,7 +33,7 @@ function open(host, port) {
 
         const cmd = (textAlt) => new Promise((ok, errorAlt) => {
             const id = `A${++tag}`;
-            pending = { tag: id, linhas: [], ok, erro: errorAlt };
+            pending = { tag: id, lines: [], ok, error: errorAlt };
             socket.write(`${id} ${textAlt}\r\n`);
         });
 
@@ -48,13 +48,13 @@ function open(host, port) {
                 if (!greeting) {
                     greeting = true;
                     if (!/^\* (OK|PREAUTH)/i.test(line)) return fail(new Error(line));
-                    resolve({ cmd, fechar: () => socket.end() });
+                    resolve({ cmd, close: () => socket.end() });
                 } else if (pending && line.startsWith(`${pending.tag} `)) {
                     const p = pending;
                     pending = null;
-                    if (/^\S+ OK/i.test(line)) p.ok(p.linhas);
-                    else p.erro(new Error(line.replace(/^\S+ /, '')));
-                } else pending?.linhas.push(line);
+                    if (/^\S+ OK/i.test(line)) p.ok(p.lines);
+                    else p.error(new Error(line.replace(/^\S+ /, '')));
+                } else pending?.lines.push(line);
             }
         });
     });
@@ -97,7 +97,7 @@ async function empty(cmd, folder) {
 async function check() {
     if (!boxConfigured()) throw new Error(t('imap.naoConfigurado'));
 
-    const { cmd, fechar: close } = await open(process.env.QRCODE_EMAIL_IMAP_HOST.trim(), 993);
+    const { cmd, close } = await open(process.env.QRCODE_EMAIL_IMAP_HOST.trim(), 993);
     try {
         await cmd(`LOGIN ${quotes(process.env.QRCODE_EMAIL_SMTP_USER)} ${quotes(process.env.QRCODE_EMAIL_SMTP_PASS)}`);
         await cmd('LOGOUT').catch(() => {});
@@ -107,20 +107,20 @@ async function check() {
 }
 
 /**
- * Connects, counts the Sent and Trash messages and, with `apagar`, empties both (Sent first).
+ * Connects, counts the Sent and Trash messages and, with `erase`, empties both (Sent first).
  * @returns {Promise<{sent: number, trash: number}>} how many messages there were in each
  */
-async function boxes({ apagar: removeAlt = false } = {}) {
+async function boxes({ erase: removeAlt = false } = {}) {
     if (!boxConfigured()) {
         throw new Error(t('imap.naoConfiguradoVars'));
     }
 
-    const { cmd, fechar: close } = await open(process.env.QRCODE_EMAIL_IMAP_HOST.trim(), 993);
+    const { cmd, close } = await open(process.env.QRCODE_EMAIL_IMAP_HOST.trim(), 993);
     try {
         await cmd(`LOGIN ${quotes(process.env.QRCODE_EMAIL_SMTP_USER)} ${quotes(process.env.QRCODE_EMAIL_SMTP_PASS)}`);
         const folders = findFolders(await cmd('LIST "" "*"'));
         if (!folders.sent || !folders.trash) {
-            throw new Error(t('imap.pastaNaoEncontrada', { pastas: [!folders.sent && 'Sent', !folders.trash && 'Trash'].filter(Boolean).join(t('imap.e')) }));
+            throw new Error(t('imap.pastaNaoEncontrada', { folders: [!folders.sent && 'Sent', !folders.trash && 'Trash'].filter(Boolean).join(t('imap.e')) }));
         }
 
         const sent = await messagesIn(cmd, folders.sent);

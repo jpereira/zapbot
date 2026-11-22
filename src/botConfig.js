@@ -26,12 +26,12 @@ validate(botConfig.commands);
 // "disabled": true takes the command out of the bot: it does not answer, it does not show in /help
 function withoutDisabled(commands) {
     return {
-        ativos: commands.filter(c => !c.disabled),
-        desativados: commands.filter(c => c.disabled).map(c => c.cmd)
+        active: commands.filter(c => !c.disabled),
+        disabled: commands.filter(c => c.disabled).map(c => c.cmd)
     };
 }
 
-const { ativos: assets, desativados: disabledCommands } = withoutDisabled(botConfig.commands);
+const { active: assets, disabled: disabledCommands } = withoutDisabled(botConfig.commands);
 botConfig.commands = assets;
 
 const commands = botConfig.commands.map(c => c.cmd);

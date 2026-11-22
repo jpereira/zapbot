@@ -38,7 +38,7 @@ test('execução preserva opções, aspas, destinos repetidos e argumentos adici
     await bot.replyAlt('/alias lua -d "Preço do Bitcoin" ' + commandAlt);
     const run = t.mock.method(HANDLERS, '/crypto', async ({ msg, args, opts }) => {
         assert.equal(args, commandAlt.slice('/crypto '.length) + ' -list');
-        const { destinos: destinations } = bot.src('destinations').extractDestinations(args);
+        const { destinations } = bot.src('destinations').extractDestinations(args);
         assert.deepEqual(destinations, ['Jorge Pereira', 'Lourival Neto']);
         assert.equal(opts.opt.alert, true);
         await msg.reply('executado');
@@ -84,12 +84,12 @@ test('opções do alvo são preservadas e aliases fixos são destinos válidos',
 
 test('reply do atalho chega ao comando original', async t => {
     await bot.replyAlt('/alias foto /sticker');
-    const quoted = bot.createMessage({ texto: 'original', de: bot.OTHERAlt.jid });
+    const quoted = bot.createMessage({ text: 'original', de: bot.OTHERAlt.jid });
     t.mock.method(HANDLERS, '/sticker', async ({ msg, quotedMsg }) => {
         assert.equal(quotedMsg, quoted);
         await msg.reply('reply preservado');
     });
-    assert.deepEqual(await bot.replyAlt('/foto', { citada: quoted }), ['🔗 Alias /foto -> /sticker', 'reply preservado']);
+    assert.deepEqual(await bot.replyAlt('/foto', { quoted }), ['🔗 Alias /foto -> /sticker', 'reply preservado']);
 });
 
 test('cadastro substitui o atalho e remoção aceita com ou sem barra', async () => {
@@ -200,9 +200,9 @@ test('/alias /nome /crypto USD: nome com barra e destino com argumento', async t
 });
 
 test('alias de texto: \\n vira quebra de linha e vários {/comando} saem numa mensagem só', async t => {
-    const [salvo] = await bot.replyAlt(
+    const [saved] = await bot.replyAlt(
         '/alias nome2 -d "Orca e Prjx" Verificando Orca {/defi orca}\\n Verificando Prjx {/defi prjx}');
-    assert.match(salvo, /Alias salvo: \/nome2/);
+    assert.match(saved, /Alias salvo: \/nome2/);
     assert.deepEqual(await aliases(), [{
         name: '/nome2', description: 'Orca e Prjx',
         command: 'Verificando Orca {/defi orca}\nVerificando Prjx {/defi prjx}', quiet: 0
@@ -289,8 +289,8 @@ test('/me respeita as permissões dos {/comando} de quem chama', async t => {
 });
 
 test('/alias -q omite o cabeçalho e aceita /me como destino', async () => {
-    const [salvo] = await bot.replyAlt('/alias -q /haha /me Hahaha vc e burro!');
-    assert.match(salvo, /Alias salvo: \/haha/);
+    const [saved] = await bot.replyAlt('/alias -q /haha /me Hahaha vc e burro!');
+    assert.match(saved, /Alias salvo: \/haha/);
     assert.deepEqual(await aliases(), [
         { name: '/haha', description: '', command: '/me Hahaha vc e burro!', quiet: 1 }
     ]);
@@ -334,11 +334,11 @@ test('o começo do nome de um alias salvo também completa (único roda, vários
     await bot.replyAlt('/alias zzuno /stocks USD');
     const single = await resolverAlias('/zzu');
     assert.equal(single.alias, '/zzuno');
-    assert.equal(single.prefixo, '/zzu');
+    assert.equal(single.prefix, '/zzu');
 
     await bot.replyAlt('/alias zzdois /stocks EUR');
     const several = await resolverAlias('/zz');
-    assert.deepEqual(several.possiveis.map(c => c.cmd), ['/zzdois', '/zzuno']);
+    assert.deepEqual(several.candidates.map(c => c.cmd), ['/zzdois', '/zzuno']);
     await bot.replyAlt('/alias -rm all');
 });
 
@@ -389,11 +389,11 @@ test('-desc sem comando atualiza só a descrição de um alias existente', async
 
 test('${N:--l}: o padrão que começa com "-"; o travessão do teclado do celular vale como "--"', async () => {
     const { applyParams } = bot.src('aliases');
-    assert.equal(applyParams('/forward ${1:--l} #nopt', '').comando, '/forward -l #nopt');
-    assert.equal(applyParams('/forward ${1:--l} #nopt', '-dry').comando, '/forward -dry #nopt');
-    assert.equal(applyParams('/forward ${1:—l} #nopt', '').comando, '/forward -l #nopt', 'travessão');
-    assert.equal(applyParams('/forward ${1:–l} #nopt', '').comando, '/forward -l #nopt', 'meia-risca');
-    assert.equal(applyParams('/stocks ${1:-USD}', '').comando, '/stocks USD', 'o padrão normal não muda');
+    assert.equal(applyParams('/forward ${1:--l} #nopt', '').command, '/forward -l #nopt');
+    assert.equal(applyParams('/forward ${1:--l} #nopt', '-dry').command, '/forward -dry #nopt');
+    assert.equal(applyParams('/forward ${1:—l} #nopt', '').command, '/forward -l #nopt', 'travessão');
+    assert.equal(applyParams('/forward ${1:–l} #nopt', '').command, '/forward -l #nopt', 'meia-risca');
+    assert.equal(applyParams('/stocks ${1:-USD}', '').command, '/stocks USD', 'o padrão normal não muda');
 
     // Saved with the dash, it is fixed
     await bot.replyAlt('/alias nopt /forward ${1:—l} #nopt');

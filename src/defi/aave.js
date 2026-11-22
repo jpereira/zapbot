@@ -29,7 +29,7 @@
  */
 
 const { ErrorEvm, addressesAbiList, uintList, multicall, textInWord } = require('./evm');
-const { addressAbi, addressAlt, isAddressEvm, uintAbi, uintDe } = require('./hyperevm');
+const { addressAbi, addressAlt, isAddressEvm, uintAbi, uintFrom } = require('./hyperevm');
 const { t } = require('../i18n');
 const { printError, printInfo } = require('../log');
 const { envOuSetting, getSetting } = require('../settings');
@@ -48,11 +48,11 @@ const PRECISION = 10n ** 6n;
  */
 const NETWORKS = {
     1: {
-        nome: 'Ethereum', env: 'ETHEREUM_RPC_URL', setting: 'defi.ethereum.rpc',
+        name: 'Ethereum', env: 'ETHEREUM_RPC_URL', setting: 'defi.ethereum.rpc',
         provider: '0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e'
     },
     8453: {
-        nome: 'Base', env: 'BASE_RPC_URL', setting: 'defi.base.rpc',
+        name: 'Base', env: 'BASE_RPC_URL', setting: 'defi.base.rpc',
         provider: '0xe20fCBdBfFC4Dd138cE8b2E6FBb6CB49777ad64D'
     }
 };
@@ -108,13 +108,13 @@ function healthFactor(raw, debt) {
 // getAllReservesTokens: (string symbol, address tokenAddress)[]
 function decodeReserves(hex) {
     const h = hex.replace(/^0x/, '');
-    const start = Number(uintDe(h, 0)) * 2;
-    const n = Number(uintDe(h.slice(start), 0));
+    const start = Number(uintFrom(h, 0)) * 2;
+    const n = Number(uintFrom(h.slice(start), 0));
     const base = start + 64;
 
     return Array.from({ length: n }, (_, i) => {
-        const tuple = h.slice(base + Number(uintDe(h.slice(base), i)) * 2);
-        return { simbolo: textInWord(tuple, 0), endereco: addressAlt(tuple, 1) };
+        const tuple = h.slice(base + Number(uintFrom(h.slice(base), i)) * 2);
+        return { symbol: textInWord(tuple, 0), address: addressAlt(tuple, 1) };
     });
 }
 
@@ -135,15 +135,15 @@ async function networkContracts(id, url, label) {
 
     const r = {
         pool: addressAlt(pool.data),
-        oraculo: addressAlt(oracle.data),
-        dados: addressAlt(dataAlt.data)
+        oracle: addressAlt(oracle.data),
+        data: addressAlt(dataAlt.data)
     };
     contracts.set(id, r);
     return r;
 }
 
 // An answer that has to have come: otherwise, the contract is not what is expected
-// (ABI diferente, rede errada...)
+// (ABI diferente, network errada...)
 function requireIt(r, oThat) {
     if (!r?.ok || r.data.length < 66) {
         throw new ErrorEvm(t('defi.err.aaveDifferent'),
@@ -154,13 +154,13 @@ function requireIt(r, oThat) {
 
 /**
  * The wallet's Aave V3 position on a network.
- * @returns {Promise<object|null>} null: nada fornecido nem emprestado ali
+ * @returns {Promise<object|null>} null: nada provided nem borrowed ali
  */
 async function readNetwork(id, wallet) {
     const network = NETWORKS[id];
     const url = envOuSetting(network.env, network.setting);
-    const label = `RPC da ${network.nome}`;
-    printInfo(`[AAVE] Chain: ${network.nome}`);
+    const label = `RPC da ${network.name}`;
+    printInfo(`[AAVE] Chain: ${network.name}`);
 
     const c = await networkContracts(id, url, label);
     const user = addressAbi(wallet);
@@ -168,44 +168,44 @@ async function readNetwork(id, wallet) {
     const [account, mode, reserves, unit] = await multicall(url, [
         { to: c.pool, data: SEL.getUserAccountData + user },
         { to: c.pool, data: SEL.getUserEMode + user },
-        { to: c.dados, data: SEL.getAllReservesTokens },
-        { to: c.oraculo, data: SEL.BASE_CURRENCY_UNIT }
+        { to: c.data, data: SEL.getAllReservesTokens },
+        { to: c.oracle, data: SEL.BASE_CURRENCY_UNIT }
     ], label);
 
     const accountData = requireIt(account, 'getUserAccountData');
     const tokens = decodeReserves(requireIt(reserves, 'getAllReservesTokens'));
-    const base = uintDe(requireIt(unit, 'BASE_CURRENCY_UNIT'));
-    const emode = mode.ok ? Number(uintDe(mode.data)) : 0;
+    const base = uintFrom(requireIt(unit, 'BASE_CURRENCY_UNIT'));
+    const emode = mode.ok ? Number(uintFrom(mode.data)) : 0;
 
     // The wallet balance in each market asset
     const balances = await multicall(url, tokens.map(t => ({
-        to: c.dados, data: SEL.getUserReserveData + addressAbi(t.endereco) + user
+        to: c.data, data: SEL.getUserReserveData + addressAbi(t.address) + user
     })), label);
 
     const assets = tokens.map((t, i) => {
-        const d = requireIt(balances[i], `getUserReserveData(${t.simbolo})`);
+        const d = requireIt(balances[i], `getUserReserveData(${t.symbol})`);
         return {
             ...t,
-            fornecido: uintDe(d, 0),
-            estavel: uintDe(d, 1),
-            variavel: uintDe(d, 2),
-            taxaEstavel: uintDe(d, 5),
-            colateral: uintDe(d, 8) === 1n
+            provided: uintFrom(d, 0),
+            stable: uintFrom(d, 1),
+            variable: uintFrom(d, 2),
+            stableRate: uintFrom(d, 5),
+            collateral: uintFrom(d, 8) === 1n
         };
-    }).filter(a => a.fornecido > 0n || a.estavel > 0n || a.variavel > 0n);
+    }).filter(a => a.provided > 0n || a.stable > 0n || a.variable > 0n);
 
     if (!assets.length) return null;
 
     // Configuration, fees, debt ceiling and price of the wallet's assets (and the eMode name)
     const details = await multicall(url, [
         ...assets.flatMap(a => [
-            { to: c.dados, data: SEL.getReserveConfigurationData + addressAbi(a.endereco) },
-            { to: c.dados, data: SEL.getReserveData + addressAbi(a.endereco) },
-            { to: c.dados, data: SEL.getDebtCeiling + addressAbi(a.endereco) }
+            { to: c.data, data: SEL.getReserveConfigurationData + addressAbi(a.address) },
+            { to: c.data, data: SEL.getReserveData + addressAbi(a.address) },
+            { to: c.data, data: SEL.getDebtCeiling + addressAbi(a.address) }
         ]),
         {
-            to: c.oraculo,
-            data: SEL.getAssetsPrices + addressesAbiList(assets.map(a => a.endereco))
+            to: c.oracle,
+            data: SEL.getAssetsPrices + addressesAbiList(assets.map(a => a.address))
         },
         ...(emode ? [{ to: c.pool, data: SEL.getEModeCategoryLabel + uintAbi(emode) }] : [])
     ], label);
@@ -219,36 +219,36 @@ async function readNetwork(id, wallet) {
     const withoutPrice = new Set();
 
     assets.forEach((a, i) => {
-        const config = requireIt(details[i * 3], `getReserveConfigurationData(${a.simbolo})`);
+        const config = requireIt(details[i * 3], `getReserveConfigurationData(${a.symbol})`);
         const reserve = details[i * 3 + 1];
         const ceiling = details[i * 3 + 2];
-        const decimals = Number(uintDe(config, 0));
+        const decimals = Number(uintFrom(config, 0));
         const price = prices[i] ?? 0n;
         const valid = decimalsValid(decimals);
         const item = (raw, extra) => {
             const usd = inUsd(raw, decimals, price, base);
-            if (usd === null) withoutPrice.add(a.simbolo);
-            const qtd = valid ? inTokens(raw, decimals) : null;
-            return { simbolo: a.simbolo, decimals, qtd, usd, ...extra };
+            if (usd === null) withoutPrice.add(a.symbol);
+            const qty = valid ? inTokens(raw, decimals) : null;
+            return { symbol: a.symbol, decimals, qty, usd, ...extra };
         };
 
         if (!valid) {
-            printError(`[AAVE] ${NETWORKS[id].nome}: invalid decimals in ${a.simbolo} (${decimals})`);
+            printError(`[AAVE] ${NETWORKS[id].name}: invalid decimals in ${a.symbol} (${decimals})`);
         }
 
-        if (a.fornecido > 0n) {
-            provided.push(item(a.fornecido, {
-                colateral: a.colateral,
-                apy: reserve?.ok ? apy(uintDe(reserve.data, 5)) : null,
-                tetoDeDivida: ceiling?.ok ? Number(uintDe(ceiling.data)) / 100 : 0,   // 2 decimals, in USD
-                precoUsd: price && base ? withPlaces((price * PRECISION) / base) : null
+        if (a.provided > 0n) {
+            provided.push(item(a.provided, {
+                collateral: a.collateral,
+                apy: reserve?.ok ? apy(uintFrom(reserve.data, 5)) : null,
+                debtCap: ceiling?.ok ? Number(uintFrom(ceiling.data)) / 100 : 0,   // 2 decimals, in USD
+                priceUsd: price && base ? withPlaces((price * PRECISION) / base) : null
             }));
         }
-        if (a.variavel > 0n) {
-            const rate = reserve?.ok ? apy(uintDe(reserve.data, 6)) : null;
-            debts.push(item(a.variavel, { modo: 'Variable', apy: rate }));
+        if (a.variable > 0n) {
+            const rate = reserve?.ok ? apy(uintFrom(reserve.data, 6)) : null;
+            debts.push(item(a.variable, { mode: 'Variable', apy: rate }));
         }
-        if (a.estavel > 0n) debts.push(item(a.estavel, { modo: 'Stable', apy: apy(a.taxaEstavel) }));
+        if (a.stable > 0n) debts.push(item(a.stable, { mode: 'Stable', apy: apy(a.stableRate) }));
     });
 
     // Dust (under $0.01, like 7e-18 WETH) is not a position; with only dust, the network stays empty
@@ -260,49 +260,49 @@ async function readNetwork(id, wallet) {
 
     // The protocol account (the oracle's base currency)
     const inBase = (raw) => withPlaces((raw * PRECISION) / base);
-    const debtRaw = uintDe(accountData, 1);
-    const collateralUsd = inBase(uintDe(accountData, 0));
+    const debtRaw = uintFrom(accountData, 1);
+    const collateralUsd = inBase(uintFrom(accountData, 0));
     const debtUsd = inBase(debtRaw);
-    const hf = healthFactor(uintDe(accountData, 5), debtRaw);
+    const hf = healthFactor(uintFrom(accountData, 5), debtRaw);
 
     // Check: the sum of the assets has to match the protocol total (1% slack)
     const sumDebt = debts.reduce((s, d) => s + (d.usd ?? 0), 0);
     if (Math.abs(sumDebt - debtUsd) > Math.max(0.01, debtUsd * 0.01)) {
-        printError(`[AAVE] ${NETWORKS[id].nome}: summed debt ${sumDebt} ≠ ${debtUsd} from the protocol`);
+        printError(`[AAVE] ${NETWORKS[id].name}: summed debt ${sumDebt} ≠ ${debtUsd} from the protocol`);
     }
 
     const providedUsd = provided.reduce((s, f) => s + (f.usd ?? 0), 0);
-    const collaterals = provided.filter(f => f.colateral);
+    const collaterals = provided.filter(f => f.collateral);
 
     // Liquidation price: only with a single collateral, that is not also the debt
     let priceSettlement = null;
     const [single] = collaterals;
-    const umCollateral = collaterals.length === 1 && !debts.some(d => d.simbolo === single.simbolo);
+    const umCollateral = collaterals.length === 1 && !debts.some(d => d.symbol === single.symbol);
     const withHf = debtRaw > 0n && Number.isFinite(hf) && hf > 0;
-    if (withHf && umCollateral && collaterals[0].precoUsd) {
-        priceSettlement = { simbolo: collaterals[0].simbolo, usd: collaterals[0].precoUsd / hf };
+    if (withHf && umCollateral && collaterals[0].priceUsd) {
+        priceSettlement = { symbol: collaterals[0].symbol, usd: collaterals[0].priceUsd / hf };
     }
 
-    const isolated = collaterals.find(f => f.tetoDeDivida > 0);
+    const isolated = collaterals.find(f => f.debtCap > 0);
     return {
-        rede: NETWORKS[id].nome,
+        network: NETWORKS[id].name,
         chainId: id,
         hf,
-        colateralUsd: collateralUsd,
-        dividaUsd: debtUsd,
-        disponivelUsd: inBase(uintDe(accountData, 2)),
-        liquidationThreshold: Number(uintDe(accountData, 3)) / 10000,
-        ltvMaximo: Number(uintDe(accountData, 4)) / 10000,
-        ltvAtual: collateralUsd > 0 ? debtUsd / collateralUsd : null,
-        fornecidoUsd: providedUsd,
-        liquidoUsd: providedUsd - debtUsd,
-        fornecidos: provided,
-        dividas: debts,
-        semPreco: [...withoutPrice],
-        emode: emode ? { id: emode, nome: emodeName } : null,
-        isolamento: isolated ? { simbolo: isolated.simbolo, tetoUsd: isolated.tetoDeDivida } : null,
-        precoLiquidacao: priceSettlement,
-        liquidacaoAmbigua: debtRaw > 0n && collaterals.length > 1
+        collateralUsd,
+        debtUsd,
+        availableUsd: inBase(uintFrom(accountData, 2)),
+        liquidationThreshold: Number(uintFrom(accountData, 3)) / 10000,
+        ltvMax: Number(uintFrom(accountData, 4)) / 10000,
+        currentLtv: collateralUsd > 0 ? debtUsd / collateralUsd : null,
+        providedUsd,
+        netUsd: providedUsd - debtUsd,
+        provided,
+        debts,
+        noPrice: [...withoutPrice],
+        emode: emode ? { id: emode, name: emodeName } : null,
+        isolation: isolated ? { symbol: isolated.symbol, capUsd: isolated.debtCap } : null,
+        liquidationPrice: priceSettlement,
+        liquidationAmbiguous: debtRaw > 0n && collaterals.length > 1
     };
 }
 
@@ -319,7 +319,7 @@ const cleanCacheAave = () => {
 /**
  * The wallet's Aave V3 positions, on each network of defi.aave.chains.
  * A network that fails does not take down the others: it goes in failures.
- * @returns {Promise<{ carteira: string, redes: object[],
+ * @returns {Promise<{ wallet: string, networks: object[],
  * failures: Array<{ network: string, reason: string }>, when: number }>}
  * @throws {ErrorEvm} invalid wallet, or all the networks failed
  */
@@ -335,41 +335,41 @@ async function positionsAave(wallet) {
     const results = await Promise.all(ids.map(async (id) => {
         if (!NETWORKS[id]) {
             const reasonAlt = t('defi.err.aaveNoChain', { id });
-            return { falha: { rede: `chain ${id}`, motivo: reasonAlt } };
+            return { failure: { network: `chain ${id}`, reason: reasonAlt } };
         }
 
         const keyAlt = `${wallet.toLowerCase()}|${id}`;
         const saved = cache.get(keyAlt);
-        if (saved && Date.now() - saved.quando < CACHE_MS) return saved;
+        if (saved && Date.now() - saved.when < CACHE_MS) return saved;
 
         try {
             const position = await readNetwork(id, wallet);
-            cache.set(keyAlt, { posicao: position, quando: Date.now() });
-            return { posicao: position, quando: Date.now() };
+            cache.set(keyAlt, { position, when: Date.now() });
+            return { position, when: Date.now() };
         } catch (err) {
             const type = /timeout/i.test(err.message) ? 'Timeout' : 'RPC error';
-            printError(`[AAVE] ${type} ${NETWORKS[id].nome}: ${err.message}`);
-            const reasonAlt = err.motivo ?? t('defi.noData');
-            return { falha: { rede: NETWORKS[id].nome, motivo: reasonAlt } };
+            printError(`[AAVE] ${type} ${NETWORKS[id].name}: ${err.message}`);
+            const reasonAlt = err.reason ?? t('defi.noData');
+            return { failure: { network: NETWORKS[id].name, reason: reasonAlt } };
         }
     }));
 
-    const failures = results.filter(r => r.falha).map(r => r.falha);
+    const failures = results.filter(r => r.failure).map(r => r.failure);
     if (failures.length === ids.length) {
-        throw new ErrorEvm(failures.map(f => `${f.rede}: ${f.motivo}`).join('\n'), 'todas as redes falharam');
+        throw new ErrorEvm(failures.map(f => `${f.network}: ${f.reason}`).join('\n'), 'todas as redes falharam');
     }
 
-    const networks = results.map(r => r.posicao).filter(Boolean);
+    const networks = results.map(r => r.position).filter(Boolean);
     for (const r of networks) {
         const hf = Number.isFinite(r.hf) ? r.hf.toFixed(2) : '∞';
-        printInfo(`[AAVE] ${r.rede}: ${r.fornecidos.length} supplied, ${r.dividas.length} borrowed`);
-        printInfo(`[AAVE] ${r.rede}: Health Factor ${hf}`);
-        printInfo(`[AAVE] ${r.rede}: Net position $${r.liquidoUsd.toFixed(2)}`);
+        printInfo(`[AAVE] ${r.network}: ${r.provided.length} supplied, ${r.debts.length} borrowed`);
+        printInfo(`[AAVE] ${r.network}: Health Factor ${hf}`);
+        printInfo(`[AAVE] ${r.network}: Net position $${r.netUsd.toFixed(2)}`);
     }
     printInfo(`[AAVE] Query finished in ${Date.now() - start}ms`);
 
-    const when = Math.min(...results.filter(r => !r.falha).map(r => r.quando));
-    return { carteira: wallet, redes: networks, falhas: failures, quando: when };
+    const when = Math.min(...results.filter(r => !r.failure).map(r => r.when));
+    return { wallet, networks, failures, when };
 }
 
 module.exports = {

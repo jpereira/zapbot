@@ -41,8 +41,8 @@ function locate(command, lang = language()) {
         ...command,
         ...so(pt, ['summary', 'usage', 'help', 'ex']),
         cmd_opts: command.cmd_opts?.map((o, i) => ({ ...o, ...so(pt.cmd_opts?.[i], ['desc', 'ex', 'values', 'argv']) })),
-        protocolos: command.protocolos && Object.fromEntries(Object.entries(command.protocolos)
-            .map(([nameAlt, p]) => [nameAlt, { ...p, ...so(pt.protocolos?.[nameAlt], ['usage', 'help', 'ex']) }]))
+        protocols: command.protocols && Object.fromEntries(Object.entries(command.protocols)
+            .map(([nameAlt, p]) => [nameAlt, { ...p, ...so(pt.protocols?.[nameAlt], ['usage', 'help', 'ex']) }]))
     };
 }
 

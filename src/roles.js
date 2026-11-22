@@ -1,13 +1,13 @@
 /*
  * The levels, of people and commands: owner > admin > user.
  *
- * Who types (the nivel, computed on every message):
+ * Who types (the level, computed on every message):
  * owner  the owner: the account paired with the bot (msg.fromMe);
  * admin  the bot.admins people (/bot +a);
  * user   the people and groups in bot.users (/bot +u).
  *
  * A command's (and an option's) "role" is the minimum level of whoever can use it. A command
- * `role: ADMIN` with `delegavel: true` the owner can still allow a user with /bot +cmd.
+ * `role: ADMIN` with `isDelegable: true` the owner can still allow a user with /bot +cmd.
  */
 
 const ROLES = Object.freeze({ USER: 'user', ADMIN: 'admin', OWNER: 'owner' });

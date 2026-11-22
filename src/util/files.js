@@ -61,7 +61,7 @@ function listCacheLevelOnly(dir = CACHE_DIR) {
     return output;
 }
 
-// Pasta cache/media/ano/mes/dia
+// Pasta cache/media/year/mes/day
 function getFolderMedia() {
     const nowAlt = new Date();
     const folderDestination = path.join(
@@ -81,7 +81,7 @@ function getFolderMedia() {
  */
 const nameSafe = (valueAlt, defaults) => String(valueAlt ?? '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64) || defaults;
 
-// true if `arquivo` is inside MEDIA_DIR (also applies to paths already stored in the database)
+// true if `file` is inside MEDIA_DIR (also applies to paths already stored in the database)
 function mediaIsPath(fileAlt) {
     if (!fileAlt) return false;
     const relative = path.relative(MEDIA_DIR, path.resolve(fileAlt));

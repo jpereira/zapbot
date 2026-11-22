@@ -6,7 +6,7 @@ const axios = require('axios');
 
 const { priceHandleAlert } = require('../priceAlerts');
 const { commandUsage } = require('./base');
-const { fmtPriceCrypto, fmtReaisCrypto, pricesInReais } = require('../quotes');
+const { fmtPriceCrypto, fmtBrlCrypto, pricesInBrl } = require('../quotes');
 const { dbReady } = require('../db');
 const { t } = require('../i18n');
 const { printError } = require('../log');
@@ -122,8 +122,8 @@ async function cmdCrypto(ctx) {
 
         const topGainer = [...coins].sort((a, b) => b.change - a.change)[0];
 
-        // In reais: one line per currency (the crypto.brl setting turns it off); if Binance fails, the dollar comes out alone
-        const reais = getSetting('crypto.brl') ? await pricesInReais(Object.fromEntries(coins.map((c) => [c.symbol, c.price]))) : {};
+        // In brl: one line per currency (the crypto.brl setting turns it off); if Binance fails, the dollar comes out alone
+        const brl = getSetting('crypto.brl') ? await pricesInBrl(Object.fromEntries(coins.map((c) => [c.symbol, c.price]))) : {};
 
         let text = t('crypto.title') + '\n```\n';
 
@@ -133,7 +133,7 @@ async function cmdCrypto(ctx) {
 
             text += `${c.icon} ${c.symbol}\n`;
             text += `    ${priceLine}${change}\n`;
-            if (reais[c.symbol]) text += `    🇧🇷 ${fmtReaisCrypto(reais[c.symbol])}\n`;
+            if (brl[c.symbol]) text += `    🇧🇷 ${fmtBrlCrypto(brl[c.symbol])}\n`;
             text += `    📈 $${fmtPrice(c.high)}\n`;
             text += `    📉 $${fmtPrice(c.low)}\n`;
             text += `    📊 ${fmtVolume(c.volume)}\n\n`;

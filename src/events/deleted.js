@@ -38,7 +38,7 @@ async function resolverAuthorDeleted(row, { after, before, protocolKey } = {}) {
     if (isChannelAlt(row.chat_id)) {
         const nameAlt = (await channelResolverName(row.chat_id)) || row.chat_name ||
             `Canal ${row.chat_id.split('@')[0]}`;
-        return { nomeChat: nameAlt, nomeRemetente: nameAlt, numeroRemetente: null };
+        return { chatName: nameAlt, senderName: nameAlt, senderNumber: null };
     }
     let nameChat = row.chat_name || 'Conversa desconhecida';
     let nameSender = row.sender_name || t('core.desconhecido');
@@ -88,30 +88,30 @@ async function resolverAuthorDeleted(row, { after, before, protocolKey } = {}) {
         }
     }
 
-    return { nomeChat: nameChat, nomeRemetente: nameSender, numeroRemetente: numberSender };
+    return { chatName: nameChat, senderName: nameSender, senderNumber: numberSender };
 }
 
 /**
- * Sends a deleted message (text, media, location or contact) to `destino`.
+ * Sends a deleted message (text, media, location or contact) to `destination`.
  *
- * @param {string} destino              chat that will receive
+ * @param {string} destination              chat that will receive
  * @param {object} row                  row of the messages table
- * @param {object} info                 { nomeChat, nomeRemetente, numeroRemetente }
- * @param {object} [opcoes]
- * @param {string} [opcoes.titulo]      first line of the alert
- * @param {string[]} [opcoes.extras]    extra lines after "Enviada em"
+ * @param {object} info                 { chatName, senderName, senderNumber }
+ * @param {object} [options]
+ * @param {string} [options.title]      first line of the alert
+ * @param {string[]} [options.extras]    extra lines after "Enviada em"
  */
-async function sendMessageDeleted(destination, row, info, { titulo: title = t('apagadas.titulo'), extras = [] } = {}) {
+async function sendMessageDeleted(destination, row, info, { title = t('apagadas.titulo'), extras = [] } = {}) {
     // Each notice message records where it came from (/mute replying to it)
-    const sender = info.numeroRemetente || row.sender_number || row.sender_jid;
-    const origin = { chatId: row.chat_id, remetente: sender };
+    const sender = info.senderNumber || row.sender_number || row.sender_jid;
+    const origin = { chatId: row.chat_id, sender };
     const send = async (...a) => registerNotice(await client.sendMessage(...a), origin);
 
     let alertText = `${title}\n\n`;
 
     alertText += headerOrigin({
-        chatId: row.chat_id, chatName: info.nomeChat, isGroup: row.is_group,
-        senderName: info.nomeRemetente, senderNumber: info.numeroRemetente
+        chatId: row.chat_id, chatName: info.chatName, isGroup: row.is_group,
+        senderName: info.senderName, senderNumber: info.senderNumber
     }) +
         t('apagadas.enviadaEm', { data: formatData(row.timestamp) });
 
@@ -143,7 +143,7 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = t('a
             await send(destination, alertText);
             if (row.body) await send(destination, row.body, { parseVCards: true });
         } else {
-            await send(destination, `${alertText}${t('apagadas.conteudo', { texto: row.body })}`);
+            await send(destination, `${alertText}${t('apagadas.conteudo', { text: row.body })}`);
         }
         return;
     }
@@ -164,14 +164,14 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = t('a
 
         if (row.type === 'video' || row.type === 'image' || mimetype.startsWith('image/') || mimetype.startsWith('video/')) {
             alertText +=
-                t('apagadas.midia', { tipo: String(row.type).toUpperCase(), legenda: captionAlt });
+                t('apagadas.midia', { type: String(row.type).toUpperCase(), caption: captionAlt });
 
             await send(destination, mediaAttachment, { caption: alertText });
             return;
         }
 
         alertText +=
-            t('apagadas.documento', { legenda: captionAlt });
+            t('apagadas.documento', { caption: captionAlt });
 
         await send(destination, mediaAttachment, { caption: alertText, sendMediaAsDocument: true });
         return;
@@ -179,11 +179,11 @@ async function sendMessageDeleted(destination, row, info, { titulo: title = t('a
 
     // Media that existed but the file is no longer on disk
     if (row.has_media) {
-        alertText += t('apagadas.arquivoIndisponivel', { tipo: String(row.type).toUpperCase() });
+        alertText += t('apagadas.arquivoIndisponivel', { type: String(row.type).toUpperCase() });
     }
 
     // Texto
-    alertText += t('apagadas.texto', { texto: await messageResolverMentions(row.body, row.id) || t('apagadas.semConteudo') });
+    alertText += t('apagadas.texto', { text: await messageResolverMentions(row.body, row.id) || t('apagadas.semConteudo') });
 
     await send(destination, alertText, { linkPreview: true });
 }
@@ -229,27 +229,27 @@ client.on('message_revoke_everyone', async (after, before) => {
                     sender_name = ?,
                     sender_number = COALESCE(?, sender_number)
               WHERE id = ?`,
-            [Date.now(), info.nomeChat, info.nomeRemetente, info.numeroRemetente, row.id]
+            [Date.now(), info.chatName, info.senderName, info.senderNumber, row.id]
         );
 
         // Deleted by you: counts for your number (in private, the stored sender is the other participant)
         const deMim = Boolean(after?.fromMe || before?.fromMe);
 
         await countStats({
-            chatId: row.chat_id, chatName: info.nomeChat, isGroup: row.is_group,
+            chatId: row.chat_id, chatName: info.chatName, isGroup: row.is_group,
             senderId: deMim ? myIdStats() : (row.sender_number || row.sender_jid),
-            senderName: deMim ? (client.info?.pushname || t('core.voce')) : info.nomeRemetente,
-            campos: { deleted: 1 }
+            senderName: deMim ? (client.info?.pushname || t('core.voce')) : info.senderName,
+            fields: { deleted: 1 }
         });
 
         // show.alert.deleted off or /mute: no notice (the message stays stored for /show)
         // Deleted by you: in private the stored sender is the other one, so it includes your id (/mute on yourself)
-        const senders = [row.sender_jid, row.sender_number, info.numeroRemetente, deMim ? client.info.wid._serialized : null];
+        const senders = [row.sender_jid, row.sender_number, info.senderNumber, deMim ? client.info.wid._serialized : null];
         if (!isStatus(row) && !getSetting('show.alert.deleted')) return;
-        if (await ignoreNotice(isStatus(row) ? 'status' : 'apagada', { chatId: row.chat_id, remetentes: senders })) return;
+        if (await ignoreNotice(isStatus(row) ? 'status' : 'apagada', { chatId: row.chat_id, senders })) return;
 
         await sendMessageDeleted(client.info.wid._serialized, row, info, {
-            titulo: isStatus(row) ? t('apagadas.tituloStatus') : t('apagadas.titulo')
+            title: isStatus(row) ? t('apagadas.tituloStatus') : t('apagadas.titulo')
         });
     } catch (sendError) {
         printError('[Revoke] Error processing the deleted item:', sendError.message);

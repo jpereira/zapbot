@@ -12,9 +12,9 @@ const WORK = '120363000000000002@g.us';
 
 beforeEach(async () => {
     await bot.restart();
-    bot.client.convites.clear();
-    bot.client.entradas.length = 0;
-    bot.client.convites.set(CODE, { id: '120363000000000009@g.us', subject: 'Churrasco', size: 7, desc: 'Sábado' });
+    bot.client.invites.clear();
+    bot.client.inputs.length = 0;
+    bot.client.invites.set(CODE, { id: '120363000000000009@g.us', subject: 'Churrasco', size: 7, desc: 'Sábado' });
 });
 
 describe('/join', () => {
@@ -22,13 +22,13 @@ describe('/join', () => {
         for (const inputAlt of [`https://chat.whatsapp.com/${CODE}`, `chat.whatsapp.com/invite/${CODE}`, CODE]) {
             assert.equal((await bot.replyAlt(`/join ${inputAlt}`))[0], '✅ Entrei em 👥 Churrasco');
         }
-        assert.deepEqual(bot.client.entradas, [CODE, CODE, CODE]);
+        assert.deepEqual(bot.client.inputs, [CODE, CODE, CODE]);
     });
 
     test('-info mostra o grupo sem entrar', async () => {
         const [r] = await bot.replyAlt(`/join -info chat.whatsapp.com/${CODE}`);
         assert.match(r, /^👥 \*Churrasco\*\n👤 7 participantes\n📝 Sábado/);
-        assert.deepEqual(bot.client.entradas, []);
+        assert.deepEqual(bot.client.inputs, []);
     });
 
     test('erros: sem link, link inválido, convite expirado e recusa do WhatsApp', async () => {
@@ -36,9 +36,9 @@ describe('/join', () => {
         assert.match((await bot.replyAlt('/join https://exemplo.com/x'))[0], /Link de convite inválido/);
         assert.match((await bot.replyAlt('/join chat.whatsapp.com/ZZZZZZZZZZZZZZZZZZZZZZ'))[0], /Convite inválido, expirado/);
 
-        bot.client.convites.set(CODE, { id: 'x@g.us', subject: 'Churrasco', recusar: 'precisa de aprovação' });
-        assert.equal((await bot.replyAlt(`/join ${CODE}`, { erroEsperado: true }))[0], '❌ Não consegui entrar em 👥 Churrasco: precisa de aprovação.');
-        assert.deepEqual(bot.client.entradas, []);
+        bot.client.invites.set(CODE, { id: 'x@g.us', subject: 'Churrasco', refuse: 'precisa de aprovação' });
+        assert.equal((await bot.replyAlt(`/join ${CODE}`, { expectedError: true }))[0], '❌ Não consegui entrar em 👥 Churrasco: precisa de aprovação.');
+        assert.deepEqual(bot.client.inputs, []);
     });
 });
 

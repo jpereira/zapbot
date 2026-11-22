@@ -28,7 +28,7 @@ const { maskPhones } = require('./util/phone');
  * in the text comes "@<id>", and the real id, in msg.mentionedIds.
  * A typed "@number", not as a mention, is refused
  * email            → (acceptsEmail) the QRCODE_EMAIL_SMTP_TO, through the bot's SMTP
- * voce@exemplo.com → (acceptsEmail) one or more emails, comma-separated
+ * voce@example.com → (acceptsEmail) one or more emails, comma-separated
  * The same name (whole) beats one that only contains the words. If still
  * more than one fits, the command lists and you reply with the no. (resolverOrChoose).
  */
@@ -40,28 +40,28 @@ const EMAIL = /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/;
 const isWordEmail = (s) => /^e-?mail$/i.test(s);
 
 // The QRCODE_EMAIL_SMTP_TO addresses, which may come as "Me <me@example.com>, other@x.com"
-const emailsDoSmtpTo = () => String(process.env.QRCODE_EMAIL_SMTP_TO ?? '').split(',')
+const emailsOfSmtpTo = () => String(process.env.QRCODE_EMAIL_SMTP_TO ?? '').split(',')
     .map(e => (e.match(/<([^>]*)>/)?.[1] ?? e).trim());
 
 /**
  * Removes the "-to <destination>" from the command text.
- * @returns {{ destino: string|null, informado: boolean, resto: string }}
+ * @returns {{ destination: string|null, given: boolean, rest: string }}
  * given: -to appeared (even without a value, which is an error for the caller)
  */
 function extractDestination(textAlt) {
     const m = String(textAlt ?? '').match(DESTINATION);
-    if (!m) return { destino: null, informado: false, resto: String(textAlt ?? '') };
+    if (!m) return { destination: null, given: false, rest: String(textAlt ?? '') };
 
     const valueAlt = (m[3] ?? m[4] ?? m[5] ?? m[6] ?? '').trim();
     // Only removes the option snippet: the rest (including line breaks) stays as it came
     const rest = (textAlt.slice(0, m.index) + m[1] + textAlt.slice(m.index + m[0].length)).trim();
 
-    return { destino: valueAlt || null, informado: true, resto: rest };
+    return { destination: valueAlt || null, given: true, rest };
 }
 
 /**
  * Removes all the "-to <destination>" from the text (every command with -to accepts several).
- * @returns {{ destinos: Array<string|null>, informado: boolean, resto: string }}
+ * @returns {{ destinations: Array<string|null>, given: boolean, rest: string }}
  * destinations: one per -to, in order (null: -to without a value)
  */
 function extractDestinations(textAlt) {
@@ -70,12 +70,12 @@ function extractDestinations(textAlt) {
 
     for (;;) {
         const r = extractDestination(rest);
-        if (!r.informado) break;
-        destinations.push(r.destino);
-        rest = r.resto;
+        if (!r.given) break;
+        destinations.push(r.destination);
+        rest = r.rest;
     }
 
-    return { destinos: destinations, informado: destinations.length > 0, resto: rest };
+    return { destinations, given: destinations.length > 0, rest };
 }
 
 const normalize = (s) => withoutAccents(s).trim();
@@ -152,24 +152,24 @@ function searchInWhatsApp(words) {
 
         const contacts = Contact.getModelsArray()
             .filter(c => c.id?.server !== 'g.us')
-            .map(c => ({ c, nome: attempt(() => getters.getName(c), c.name), eu: Boolean(attempt(() => getters.getIsMe(c), c.isMe)) }))
-            .filter(({ c, nome: nameAlt, eu }) => home(nameAlt) && (eu || attempt(() => getIsMyContact(c), c.isMyContact)))
-            .map(({ c, nome: nameAlt, eu }) => {
+            .map(c => ({ c, name: attempt(() => getters.getName(c), c.name), eu: Boolean(attempt(() => getters.getIsMe(c), c.isMe)) }))
+            .filter(({ c, name: nameAlt, eu }) => home(nameAlt) && (eu || attempt(() => getIsMyContact(c), c.isMyContact)))
+            .map(({ c, name: nameAlt, eu }) => {
                 // You: whoever calls swaps in their own id (the model's may be the LID)
-                if (eu) return { id: null, nome: nameAlt, eu };
+                if (eu) return { id: null, name: nameAlt, eu };
 
                 const id = serial(c.id);
                 const phoneAlt = id?.endsWith('@lid')
                     ? serial(c.phoneNumber) ?? serial(attempt(() => getAlternateUserWid(c.id)))
                     : null;
-                return { id: phoneAlt ?? id, nome: nameAlt };
+                return { id: phoneAlt ?? id, name: nameAlt };
             });
 
         const groups = Chat.getModelsArray()
             .filter(ch => ch.id?.server === 'g.us' && home(ch.formattedTitle || ch.name))
-            .map(ch => ({ id: serial(ch.id), nome: ch.formattedTitle || ch.name }));
+            .map(ch => ({ id: serial(ch.id), name: ch.formattedTitle || ch.name }));
 
-        return { contatos: contacts, grupos: groups };
+        return { contacts, groups };
     }, words);
 
     let limitAlt;
@@ -187,9 +187,9 @@ function withYou(contacts, home) {
     const myId = client.info?.wid?._serialized;
     if (!myId) return contacts.filter(c => !c.eu);
 
-    const myName = contacts.find(c => c.eu)?.nome ?? (home(client.info.pushname) ? client.info.pushname : null);
+    const myName = contacts.find(c => c.eu)?.name ?? (home(client.info.pushname) ? client.info.pushname : null);
     const other = contacts.filter(c => !c.eu && c.id !== myId);
-    return myName ? [{ id: myId, nome: myName }, ...other] : other;
+    return myName ? [{ id: myId, name: myName }, ...other] : other;
 }
 
 // Same shape as whatsapp-web.js (Contact and Chat), so the rest of the code does not depend on the origin
@@ -197,12 +197,12 @@ async function contactsAndGroups(words) {
     const home = (nameAlt) => Boolean(nameAlt) && words.every(p => normalize(nameAlt).includes(p));
 
     if (client.pupPage) {
-        const { contatos: contacts, grupos: groups } = await searchInWhatsApp(words);
+        const { contacts, groups } = await searchInWhatsApp(words);
         const allAlt2 = withYou(contacts, home).filter(c => c.id);
         const unique = [...new Map(allAlt2.map(c => [c.id, c])).values()];
         return {
-            contatos: unique.map(c => ({ id: { _serialized: c.id }, name: c.nome, number: c.id.split('@')[0], isMyContact: true })),
-            grupos: groups.filter(g => g.id).map(g => ({ id: { _serialized: g.id }, name: g.nome, isGroup: true }))
+            contacts: unique.map(c => ({ id: { _serialized: c.id }, name: c.name, number: c.id.split('@')[0], isMyContact: true })),
+            groups: groups.filter(g => g.id).map(g => ({ id: { _serialized: g.id }, name: g.name, isGroup: true }))
         };
     }
 
@@ -210,64 +210,64 @@ async function contactsAndGroups(words) {
     const [contacts, chats] = await Promise.all([client.getContacts?.().catch(() => []) ?? [], client.getChats().catch(() => [])]);
     const schedule = contacts
         .filter(c => (c?.isMyContact || c?.isMe) && !c.isGroup && c.name && c.id?._serialized && home(c.name))
-        .map(c => ({ id: c.id._serialized, nome: c.name, eu: Boolean(c.isMe) }));
+        .map(c => ({ id: c.id._serialized, name: c.name, eu: Boolean(c.isMe) }));
     return {
-        contatos: withYou(schedule, home).map(c => ({ id: { _serialized: c.id }, name: c.nome, number: c.id.split('@')[0], isMyContact: true })),
-        grupos: chats.filter(c => c.isGroup && c.name && home(c.name))
+        contacts: withYou(schedule, home).map(c => ({ id: { _serialized: c.id }, name: c.name, number: c.id.split('@')[0], isMyContact: true })),
+        groups: chats.filter(c => c.isGroup && c.name && home(c.name))
     };
 }
 
-const contact = (c) => ({ id: c.id._serialized, nome: c.name, grupo: false, numero: c.number ?? null });
-const group = (g) => ({ id: g.id._serialized, nome: g.name, grupo: true });
+const contact = (c) => ({ id: c.id._serialized, name: c.name, group: false, number: c.number ?? null });
+const group = (g) => ({ id: g.id._serialized, name: g.name, group: true });
 
 /**
  * "email" and/or addresses → the email destination; null if the text is not that.
- * @returns {{ email: string, nome: string, grupo: false } | { erro: string } | null}
+ * @returns {{ email: string, name: string, group: false } | { error: string } | null}
  */
 function readEmails(textAlt) {
     const partsAlt = textAlt.split(/[\s,;]+/).filter(Boolean);
     if (!partsAlt.length || !partsAlt.every(p => isWordEmail(p) || EMAIL.test(p))) return null;
 
-    const emails = partsAlt.flatMap(p => (isWordEmail(p) ? emailsDoSmtpTo() : [p])).map(e => e.trim());
+    const emails = partsAlt.flatMap(p => (isWordEmail(p) ? emailsOfSmtpTo() : [p])).map(e => e.trim());
 
     if (emails.some(e => !EMAIL.test(e))) {
-        return { erro: t('grp.dest.emptySmtpTo') };
+        return { error: t('grp.dest.emptySmtpTo') };
     }
     if (!smtpForSend()) {
-        return { erro: t('grp.dest.noSmtp') };
+        return { error: t('grp.dest.noSmtp') };
     }
 
     const list = [...new Set(emails)].join(', ');
-    return { email: list, nome: list, grupo: false };
+    return { email: list, name: list, group: false };
 }
 
 /**
  * Resolves the text to a chat (or to emails).
- * @param {string} valor  what came in -to (or in the /mute target)
+ * @param {string} value  what came in -to (or in the /mute target)
  * @param {object} [o]
  * @param {boolean} [o.acceptsEmail]  "email" and addresses count (alerts, /backup); otherwise, error
  * @param {string} [o.withoutEmail]      the error when it does not accept (the command's why)
- * @param {'grupo'|'contato'} [o.tipo]  restricts the search to the type indicated by the notice
- * @param {Array<string|{_serialized: string}>} [o.mencoes]  msg.mentionedIds (the @ mentions)
- * @returns {Promise<{ id: string, nome: string, grupo: boolean }
- *   | { email: string, nome: string, grupo: false }
- *   | { erro: string }
+ * @param {'group'|'contact'} [o.type]  restricts the search to the type indicated by the notice
+ * @param {Array<string|{_serialized: string}>} [o.mentions]  msg.mentionedIds (the @ mentions)
+ * @returns {Promise<{ id: string, name: string, group: boolean }
+ *   | { email: string, name: string, group: false }
+ *   | { error: string }
  * | { options: Array<{ id, name, group }>, search: string, more: number }>}
  * options: more than one fit; the caller offers the choice (resolverOrChoose)
  */
 async function resolverDestination(valueAlt, {
-    aceitaEmail: acceptsEmail = false, aceitaCanal: acceptsChannel = false, tipo: type,
-    semEmail: withoutEmail = t('grp.dest.noEmail'), mencoes: mentions = []
+    acceptsEmail = false, acceptsChannel = false, type,
+    noEmail: withoutEmail = t('grp.dest.noEmail'), mentions = []
 } = {}) {
     const textAlt = String(valueAlt ?? '').trim();
     if (acceptsChannel && isChannelAlt(textAlt)) {
         const channel = await client.getChatById(textAlt).catch(() => null);
-        return channel ? { id: textAlt, nome: channel.name || textAlt, grupo: false, canal: true }
-            : { erro: t('grp.dest.channelNotFound', { text: textAlt }) };
+        return channel ? { id: textAlt, name: channel.name || textAlt, group: false, channel: true }
+            : { error: t('grp.dest.channelNotFound', { text: textAlt }) };
     }
 
     if (!textAlt) {
-        return { erro: t(acceptsEmail ? 'grp.dest.needDestEmail' : 'grp.dest.needDest', { examples: example() }) };
+        return { error: t(acceptsEmail ? 'grp.dest.needDestEmail' : 'grp.dest.needDest', { examples: example() }) };
     }
 
     // Mention: "@<id>" in the text, with the same id in msg.mentionedIds
@@ -276,19 +276,19 @@ async function resolverDestination(valueAlt, {
 
     // Email: "email" (the QRCODE_EMAIL_SMTP_TO) and/or addresses
     const byEmail = type === 'grupo' ? null : readEmails(textAlt);
-    if (byEmail) return acceptsEmail ? byEmail : { erro: withoutEmail };
+    if (byEmail) return acceptsEmail ? byEmail : { error: withoutEmail };
 
     // Number: digits only, with + and separators
     const digits = type === 'grupo' ? null : readNumber(textAlt);
     if (digits !== null) {
         if (digits.length < 10 || digits.length > 15) {
-            return { erro: t('grp.dest.badNumber', { text: textAlt }) };
+            return { error: t('grp.dest.badNumber', { text: textAlt }) };
         }
 
         const wid = await client.getNumberId(digits).catch(() => null);
-        if (!wid) return { erro: t('grp.dest.notOnWhatsApp', { number: digits }) };
+        if (!wid) return { error: t('grp.dest.notOnWhatsApp', { number: digits }) };
 
-        return { id: wid._serialized, nome: await contactName(wid._serialized, digits), grupo: false };
+        return { id: wid._serialized, name: await contactName(wid._serialized, digits), group: false };
     }
 
     // Name: all the words, first in the contacts, then in the groups
@@ -300,15 +300,15 @@ async function resolverDestination(valueAlt, {
         foundAlt6 = await contactsAndGroups(words);
     } catch (err) {
         printError(`[DESTINATION] lookup for "${textAlt}" failed:`, err.message);
-        return { erro: t('grp.dest.searchFailed', { text: textAlt, error: err.message }) };
+        return { error: t('grp.dest.searchFailed', { text: textAlt, error: err.message }) };
     }
-    const contacts = type === 'grupo' ? [] : await withoutAsCopiesByLid(foundAlt6.contatos);
-    const groups = type === 'contato' ? [] : foundAlt6.grupos;
+    const contacts = type === 'grupo' ? [] : await withoutAsCopiesByLid(foundAlt6.contacts);
+    const groups = type === 'contato' ? [] : foundAlt6.groups;
     const channels = acceptsChannel
         ? (await (client.getChannels ? client.getChannels() : client.getChats()))
             .filter(c => isChannelAlt(c.id?._serialized) &&
                 words.every(p => normalize(c.name ?? '').includes(p)))
-            .map(c => ({ id: c.id._serialized, nome: c.name, grupo: false, canal: true })) : [];
+            .map(c => ({ id: c.id._serialized, name: c.name, group: false, channel: true })) : [];
 
     if (isDebugMode()) {
         printDebug(`[DESTINATION] "${textAlt}": contacts ${contacts.map(c => `${c.name}=${c.id._serialized}`).join(', ') || '-'}; ` +
@@ -320,7 +320,7 @@ async function resolverDestination(valueAlt, {
 
     if (exact && contacts.filter(c => normalize(c.name) === search).length === 1) return contact(exact);
     if (!exact && groupExact && groups.filter(g => normalize(g.name) === search).length === 1) return group(groupExact);
-    const channelExact = channels.filter(c => normalize(c.nome) === search);
+    const channelExact = channels.filter(c => normalize(c.name) === search);
     if (!exact && !groupExact && channelExact.length === 1) return channelExact[0];
 
     const candidates = contacts.length ? contacts.map(contact)
@@ -328,11 +328,11 @@ async function resolverDestination(valueAlt, {
     if (candidates.length === 1) return candidates[0];
 
     if (!candidates.length) {
-        if (type) return { erro: t('grp.dest.noneOfType', { type: t(type === 'grupo' ? 'grp.dest.typeGroup' : 'grp.dest.typeContact'), text: textAlt }) };
-        return { erro: t(acceptsChannel ? 'grp.dest.noneWithChannel' : 'grp.dest.none', { text: textAlt, examples: example() }) };
+        if (type) return { error: t('grp.dest.noneOfType', { type: t(type === 'grupo' ? 'grp.dest.typeGroup' : 'grp.dest.typeContact'), text: textAlt }) };
+        return { error: t(acceptsChannel ? 'grp.dest.noneWithChannel' : 'grp.dest.none', { text: textAlt, examples: example() }) };
     }
 
-    return { opcoes: candidates.slice(0, LIMIT), busca: textAlt, mais: Math.max(0, candidates.length - LIMIT) };
+    return { options: candidates.slice(0, LIMIT), search: textAlt, mais: Math.max(0, candidates.length - LIMIT) };
 }
 
 /**
@@ -340,29 +340,29 @@ async function resolverDestination(valueAlt, {
  * you reply with the no. (up to 2 minutes). Errors and the timeout already go
  * answered in the chat.
  * @param {object} msg  the command message
- * @param {string} valor
+ * @param {string} value
  * @param {object} [o]  the same as resolverDestination
- * @returns {Promise<{ id: string, nome: string, grupo: boolean } | null>}
+ * @returns {Promise<{ id: string, name: string, group: boolean } | null>}
  */
 async function resolverOrChoose(msg, valueAlt, o = {}) {
-    const r = await resolverDestination(valueAlt, { mencoes: msg.mentionedIds ?? [], ...o });
+    const r = await resolverDestination(valueAlt, { mentions: msg.mentionedIds ?? [], ...o });
 
-    if (r.erro) {
-        await msg.reply(r.erro);
+    if (r.error) {
+        await msg.reply(r.error);
         return null;
     }
-    if (!r.opcoes) return r;
+    if (!r.options) return r;
 
-    const type = t(r.opcoes[0].canal ? 'grp.dest.kindChannels' : r.opcoes[0].grupo ? 'grp.dest.kindGroups' : 'grp.dest.kindContacts');
-    const linesAlt = r.opcoes.map((d, i) => `${i + 1}. ${describeDestination(d)}${d.numero ? ` · +${d.numero}` : ''}`);
+    const type = t(r.options[0].channel ? 'grp.dest.kindChannels' : r.options[0].group ? 'grp.dest.kindGroups' : 'grp.dest.kindContacts');
+    const linesAlt = r.options.map((d, i) => `${i + 1}. ${describeDestination(d)}${d.number ? ` · +${d.number}` : ''}`);
     const more = r.mais ? '\n' + t('grp.dest.more', { n: r.mais, kind: type }) : '';
 
-    const question = await msg.reply(t('grp.dest.matches', { search: r.busca, n: r.opcoes.length + r.mais, kind: type, list: linesAlt.join('\n'), more: more }));
+    const question = await msg.reply(t('grp.dest.matches', { search: r.search, n: r.options.length + r.mais, kind: type, list: linesAlt.join('\n'), more: more }));
 
     const chatId = msg.id?.remote ?? msg.from;
-    return waitChoice(chatId, r.opcoes, {
-        autor: authorAlt(msg),
-        aoExpirar: () => completeNotice(msg, question, t('grp.dest.expired', { search: r.busca }))
+    return waitChoice(chatId, r.options, {
+        author: authorAlt(msg),
+        onExpire: () => completeNotice(msg, question, t('grp.dest.expired', { search: r.search }))
     });
 }
 
@@ -373,7 +373,7 @@ const destinationKey = (d) => (d.email ? `email:${d.email}` : d.id);
  * Resolves the several -to, one at a time (each may ask for the choice in the
  * list). A repeat counts once.
  * @param {object} msg  the command message
- * @param {Array<string|null>} textos  those from extractDestinations
+ * @param {Array<string|null>} texts  those from extractDestinations
  * @param {object} [o]  the same as resolverDestination
  * @returns {Promise<Array<object>|null>}  null: one failed (the error was already replied)
  */
@@ -391,17 +391,17 @@ async function resolverDestinations(msg, texts, o = {}) {
  * Sends a bot text to the destination: the chat (without a destination: your private chat) or,
  * by email, without WhatsApp formatting (*bold*, _italic_).
  * Throws the send error for whoever called.
- * @param {object|null} destino  the one from resolverDestination (or null)
- * @param {string} texto
+ * @param {object|null} destination  the one from resolverDestination (or null)
+ * @param {string} text
  * @param {object} [o]
- * @param {string} [o.assunto]  of the email
- * @param {object} [o.opcoes]   for client.sendMessage (e.g.: { linkPreview: false })
+ * @param {string} [o.subject]  of the email
+ * @param {object} [o.options]   for client.sendMessage (e.g.: { linkPreview: false })
  */
-async function sendOnDestination(destination, textAlt, { assunto: subject = t('grp.dest.subject'), opcoes: optionsAlt = {} } = {}) {
+async function sendOnDestination(destination, textAlt, { subject = t('grp.dest.subject'), options: optionsAlt = {} } = {}) {
     if (destination?.email) {
         const withoutFormatting = textAlt.replace(/[*_]/g, '');
-        await sendEmail({ para: destination.email.split(/\s*,\s*/), assunto: subject,
-            texto: contextDebug().maskTelefones
+        await sendEmail({ para: destination.email.split(/\s*,\s*/), subject,
+            text: contextDebug().maskPhones
                 ? maskPhones(withoutFormatting) : withoutFormatting });
         return;
     }
@@ -423,15 +423,15 @@ async function sendToDestinations(destinations, textAlt, o = {}) {
 
 // A stored row (dest_id, dest_name, dest_is_group, dest_email) → the destination; null: your private chat
 function lineDestination(r) {
-    if (r?.dest_email) return { email: r.dest_email, nome: r.dest_email, grupo: false };
-    return r?.dest_id ? { id: r.dest_id, nome: r.dest_name, grupo: Boolean(r.dest_is_group) } : null;
+    if (r?.dest_email) return { email: r.dest_email, name: r.dest_email, group: false };
+    return r?.dest_id ? { id: r.dest_id, name: r.dest_name, group: Boolean(r.dest_is_group) } : null;
 }
 
 // The reverse: the destination → the dest_* columns of a row
 const destinationColumns = (d) => ({
     dest_id: d?.email ? null : d?.id ?? null,
-    dest_name: d?.email ? null : d?.nome ?? null,
-    dest_is_group: d?.grupo ? 1 : 0,
+    dest_name: d?.email ? null : d?.name ?? null,
+    dest_is_group: d?.group ? 1 : 0,
     dest_email: d?.email ?? null
 });
 
@@ -440,8 +440,8 @@ const destinationColumns = (d) => ({
  * JSON with all of them, and the dest_* keep the first. With a single one, it stays null.
  */
 const saveable = (d) => (d.email
-    ? { email: d.email, nome: d.email, grupo: false }
-    : { id: d.id, nome: d.nome, grupo: Boolean(d.grupo) });
+    ? { email: d.email, name: d.email, group: false }
+    : { id: d.id, name: d.name, group: Boolean(d.group) });
 const recipientsDe = (destinations) => (destinations.length > 1 ? JSON.stringify(destinations.map(saveable)) : null);
 
 // The same, with any amount (the daily status: with none, null = your private chat)
@@ -460,12 +460,12 @@ const destinationsSaved = (recipients, single) => (recipients ? JSON.parse(recip
 async function personMentioned(digits, mentions) {
     const id = mentions.map(m => (typeof m === 'string' ? m : m?._serialized)).find(m => m?.split('@')[0] === digits);
     if (!id) {
-        return { erro: t('grp.dest.notMention', { digits: digits, examples: example() }) };
+        return { error: t('grp.dest.notMention', { digits: digits, examples: example() }) };
     }
 
     const phoneAlt = id.endsWith('@lid') ? await resolveLidToPhone(id) : id;
     const final = phoneAlt ?? id;
-    return { id: final, nome: await contactName(final, final.split('@')[0]), grupo: false };
+    return { id: final, name: await contactName(final, final.split('@')[0]), group: false };
 }
 
 async function contactName(id, digits) {
@@ -473,8 +473,8 @@ async function contactName(id, digits) {
     return nameScheduleFirst(contactAlt) || `+${digits}`;
 }
 
-// "👥 Grupo sobre L200" / "👤 Fulano" / "📧 voce@exemplo.com"
-const describeDestination = (d) => `${d.email ? '📧' : d.canal ? '📰' : d.grupo ? '👥' : '👤'} ${d.email ?? d.nome}`;
+// "👥 Grupo sobre L200" / "👤 Fulano" / "📧 voce@example.com"
+const describeDestination = (d) => `${d.email ? '📧' : d.channel ? '📰' : d.group ? '👥' : '👤'} ${d.email ?? d.name}`;
 const describeDestinations = (destinations) => destinations.map(describeDestination).join(', ');
 
 module.exports = {
@@ -484,7 +484,7 @@ module.exports = {
     lineDestination,
     destinationsForSave,
     destinationsSaved,
-    emailsDoSmtpTo,
+    emailsOfSmtpTo,
     sendOnDestination,
     sendToDestinations,
     extractDestination,

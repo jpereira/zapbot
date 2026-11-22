@@ -54,10 +54,10 @@ async function appendMentions(messageId, mentionedIds) {
  * Messages stored before mentions existed: finds the @number ids of the text among the
  * group participants and stores it. Whoever is not found stays with [] (does not try again).
  * @param {object} [o]
- * @param {number} [o.limite]  how many messages at a time (the newest first)
- * @returns {Promise<{ lidas: number, preenchidas: number }>}
+ * @param {number} [o.limit]  how many messages at a time (the newest first)
+ * @returns {Promise<{ read: number, filled: number }>}
  */
-async function fillMentionsOld({ limite: limitAlt = 5000 } = {}) {
+async function fillMentionsOld({ limit: limitAlt = 5000 } = {}) {
     const linesAlt = await dbAll(
         "SELECT id, chat_id, body FROM messages WHERE mentions IS NULL AND body LIKE '%@%' ORDER BY timestamp DESC LIMIT ?",
         [limitAlt]
@@ -91,7 +91,7 @@ async function fillMentionsOld({ limite: limitAlt = 5000 } = {}) {
     }
 
     if (read) printInfo(`[Mentions] ${filled} of ${read} old messages with mention ids filled in`);
-    return { lidas: read, preenchidas: filled };
+    return { read, filled };
 }
 
 module.exports = { appendMentions, fillMentionsOld, mentionsRecorded, mentionsForRecord, messageResolverMentions };

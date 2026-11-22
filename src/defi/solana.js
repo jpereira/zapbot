@@ -104,7 +104,7 @@ function addressPda(seeds, program) {
 
 /**
  * Reads several accounts at once (getMultipleAccounts).
- * @returns {Promise<Array<{ dados: Buffer, dono: string }|null>>} each account and the
+ * @returns {Promise<Array<{ data: Buffer, owner: string }|null>>} each account and the
  * owner program of it (null: the account does not exist)
  */
 async function readAccounts(addresses) {
@@ -113,7 +113,7 @@ async function readAccounts(addresses) {
     }, { timeout: RPC_TIMEOUT_MS });
 
     if (data.error) throw new Error(t('defi.err.solana', { reason: data.error.message }));
-    return data.result.value.map(v => (v ? { dados: Buffer.from(v.data[0], 'base64'), dono: v.owner } : null));
+    return data.result.value.map(v => (v ? { data: Buffer.from(v.data[0], 'base64'), owner: v.owner } : null));
 }
 
 // Reading little-endian fields of an account
@@ -127,7 +127,7 @@ module.exports = {
     keyAlt,
     addressPda,
     i128,
-    isEnderecoSolana: isAddressSolana,
+    isAddressSolana,
     readAccounts,
     inCurve,
     u128

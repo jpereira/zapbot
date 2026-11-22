@@ -4,7 +4,7 @@
 
 const { language } = require('../i18n');
 
-// 'pt_BR' → 'pt-BR'; qualquer outro idioma → 'en-US'
+// 'pt_BR' → 'pt-BR'; qualquer outro language → 'en-US'
 const localeCurrent = () => (language() === 'pt_BR' ? 'pt-BR' : 'en-US');
 
 // Timestamp stored in seconds (WhatsApp) or milliseconds (Date.now())

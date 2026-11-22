@@ -30,7 +30,7 @@ module.exports = {
             cron: false
         }
     ],
-    argumentosLivres: true,
+    freeArguments: true,
     role: ADMIN, // runs several commands at once
     cron: false
 };

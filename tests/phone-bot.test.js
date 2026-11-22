@@ -15,7 +15,7 @@ afterEach(() => { process.env.PHONE_NUMBER = phoneAlt; });
 test('número em dígitos envia ao chat privado sem warning', async () => {
     const start = bot.logs.length;
     await messageToSelf('Teste de aviso');
-    assert.equal(bot.client.enviadas[0].chatId, `${phoneAlt}@c.us`);
+    assert.equal(bot.client.sent[0].chatId, `${phoneAlt}@c.us`);
     assert.equal(process.env.PHONE_NUMBER, phoneAlt);
     assert.ok(!bot.logs.slice(start).some(l => l.includes('PHONE_NUMBER ajustado')));
 });
@@ -28,7 +28,7 @@ test('limpa sufixos e formatação, avisa o formato esperado e continua enviando
         process.env.PHONE_NUMBER = valueAlt;
         const start = bot.logs.length;
         await messageToSelf('Aviso com telefone limpo');
-        assert.equal(bot.client.enviadas.at(-1).chatId, `${phoneAlt}@c.us`);
+        assert.equal(bot.client.sent.at(-1).chatId, `${phoneAlt}@c.us`);
         assert.equal(process.env.PHONE_NUMBER, phoneAlt);
         const warnings = bot.logs.slice(start).filter(l => l.includes('PHONE_NUMBER ajustado'));
         assert.equal(warnings.length, 1);

@@ -29,15 +29,15 @@ async function inJpeg(buffer, mime) {
 }
 
 /**
- * @param {object} contato  the whatsapp-web.js Contact
- * @param {string} telefone
+ * @param {object} contact  the whatsapp-web.js Contact
+ * @param {string} phone
  * @param {{refresh?: boolean, cache?: boolean}} [o]  cache: false neither reads nor writes
- * @returns {Promise<{foto: Buffer|null, doCache: boolean}>}
+ * @returns {Promise<{photo: Buffer|null, doCache: boolean}>}
  */
 async function contactPhoto(contactAlt, phoneAlt, { refresh = false, cache = getSetting('contacts.cache') } = {}) {
     if (cache && !refresh) {
-        if (!(await expired(fileAlt(phoneAlt, 'jpg')))) return { foto: await fs.readFile(fileAlt(phoneAlt, 'jpg')), doCache: true };
-        if (!(await expired(fileAlt(phoneAlt, 'none')))) return { foto: null, doCache: true };
+        if (!(await expired(fileAlt(phoneAlt, 'jpg')))) return { photo: await fs.readFile(fileAlt(phoneAlt, 'jpg')), doCache: true };
+        if (!(await expired(fileAlt(phoneAlt, 'none')))) return { photo: null, doCache: true };
     }
 
     let photo = null;
@@ -51,7 +51,7 @@ async function contactPhoto(contactAlt, phoneAlt, { refresh = false, cache = get
         }
     } catch (err) {
         printError(`/contacts: could not download the photo of ${phoneAlt}:`, err.message);
-        return { foto: null, doCache: false }; // a network failure does not become "no photo" in the cache
+        return { photo: null, doCache: false }; // a network failure does not become "no photo" in the cache
     }
 
     if (cache) {
@@ -60,18 +60,18 @@ async function contactPhoto(contactAlt, phoneAlt, { refresh = false, cache = get
         if (photo) await fs.writeFile(fileAlt(phoneAlt, 'jpg'), photo);
         else await fs.writeFile(fileAlt(phoneAlt, 'none'), '');
     }
-    return { foto: photo, doCache: false };
+    return { photo, doCache: false };
 }
 
 // How many photos (and how many bytes) are in CONTACTS_DIR
 async function cacheSummary() {
-    if (!fs.existsSync(CONTACTS_DIR)) return { fotos: 0, semFoto: 0, bytes: 0 };
+    if (!fs.existsSync(CONTACTS_DIR)) return { photos: 0, noPhoto: 0, bytes: 0 };
     let photos = 0, withoutPhoto = 0, bytes = 0;
     for (const f of await fs.readdir(CONTACTS_DIR)) {
         if (f.endsWith('.jpg')) { photos++; bytes += (await fs.stat(path.join(CONTACTS_DIR, f))).size; }
         else if (f.endsWith('.none')) withoutPhoto++;
     }
-    return { fotos: photos, semFoto: withoutPhoto, bytes };
+    return { photos, noPhoto: withoutPhoto, bytes };
 }
 
 async function cleanCache() {

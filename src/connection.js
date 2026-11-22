@@ -5,7 +5,7 @@
 const qrcode = require('qrcode');
 const qrcodeTerminal = require('qrcode-terminal');
 
-const { estado: stateAlt } = require('./state');
+const { state: stateAlt } = require('./state');
 const { client, messageToSelf } = require('./client');
 const { dbReady } = require('./db');
 const { fillMentionsOld } = require('./mentions');
@@ -32,47 +32,47 @@ const CONNECTION_MAX_MS = 3 * 60 * 1000;
 
 let newAttempt = null;     // the setTimeout of the next attempt
 let reasonOriginal = null;    // what led to the 1st restart that failed (that of the following attempts)
-let vigiaDoReady = null;      // the setTimeout that waits for 'ready' after initialize
+let readyWatchdog = null;      // the setTimeout that waits for 'ready' after initialize
 
 // Both timers do not hold the process (unref) and leave together (ready, tests)
 function stopReconnection() {
     reasonOriginal = null;
     clearTimeout(newAttempt);
-    clearTimeout(vigiaDoReady);
+    clearTimeout(readyWatchdog);
     newAttempt = null;
-    vigiaDoReady = null;
+    readyWatchdog = null;
 }
 
 function scheduleNewAttempt(reasonAlt, errorAlt) {
-    const wait = WAITS_MS[Math.min(stateAlt.tentativas, WAITS_MS.length - 1)];
-    stateAlt.tentativas++;
-    stateAlt.foraDesde ??= Date.now();
+    const wait = WAITS_MS[Math.min(stateAlt.attempts, WAITS_MS.length - 1)];
+    stateAlt.attempts++;
+    stateAlt.outSince ??= Date.now();
 
     // A single email, on the 1st failure (with the internet down, it does not even go out: the "Reconectado" counts the rest)
-    if (stateAlt.tentativas === 1) {
+    if (stateAlt.attempts === 1) {
         reasonOriginal = reasonAlt;
-        alertPerEmail(t('conexao.falhaReiniciarTitulo'), t('conexao.falhaReiniciarCorpo', { motivo: reasonAlt, erro: errorAlt }));
+        alertPerEmail(t('conexao.falhaReiniciarTitulo'), t('conexao.falhaReiniciarCorpo', { reason: reasonAlt, error: errorAlt }));
     }
 
-    printInfo(`♻️ Retrying to connect in ${wait / 1000}s (consecutive failures: ${stateAlt.tentativas}).`);
+    printInfo(`♻️ Retrying to connect in ${wait / 1000}s (consecutive failures: ${stateAlt.attempts}).`);
     clearTimeout(newAttempt);
     newAttempt = setTimeout(() => {
         newAttempt = null;
-        restartClient(t('conexao.motivoNovaTentativa', { n: stateAlt.tentativas + 1, motivo: reasonOriginal }));
+        restartClient(t('conexao.motivoNovaTentativa', { n: stateAlt.attempts + 1, reason: reasonOriginal }));
     }, wait);
     newAttempt.unref?.();
 }
 
 // After an initialize that went through: if 'ready' does not come, restarts (except while waiting for the QR Code)
 function watchReady() {
-    clearTimeout(vigiaDoReady);
-    vigiaDoReady = setTimeout(() => {
-        vigiaDoReady = null;
-        if (stateAlt.pronto || stateAlt.reiniciando || stateAlt.aguardandoQr) return;
+    clearTimeout(readyWatchdog);
+    readyWatchdog = setTimeout(() => {
+        readyWatchdog = null;
+        if (stateAlt.ready || stateAlt.restarting || stateAlt.waitingQr) return;
         printError(`No connection ${CONNECTION_MAX_MS / 60000} min after starting: restarting the client.`);
         restartClient(t('conexao.motivoSemReady', { min: CONNECTION_MAX_MS / 60000 }));
     }, CONNECTION_MAX_MS);
-    vigiaDoReady.unref?.();
+    readyWatchdog.unref?.();
 }
 
 /*
@@ -88,13 +88,13 @@ function killBrowserOrphan() {
 }
 
 async function restartClient(reasonAlt) {
-    if (stateAlt.reiniciando) {
+    if (stateAlt.restarting) {
         printInfo(`Restart ignored (already in progress). Reason: ${reasonAlt}`);
         return;
     }
 
-    stateAlt.reiniciando = true;
-    stateAlt.pronto = false;
+    stateAlt.restarting = true;
+    stateAlt.ready = false;
     printInfo(`♻️ Restarting client. Reason: ${reasonAlt}`);
 
     try {
@@ -113,7 +113,7 @@ async function restartClient(reasonAlt) {
         errorAlt = e;
         printError('initialize failed:', e.message);
     } finally {
-        stateAlt.reiniciando = false;
+        stateAlt.restarting = false;
     }
 
     if (errorAlt) scheduleNewAttempt(reasonAlt, errorAlt.message);
@@ -122,7 +122,7 @@ async function restartClient(reasonAlt) {
 
 // Watchdog (the check that WhatsApp responds lives in heartbeat.js): only watches a client that was already ready and is not restarting
 async function watchBrowser() {
-    if (!stateAlt.pronto || stateAlt.reiniciando) return;
+    if (!stateAlt.ready || stateAlt.restarting) return;
 
     if (!client.pupBrowser?.isConnected()) {
         alertPerEmail(t('conexao.browserCaiuTitulo'), t('conexao.browserCaiuCorpo'));
@@ -144,7 +144,7 @@ let qrEmailCounter = 0;
 
 client.on('qr', async (qr) => {
     // Waiting for someone to read the QR: the 'ready' watcher does not restart (the QR would change on every restart)
-    stateAlt.aguardandoQr = true;
+    stateAlt.waitingQr = true;
 
     const currentdatetimeday =
         new Date().toLocaleString('sv-SE', { timeZone: 'America/Sao_Paulo', hour12: false }) + ' BRT';
@@ -154,12 +154,12 @@ client.on('qr', async (qr) => {
     printInfo(`[QR] PID=${process.pid} emailEnabled=${emailEnabled}`);
 
     // Diagnostic: a QR after already authenticating indicates a lost session.
-    if (stateAlt.autenticadoEm > 0 || stateAlt.ultimaQueda) {
+    if (stateAlt.authenticatedAt > 0 || stateAlt.lastOutage) {
         printError(
             '⚠️ QR received AFTER authentication.',
-            `lastDisconnect=${stateAlt.ultimaQueda} restarting=${stateAlt.reiniciando} ready=${stateAlt.pronto}`
+            `lastDisconnect=${stateAlt.lastOutage} restarting=${stateAlt.restarting} ready=${stateAlt.ready}`
         );
-        alertPerEmail(t('conexao.sessaoPerdidaTitulo'), t('conexao.sessaoPerdidaCorpo', { motivo: stateAlt.ultimaQueda ?? '-' }));
+        alertPerEmail(t('conexao.sessaoPerdidaTitulo'), t('conexao.sessaoPerdidaCorpo', { reason: stateAlt.lastOutage ?? '-' }));
     }
 
     if (!emailEnabled) {
@@ -260,8 +260,8 @@ client.on('qr', async (qr) => {
  */
 client.on('authenticated', () => {
     printSuccess('🔐 Whatsapp authentication success!');
-    stateAlt.autenticadoEm = Date.now();
-    stateAlt.aguardandoQr = false;
+    stateAlt.authenticatedAt = Date.now();
+    stateAlt.waitingQr = false;
 
     if (!isDebugMode()) return;
 
@@ -300,18 +300,18 @@ client.on('authenticated', () => {
 });
 
 client.on('disconnected', async (reason) => {
-    stateAlt.pronto = false;
-    stateAlt.autenticadoEm = 0;
-    stateAlt.ultimaQueda = reason;
+    stateAlt.ready = false;
+    stateAlt.authenticatedAt = 0;
+    stateAlt.lastOutage = reason;
     printInfo(`💥 WhatsApp disconnected: ${reason}`);
 
     if (NOT_RESTART.has(String(reason))) {
         printError(`Reason '${reason}' needs manual action (another instance or revoked session). Not restarting in a loop.`);
-        alertPerEmail(t('conexao.desconectadoManualTitulo'), t('conexao.desconectadoManualCorpo', { motivo: reason }));
+        alertPerEmail(t('conexao.desconectadoManualTitulo'), t('conexao.desconectadoManualCorpo', { reason }));
         return;
     }
 
-    alertPerEmail(t('conexao.desconectadoTitulo'), t('conexao.desconectadoCorpo', { motivo: reason }));
+    alertPerEmail(t('conexao.desconectadoTitulo'), t('conexao.desconectadoCorpo', { reason }));
 
     await restartClient(`disconnected: ${reason}`);
 });
@@ -330,21 +330,21 @@ const STATES_PROBLEM = new Set(['CONFLICT', 'UNPAIRED', 'UNPAIRED_IDLE', 'DEPREC
 
 client.on('change_state', state => {
     printInfo(`[WA STATE]=${state}`);
-    if (STATES_PROBLEM.has(state)) alertPerEmail(t('conexao.estadoTitulo', { estado: state }), t('conexao.estadoCorpo', { estado: state }));
+    if (STATES_PROBLEM.has(state)) alertPerEmail(t('conexao.estadoTitulo', { state }), t('conexao.estadoCorpo', { state }));
 });
 
 let jaStayedReady = false;
 
-client.on('ready', () => withContextDebug({ semFiltro: true }, async () => {
-    stateAlt.pronto = true;
-    stateAlt.aguardandoQr = false;
-    const dropReason = stateAlt.ultimaQueda;
-    stateAlt.ultimaQueda = null;
+client.on('ready', () => withContextDebug({ noFilter: true }, async () => {
+    stateAlt.ready = true;
+    stateAlt.waitingQr = false;
+    const dropReason = stateAlt.lastOutage;
+    stateAlt.lastOutage = null;
 
     // Connected: the attempts stop, and the email says how long it was out
-    const { tentativas: attempts, foraDesde: outsideSince } = stateAlt;
-    stateAlt.tentativas = 0;
-    stateAlt.foraDesde = null;
+    const { attempts, outSince: outsideSince } = stateAlt;
+    stateAlt.attempts = 0;
+    stateAlt.outSince = null;
     stopReconnection();
     const minutesOutside = outsideSince ? Math.max(1, Math.round((Date.now() - outsideSince) / 60000)) : 0;
     const outsidePer = outsideSince
@@ -361,10 +361,10 @@ client.on('ready', () => withContextDebug({ semFiltro: true }, async () => {
     const notices = listNotices.map(a => ` ${a}`).join('');
 
     printSuccess(`🤖 ZapBot ${versionWithCommit()} ready! Reporting to ${process.env.PHONE_NUMBER}`);
-    messageToSelf(t('conexao.inicializado', { versao: versionWithCommit(), avisos: notices }));
+    messageToSelf(t('conexao.inicializado', { version: versionWithCommit(), notices }));
 
     alertPerEmail(t(jaStayedReady ? 'conexao.reconectadoTitulo' : 'conexao.iniciadoTitulo'),
-        [jaStayedReady ? (dropReason ? t('conexao.conectadoDeNovoQueda', { motivo: dropReason }) : t('conexao.conectadoDeNovo')) : t('conexao.conectado'),
+        [jaStayedReady ? (dropReason ? t('conexao.conectadoDeNovoQueda', { reason: dropReason }) : t('conexao.conectadoDeNovo')) : t('conexao.conectado'),
          outsidePer, ...listNotices].filter(Boolean).join('\n'));
     if (!jaStayedReady) {
         // In the background: the mention ids of messages stored before they existed

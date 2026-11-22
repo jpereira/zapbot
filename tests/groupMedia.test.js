@@ -9,11 +9,11 @@ const assert = require('node:assert/strict');
 
 const { OWNER, GROUP, OTHERAlt, MessageMedia, Poll, network } = bot;
 
-const CICLANO = { jid: '5521922222222@c.us', nome: 'Ciclano' };
+const CICLANO = { jid: '5521922222222@c.us', name: 'Ciclano' };
 
 beforeEach(async () => {
     await bot.restart();
-    bot.createContact(CICLANO.jid, CICLANO.nome);
+    bot.createContact(CICLANO.jid, CICLANO.name);
     bot.createGroup(GROUP, 'Família', [
         { jid: OWNER.jid, isSuperAdmin: true },
         { jid: OTHERAlt.jid, isAdmin: true },
@@ -26,9 +26,9 @@ const onlyGroup = 'Apenas utilizado dentro de grupos.';
 
 describe('/everybody', () => {
     test('marca todos menos quem chamou, respondendo a mensagem', async () => {
-        const [r] = await bot.executar('/everybody', { id: 'CHAMADA' });
+        const [r] = await bot.execute('/everybody', { id: 'CHAMADA' });
         assert.equal(r.chatId, GROUP);
-        assert.equal(r.texto, `@${OTHERAlt.jid.split('@')[0]} @${CICLANO.jid.split('@')[0]} @777 `);
+        assert.equal(r.text, `@${OTHERAlt.jid.split('@')[0]} @${CICLANO.jid.split('@')[0]} @777 `);
         assert.deepEqual(r.options.mentions, [OTHERAlt.jid, CICLANO.jid, '777@lid']);
         assert.match(r.options.quotedMessageId, /CHAMADA$/);
     });
@@ -38,7 +38,7 @@ describe('/everybody', () => {
     });
 
     test('o alias /everybody', async () => {
-        const [r] = await bot.executar('/everybody');
+        const [r] = await bot.execute('/everybody');
         assert.equal(r.chatId, GROUP);
         assert.deepEqual(r.options.mentions, [OTHERAlt.jid, CICLANO.jid, '777@lid']);
     });
@@ -51,13 +51,13 @@ describe('/everybody', () => {
 describe('/bills e /walissu', () => {
     test('/bills sorteia 2 membros diferentes (nunca o bot)', async () => {
         for (let i = 0; i < 10; i++) {
-            const [r] = await bot.executar('/bills');
+            const [r] = await bot.execute('/bills');
             const marked = r.options.mentions;
             assert.equal(marked.length, 2);
             assert.notEqual(marked[0], marked[1]);
             assert.ok(!marked.includes(OWNER.jid));
-            assert.match(r.texto, /🥳 Parabéns @\S+ e @\S+ 🎉\nVocês foram sorteados para pagar um boleto!/);
-            assert.match(r.texto, /\n\n🤡 _É só uma piada! Não existe boleto nenhum: não pague nada\._$/);
+            assert.match(r.text, /🥳 Parabéns @\S+ e @\S+ 🎉\nVocês foram sorteados para pagar um boleto!/);
+            assert.match(r.text, /\n\n🤡 _É só uma piada! Não existe boleto nenhum: não pague nada\._$/);
         }
     });
 
@@ -74,16 +74,16 @@ describe('/bills e /walissu', () => {
             ? { totalResults: 1 }
             : { vulnerabilities: [{ cve: { id: 'CVE-2026-0001', descriptions: [{ lang: 'en', value: 'Bug.' }], metrics: {} } }] });
 
-        const [r] = await bot.executar('/walissu');
+        const [r] = await bot.execute('/walissu');
         assert.equal(r.options.mentions.length, 2);
-        assert.match(r.texto, /Walissu CVE BOT[\s\S]*\*CVE-2026-0001\*[\s\S]*Preciso sair de Brasília!\n\n🤡 _É só uma piada do Walissu CVE BOT/);
+        assert.match(r.text, /Walissu CVE BOT[\s\S]*\*CVE-2026-0001\*[\s\S]*Preciso sair de Brasília!\n\n🤡 _É só uma piada do Walissu CVE BOT/);
     });
 
     test('/walissu sem CVE ou com o NVD fora do ar', async () => {
         network.responder('get', 'services.nvd.nist.gov', { totalResults: 0 });
         assert.deepEqual(await bot.replyAlt('/walissu'), ['🛡️ Nenhuma CVE publicada nos últimos 2 dias.']);
         network.responder('get', 'services.nvd.nist.gov', new Error('503'));
-        assert.deepEqual(await bot.replyAlt('/walissu', { erroEsperado: true }), ['❌ Não consegui consultar o NVD agora.']);
+        assert.deepEqual(await bot.replyAlt('/walissu', { expectedError: true }), ['❌ Não consegui consultar o NVD agora.']);
     });
 });
 
@@ -109,7 +109,7 @@ describe('/members', () => {
 
 describe('/poll', () => {
     const pollAlt = async (line) => {
-        const [r] = await bot.executar(line);
+        const [r] = await bot.execute(line);
         assert.ok(r.content instanceof Poll, `sem enquete para: ${line}`);
         return r.content;
     };
@@ -160,7 +160,7 @@ describe('/poll -r (resultado)', () => {
     beforeEach(() => bot.createContact(CICLANO_JID, 'Ciclano'));
 
     test('placar da enquete mais recente do chat, com quem votou', async () => {
-        const [sent] = await bot.executar('/poll Pizza ou hambúrguer? | Pizza | Hambúrguer | Salada');
+        const [sent] = await bot.execute('/poll Pizza ou hambúrguer? | Pizza | Hambúrguer | Salada');
 
         // Before they vote: the poll is already registered
         assert.match((await bot.replyAlt('/poll -r'))[0], /📊 \*Resultado: Pizza ou hambúrguer\?\*\n_0 votos de 0 pessoas · criada em [^_]+_\n[\s\S]*_Ninguém votou ainda\._/);
@@ -177,7 +177,7 @@ describe('/poll -r (resultado)', () => {
     });
 
     test('mudar ou tirar o voto; várias respostas', async () => {
-        const [sent] = await bot.executar('/poll -m Dias? | Seg | Ter');
+        const [sent] = await bot.execute('/poll -m Dias? | Seg | Ter');
         await bot.voteAlt(sent, OTHERAlt.jid, ['Seg']);
         await bot.voteAlt(sent, OTHERAlt.jid, ['Seg', 'Ter']);   // changed: the last one counts
         await bot.voteAlt(sent, CICLANO_JID, ['Ter']);
@@ -196,27 +196,27 @@ describe('/poll -r (resultado)', () => {
             pollOptions: [{ name: 'Sim', localId: 0 }, { name: 'Não', localId: 1 }]
         };
         await bot.voteAlt(phone, OTHERAlt.jid, ['Sim']);
-        await bot.executar('/poll Outra? | a | b');   // most recent
+        await bot.execute('/poll Outra? | a | b');   // most recent
 
         assert.match((await bot.replyAlt('/poll -r'))[0], /Resultado: Outra\?/);
 
-        const quoted = bot.createMessage({ tipo: 'poll_creation', id: 'POLL1' });
-        const [r] = await bot.replyAlt('/poll -r', { citada: quoted });
+        const quoted = bot.createMessage({ type: 'poll_creation', id: 'POLL1' });
+        const [r] = await bot.replyAlt('/poll -r', { quoted });
         assert.match(r, /Resultado: Churrasco\?[\s\S]*🏆 \*Sim\* — 1 \(100%\)/);
 
-        const unknown = bot.createMessage({ tipo: 'poll_creation', id: 'NAOSEI' });
-        assert.match((await bot.replyAlt('/poll -r', { citada: unknown }))[0], /📊 Não tenho os votos dessa enquete/);
+        const unknown = bot.createMessage({ type: 'poll_creation', id: 'NAOSEI' });
+        assert.match((await bot.replyAlt('/poll -r', { quoted: unknown }))[0], /📊 Não tenho os votos dessa enquete/);
     });
 
     test('sem enquete no chat; -r no meio faz parte da pergunta', async () => {
         assert.match((await bot.replyAlt('/poll -r'))[0], /📊 Nenhuma enquete registrada neste chat/);
-        const [r] = await bot.executar('/poll Vale -r aqui? | sim | não');
+        const [r] = await bot.execute('/poll Vale -r aqui? | sim | não');
         assert.equal(r.content.pollName, 'Vale -r aqui?');
     });
 
     test('limpeza: enquetes mais antigas que poll.retentionDays saem com os votos', async () => {
         const { cleanPollsOld } = bot.src('cleanup');
-        const [sent] = await bot.executar('/poll Velha? | a | b');
+        const [sent] = await bot.execute('/poll Velha? | a | b');
         await bot.voteAlt(sent, OTHERAlt.jid, ['a']);
         await bot.dbRun('UPDATE polls SET created_at = ?', [Date.now() - 91 * 86400_000]);
 
@@ -235,8 +235,8 @@ describe('/sticker', () => {
 
     test('imagem: enquadrada em webp, com o nome e o autor do setting', async () => {
         await bot.setSetting('sticker.name', 'Meu Pacote');
-        const quoted = bot.createMessage({ de: OTHERAlt.jid, midia: photo });
-        const [r] = await bot.executar('/sticker', { citada: quoted });
+        const quoted = bot.createMessage({ de: OTHERAlt.jid, media: photo });
+        const [r] = await bot.execute('/sticker', { quoted });
 
         assert.ok(r.content instanceof MessageMedia);
         assert.equal(r.content.mimetype, 'image/webp');
@@ -247,15 +247,15 @@ describe('/sticker', () => {
 
     test('webp vai como está; vídeo vira figurinha animada pelo ffmpeg, com -ss e -es', async () => {
         const webp = { mimetype: 'image/webp', data: 'AA==' };
-        const [r] = await bot.executar('/sticker', { citada: bot.createMessage({ de: OTHERAlt.jid, midia: webp }) });
+        const [r] = await bot.execute('/sticker', { quoted: bot.createMessage({ de: OTHERAlt.jid, media: webp }) });
         assert.equal(r.content, webp);
 
-        const video = bot.createMessage({ de: OTHERAlt.jid, midia: { mimetype: 'video/mp4', data: 'AA==' } });
-        const [notice, sticker] = await bot.executar('/sticker -ss 4 -es 7', { citada: video });
-        assert.equal(notice.texto, '✅ Sticker criado com sucesso!');
+        const video = bot.createMessage({ de: OTHERAlt.jid, media: { mimetype: 'video/mp4', data: 'AA==' } });
+        const [notice, sticker] = await bot.execute('/sticker -ss 4 -es 7', { quoted: video });
+        assert.equal(notice.text, '✅ Sticker criado com sucesso!');
         assert.equal(sticker.options.sendMediaAsSticker, true);
 
-        const [ffmpeg] = bot.processes.chamadas;
+        const [ffmpeg] = bot.processes.calls;
         assert.match(ffmpeg.bin, /ffmpeg$/);
         assert.equal(ffmpeg.args[ffmpeg.args.indexOf('-ss') + 1], '4');
         assert.equal(ffmpeg.args[ffmpeg.args.indexOf('-t') + 1], '3');
@@ -268,110 +268,110 @@ describe('/sticker', () => {
     });
 
     test('vídeo: reduz qualidade e fps até a figurinha caber em 500 KB', async () => {
-        const video = bot.createMessage({ de: OTHERAlt.jid, midia: { mimetype: 'video/mp4', data: 'AA==' } });
-        bot.processes.tamanhoSaida = 500 * 1024 + 1;
-        const r = await bot.executar('/sticker', { citada: video, erroEsperado: true });
+        const video = bot.createMessage({ de: OTHERAlt.jid, media: { mimetype: 'video/mp4', data: 'AA==' } });
+        bot.processes.outputSize = 500 * 1024 + 1;
+        const r = await bot.execute('/sticker', { quoted: video, expectedError: true });
 
-        const ffmpegs = bot.processes.chamadas.map(c => c.args);
+        const ffmpegs = bot.processes.calls.map(c => c.args);
         assert.deepEqual(ffmpegs.map(a => a[a.indexOf('-q:v') + 1]), ['75', '50', '30', '20']);
         assert.match(ffmpegs.at(-1)[ffmpegs.at(-1).indexOf('-vf') + 1], /^fps=8,/);
         assert.equal(r.length, 1, 'só o aviso, editado com o erro');
-        assert.match(r[0].texto, /Figurinha grande demais para o WhatsApp \(máx\. 500 KB\)/);
+        assert.match(r[0].text, /Figurinha grande demais para o WhatsApp \(máx\. 500 KB\)/);
     });
 
     test('URL ou link respondido: baixa o vídeo, como o /get -st', async () => {
-        await bot.executar('/sticker -ss 10 http://8.8.8.8/video');
-        assert.deepEqual(bot.processes.chamadas.map(c => c.bin.split('/').pop()), ['yt-dlp', 'ffmpeg']);
+        await bot.execute('/sticker -ss 10 http://8.8.8.8/video');
+        assert.deepEqual(bot.processes.calls.map(c => c.bin.split('/').pop()), ['yt-dlp', 'ffmpeg']);
         // yt-dlp downloads only the snippet: ffmpeg only limits the duration
         const section = () => {
-            const yt = bot.processes.chamadas[0].args;
+            const yt = bot.processes.calls[0].args;
             return yt[yt.indexOf('--download-sections') + 1];
         };
-        const ff = bot.processes.chamadas[1].args;
+        const ff = bot.processes.calls[1].args;
         assert.equal(section(), '*10-16', 'sem -es: os 6 s seguintes');
         assert.ok(!ff.includes('-ss'));
         assert.equal(ff[ff.indexOf('-t') + 1], '6');
 
-        bot.processes.chamadas.length = 0;
-        await bot.executar('/sticker -ss 01:10 -es 01:13 http://8.8.8.8/video');
-        const ffMin = bot.processes.chamadas[1].args;
+        bot.processes.calls.length = 0;
+        await bot.execute('/sticker -ss 01:10 -es 01:13 http://8.8.8.8/video');
+        const ffMin = bot.processes.calls[1].args;
         assert.equal(section(), '*70-73', 'min:seg vira segundos');
         assert.equal(ffMin[ffMin.indexOf('-t') + 1], '3');
 
-        bot.processes.chamadas.length = 0;
-        const [, sticker] = await bot.executar('/sticker', { citada: bot.createMessage({ texto: 'olha http://8.8.8.8/v', de: OTHERAlt.jid }) });
-        assert.equal(bot.processes.chamadas[0].args.at(-1), 'http://8.8.8.8/v');
+        bot.processes.calls.length = 0;
+        const [, sticker] = await bot.execute('/sticker', { quoted: bot.createMessage({ text: 'olha http://8.8.8.8/v', de: OTHERAlt.jid }) });
+        assert.equal(bot.processes.calls[0].args.at(-1), 'http://8.8.8.8/v');
         assert.equal(sticker.options.sendMediaAsSticker, true);
     });
 
     test('link sem vídeo: usa a prévia do link (interna ou externa) e edita o aviso', async () => {
-        bot.processes.falhar = 'yt-dlp';
-        const withThumb = bot.createMessage({ texto: 'http://8.8.8.8/post', de: OTHERAlt.jid, extras: { _data: { thumbnail: Buffer.from('thumb').toString('base64') } } });
-        const [notice, internal] = await bot.executar('/sticker', { citada: withThumb });
-        assert.equal(notice.texto, '✅ Sticker criado com sucesso!');
+        bot.processes.fail = 'yt-dlp';
+        const withThumb = bot.createMessage({ text: 'http://8.8.8.8/post', de: OTHERAlt.jid, extras: { _data: { thumbnail: Buffer.from('thumb').toString('base64') } } });
+        const [notice, internal] = await bot.execute('/sticker', { quoted: withThumb });
+        assert.equal(notice.text, '✅ Sticker criado com sucesso!');
         assert.equal(internal.content.mimetype, 'image/webp');
         assert.equal(internal.options.sendMediaAsSticker, true);
 
         // The external preview is fetched with an IP pin (httpGetSafe), not MessageMedia.fromUrl
         bot.network.responder('get', '8.8.4.4', bot.network.http({ data: Buffer.from('jpg'), headers: { 'content-type': 'image/jpeg' } }));
-        const external = bot.createMessage({ texto: 'http://8.8.8.8/post', de: OTHERAlt.jid, extras: { _data: { thumbnailUrl: 'http://8.8.4.4/t.jpg' } } });
-        assert.equal((await bot.executar('/sticker', { citada: external }))[1].content.mimetype, 'image/webp');
+        const external = bot.createMessage({ text: 'http://8.8.8.8/post', de: OTHERAlt.jid, extras: { _data: { thumbnailUrl: 'http://8.8.4.4/t.jpg' } } });
+        assert.equal((await bot.execute('/sticker', { quoted: external }))[1].content.mimetype, 'image/webp');
 
         // The external preview goes through the anti-SSRF: on the internal network, it is not downloaded (and the yt-dlp error stays)
-        const interna = bot.createMessage({ texto: 'http://8.8.8.8/post', de: OTHERAlt.jid, extras: { _data: { thumbnailUrl: 'http://192.168.0.1/t.jpg' } } });
-        const withoutPreview = await bot.executar('/sticker', { citada: interna, erroEsperado: true });
+        const internalThumb = bot.createMessage({ text: 'http://8.8.8.8/post', de: OTHERAlt.jid, extras: { _data: { thumbnailUrl: 'http://192.168.0.1/t.jpg' } } });
+        const withoutPreview = await bot.execute('/sticker', { quoted: internalThumb, expectedError: true });
         assert.equal(withoutPreview.length, 1);
-        assert.match(withoutPreview[0].texto, /Problemas para baixar com/);
+        assert.match(withoutPreview[0].text, /Problemas para baixar com/);
 
         // A link that cannot be downloaded (private address): the preview also works, without a warning
-        const private = bot.createMessage({ texto: 'http://127.0.0.1/post', de: OTHERAlt.jid, extras: { _data: { thumbnail: 'AA==' } } });
-        const r = await bot.executar('/sticker', { citada: private });
+        const private = bot.createMessage({ text: 'http://127.0.0.1/post', de: OTHERAlt.jid, extras: { _data: { thumbnail: 'AA==' } } });
+        const r = await bot.execute('/sticker', { quoted: private });
         assert.equal(r.length, 1);
         assert.equal(r[0].options.sendMediaAsSticker, true);
     });
 
     test('mensagem sem mídia nem link; link sem vídeo nem prévia; áudio', async () => {
-        assert.deepEqual(await bot.replyAlt('/sticker', { citada: bot.createMessage({ texto: 'só texto', de: OTHERAlt.jid }) }),
+        assert.deepEqual(await bot.replyAlt('/sticker', { quoted: bot.createMessage({ text: 'só texto', de: OTHERAlt.jid }) }),
             ['❌ A mensagem respondida não tem mídia nem link.']);
 
-        bot.processes.falhar = 'yt-dlp';
-        const r = await bot.executar('/sticker', { citada: bot.createMessage({ texto: 'http://8.8.8.8/a', de: OTHERAlt.jid }), erroEsperado: true });
+        bot.processes.fail = 'yt-dlp';
+        const r = await bot.execute('/sticker', { quoted: bot.createMessage({ text: 'http://8.8.8.8/a', de: OTHERAlt.jid }), expectedError: true });
         assert.equal(r.length, 1);
-        assert.match(r[0].texto, /Problemas para baixar com/);
+        assert.match(r[0].text, /Problemas para baixar com/);
 
-        const audio = bot.createMessage({ de: OTHERAlt.jid, midia: { mimetype: 'audio/ogg', data: 'AA==' } });
-        assert.deepEqual(await bot.replyAlt('/sticker', { citada: audio }), ['❌ Não dá para fazer figurinha de um áudio.']);
+        const audio = bot.createMessage({ de: OTHERAlt.jid, media: { mimetype: 'audio/ogg', data: 'AA==' } });
+        assert.deepEqual(await bot.replyAlt('/sticker', { quoted: audio }), ['❌ Não dá para fazer figurinha de um áudio.']);
     });
 
     test('-txt: os dois quadros em PNG (letra fg no fundo bg, e o contrário), juntados pelo ffmpeg num WEBP animado', async () => {
-        const { textFrames, readCor } = bot.src('stickerText');
+        const { textFrames, readColor } = bot.src('stickerText');
         const sharp = require('sharp');   // the environment's fake: stores what was requested
 
-        sharp.entradas.length = 0;
+        sharp.inputs.length = 0;
         await textFrames('Bom dia <b>&', { fg: '#000000', bg: '#FFFF00' });
-        const [t0, c0, t1, c1] = sharp.entradas;
+        const [t0, c0, t1, c1] = sharp.inputs;
         assert.equal(t0.text.text, '<span foreground="#000000">Bom dia &lt;b&gt;&amp;</span>', 'o texto vai escapado');
         assert.deepEqual([t0.text.width, t0.text.height, c0.create.width, c0.create.background], [432, 432, 512, '#FFFF00']);
         assert.deepEqual([t1.text.text.slice(0, 26), c1.create.background], ['<span foreground="#FFFF00"', '#000000'], 'o 2º quadro inverte');
-        assert.deepEqual([readCor('#fff'), readCor('C0392B'), readCor('azul')], ['#FFFFFF', '#C0392B', null]);
+        assert.deepEqual([readColor('#fff'), readColor('C0392B'), readColor('azul')], ['#FFFFFF', '#C0392B', null]);
 
-        bot.processes.chamadas.length = 0;
-        const [r] = await bot.executar('/sticker -txt "Bom dia, grupo!" -bg "#C0392B" -fg #fff');
+        bot.processes.calls.length = 0;
+        const [r] = await bot.execute('/sticker -txt "Bom dia, grupo!" -bg "#C0392B" -fg #fff');
         assert.equal(r.content.mimetype, 'image/webp');
         assert.equal(r.options.sendMediaAsSticker, true);
 
-        const [ffmpeg] = bot.processes.chamadas;
+        const [ffmpeg] = bot.processes.calls;
         assert.match(ffmpeg.bin, /ffmpeg$/);
         assert.deepEqual(ffmpeg.args.slice(ffmpeg.args.indexOf('-c:v'), ffmpeg.args.indexOf('-c:v') + 2), ['-c:v', 'libwebp']);
         assert.ok(ffmpeg.args.join(' ').includes('-framerate 2') && ffmpeg.args.join(' ').includes('-loop 0'));
         assert.match(ffmpeg.args[ffmpeg.args.indexOf('-i') + 1], /quadro_%d\.png$/);
 
         // Without quotes and without colors: the default (black letter, white background)
-        assert.equal((await bot.executar('/sticker -txt Partiu praia?'))[0].content.mimetype, 'image/webp');
+        assert.equal((await bot.execute('/sticker -txt Partiu praia?'))[0].content.mimetype, 'image/webp');
     });
 
     test('-txt: erros de texto, cor e ffmpeg', async () => {
-        const errorAlt = async (line, expected) => assert.deepEqual(await bot.replyAlt(line, { erroEsperado: true }), [expected], line);
+        const errorAlt = async (line, expected) => assert.deepEqual(await bot.replyAlt(line, { expectedError: true }), [expected], line);
         await errorAlt('/sticker -txt', 'Informe o texto: /sticker -txt "Bom dia!"');
         await errorAlt(`/sticker -txt ${'a'.repeat(201)}`, '❌ Texto longo demais: até 200 caracteres.');
         await errorAlt('/sticker -txt oi -bg azul', '❌ -bg: "azul" não é uma cor. Use #RRGGBB (ex.: #FFFFFF).');
@@ -382,9 +382,9 @@ describe('/sticker', () => {
             await errorAlt(line, '❌ O -txt não combina com -ss, -es, -v nem com uma URL: ele faz a figurinha só do texto.');
         }
         // After -txt it is all text
-        assert.equal((await bot.executar('/sticker -txt corre -ss 3'))[0].content.mimetype, 'image/webp');
+        assert.equal((await bot.execute('/sticker -txt corre -ss 3'))[0].content.mimetype, 'image/webp');
 
-        bot.processes.falhar = 'ffmpeg';
+        bot.processes.fail = 'ffmpeg';
         await errorAlt('/sticker -txt oi', '❌ Não consegui gerar a figurinha: /usr/bin/ffmpeg exited with code 1');
     });
 });

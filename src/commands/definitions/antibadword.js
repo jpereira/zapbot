@@ -34,6 +34,6 @@ module.exports = {
         },
         { opts: ['list', 'l'], values: [], desc: 'Shows the words of the list.' }
     ],
-    delegavel: true,
+    isDelegable: true,
     role: ADMIN // Touches the current group: delegable
 };

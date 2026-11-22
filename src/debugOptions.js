@@ -12,7 +12,7 @@ function compileFilterDebug(valueAlt) {
     try {
         return new RegExp(m[1], m[2]);
     } catch (err) {
-        throw new Error(t('adm.debug.badRegex', { erro: err.message }), { cause: err });
+        throw new Error(t('adm.debug.badRegex', { error: err.message }), { cause: err });
     }
 }
 
@@ -24,8 +24,8 @@ function readOptionsDebug(args) {
     while (textAlt) {
         const m = textAlt.match(/^-([a-z-]+)(?=\s|$)/);
         const nameAlt = m && aliases[m[1]];
-        if (!nameAlt) throw new Error(t('adm.debug.unknownOpt', { opcao: textAlt.split(/\s/)[0] }));
-        if (Object.hasOwn(optionsAlt, nameAlt)) throw new Error(t('adm.debug.repeatedOpt', { opcao: m[1] }));
+        if (!nameAlt) throw new Error(t('adm.debug.unknownOpt', { option: textAlt.split(/\s/)[0] }));
+        if (Object.hasOwn(optionsAlt, nameAlt)) throw new Error(t('adm.debug.repeatedOpt', { option: m[1] }));
         textAlt = textAlt.slice(m[0].length).trimStart();
         if (nameAlt === 'on' || nameAlt === 'off') {
             optionsAlt[nameAlt] = true;
@@ -50,13 +50,13 @@ function readOptionsDebug(args) {
                 }
                 if (c === start && !kind) break;
             }
-            if (end === textAlt.length) throw new Error(t('adm.debug.unclosed', { opcao: m[1] }));
+            if (end === textAlt.length) throw new Error(t('adm.debug.unclosed', { option: m[1] }));
             end++;
             if (nameAlt === 'filter' && start === '/') {
                 while (/[a-z]/i.test(textAlt[end] ?? '') && end < textAlt.length) end++;
             }
             if (textAlt[end] && !/\s/.test(textAlt[end])) {
-                throw new Error(t('adm.debug.separate', { opcao: m[1] }));
+                throw new Error(t('adm.debug.separate', { option: m[1] }));
             }
             const valueAlt = textAlt.slice(0, end);
             optionsAlt[nameAlt] = nameAlt === 'filter' && start === '/' ? valueAlt : valueAlt.slice(1, -1);

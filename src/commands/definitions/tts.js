@@ -24,6 +24,6 @@ module.exports = {
             desc: 'What to speak. Replying to a message, the style of the speech.'
         }
     ],
-    delegavel: true,
+    isDelegable: true,
     role: ADMIN // Spends the OpenAI key: delegable, like /gpt
 };

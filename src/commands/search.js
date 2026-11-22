@@ -11,7 +11,7 @@ const { ROLES } = require('../roles');
 const { formatData, paraMs, plural } = require('../util/format');
 
 /*
- * /search [-N] <texto>
+ * /search [-N] <text>
  * WhatsApp Web's own search (client.searchMessages): the messages that the
  * WhatsApp Web has, including those that never went through the bot cache. In this
  * chat; in your private chat, in all chats. Without -N, the 10 most recent.
@@ -58,13 +58,13 @@ const lastSearches = new Map();
 function resultId(request, chatId) {
     if (!/^\d{1,3}$/.test(request)) return { id: request };
     const last = lastSearches.get(chatId);
-    if (!last || Date.now() - last.quando > LIST_MS_VALIDITY) return { erro: t('search.noList') };
+    if (!last || Date.now() - last.when > LIST_MS_VALIDITY) return { error: t('search.noList') };
     const id = last.ids[Number(request) - 1];
-    return id ? { id } : { erro: t('search.outOfList', { n: request, max: last.ids.length }) };
+    return id ? { id } : { error: t('search.outOfList', { n: request, max: last.ids.length }) };
 }
 
 // -read <no.|id>: the whole message, without cutting the text
-async function readMessage({ msg, id, chatId, todos: allAlt2 }) {
+async function readMessage({ msg, id, chatId, all: allAlt2 }) {
     let foundAlt;
     try {
         foundAlt = await client.getMessageById(id);
@@ -89,16 +89,16 @@ async function readMessage({ msg, id, chatId, todos: allAlt2 }) {
         null, { linkPreview: false });
 }
 
-async function cmdSearch({ msg, opts, chatId, nivel: level }) {
-    const idLido = opts.opt.read;
-    if (idLido) {
+async function cmdSearch({ msg, opts, chatId, level }) {
+    const idRead = opts.opt.read;
+    if (idRead) {
         const allAlt2 = (await chatCurrentIds(chatId)).includes(client.info.wid._serialized);
-        const { id, erro: errorAlt } = resultId(String(idLido).trim(), chatId);
+        const { id, error: errorAlt } = resultId(String(idRead).trim(), chatId);
         if (errorAlt) {
             await msg.reply(errorAlt);
             return;
         }
-        await readMessage({ msg, id, chatId, todos: allAlt2 });
+        await readMessage({ msg, id, chatId, all: allAlt2 });
         return;
     }
 
@@ -165,7 +165,7 @@ async function cmdSearch({ msg, opts, chatId, nivel: level }) {
             `\n   🆔 ${m.id?._serialized}`;
     }));
 
-    lastSearches.set(chatId, { ids: foundAlt3.map(m => m.id?._serialized), quando: Date.now() });
+    lastSearches.set(chatId, { ids: foundAlt3.map(m => m.id?._serialized), when: Date.now() });
 
     const reply = t('search.header', { count: plural(foundAlt3.length, t('search.message'), t('search.messages')), text: textAlt }) +
         `${allAlt2 ? ' ' + t('search.allChats') : ''}${notice}\n\n${linesAlt.join('\n\n')}` +

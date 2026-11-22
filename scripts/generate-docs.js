@@ -6,7 +6,7 @@
  * roles     "Commands by role": each role's list;
  * limits   the table of what a delegated `admin` does not do (the `role` and `otherChats` marks).
  *
- * node scripts/gerar-docs.js           reescreve o arquivo
+ * node scripts/gerar-docs.js           reescreve o file
  * node scripts/generate-docs.js --check   only checks (exits with 1 if out of date)
  */
 
@@ -40,41 +40,41 @@ function lineBreak(items) {
 const TEXTS = {
     en: {
         lang: 'en_US',
-        arquivo: 'index.md',
-        porRole: 'Commands by role',
-        grupos: [
+        file: 'index.md',
+        byRole: 'Commands by role',
+        groups: [
             '**user** (whoever is in `bot.users`)',
             '**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`)',
             '**admin** (admins and the owner; never delegable)',
             '**owner** (the owner only)'
         ],
-        tabela: ['Command', 'Current chat only (left out)', 'Owner and admins only']
+        table: ['Command', 'Current chat only (left out)', 'Owner and admins only']
     },
     'pt-BR': {
         lang: 'pt_BR',
-        arquivo: 'index.pt-BR.md',
-        porRole: 'Comandos por role',
-        grupos: [
+        file: 'index.pt-BR.md',
+        byRole: 'Comandos por role',
+        groups: [
             '**user** (de quem está no `bot.users`)',
             '**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`)',
             '**admin** (admins e o dono; nunca delegáveis)',
             '**owner** (só o dono)'
         ],
-        tabela: ['Comando', 'Só o chat atual (fica de fora)', 'Só o dono e os admins']
+        table: ['Comando', 'Só o chat atual (fica de fora)', 'Só o dono e os admins']
     }
 };
 
 // The list groups, from the most common to the most restricted: the commands that enter each one
 const ENTERS = [
     c => c.role === ROLES.USER,
-    c => c.role === ROLES.ADMIN && c.delegavel,
-    c => c.role === ROLES.ADMIN && !c.delegavel,
+    c => c.role === ROLES.ADMIN && c.isDelegable,
+    c => c.role === ROLES.ADMIN && !c.isDelegable,
     c => c.role === ROLES.OWNER
 ];
 
 const byRole = (textAlt) => () => {
-    const partsAlt = [`### ${textAlt.porRole}\n`];
-    textAlt.grupos.forEach((title, i) => {
+    const partsAlt = [`### ${textAlt.byRole}\n`];
+    textAlt.groups.forEach((title, i) => {
         const links = commands.filter(ENTERS[i]).map(c => `[\`${c.cmd}\`](${c.cmd.slice(1)}.md)`);
         if (links.length) partsAlt.push(`${title} (${links.length}):\n\n${lineBreak(links)}\n`);
     });
@@ -88,18 +88,18 @@ const cell = (items) => (items.length ? items.map(n => `\`${n}\``).join(', ').re
 const limits = (textAlt) => () => {
     const linesAlt = commands.map(c => locate(c, textAlt.lang)).map(c => ({
         cmd: c.cmd,
-        outros: cell((c.cmd_opts ?? []).filter(o => o.outrosChats).map(nameAltAlt)),
-        ajustes: cell((c.cmd_opts ?? []).filter(o => o.role && o.role !== ROLES.USER).map(nameAltAlt))
-    })).filter(l => l.outros || l.ajustes);
+        others: cell((c.cmd_opts ?? []).filter(o => o.otherChats).map(nameAltAlt)),
+        settings: cell((c.cmd_opts ?? []).filter(o => o.role && o.role !== ROLES.USER).map(nameAltAlt))
+    })).filter(l => l.others || l.settings);
 
     return [
-        `| ${textAlt.tabela.join(' | ')} |`,
+        `| ${textAlt.table.join(' | ')} |`,
         '|---|---|---|',
-        ...linesAlt.map(l => `| \`${l.cmd}\` | ${l.outros} | ${l.ajustes} |`)
+        ...linesAlt.map(l => `| \`${l.cmd}\` | ${l.others} | ${l.settings} |`)
     ].join('\n');
 };
 
-const file = (language) => path.join(DOCS, TEXTS[language].arquivo);
+const file = (language) => path.join(DOCS, TEXTS[language].file);
 
 // The page with each generated snippet replaced by the new one (language: 'en' or 'pt-BR')
 function generate(content, language = 'en') {
@@ -108,8 +108,8 @@ function generate(content, language = 'en') {
     content ??= fs.readFileSync(file(language), 'utf8');
     return Object.entries(snippets).reduce((md, [nameAlt, fn]) => {
         const re = new RegExp(`(<!-- gerado:${nameAlt} -->\\n)[\\s\\S]*?(\\n<!-- /gerado:${nameAlt} -->)`);
-        if (!re.test(md)) throw new Error(`docs/commands/${textAlt.arquivo}: sem os marcadores gerado:${nameAlt}`);
-        return md.replace(re, (_, ini, end) => `${ini}${fn().trimEnd()}${end}`);
+        if (!re.test(md)) throw new Error(`docs/commands/${textAlt.file}: sem os marcadores gerado:${nameAlt}`);
+        return md.replace(re, (_, marker, end) => `${marker}${fn().trimEnd()}${end}`);
     }, content);
 }
 
@@ -122,11 +122,11 @@ if (require.main === module) {
         if (freshAlt === current) continue;
 
         if (process.argv.includes('--check')) {
-            console.error(`docs/commands/${TEXTS[language].arquivo} out of date: run node scripts/generate-docs.js`);
+            console.error(`docs/commands/${TEXTS[language].file} out of date: run node scripts/generate-docs.js`);
             outdated = true;
         } else {
             fs.writeFileSync(fileAlt, freshAlt);
-            console.log(`docs/commands/${TEXTS[language].arquivo} updated`);
+            console.log(`docs/commands/${TEXTS[language].file} updated`);
         }
     }
     if (outdated) process.exit(1);

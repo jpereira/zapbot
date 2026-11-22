@@ -58,9 +58,9 @@ async function rulesLocked() {
 const whereWarn = (destinations) => (destinations.length ? describeDestinations(destinations) : t('watch.yourPrivate'));
 
 /**
- * The -to destinations: "off" (or "privado") goes back to your private chat; otherwise, each one
+ * The -to destinations: "off" (or "ownerOnly") goes back to your private chat; otherwise, each one
  * is a contact, group, number or email (several with the name: you choose from the list).
- * @returns {Promise<{ destinos: object[] } | null>}  null: already replied the error
+ * @returns {Promise<{ destinations: object[] } | null>}  null: already replied the error
  */
 async function toReadDestinations(msg, texts) {
     if (texts.some(x => /^(off|privado|private)$/i.test(String(x ?? '').trim()))) {
@@ -68,10 +68,10 @@ async function toReadDestinations(msg, texts) {
             await msg.reply(t('watch.toOffAlone'));
             return null;
         }
-        return { destinos: [] };
+        return { destinations: [] };
     }
-    const destinations = await resolverDestinations(msg, texts, { aceitaEmail: true });
-    return destinations ? { destinos: destinations } : null;
+    const destinations = await resolverDestinations(msg, texts, { acceptsEmail: true });
+    return destinations ? { destinations } : null;
 }
 
 
@@ -160,7 +160,7 @@ async function listOccurrences(rule, rules, limitAlt, complete = false, search =
         textAlt += t('watch.hitLine', { i: i + 1, date: formatData(h.timestamp), which: which, where: whereAlt,
             body: complete ? body : summarizeText(body) });
     }
-    return { total, texto: textAlt };
+    return { total, text: textAlt };
 }
 
 async function cmdWatch({ msg, args }) {
@@ -174,8 +174,8 @@ async function cmdWatch({ msg, args }) {
     }
     const rules = getSetting('watch.rules');
     const help = () => msg.reply(commandUsage('/watch'));
-    if (o.trava) {
-        const { n, ligar: turnOn } = o.trava;
+    if (o.lock) {
+        const { n, turnOn } = o.lock;
         const target = rules[n - 1];
         if (!target) {
             await msg.reply(t('watch.ruleMissing', { n, rules: countAlt('watch.rules', rules.length) }));
@@ -188,14 +188,14 @@ async function cmdWatch({ msg, args }) {
             : t('watch.maskOff', { n, rule: target }));
         return;
     }
-    if (o.regra) {
-        if (o.limite !== null) { await help(); return; }
-        try { compileRuleWatch(o.regra); } catch (err) {
+    if (o.rule) {
+        if (o.limit !== null) { await help(); return; }
+        try { compileRuleWatch(o.rule); } catch (err) {
             await msg.reply(t('watch.invalidRule', { error: err.message }));
             return;
         }
-        if (rules.includes(o.regra)) {
-            await msg.reply(t('watch.exists', { n: rules.indexOf(o.regra) + 1, rule: o.regra }));
+        if (rules.includes(o.rule)) {
+            await msg.reply(t('watch.exists', { n: rules.indexOf(o.rule) + 1, rule: o.rule }));
             return;
         }
         if (rules.length >= getSetting('watch.max')) {
@@ -203,36 +203,36 @@ async function cmdWatch({ msg, args }) {
             return;
         }
         let origin;
-        if (o.origem !== null) {
-            origin = await resolverOrChoose(msg, o.origem, { aceitaCanal: true,
-                semEmail: t('watch.inNoEmail') });
+        if (o.origin !== null) {
+            origin = await resolverOrChoose(msg, o.origin, { acceptsChannel: true,
+                noEmail: t('watch.inNoEmail') });
             if (!origin) return;
         }
-        const lido = o.destinos.length ? await toReadDestinations(msg, o.destinos) : { destinos: [] };
-        if (!lido) return;
-        await setSetting('watch.rules', [...rules, o.regra]);
+        const wasRead = o.destinations.length ? await toReadDestinations(msg, o.destinations) : { destinations: [] };
+        if (!wasRead) return;
+        await setSetting('watch.rules', [...rules, o.rule]);
         // A recreated rule does not inherit an old origin left by /set.
-        await dbRun('DELETE FROM watch_sources WHERE rule = ?', [o.regra]);
-        await dbRun('DELETE FROM watch_masks WHERE rule = ?', [o.regra]);
+        await dbRun('DELETE FROM watch_sources WHERE rule = ?', [o.rule]);
+        await dbRun('DELETE FROM watch_masks WHERE rule = ?', [o.rule]);
         // /watch /rule/ -mask: is born with the 🔒
-        if (o.mask) await dbRun('INSERT INTO watch_masks (rule) VALUES (?)', [o.regra]);
+        if (o.mask) await dbRun('INSERT INTO watch_masks (rule) VALUES (?)', [o.rule]);
         if (origin) {
             await dbRun('INSERT INTO watch_sources VALUES (?, ?, ?, ?)',
-                [o.regra, origin.id, origin.nome, origin.canal ? 'canal' : origin.grupo
+                [o.rule, origin.id, origin.name, origin.channel ? 'canal' : origin.group
                     ? 'grupo' : 'contato']);
         }
-        await recordDestinations(o.regra, lido.destinos);
-        const type = t(RULE_REGEX.test(o.regra) ? 'watch.kindRegex' : 'watch.kindText');
-        printInfo(`/watch: rule #${rules.length + 1} added: ${o.regra}`);
-        await msg.reply(t('watch.added', { n: rules.length + 1, kind: type, rule: o.regra }) +
+        await recordDestinations(o.rule, wasRead.destinations);
+        const type = t(RULE_REGEX.test(o.rule) ? 'watch.kindRegex' : 'watch.kindText');
+        printInfo(`/watch: rule #${rules.length + 1} added: ${o.rule}`);
+        await msg.reply(t('watch.added', { n: rules.length + 1, kind: type, rule: o.rule }) +
             (origin ? t('watch.addedOnlyIn', { where: describeDestinations([origin]) }) : '') +
             (o.mask ? t('watch.addedMask') : '') +
-            t('watch.addedAlerts', { where: lido.destinos.length ? t('watch.alertsIn', { where: whereWarn(lido.destinos) })
+            t('watch.addedAlerts', { where: wasRead.destinations.length ? t('watch.alertsIn', { where: whereWarn(wasRead.destinations) })
                 : t('watch.alertsPrivate') }));
         return;
     }
-    if (o.busca !== null) {
-        try { compileSearch(o.busca); } catch (err) {
+    if (o.search !== null) {
+        try { compileSearch(o.search); } catch (err) {
             await msg.reply(t('watch.queryInvalid', { error: err.message }));
             return;
         }
@@ -241,24 +241,24 @@ async function cmdWatch({ msg, args }) {
         o.n = await ruleNumber(msg, o.ref, rules);
         if (o.n === null) return;
     }
-    const n = o.n ?? (o.destinos.length ? o.limite : null);
+    const n = o.n ?? (o.destinations.length ? o.limit : null);
     const rule = n === null ? null : rules[n - 1];
     if (n !== null && !rule) {
         await msg.reply(t('watch.ruleMissing', { n, rules: countAlt('watch.rules', rules.length) }));
         return;
     }
-    if (o.destinos.length) {
-        if (!rule || (o.acao && o.acao !== 'show')) {
+    if (o.destinations.length) {
+        if (!rule || (o.action && o.action !== 'show')) {
             await msg.reply(t('watch.badTo'));
             return;
         }
-        const lido = await toReadDestinations(msg, o.destinos);
-        if (!lido) return;
-        await recordDestinations(rule, lido.destinos);
-        await msg.reply(t('watch.toSet', { n, rule: rule, where: whereWarn(lido.destinos) }));
+        const wasRead = await toReadDestinations(msg, o.destinations);
+        if (!wasRead) return;
+        await recordDestinations(rule, wasRead.destinations);
+        await msg.reply(t('watch.toSet', { n, rule: rule, where: whereWarn(wasRead.destinations) }));
         return;
     }
-    if (o.acao === 'rm') {
+    if (o.action === 'rm') {
         if (!rule) { await help(); return; }
         await setSetting('watch.rules', rules.filter((_, i) => i !== n - 1));
         const res = await dbRun('DELETE FROM watch_hits WHERE rule = ?', [rule]);
@@ -270,7 +270,7 @@ async function cmdWatch({ msg, args }) {
             (n < rules.length ? t('watch.renumbered') : ''));
         return;
     }
-    if (o.acao === 'flush') {
+    if (o.action === 'flush') {
         const res = rule === null ? await dbRun('DELETE FROM watch_hits')
             : await dbRun('DELETE FROM watch_hits WHERE rule = ?', [rule]);
         await msg.reply((rule === null ? t('watch.flushAll') : t('watch.flushOne', { n, rule: rule })) +
@@ -278,14 +278,14 @@ async function cmdWatch({ msg, args }) {
             t('watch.flushFooter'));
         return;
     }
-    if (o.acao === 'show') {
-        await msg.reply((await listOccurrences(rule, rules, o.limite, true, o.busca)).texto + tips());
+    if (o.action === 'show') {
+        await msg.reply((await listOccurrences(rule, rules, o.limit, true, o.search)).text + tips());
         return;
     }
     let textAlt = await listRules(rules);
-    if (o.acao !== 'list') {
-        const occurrences = await listOccurrences(null, rules, o.limite, false, o.busca);
-        if (occurrences.total || o.busca !== null) textAlt += '\n\n' + occurrences.texto;
+    if (o.action !== 'list') {
+        const occurrences = await listOccurrences(null, rules, o.limit, false, o.search);
+        if (occurrences.total || o.search !== null) textAlt += '\n\n' + occurrences.text;
     }
     await msg.reply(textAlt + tips());
 }

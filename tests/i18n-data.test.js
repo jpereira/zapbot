@@ -20,7 +20,7 @@ const my = (line) => bot.replyAlt(line, { chat: OWNER.jid });
 test('/stats em inglês: sem dados, ranking e os atalhos', async () => {
     assert.match((await my('/stats'))[0], /^📊 No statistics for this chat in the last 7 days\./);
     for (let i = 0; i < 3; i++) {
-        await countStats({ chatId: GROUP, chatName: 'Family', isGroup: 1, senderId: 'a', senderName: 'Aunt', quando: Date.now(), campos: { msgs: 1 } });
+        await countStats({ chatId: GROUP, chatName: 'Family', isGroup: 1, senderId: 'a', senderName: 'Aunt', when: Date.now(), fields: { msgs: 1 } });
     }
     const [r] = await my('/stats /family/');
     assert.match(r, /📊 \*Statistics of Family\*\n_Last 7 days_/);

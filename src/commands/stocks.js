@@ -25,33 +25,33 @@ const isCurrency = (sym) => Boolean(QUOTE_SUPPORTED[sym]);
 const readSymbols = (argv) => [...new Set(argv.join(' ').split(/[\s,]+/).filter(Boolean).map(normalizeTicker))];
 
 // A symbol's quote: exchange rate against the real (currencies) or the stock price
-const search = (sym) => (isCurrency(sym) ? searchQuote(sym).then((c) => ({ tipo: 'moeda', ...c })) : quoteAction(sym).then((c) => ({ tipo: 'acao', ...c })));
+const search = (sym) => (isCurrency(sym) ? searchQuote(sym).then((c) => ({ type: 'moeda', ...c })) : quoteAction(sym).then((c) => ({ type: 'acao', ...c })));
 
 // A currency's block (the same output as the old /rates): "🇺🇸 USD/BRL (Dollar)"
 function currencyBlock(sym, c) {
-    const { icone: iconAlt, nome: nameAlt } = QUOTE_SUPPORTED[sym];
-    const dayAlt = fmtChange(c.atual, c.fechamento);
-    const sinceOpening = fmtChange(c.atual, c.abertura);
+    const { icon: iconAlt, name: nameAlt } = QUOTE_SUPPORTED[sym];
+    const dayAlt = fmtChange(c.current, c.closing);
+    const sinceOpening = fmtChange(c.current, c.opening);
 
     let textAlt = `\n${iconAlt} *${sym}/BRL* _(${nameAlt})_\n`;
-    textAlt += `   💰 *${fmtReal(c.atual)}*${dayAlt ? `  ${dayAlt}` : ''}\n`;
-    textAlt += `   🔔 ${t('stocks.open')}: ${c.abertura ? fmtReal(c.abertura) : '—'}${sinceOpening ? ` _(${t('stocks.sinceOpen', { change: sinceOpening })})_` : ''}\n`;
-    textAlt += `   🏁 ${t('stocks.prevClose')}: ${c.fechamento ? fmtReal(c.fechamento) : '—'}\n`;
+    textAlt += `   💰 *${fmtReal(c.current)}*${dayAlt ? `  ${dayAlt}` : ''}\n`;
+    textAlt += `   🔔 ${t('stocks.open')}: ${c.opening ? fmtReal(c.opening) : '—'}${sinceOpening ? ` _(${t('stocks.sinceOpen', { change: sinceOpening })})_` : ''}\n`;
+    textAlt += `   🏁 ${t('stocks.prevClose')}: ${c.closing ? fmtReal(c.closing) : '—'}\n`;
     if (c.max && c.min) textAlt += `   ${t('stocks.maxMin', { max: fmtReal(c.max), min: fmtReal(c.min) })}\n`;
     return textAlt;
 }
 
 // The block of a stock, ETF or index, in the asset's currency
 function actionBlock(c) {
-    const p = (v) => fmtPrice(v, c.moeda);
-    const dayAlt = fmtChange(c.atual, c.fechamento);
-    const sinceOpening = fmtChange(c.atual, c.abertura);
-    const whereAlt = [c.nome, c.bolsa].filter(Boolean).join(' · ');
+    const p = (v) => fmtPrice(v, c.currency);
+    const dayAlt = fmtChange(c.current, c.closing);
+    const sinceOpening = fmtChange(c.current, c.opening);
+    const whereAlt = [c.name, c.exchange].filter(Boolean).join(' · ');
 
     let textAlt = `\n🏢 *${c.ticker}*${whereAlt ? ` _(${whereAlt})_` : ''}\n`;
-    textAlt += `   💰 *${p(c.atual)}*${dayAlt ? `  ${dayAlt}` : ''}\n`;
-    textAlt += `   🔔 ${t('stocks.open')}: ${c.abertura ? p(c.abertura) : '—'}${sinceOpening ? ` _(${t('stocks.sinceOpen', { change: sinceOpening })})_` : ''}\n`;
-    textAlt += `   🏁 ${t('stocks.prevClose')}: ${c.fechamento ? p(c.fechamento) : '—'}\n`;
+    textAlt += `   💰 *${p(c.current)}*${dayAlt ? `  ${dayAlt}` : ''}\n`;
+    textAlt += `   🔔 ${t('stocks.open')}: ${c.opening ? p(c.opening) : '—'}${sinceOpening ? ` _(${t('stocks.sinceOpen', { change: sinceOpening })})_` : ''}\n`;
+    textAlt += `   🏁 ${t('stocks.prevClose')}: ${c.closing ? p(c.closing) : '—'}\n`;
     if (c.max && c.min) textAlt += `   ${t('stocks.maxMin', { max: p(c.max), min: p(c.min) })}\n`;
     if (c.volume) textAlt += `   📊 ${t('stocks.volume')}: ${fmtVolume(c.volume)}\n`;
     if (c.max52 && c.min52) textAlt += `   🗓️ ${t('stocks.week52', { min: p(c.min52), max: p(c.max52) })}\n`;
@@ -70,7 +70,7 @@ async function cmdStocks(ctx) {
     const assets = getSetting('stocks.symbols');
 
     if (opts.opt.list) {
-        const line = (s) => (isCurrency(s) ? `• ${QUOTE_SUPPORTED[s].icone} ${s} — ${QUOTE_SUPPORTED[s].nome}` : `• 🏢 ${s}`);
+        const line = (s) => (isCurrency(s) ? `• ${QUOTE_SUPPORTED[s].icon} ${s} — ${QUOTE_SUPPORTED[s].name}` : `• 🏢 ${s}`);
         await msg.reply(assets.length
             ? t('stocks.enabledList', { list: assets.map(line).join('\n'), currencies: Object.keys(QUOTE_SUPPORTED).join(', ') })
             : t('stocks.noneEnabled'));
@@ -107,13 +107,13 @@ async function cmdStocks(ctx) {
         // A supported currency goes straight in; a ticker only if Yahoo knows it
         if (isCurrency(sym)) {
             await setSetting('stocks.symbols', [...assets, sym]);
-            await msg.reply(t('stocks.added', { sym, name: QUOTE_SUPPORTED[sym].nome }));
+            await msg.reply(t('stocks.added', { sym, name: QUOTE_SUPPORTED[sym].name }));
             return;
         }
         try {
             const c = await quoteAction(sym);
             await setSetting('stocks.symbols', [...assets, sym]);
-            await msg.reply(t('stocks.added', { sym, name: c.nome ?? sym }));
+            await msg.reply(t('stocks.added', { sym, name: c.name ?? sym }));
         } catch (err) {
             if (err.message !== 'notfound') printError(`/stocks -add ${sym}:`, err.message);
             await msg.reply(t(err.message === 'notfound' ? 'stocks.notFound' : 'stocks.failed', { list: sym }));
@@ -146,11 +146,11 @@ async function cmdStocks(ctx) {
         const r = results[i];
         if (r.status === 'rejected') {
             if (r.reason?.message !== 'notfound') printError(`/stocks ${sym}:`, r.reason?.message);
-            textAlt += `\n${isCurrency(sym) ? `${QUOTE_SUPPORTED[sym].icone} *${sym}/BRL* _(${QUOTE_SUPPORTED[sym].nome})_` : `🏢 *${sym}*`}\n   ⚠️ _${t(r.reason?.message === 'notfound' ? 'stocks.lineNotFound' : 'stocks.lineUnavailable')}_\n`;
+            textAlt += `\n${isCurrency(sym) ? `${QUOTE_SUPPORTED[sym].icon} *${sym}/BRL* _(${QUOTE_SUPPORTED[sym].name})_` : `🏢 *${sym}*`}\n   ⚠️ _${t(r.reason?.message === 'notfound' ? 'stocks.lineNotFound' : 'stocks.lineUnavailable')}_\n`;
             return;
         }
-        sourcesAlt.add(r.value.fonte);
-        textAlt += r.value.tipo === 'moeda' ? currencyBlock(sym, r.value) : actionBlock(r.value);
+        sourcesAlt.add(r.value.source);
+        textAlt += r.value.type === 'moeda' ? currencyBlock(sym, r.value) : actionBlock(r.value);
     });
 
     const nowAlt = new Date().toLocaleString(language() === 'pt_BR' ? 'pt-BR' : 'en-US', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' });

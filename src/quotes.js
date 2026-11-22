@@ -39,12 +39,12 @@ async function quoteYahoo(currency) {
     for (let i = n - 2; i >= 0 && closingAlt === null; i--) closingAlt = valid(q.close[i]);
 
     return {
-        atual: r.meta.regularMarketPrice,
-        abertura: valid(q.open[n - 1]),
-        fechamento: closingAlt,
+        current: r.meta.regularMarketPrice,
+        opening: valid(q.open[n - 1]),
+        closing: closingAlt,
         max: valid(r.meta.regularMarketDayHigh) ?? valid(q.high[n - 1]),
         min: valid(r.meta.regularMarketDayLow) ?? valid(q.low[n - 1]),
-        fonte: 'Yahoo Finance'
+        source: 'Yahoo Finance'
     };
 }
 
@@ -56,12 +56,12 @@ async function quoteAwesome(currency) {
 
     const current = Number(d.bid);
     return {
-        atual: current,
-        abertura: null,
-        fechamento: current - Number(d.varBid),
+        current,
+        opening: null,
+        closing: current - Number(d.varBid),
         max: Number(d.high),
         min: Number(d.low),
-        fonte: 'AwesomeAPI'
+        source: 'AwesomeAPI'
     };
 }
 
@@ -76,17 +76,17 @@ async function quoteBinance(currency) {
     if (!today) throw new Error('resposta sem cotação');
 
     return {
-        atual: Number(today[4]),
-        abertura: Number(today[1]),
-        fechamento: Number(yesterday[4]),
+        current: Number(today[4]),
+        opening: Number(today[1]),
+        closing: Number(yesterday[4]),
         max: Number(today[2]),
         min: Number(today[3]),
-        fonte: 'Binance'
+        source: 'Binance'
     };
 }
 
 async function searchQuote(currency) {
-    if (QUOTE_SUPPORTED[currency].fonte === 'binance') return quoteBinance(currency);
+    if (QUOTE_SUPPORTED[currency].source === 'binance') return quoteBinance(currency);
 
     try {
         return await quoteYahoo(currency);
@@ -102,17 +102,17 @@ async function searchQuote(currency) {
  * comes from Binance's exchangeInfo, stored for 6 hours. If the query fails, the fixed list applies.
  */
 const STATUS_BRL_TTL_MS = 6 * 60 * 60 * 1000;
-let statusBrl = { em: 0, pares: null };
+let statusBrl = { em: 0, pairs: null };
 
-async function pairsInReaisTradable(nowAlt = Date.now()) {
-    if (statusBrl.pares && nowAlt - statusBrl.em < STATUS_BRL_TTL_MS) return statusBrl.pares;
+async function pairsInBrlTradable(nowAlt = Date.now()) {
+    if (statusBrl.pairs && nowAlt - statusBrl.em < STATUS_BRL_TTL_MS) return statusBrl.pairs;
     try {
         const { data } = await axios.get('https://api.binance.com/api/v3/exchangeInfo', {
             params: { symbols: JSON.stringify(CRYPTO_BRL_DIRECT.map((s) => `${s}BRL`)) },
             timeout: QUOTE_TIMEOUT_MS
         });
         const pairs = data.symbols.filter((s) => s.status === 'TRADING').map((s) => s.baseAsset);
-        statusBrl = { em: nowAlt, pares: pairs };
+        statusBrl = { em: nowAlt, pairs };
         return pairs;
     } catch (err) {
         printError('/crypto: status of the BRL pairs failed, using the fixed list:', err.message);
@@ -121,17 +121,17 @@ async function pairsInReaisTradable(nowAlt = Date.now()) {
 }
 
 // For the tests: forgets the stored status
-const zeroStatusBrl = () => { statusBrl = { em: 0, pares: null }; };
+const zeroStatusBrl = () => { statusBrl = { em: 0, pairs: null }; };
 
 /**
- * The reais price of each /crypto currency: the direct Binance pair (<TOKEN>BRL) when it exists; otherwise, the price
+ * The brl price of each /crypto currency: the direct Binance pair (<TOKEN>BRL) when it exists; otherwise, the price
  * in dollars × USDTBRL. If Binance fails, returns what worked ({} with nothing).
  * @param {Record<string, number>} inDollar  the price of each currency in dollars (USDT)
  * @returns {Promise<Record<string, number>>}
  */
-async function pricesInReais(inDollar) {
+async function pricesInBrl(inDollar) {
     const syms = Object.keys(inDollar);
-    const tradable = await pairsInReaisTradable();
+    const tradable = await pairsInBrlTradable();
     const directAlt = syms.filter((s) => tradable.includes(s));
     const search = async (pairs) => {
         const { data } = await axios.get('https://api.binance.com/api/v3/ticker/price', {
@@ -155,19 +155,19 @@ async function pricesInReais(inDollar) {
     }
 
     const dollar = table.USDT;
-    const reais = {};
+    const brl = {};
     for (const sym of syms) {
         const direct = directAlt.includes(sym) ? table[sym] : undefined;
         const v = Number.isFinite(direct) ? direct : (Number.isFinite(dollar) ? inDollar[sym] * dollar : NaN);
-        if (Number.isFinite(v)) reais[sym] = v;
+        if (Number.isFinite(v)) brl[sym] = v;
     }
-    return reais;
+    return brl;
 }
 
 const localeNumbers = () => (language() === 'pt_BR' ? 'pt-BR' : 'en-US');
 
 // "R$ 369.246,00" (pt) / "R$ 369,246.00" (en); low-priced ones (PEPE, SHIB) with more decimals
-const fmtReaisCrypto = (v) => `R$ ${Number(v).toLocaleString(localeNumbers(), { minimumFractionDigits: 2, maximumFractionDigits: Number(v) < 0.01 ? 8 : Number(v) < 1 ? 6 : 2 })}`;
+const fmtBrlCrypto = (v) => `R$ ${Number(v).toLocaleString(localeNumbers(), { minimumFractionDigits: 2, maximumFractionDigits: Number(v) < 0.01 ? 8 : Number(v) < 1 ? 6 : 2 })}`;
 
 const fmtReal = (v) => `R$ ${Number(v).toLocaleString(localeNumbers(), { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
 
@@ -183,10 +183,10 @@ module.exports = {
     QUOTE_TIMEOUT_MS,
     searchQuote,
     fmtPriceCrypto,
-    fmtReaisCrypto,
+    fmtBrlCrypto,
     fmtReal,
     fmtChange,
-    pairsInReaisTradable,
-    pricesInReais,
+    pairsInBrlTradable,
+    pricesInBrl,
     zeroStatusBrl
 };

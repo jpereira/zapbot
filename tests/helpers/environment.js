@@ -32,11 +32,11 @@ process.env.ZAPBOT_CACHE_DIR = CACHE_DIR;
 process.env.ZAPBOT_HEARTBEAT_FILE = path.join(CACHE_DIR, 'heartbeat.json');
 process.env.PHONE_NUMBER = '5521900000000';
 
-const OWNER = { user: '5521900000000', jid: '5521900000000@c.us', nome: 'Dono' };
+const OWNER = { user: '5521900000000', jid: '5521900000000@c.us', name: 'Dono' };
 
 /*
  * Log: the bot writes with console.log; we keep it (without the colors) for the tests
- * to be able to check them, and we only print with DEBUG_TESTES=1.
+ * to be able to check them, and we only print with DEBUG_TESTS=1.
  */
 const logs = [];
 const consoleLog = console.log;
@@ -45,7 +45,7 @@ console.log = (...args) => {
         // eslint-disable-next-line no-control-regex -- removes the ANSI colors (\x1b[...m) from the log
         .replace(/\x1b\[[0-9;]*m/g, '');
     logs.push(line);
-    if (process.env.DEBUG_TESTES) consoleLog(line);
+    if (process.env.DEBUG_TESTS) consoleLog(line);
 };
 
 /*
@@ -54,36 +54,36 @@ console.log = (...args) => {
 class ClientFake extends EventEmitter {
     constructor() {
         super();
-        this.info = { wid: { _serialized: OWNER.jid, user: OWNER.user }, pushname: OWNER.nome };
-        this.enviadas = [];            // { chatId, content, options }
-        this.reagidas = [];            // { id, emoji } of each bot msg.react()
-        this.contatos = new Map();     // jid -> contato
+        this.info = { wid: { _serialized: OWNER.jid, user: OWNER.user }, pushname: OWNER.name };
+        this.sent = [];            // { chatId, content, options }
+        this.reacted = [];            // { id, emoji } of each bot msg.react()
+        this.contacts = new Map();     // jid -> contact
         this.chats = new Map();        // chatId -> chat
         this.lids = new Map();         // "123@lid" -> "5521...@c.us"
-        this.fotos = new Map();        // id -> profile photo URL (no entry: no photo)
-        this.inicializado = 0;
-        this.destruido = 0;
-        this.recusarEdicao = false;    // edit() returns null, as when WhatsApp does not let it edit
-        this.convites = new Map();     // invite code -> { id, subject, size, desc, refuse }
-        this.entradas = [];            // codes accepted by acceptInvite
-        this.buscas = [];              // { query, options } of each searchMessages
-        this.resultadosDaBusca = [];   // what searchMessages returns (or an Error, which it throws)
+        this.photos = new Map();        // id -> profile photo URL (no entry: no photo)
+        this.initialized = 0;
+        this.destroyed = 0;
+        this.refuseEdit = false;    // edit() returns null, as when WhatsApp does not let it edit
+        this.invites = new Map();     // invite code -> { id, subject, size, desc, refuse }
+        this.inputs = [];            // codes accepted by acceptInvite
+        this.searches = [];              // { query, options } of each searchMessages
+        this.searchResults = [];   // what searchMessages returns (or an Error, which it throws)
     }
 
-    async initialize() { this.inicializado++; }
-    async destroy() { this.destruido++; }
+    async initialize() { this.initialized++; }
+    async destroy() { this.destroyed++; }
     async getState() { return 'CONNECTED'; }
 
     async sendMessage(chatId, content, options = {}) {
         const sent = { chatId, content, options };
         // Like whatsapp-web.js' Message: the id of the sent message (outside the tests' deepEqual)
-        const id = `BOT${this.enviadas.length + 1}`;
+        const id = `BOT${this.sent.length + 1}`;
         Object.defineProperty(sent, 'id', { value: { id, remote: chatId, fromMe: true, _serialized: `true_${chatId}_${id}` } });
         // Editing swaps the text in place (as it appears in the chat) and, like WhatsApp Web,
         // fires 'message_edit' with your message
         Object.defineProperty(sent, 'edit', {
             value: async (textAlt) => {
-                if (this.recusarEdicao) return null;
+                if (this.refuseEdit) return null;
                 const oldAlt2 = sent.content;
                 Object.assign(sent, { content: textAlt, editada: true });
                 const edited = {
@@ -95,28 +95,28 @@ class ClientFake extends EventEmitter {
                 return sent;
             }
         });
-        this.enviadas.push(sent);
+        this.sent.push(sent);
         return sent;
     }
 
     // Group invites: code -> { id, subject, size, desc }; acceptInvite notes what joined
     async getInviteInfo(codeAlt) {
-        if (!this.convites.has(codeAlt)) throw new Error('Invite code not found');
-        return this.convites.get(codeAlt);
+        if (!this.invites.has(codeAlt)) throw new Error('Invite code not found');
+        return this.invites.get(codeAlt);
     }
 
     async acceptInvite(codeAlt) {
         const info = await this.getInviteInfo(codeAlt);
-        if (info.recusar) throw new Error(info.recusar);
-        this.entradas.push(codeAlt);
+        if (info.refuse) throw new Error(info.refuse);
+        this.inputs.push(codeAlt);
         return info.id;
     }
 
-    async getProfilePicUrl(id) { return this.fotos.get(id); }
+    async getProfilePicUrl(id) { return this.photos.get(id); }
 
     async getContactById(id) {
-        if (!this.contatos.has(id)) throw new Error(`contato ${id} não encontrado`);
-        return this.contatos.get(id);
+        if (!this.contacts.has(id)) throw new Error(`contato ${id} não encontrado`);
+        return this.contacts.get(id);
     }
 
     async getChatById(id) {
@@ -129,29 +129,29 @@ class ClientFake extends EventEmitter {
     }
 
     async getContacts() {
-        return [...this.contatos.values()];
+        return [...this.contacts.values()];
     }
 
     async getBlockedContacts() {
-        return [...this.contatos.values()].filter(c => c.isBlocked);
+        return [...this.contacts.values()].filter(c => c.isBlocked);
     }
 
     async searchMessages(query, options = {}) {
-        this.buscas.push({ query, options });
-        if (this.resultadosDaBusca instanceof Error) throw this.resultadosDaBusca;
-        return this.resultadosDaBusca;
+        this.searches.push({ query, options });
+        if (this.searchResults instanceof Error) throw this.searchResults;
+        return this.searchResults;
     }
 
     // The serialized id → the message (from searchResults), or null
     async getMessageById(id) {
-        if (this.resultadosDaBusca instanceof Error) throw this.resultadosDaBusca;
-        return this.resultadosDaBusca.find(m => m.id?._serialized === id) ?? null;
+        if (this.searchResults instanceof Error) throw this.searchResults;
+        return this.searchResults.find(m => m.id?._serialized === id) ?? null;
     }
 
     // As in whatsapp-web.js: the number's id on WhatsApp, or null if it has no account
     async getNumberId(numberAlt) {
         const jid = `${numberAlt}@c.us`;
-        return this.contatos.has(jid) ? { user: numberAlt, server: 'c.us', _serialized: jid } : null;
+        return this.contacts.has(jid) ? { user: numberAlt, server: 'c.us', _serialized: jid } : null;
     }
 
     // As in whatsapp-web.js: the @lid/phone pair of each id (a @lid or a phone)
@@ -215,15 +215,15 @@ class DbFake {
     }
 
     get(sql, params, cb) {
-        try { cb(null, this.normalizar(this.db.prepare(sql).get(...params))); } catch (e) { cb(e); }
+        try { cb(null, this.normalize(this.db.prepare(sql).get(...params))); } catch (e) { cb(e); }
     }
 
     all(sql, params, cb) {
-        try { cb(null, this.db.prepare(sql).all(...params).map(r => this.normalizar(r))); } catch (e) { cb(e); }
+        try { cb(null, this.db.prepare(sql).all(...params).map(r => this.normalize(r))); } catch (e) { cb(e); }
     }
 
     // node:sqlite returns objects without a prototype; sqlite3 returns plain objects
-    normalizar(r) {
+    normalize(r) {
         return r && { ...r };
     }
 }
@@ -236,20 +236,20 @@ const REPLY_HTTP = Symbol('resposta HTTP completa');
 
 const network = {
     rotas: [],
-    chamadas: [],
+    calls: [],
 
     /*
-     * padrao: URL snippet (string) or RegExp.
+     * fallback: URL snippet (string) or RegExp.
      * reply: the body (response.data), a function(url, cfg) that returns the
-     * body, an Error (the request fails) or rede.http({ data, headers }).
+     * body, an Error (the request fails) or network.http({ data, headers }).
      */
     responder(method, defaults, reply) {
-        this.rotas.unshift({ metodo: method, padrao: defaults, resposta: reply });
+        this.rotas.unshift({ method, fallback: defaults, answer: reply });
     },
 
-    limpar() {
+    clear() {
         this.rotas = [];
-        this.chamadas = [];
+        this.calls = [];
     },
 
     // Response with headers/status besides the body
@@ -257,14 +257,14 @@ const network = {
         return { [REPLY_HTTP]: true, data, headers, status };
     },
 
-    async despachar(method, url, cfg = {}) {
-        this.chamadas.push({ metodo: method, url, cfg });
-        const rota = this.rotas.find(r => r.metodo === method &&
-            (r.padrao instanceof RegExp ? r.padrao.test(url) : url.includes(r.padrao)));
+    async dispatch(method, url, cfg = {}) {
+        this.calls.push({ method, url, cfg });
+        const rota = this.rotas.find(r => r.method === method &&
+            (r.fallback instanceof RegExp ? r.fallback.test(url) : url.includes(r.fallback)));
 
         if (!rota) throw new Error(`teste sem resposta simulada para ${method.toUpperCase()} ${url}`);
 
-        const reply = typeof rota.resposta === 'function' ? await rota.resposta(url, cfg) : rota.resposta;
+        const reply = typeof rota.answer === 'function' ? await rota.answer(url, cfg) : rota.answer;
         if (reply instanceof Error) throw reply;
         if (reply?.[REPLY_HTTP]) return { data: reply.data, headers: reply.headers, status: reply.status };
         return { data: reply, headers: {}, status: 200 };
@@ -272,8 +272,8 @@ const network = {
 };
 
 const axiosFake = {
-    get: (url, cfg) => network.despachar('get', url, cfg),
-    post: (url, body, cfg) => network.despachar('post', url, { ...cfg, body })
+    get: (url, cfg) => network.dispatch('get', url, cfg),
+    post: (url, body, cfg) => network.dispatch('post', url, { ...cfg, body })
 };
 
 // Error in axios' format (err.response.status, err.code)
@@ -286,12 +286,12 @@ function errorHttp(status, messageAlt = `HTTP ${status}`, extra = {}) {
 
 /*
  * google-translate-api-x: the /translate package, without network. The call goes through the simulated network
- * (rede.responder('post', 'google-translate-api-x', { text, from: { language: { iso } } })) e o
- * text and the options (to...) stay in rede.chamadas.at(-1).cfg.body.
+ * (network.responder('post', 'google-translate-api-x', { text, from: { language: { iso } } })) e o
+ * text and the options (to...) stay in network.calls.at(-1).cfg.body.
  */
 const googleTranslateFake = {
-    translate: async (textAlt, optionsAlt = {}) => (await network.despachar('post', 'google-translate-api-x',
-        { body: { texto: textAlt, ...optionsAlt } })).data,
+    translate: async (textAlt, optionsAlt = {}) => (await network.dispatch('post', 'google-translate-api-x',
+        { body: { text: textAlt, ...optionsAlt } })).data,
     languages: { auto: 'Automatic', en: 'English', es: 'Spanish', fr: 'French', pt: 'Portuguese', 'zh-CN': 'Chinese (Simplified)' }
 };
 
@@ -302,27 +302,27 @@ const emails = [];
 const nodemailerFake = {
     createTransport: () => ({
         sendMail: async (m) => {
-            if (nodemailerFake.falhar) throw new Error('SMTP fora do ar');
+            if (nodemailerFake.fail) throw new Error('SMTP fora do ar');
             emails.push(m);
             return { messageId: `<teste-${emails.length}>` };
         }
     }),
-    falhar: false
+    fail: false
 };
 
 /*
  * yt-dlp / ffmpeg: the fake spawn only creates the output file
  */
 const processes = {
-    chamadas: [],
-    falhar: null,        // 'yt-dlp' | 'ffmpeg'
-    naoBaixar: false,    // yt-dlp ends without creating the file (above --max-filesize)
-    falharTrecho: false, // yt-dlp fails only with --download-sections (a site that does not allow it)
-    duracao: 100,        // what ffprobe (and yt-dlp --print duration) report; null: neither knows
-    siteSemDuracao: false, // yt-dlp --print duration says NA (ffprobe still measures the file)
-    tamanhoSaida: 1024,
-    fala: 'olá mundo, isto é um teste', // the text that faster-whisper (python) returns
-    saidaErro: null, // what yt-dlp writes in the log before failing
+    calls: [],
+    fail: null,        // 'yt-dlp' | 'ffmpeg'
+    skipDownload: false,    // yt-dlp ends without creating the file (above --max-filesize)
+    failSnippet: false, // yt-dlp fails only with --download-sections (a site that does not allow it)
+    duration: 100,        // what ffprobe (and yt-dlp --print duration) report; null: neither knows
+    siteWithoutDuration: false, // yt-dlp --print duration says NA (ffprobe still measures the file)
+    outputSize: 1024,
+    speech: 'olá mundo, isto é um teste', // the text that faster-whisper (python) returns
+    errorOutput: null, // what yt-dlp writes in the log before failing
     post: null // the JSON that yt-dlp -J returns (a photo post)
 };
 
@@ -330,7 +330,7 @@ function spawnFake(bin, args, optionsAlt) {
     const child = new EventEmitter();
     child.kill = () => {};
     child.stdout = new EventEmitter();
-    processes.chamadas.push({ bin, args });
+    processes.calls.push({ bin, args });
 
     setImmediate(() => {
         const nameAlt = path.basename(bin);
@@ -343,33 +343,33 @@ function spawnFake(bin, args, optionsAlt) {
             return;
         }
 
-        if (processes.falhar === nameAlt || (processes.falharTrecho && args.includes('--download-sections'))) {
+        if (processes.fail === nameAlt || (processes.failSnippet && args.includes('--download-sections'))) {
             // The program output goes to the log file (stdio[1]), as in the real one
-            if (processes.saidaErro && typeof optionsAlt?.stdio?.[1] === 'number') fs.writeSync(optionsAlt.stdio[1], processes.saidaErro);
+            if (processes.errorOutput && typeof optionsAlt?.stdio?.[1] === 'number') fs.writeSync(optionsAlt.stdio[1], processes.errorOutput);
             child.emit('close', 1, null);
             return;
         }
 
         // transcribe.py: the JSON on the last line of the output
         if (nameAlt === 'python') {
-            child.stdout.emit('data', `${JSON.stringify({ language: 'pt', duration: 5, text: processes.fala })}\n`);
+            child.stdout.emit('data', `${JSON.stringify({ language: 'pt', duration: 5, text: processes.speech })}\n`);
             child.emit('close', 0, null);
             return;
         }
 
         if (nameAlt === 'ffprobe' || args.includes('--print')) {
-            const without = processes.duracao === null || (processes.siteSemDuracao && nameAlt === 'yt-dlp');
-            child.stdout.emit('data', `${without ? 'NA' : processes.duracao}\n`);
+            const without = processes.duration === null || (processes.siteWithoutDuration && nameAlt === 'yt-dlp');
+            child.stdout.emit('data', `${without ? 'NA' : processes.duration}\n`);
             child.emit('close', 0, null);
             return;
         }
 
-        if (nameAlt === 'yt-dlp' && !processes.naoBaixar) {
+        if (nameAlt === 'yt-dlp' && !processes.skipDownload) {
             fs.writeFileSync(args[args.indexOf('-o') + 1], 'video');
         }
 
         if (nameAlt === 'ffmpeg') {
-            fs.writeFileSync(args[args.length - 1], Buffer.alloc(processes.tamanhoSaida));
+            fs.writeFileSync(args[args.length - 1], Buffer.alloc(processes.outputSize));
         }
 
         child.emit('close', 0, null);
@@ -382,10 +382,10 @@ function spawnFake(bin, args, optionsAlt) {
  * sharp: returns a fixed "webp". For /pixelart, a "png:WxH" image
  * reports the dimensions in metadata() and png() returns "png:WxH" of the result
  * (after the resize/extract). The inputs (including { text } and { create } of the
- * /sticker -txt) stay in sharpFake.entradas.
+ * /sticker -txt) stay in sharpFake.inputs.
  */
 const sharpFake = (inputAlt) => {
-    sharpFake.entradas.push(inputAlt);
+    sharpFake.inputs.push(inputAlt);
     const [, w, h] = String(inputAlt).match(/^png:(\d+)x(\d+)$/) ?? [];
     let dim = { width: Number(w), height: Number(h) };
     let format = 'webp';
@@ -404,7 +404,7 @@ const sharpFake = (inputAlt) => {
         composite: () => chainAlt,
         extend: () => chainAlt,
         png: () => { format = 'png'; return chainAlt; },
-        // /notes -export: the file that starts with "nao e imagem" fails; the rest becomes a 40x20 "jpeg"
+        // /notes -export: the file that starts with "nao e image" fails; the rest becomes a 40x20 "jpeg"
         flatten: () => chainAlt,
         toColourspace: () => chainAlt,
         jpeg: () => { format = 'jpeg'; return chainAlt; },
@@ -427,7 +427,7 @@ const sharpFake = (inputAlt) => {
     };
     return chainAlt;
 };
-sharpFake.entradas = [];
+sharpFake.inputs = [];
 sharpFake.pixels = null;   // what raw() returns (see /qr -d)
 sharpFake.resizes = [];   // the options of each resize (fit, position)
 

@@ -19,14 +19,14 @@ function wrap(fn, nameAlt, level) {
     if (wrappers.has(fn)) return wrappers.get(fn);
     function tracked(...args) {
         const cfg = configureDebug();
-        if (!cfg.enabled || cfg.level < level || contextDebug().semRastro) {
+        if (!cfg.enabled || cfg.level < level || contextDebug().noTrace) {
             return fn.apply(this, args);
         }
         const parent = contextDebug();
         const id = ++sequence;
         const start = Date.now();
-        return withContextDebug({ profundidade: (parent.profundidade ?? 0) + 1 }, () => {
-            const prefix = `${'  '.repeat(Math.min(parent.profundidade ?? 0, 12))}#${id} ${nameAlt}`;
+        return withContextDebug({ depth: (parent.depth ?? 0) + 1 }, () => {
+            const prefix = `${'  '.repeat(Math.min(parent.depth ?? 0, 12))}#${id} ${nameAlt}`;
             printDebugLevel(level, `${prefix} start`, args);
             const end = (errorAlt, valueAlt, failed = false) => {
                 const duration = Date.now() - start;
@@ -90,9 +90,9 @@ function installDebug() {
             trackedAlt.add(resultAlt);
             const create = resultAlt.createTransport;
             resultAlt.createTransport = function (...args) {
-                const transporte = create.apply(this, args);
-                instrumentObject(transporte, 'SMTP', 2, ['sendMail']);
-                return transporte;
+                const transport = create.apply(this, args);
+                instrumentObject(transport, 'SMTP', 2, ['sendMail']);
+                return transport;
             };
         } else if (request === 'child_process') {
             instrumentObject(resultAlt, 'processo', 2, ['spawn', 'execFile']);

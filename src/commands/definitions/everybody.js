@@ -10,6 +10,6 @@ module.exports = {
     aliases: [],
     summary: 'Replies mentioning everyone in the group',
     help: 'Replies mentioning everyone in the group (except you).',
-    delegavel: true,
+    isDelegable: true,
     role: ADMIN // delegable: tags the current group
 };

@@ -24,8 +24,8 @@ const { assembleVcard } = require('../vcard');
  * Owner only, in their own private chat: the output is the whole schedule.
  */
 const MAX_VCF_BYTES = 90 * 1024 * 1024; // WhatsApp refuses documents over 100 MB
-const MAX_LINES_IN_CHAT = 40; // acima disso a lista vai num arquivo .txt
-let exportando = false;
+const MAX_LINES_IN_CHAT = 40; // acima disso a list vai num file .txt
+let exporting = false;
 
 const today = () => new Date().toISOString().slice(0, 10).replace(/-/g, '');
 
@@ -39,7 +39,7 @@ function textFilters(textAlt) {
     const items = [...textAlt.matchAll(/\/([^/]+)\//g)].map(m => m[1].trim());
     const rest = textAlt.replace(/\/[^/]+\//g, ' ').trim();
     if (rest) items.push(rest);
-    return items.filter(Boolean).map(i => ({ texto: i.toLowerCase(), digitos: i.replace(/\D/g, '') }));
+    return items.filter(Boolean).map(i => ({ text: i.toLowerCase(), digits: i.replace(/\D/g, '') }));
 }
 
 // The address book contacts (without groups), one per phone, with the filter (name or digits) applied.
@@ -60,7 +60,7 @@ async function scheduleContacts(filter) {
     }
 
     const filters = textFilters(filter);
-    const home = (c) => !filters.length || filters.some(({ texto: textAlt, digitos: digits }) =>
+    const home = (c) => !filters.length || filters.some(({ text: textAlt, digits }) =>
         (scheduleName(c) ?? '').toLowerCase().includes(textAlt) || (digits && c.number.includes(digits)));
     return [...byNumber.values()]
         .filter(home)
@@ -90,7 +90,7 @@ async function sendFile(msg, buffer, nameAlt, mime, caption) {
 
 const nameAltAlt = (c) => scheduleName(c) || c.pushname || `+${c.number}`;
 
-async function exportar(msg, notice, contacts, { fotos: photos, refresh, cache }) {
+async function exportNotes(msg, notice, contacts, { photos, refresh, cache }) {
 
     const delay = getSetting('contacts.delayMs');
     const cards = [];
@@ -98,15 +98,15 @@ async function exportar(msg, notice, contacts, { fotos: photos, refresh, cache }
 
     for (const c of contacts) {
         try {
-            const { foto: photo, doCache: cacheCame } = photos
+            const { photo, doCache: cacheCame } = photos
                 ? await contactPhoto(c, c.number, { refresh, cache })
-                : { foto: null, doCache: false };
+                : { photo: null, doCache: false };
             if (photo) withPhoto++;
             if (cacheCame) doCache++;
             const message = await c.getAbout().catch(() => null);
             cards.push(assembleVcard({
-                telefone: c.number, nome: nameAltAlt(c), recado: message,
-                empresa: c.isBusiness ? c.verifiedName || c.name : null, foto: photo
+                phone: c.number, name: nameAltAlt(c), note: message,
+                company: c.isBusiness ? c.verifiedName || c.name : null, photo
             }));
             if (photos && !cacheCame && delay) await pause(delay);
         } catch (err) {
@@ -147,7 +147,7 @@ async function cmdContacts({ msg, opts, chatId, isGroup }) {
 
     if (o.clear) {
         const r = await cleanCache();
-        await msg.reply(t('contacts.cleared', { count: r.fotos + r.semFoto, size: humanSize(r.bytes) }));
+        await msg.reply(t('contacts.cleared', { count: r.photos + r.noPhoto, size: humanSize(r.bytes) }));
         return;
     }
 
@@ -156,21 +156,21 @@ async function cmdContacts({ msg, opts, chatId, isGroup }) {
         return;
     }
 
-    if (o.export && exportando) {
+    if (o.export && exporting) {
         await msg.reply(t('contacts.busy'));
         return;
     }
 
     // As in /get: the "⏳ Processando…" goes out first and becomes the result (or the error)
     const notice = await msg.reply(t('contacts.processing'));
-    if (o.export) exportando = true;
+    if (o.export) exporting = true;
     try {
         const contacts = await scheduleContacts(filter);
         if (!contacts.length) {
             await completeNotice(msg, notice, t('contacts.none'));
         } else if (o.export) {
             await completeNotice(msg, notice, t('contacts.exporting', { count: contacts.length }));
-            await exportar(msg, notice, contacts, { fotos: Boolean(o.photos), refresh: Boolean(o.refresh), cache: o.nocache ? false : getSetting('contacts.cache') });
+            await exportNotes(msg, notice, contacts, { photos: Boolean(o.photos), refresh: Boolean(o.refresh), cache: o.nocache ? false : getSetting('contacts.cache') });
         } else {
             const linesAlt = contacts.map(c => `• ${nameAltAlt(c)} · +${c.number}`).join('\n');
             const title = t('contacts.listTitle', { count: contacts.length });
@@ -187,7 +187,7 @@ async function cmdContacts({ msg, opts, chatId, isGroup }) {
         printError('/contacts:', err.message);
         await completeNotice(msg, notice, t('contacts.error', { error: err.message }));
     } finally {
-        if (o.export) exportando = false;
+        if (o.export) exporting = false;
     }
 }
 

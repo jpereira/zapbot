@@ -12,7 +12,7 @@ const { compileRuleWatch } = bot.src('watch/rules');
 beforeEach(bot.restart);
 
 // Someone writes in the group; returns the notices the bot sent
-const someoneWrite = (textAlt, optionsAlt = {}) => bot.executar(textAlt, { de: OTHERAlt.jid, ...optionsAlt });
+const someoneWrite = (textAlt, optionsAlt = {}) => bot.execute(textAlt, { de: OTHERAlt.jid, ...optionsAlt });
 
 describe('regras', () => {
     test('texto: contém, sem diferenciar maiúsculas nem acentos', () => {
@@ -63,7 +63,7 @@ describe('detecção', () => {
         bot.createContact(phoneAlt, 'Defesa Civil');
         bot.createContact('status@broadcast', 'Fátima');
         const msg = bot.createMessage({
-            texto: 'Centro de Monitoramento da Defesa Civil de Niterói informa',
+            text: 'Centro de Monitoramento da Defesa Civil de Niterói informa',
             chat: 'status@broadcast', de: OTHERAlt.jid,
             extras: {
                 from: 'status@broadcast', author: '67658770853938:12@lid', isStatus: true,
@@ -71,13 +71,13 @@ describe('detecção', () => {
             }
         });
         const [notice] = await bot.deliver(msg);
-        assert.match(notice.texto, /👤 \*Nome:\* Defesa Civil/);
-        assert.match(notice.texto, /📱 \*Número:\* \+5521999999988/);
-        assert.doesNotMatch(notice.texto, /Fátima/);
-        const salvo = await bot.dbGet('SELECT * FROM messages WHERE id = ?', [msg.id.id]);
-        assert.equal(salvo.sender_jid, phoneAlt);
-        assert.equal(salvo.sender_name, 'Defesa Civil');
-        assert.equal(salvo.chat_name, 'Status de Defesa Civil');
+        assert.match(notice.text, /👤 \*Nome:\* Defesa Civil/);
+        assert.match(notice.text, /📱 \*Número:\* \+5521999999988/);
+        assert.doesNotMatch(notice.text, /Fátima/);
+        const saved = await bot.dbGet('SELECT * FROM messages WHERE id = ?', [msg.id.id]);
+        assert.equal(saved.sender_jid, phoneAlt);
+        assert.equal(saved.sender_name, 'Defesa Civil');
+        assert.equal(saved.chat_name, 'Status de Defesa Civil');
         const hit = await bot.dbGet('SELECT * FROM watch_hits WHERE message_id = ?', [msg.id.id]);
         assert.equal(hit.sender_name, 'Defesa Civil');
         assert.equal(hit.sender_number, '5521999999988');
@@ -92,9 +92,9 @@ describe('detecção', () => {
             extras: { from: '123@broadcast', author: undefined,
                 _data: { participant: { _serialized: '67658770853939@lid' }, notifyName: 'Fátima' } }
         });
-        assert.match(notice.texto, /Nome:\* Defesa Civil sem telefone/);
-        assert.match(notice.texto, /Número:\* Número indisponível/);
-        assert.doesNotMatch(notice.texto, /Fátima/);
+        assert.match(notice.text, /Nome:\* Defesa Civil sem telefone/);
+        assert.match(notice.text, /Número:\* Número indisponível/);
+        assert.doesNotMatch(notice.text, /Fátima/);
         const hit = await bot.dbGet('SELECT * FROM watch_hits');
         assert.equal(hit.chat_name, 'Transmissão de Defesa Civil sem telefone');
     });
@@ -106,9 +106,9 @@ describe('detecção', () => {
             extras: { from: 'status@broadcast', author: undefined,
                 _data: { notifyName: 'Fátima', chat: { name: 'Defesa Civil' } } }
         });
-        assert.match(notice.texto, /Nome:\* Desconhecido/);
-        assert.match(notice.texto, /Número:\* Número indisponível/);
-        assert.doesNotMatch(notice.texto, /Fátima|Defesa Civil/);
+        assert.match(notice.text, /Nome:\* Desconhecido/);
+        assert.match(notice.text, /Número:\* Número indisponível/);
+        assert.doesNotMatch(notice.text, /Fátima|Defesa Civil/);
         const hit = await bot.dbGet('SELECT * FROM watch_hits');
         assert.equal(hit.chat_name, 'Status');
     });
@@ -119,20 +119,20 @@ describe('detecção', () => {
 
         assert.equal(notices.length, 1);
         assert.equal(notices[0].chatId, OWNER.jid);
-        assert.match(notices[0].texto, /👀 \*WATCH: MENSAGEM DETECTADA\*/);
-        assert.match(notices[0].texto, /🔎 \*Regra #1:\* promoção\n🔎 \*Regra #2:\* \/pix\/i/);
-        assert.match(notices[0].texto, /👥 \*Grupo:\* Família\n👤 \*Nome:\* Fulano/);
+        assert.match(notices[0].text, /👀 \*WATCH: MENSAGEM DETECTADA\*/);
+        assert.match(notices[0].text, /🔎 \*Regra #1:\* promoção\n🔎 \*Regra #2:\* \/pix\/i/);
+        assert.match(notices[0].text, /👥 \*Grupo:\* Família\n👤 \*Nome:\* Fulano/);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM watch_hits')).n, 2);
     });
 
     test('não avisa: suas mensagens, comandos, sem casar, repetida e /watch desativado', async () => {
         await bot.setSetting('watch.rules', 'pix');
-        assert.deepEqual(await bot.executar('meu pix'), []);                  // your
+        assert.deepEqual(await bot.execute('meu pix'), []);                  // your
         const commandAltAlt = await someoneWrite('/noffa pix');             // command: only its reply
-        assert.ok(!commandAltAlt.some(e => /WATCH/.test(e.texto)));
+        assert.ok(!commandAltAlt.some(e => /WATCH/.test(e.text)));
         assert.deepEqual(await someoneWrite('nada a ver'), []);
 
-        const msg = bot.createMessage({ texto: 'pix', de: OTHERAlt.jid, id: 'REPETIDA' });
+        const msg = bot.createMessage({ text: 'pix', de: OTHERAlt.jid, id: 'REPETIDA' });
         assert.equal((await bot.deliver(msg)).length, 1);
         assert.equal((await bot.deliver(msg)).length, 0);
 
@@ -142,8 +142,8 @@ describe('detecção', () => {
 
     test('menções cruas viram nomes no aviso', async () => {
         await bot.setSetting('watch.rules', 'oi');
-        const [notice] = await someoneWrite(`oi @${OTHERAlt.user}`, { mencoes: [OTHERAlt.jid] });
-        assert.match(notice.texto, /"oi @Fulano"/);
+        const [notice] = await someoneWrite(`oi @${OTHERAlt.user}`, { mentions: [OTHERAlt.jid] });
+        assert.match(notice.text, /"oi @Fulano"/);
     });
 });
 
@@ -169,14 +169,14 @@ describe('/watch', () => {
 
         await bot.setSetting('watch.rules', 'pix\nboleto');
         await someoneWrite('pix');
-        const r = await bot.executar('/watch -l');
+        const r = await bot.execute('/watch -l');
         assert.equal(r.length, 1);
         assert.equal(r[0].chatId, bot.GROUP);
-        assert.match(r[0].texto, /#1  pix  \(1\)\n#2  boleto  \(0\)/);
+        assert.match(r[0].text, /#1  pix  \(1\)\n#2  boleto  \(0\)/);
 
-        const [here] = await bot.executar('/watch -s');
+        const [here] = await bot.execute('/watch -s');
         assert.equal(here.chatId, bot.GROUP);
-        assert.match(here.texto, /WATCH/);
+        assert.match(here.text, /WATCH/);
     });
 
     test('listagem com ocorrências de todas; -s N de uma regra', async () => {
@@ -184,13 +184,13 @@ describe('/watch', () => {
         await someoneWrite('pix 1');
         await someoneWrite('boleto 1');
 
-        const allAlt = (await bot.executar('/watch', { chat: OWNER.jid }))[0].texto;
+        const allAlt = (await bot.execute('/watch', { chat: OWNER.jid }))[0].text;
         assert.match(allAlt, /🔎 \*Regras:\* todas\n📦 \*Total:\* 2/);
         // Each occurrence with the no. of the rule that matched (the order is by time; here they tie)
         assert.match(allAlt, /· 🔎 #1\n.*\n    💬 "pix 1"/);
         assert.match(allAlt, /· 🔎 #2\n.*\n    💬 "boleto 1"/);
 
-        const aAlt = (await bot.executar('/watch -s 2', { chat: OWNER.jid }))[0].texto;
+        const aAlt = (await bot.execute('/watch -s 2', { chat: OWNER.jid }))[0].text;
         assert.match(aAlt, /🔎 \*Regra #2:\* boleto\n📦 \*Total:\* 1/);
         assert.doesNotMatch(aAlt, /pix 1/);
 
@@ -245,8 +245,8 @@ describe('/watch -to', () => {
 
         const notices = await someoneWrite('promoção no pix');
         assert.deepEqual(notices.map(a => a.chatId).sort(), [OWNER.jid, L200].sort());
-        assert.match(notices.find(a => a.chatId === L200).texto, /🔎 \*Regra #1:\* promoção\n👥/);
-        assert.match(notices.find(a => a.chatId === OWNER.jid).texto, /🔎 \*Regra #2:\* pix\n👥/);
+        assert.match(notices.find(a => a.chatId === L200).text, /🔎 \*Regra #1:\* promoção\n👥/);
+        assert.match(notices.find(a => a.chatId === OWNER.jid).text, /🔎 \*Regra #2:\* pix\n👥/);
 
         const [list] = await bot.replyAlt('/watch -l');
         assert.match(list, /#1  promoção  \(1\)  → 👥 Grupo sobre L200\n#2  pix  \(1\)/);
@@ -272,7 +272,7 @@ describe('/watch -to', () => {
 
         const notices = await someoneWrite('promoção no pix');
         assert.deepEqual(notices.map(a => a.chatId).sort(), [L200, OTHERAlt.jid].sort());
-        assert.match(notices.find(a => a.chatId === OTHERAlt.jid).texto, /🔎 \*Regra #1:\* promoção\n🔎 \*Regra #2:\* pix\n/);
+        assert.match(notices.find(a => a.chatId === OTHERAlt.jid).text, /🔎 \*Regra #1:\* promoção\n🔎 \*Regra #2:\* pix\n/);
         assert.match((await bot.replyAlt('/watch -l'))[0], /#1  promoção  \(1\)  → 👥 Grupo sobre L200, 👤 Fulano/);
 
         // -N with several -to changes all; off does not mix with others
@@ -507,12 +507,12 @@ describe('/watch -q (busca)', () => {
             await bot.replyAlt('/watch -mask 1');
 
             const [locked] = await someoneWrite(TEL + ' liga');
-            assert.match(locked.texto, /\+55219\*\*\*\*77/);
-            assert.doesNotMatch(locked.texto, /973395377/);
+            assert.match(locked.text, /\+55219\*\*\*\*77/);
+            assert.doesNotMatch(locked.text, /973395377/);
             assert.match((await bot.dbGet('SELECT body FROM watch_hits')).body, /\+5521973395377/);
 
-            const [livre] = await someoneWrite(TEL + ' pix');
-            assert.match(livre.texto, /\+5521973395377/);
+            const [free] = await someoneWrite(TEL + ' pix');
+            assert.match(free.text, /\+5521973395377/);
         });
 
         test('-s mostra as ocorrências da regra com 🔒 ofuscadas', async () => {
@@ -529,12 +529,12 @@ describe('/watch -q (busca)', () => {
             await bot.replyAlt('/watch tel -to /Fulano/ -mask');
             const [inGroup] = await someoneWrite(TEL + ' tel');
             assert.equal(inGroup.chatId, OTHERAlt.jid);
-            assert.doesNotMatch(inGroup.texto, /973395377/);
+            assert.doesNotMatch(inGroup.text, /973395377/);
 
             await bot.replyAlt('/watch livre -to /Fulano/');
             const [junto] = await someoneWrite(TEL + ' tel livre');
-            assert.match(junto.texto, /🔎 \*Regra #1:\* tel\n🔎 \*Regra #2:\* livre\n/);
-            assert.doesNotMatch(junto.texto, /973395377/);
+            assert.match(junto.text, /🔎 \*Regra #1:\* tel\n🔎 \*Regra #2:\* livre\n/);
+            assert.doesNotMatch(junto.text, /973395377/);
 
             const env = { QRCODE_EMAIL_SMTP_HOST: 'smtp.exemplo.com', QRCODE_EMAIL_SMTP_USER: 'bot@exemplo.com',
                 QRCODE_EMAIL_SMTP_TO: 'Eu <eu@exemplo.com>' };
@@ -558,8 +558,8 @@ describe('/watch -q (busca)', () => {
                 ['/(tcpro|tc pro)/i', 'pix']);
 
             const [notice] = await someoneWrite('TCPRO ' + TEL);
-            assert.match(notice.texto, /\+55219\*\*\*\*77/);
-            assert.doesNotMatch(notice.texto, /973395377/);
+            assert.match(notice.text, /\+55219\*\*\*\*77/);
+            assert.doesNotMatch(notice.text, /973395377/);
         });
 
         test('-rm apaga o 🔒; regra nova com o mesmo texto não herda', async () => {

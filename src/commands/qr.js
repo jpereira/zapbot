@@ -38,7 +38,7 @@ async function generate({ msg, args, quotedMsg }) {
 
 /**
  * An image's QR Code text (null: found none).
- * @param {Buffer} imagem
+ * @param {Buffer} image
  */
 async function readQr(image) {
     const { data, info } = await sharp(image)

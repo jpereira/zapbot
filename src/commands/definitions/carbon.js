@@ -19,6 +19,6 @@ module.exports = {
             ex: ['/carbon -t light print(42)']
         }
     ],
-    argumentosLivres: true,
+    freeArguments: true,
     role: USER // Code snippets become an image in the bot itself (SVG + sharp)
 };

@@ -12,7 +12,7 @@ const { findCommand } = require('./base');
 const { client } = require('../client');
 const { BACKUP_DIR, DB_PATH } = require('../constants');
 const {
-    describeDestinations, emailsDoSmtpTo, extractDestinations, resolverDestinations
+    describeDestinations, emailsOfSmtpTo, extractDestinations, resolverDestinations
 } = require('../destinations');
 const { printError } = require('../log');
 const { GetOptFromCommand } = require('../options');
@@ -39,14 +39,14 @@ const { fmtWhen, partsInBrasilia } = require('../util/when');
 const inputsInLine = (inputs) => Object.entries(inputs)
     .map(([table, n]) => `${table} ${fmtInA(n)}`).join(' · ');
 
-const backupLine = (b, i) => `${i + 1}. *${fmtWhen(b.criadoEm)}* · ${humanSize(b.bytes)}` +
-    `${b.bytesNotas ? ` + 🖼️ ${humanSize(b.bytesNotas)}` : ''}${b.bytesContatos ? ` + 📇 ${humanSize(b.bytesContatos)}` : ''} · ${reasonText(b.motivo)}`;
+const backupLine = (b, i) => `${i + 1}. *${fmtWhen(b.createdAt)}* · ${humanSize(b.bytes)}` +
+    `${b.notesBytes ? ` + 🖼️ ${humanSize(b.notesBytes)}` : ''}${b.contactsBytes ? ` + 📇 ${humanSize(b.contactsBytes)}` : ''} · ${reasonText(b.reason)}`;
 
 // "2" (list number) or the file name (with or without .db.gz)
 function findBackup(list, valueAlt) {
     const v = String(valueAlt ?? '').trim();
     if (/^\d+$/.test(v)) return list[Number(v) - 1] ?? null;
-    return list.find(b => b.nome === v.replace(/\.db\.gz$/, '')) ?? null;
+    return list.find(b => b.name === v.replace(/\.db\.gz$/, '')) ?? null;
 }
 
 async function status(msg) {
@@ -54,33 +54,33 @@ async function status(msg) {
     const inputs = await countInputs();
     const db = DB_PATH;
     const bytesDb = fs.existsSync(db) ? fs.statSync(db).size : null;
-    const total = list.reduce((s, b) => s + b.bytes + (b.bytesNotas ?? 0) + (b.bytesContatos ?? 0), 0);
+    const total = list.reduce((s, b) => s + b.bytes + (b.notesBytes ?? 0) + (b.contactsBytes ?? 0), 0);
     const [last] = list;
 
     const today = partsInBrasilia(Date.now());
     const doneToday = list.some(b => {
-        const p = partsInBrasilia(b.criadoEm);
-        return b.motivo === REASONS.automatico && p.ano === today.ano && p.mes === today.mes && p.dia === today.dia;
+        const p = partsInBrasilia(b.createdAt);
+        return b.reason === REASONS.automatic && p.year === today.year && p.mes === today.mes && p.day === today.day;
     });
 
     // One item per bullet; the database entries, a sub-bullet per table
     const items = [
-        t('adm.backup.dbNow', { tamanho: bytesDb === null ? '—' : humanSize(bytesDb) }) + '\n' +
+        t('adm.backup.dbNow', { size: bytesDb === null ? '—' : humanSize(bytesDb) }) + '\n' +
             Object.entries(inputs).map(([table, n]) => `   ◦ ${table}: ${fmtInA(n)}`).join('\n'),
         t('adm.backup.count', { n: list.length, total: list.length ? ` (${humanSize(total)})` : '', dir: BACKUP_DIR }),
         t('adm.backup.last', {
-            valor: last
-                ? t('adm.backup.lastValue', { quando: fmtWhen(last.criadoEm), motivo: reasonText(last.motivo), tamanho: humanSize(last.bytes) })
+            value: last
+                ? t('adm.backup.lastValue', { when: fmtWhen(last.createdAt), reason: reasonText(last.reason), size: humanSize(last.bytes) })
                 : t('adm.backup.none')
         }),
         getSetting('backup.enabled')
             ? t('adm.backup.next', {
-                quando: fmtWhen(nextBackupDaily(Date.now(), doneToday)),
-                hora: getSetting('backup.hour'),
+                when: fmtWhen(nextBackupDaily(Date.now(), doneToday)),
+                hour: getSetting('backup.hour'),
                 keep: getSetting('backup.keep')
             })
             : t('adm.backup.autoOff'),
-        t('adm.backup.autoTo', { valor: getSetting('backup.to') || t('adm.backup.localOnly') })
+        t('adm.backup.autoTo', { value: getSetting('backup.to') || t('adm.backup.localOnly') })
     ];
     const textAlt = `${t('adm.backup.title')}\n\n${items.map(i => `• ${i}`).join('\n')}\n`;
 
@@ -92,7 +92,7 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
      * -to accepts spaces (/Jorge Pereira/), which the option parser
      * would split: goes out of the text first, and the rest is read again.
      */
-    const { destinos: destinationsText, informado: withDestination, resto: rest } = extractDestinations(args);
+    const { destinations: destinationsText, given: withDestination, rest } = extractDestinations(args);
     const opts = withDestination ? GetOptFromCommand(rest, findCommand('/backup')) : commandOpts;
     const o = opts.opt;
 
@@ -108,11 +108,11 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
     if (o.now) {
         const b = await createBackup(REASONS.manual);
         await msg.reply(t('adm.backup.created', {
-            nome: b.nome,
-            tamanho: humanSize(b.bytes),
-            notas: (b.bytesNotas ? t('adm.backup.createdNotes', { tamanho: humanSize(b.bytesNotas) }) : '') +
-                (b.bytesContatos ? t('adm.backup.createdContacts', { tamanho: humanSize(b.bytesContatos) }) : ''),
-            entradas: inputsInLine(b.entradas)
+            name: b.name,
+            size: humanSize(b.bytes),
+            notes: (b.notesBytes ? t('adm.backup.createdNotes', { size: humanSize(b.notesBytes) }) : '') +
+                (b.contactsBytes ? t('adm.backup.createdContacts', { size: humanSize(b.contactsBytes) }) : ''),
+            inputs: inputsInLine(b.inputs)
         }));
         return;
     }
@@ -137,17 +137,17 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
         }
 
         const current = await countInputs();
-        const names = [...new Set([...Object.keys(b.entradas ?? {}), ...Object.keys(current)])].sort();
-        const linesAlt = names.map(table => `${table}: ${fmtInA(b.entradas?.[table] ?? 0)} → ${fmtInA(current[table] ?? 0)}`);
+        const names = [...new Set([...Object.keys(b.inputs ?? {}), ...Object.keys(current)])].sort();
+        const linesAlt = names.map(table => `${table}: ${fmtInA(b.inputs?.[table] ?? 0)} → ${fmtInA(current[table] ?? 0)}`);
 
         await msg.reply(`${t('adm.backup.infoHead', { n: list.indexOf(b) + 1 })}\n` +
-            `📄 ${b.nome}\n🕐 ${fmtWhen(b.criadoEm)} · ${reasonText(b.motivo)} · ZapBot ${b.versao}\n📦 ${humanSize(b.bytes)}\n` +
-            `${b.bytesNotas ? t('adm.backup.infoNotes', { tamanho: humanSize(b.bytesNotas), imagens: b.imagens ? ` (${b.imagens})` : '' }) : ''}\n` +
+            `📄 ${b.name}\n🕐 ${fmtWhen(b.createdAt)} · ${reasonText(b.reason)} · ZapBot ${b.version}\n📦 ${humanSize(b.bytes)}\n` +
+            `${b.notesBytes ? t('adm.backup.infoNotes', { size: humanSize(b.notesBytes), images: b.images ? ` (${b.images})` : '' }) : ''}\n` +
             `${t('adm.backup.infoEntries')}\n\`\`\`${linesAlt.join('\n')}\`\`\``);
         return;
     }
 
-    // -restore <nº|nome> [-yes]
+    // -restore <nº|name> [-yes]
     if (opts.given.has('restore')) {
         const b = findBackup(list, o.restore);
         if (!b) {
@@ -157,20 +157,20 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
 
         if (!o.yes) {
             await msg.reply(t('adm.backup.restoreAsk', {
-                quando: fmtWhen(b.criadoEm),
-                nome: b.nome,
-                motivo: reasonText(b.motivo),
-                versao: b.versao,
-                notas: t(b.arquivoNotas ? 'adm.backup.restoreNotesYes' : 'adm.backup.restoreNotesNo')
+                when: fmtWhen(b.createdAt),
+                name: b.name,
+                reason: reasonText(b.reason),
+                version: b.version,
+                notes: t(b.notesFile ? 'adm.backup.restoreNotesYes' : 'adm.backup.restoreNotesNo')
             }));
             return;
         }
 
         const r = await restoreBackup(b);
         await msg.reply(t('adm.backup.restored', {
-            quando: fmtWhen(b.criadoEm),
-            entradas: inputsInLine(r.entradas),
-            seguranca: r.seguranca.nome
+            when: fmtWhen(b.createdAt),
+            inputs: inputsInLine(r.inputs),
+            security: r.security.name
         }));
         return;
     }
@@ -188,12 +188,12 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
             return;
         }
 
-        const emailsOld = old.flatMap(v => (/^e-?mail$/i.test(v) ? emailsDoSmtpTo() : [v]));
+        const emailsOld = old.flatMap(v => (/^e-?mail$/i.test(v) ? emailsOfSmtpTo() : [v]));
         const invalid = emailsOld.filter(e => !e || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(e));
 
         if (invalid.length) {
             await msg.reply(t('adm.backup.badEmail', {
-                lista: invalid.map(e => e || t('adm.backup.smtpToEmpty')).join(', ')
+                list: invalid.map(e => e || t('adm.backup.smtpToEmpty')).join(', ')
             }));
             return;
         }
@@ -208,7 +208,7 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
         if (withDestination) {
             // Email or chat (several -to: all); several contacts or groups with the name, waits for you
             // choose from the list
-            destinations = await resolverDestinations(msg, destinationsText, { aceitaEmail: true });
+            destinations = await resolverDestinations(msg, destinationsText, { acceptsEmail: true });
             if (!destinations) return;
         }
 
@@ -219,8 +219,8 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
         if (otherChats.length && !o.yes) {
             const tos = destinationsText.map(d => `-to ${/\s/.test(d) ? `/${d}/` : d}`).join(' ');
             await msg.reply(t('adm.backup.sendConfirm', {
-                onde: describeDestinations(otherChats),
-                numero: numberAlt ? ` ${numberAlt}` : '',
+                where: describeDestinations(otherChats),
+                number: numberAlt ? ` ${numberAlt}` : '',
                 tos
             }));
             return;
@@ -233,16 +233,16 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
 
         if (emails.length) {
             if (b.bytes > MAX_ATTACHMENT_BYTES) {
-                await msg.reply(t('adm.backup.tooBigAttach', { tamanho: humanSize(b.bytes), max: humanSize(MAX_ATTACHMENT_BYTES) }));
+                await msg.reply(t('adm.backup.tooBigAttach', { size: humanSize(b.bytes), max: humanSize(MAX_ATTACHMENT_BYTES) }));
                 return;
             }
 
             try {
                 await sendBackupPerEmail(b, emails);
-                await msg.reply(t('adm.backup.emailSent', { quando: fmtWhen(b.criadoEm), emails: emails.join(', ') }));
+                await msg.reply(t('adm.backup.emailSent', { when: fmtWhen(b.createdAt), emails: emails.join(', ') }));
             } catch (err) {
                 printError('/backup -send by e-mail:', err.message);
-                await msg.reply(t('adm.backup.emailFail', { erro: err.message }));
+                await msg.reply(t('adm.backup.emailFail', { error: err.message }));
             }
         }
 
@@ -255,16 +255,16 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
             } catch (err) {
                 printError(`/backup -send to ${d.id}:`, err.message);
                 const whereAlt = d.id === myId ? t('adm.backup.myPrivate') : describeDestinations([d]);
-                await msg.reply(t('adm.backup.chatFail', { onde: whereAlt, erro: err.message }));
+                await msg.reply(t('adm.backup.chatFail', { where: whereAlt, error: err.message }));
             }
         }
 
         // "in your private chat" only if the command did not come from there (or if it came together with other chats)
         const other = sentAlt3.filter(d => d.id !== myId);
         const inPrivate = sentAlt3.some(d => d.id === myId) && (other.length || msg.id?.remote !== myId);
-        const whereAlt = [inPrivate && t('adm.backup.inPrivate'), other.length && t('adm.backup.inChats', { onde: describeDestinations(other) })]
+        const whereAlt = [inPrivate && t('adm.backup.inPrivate'), other.length && t('adm.backup.inChats', { where: describeDestinations(other) })]
             .filter(Boolean);
-        if (whereAlt.length) await msg.reply(t('adm.backup.sent', { onde: whereAlt.join(t('adm.backup.and')) }));
+        if (whereAlt.length) await msg.reply(t('adm.backup.sent', { where: whereAlt.join(t('adm.backup.and')) }));
         return;
     }
 
@@ -283,7 +283,7 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
         }
 
         await removeBackup(b);
-        await msg.reply(t('adm.backup.removed', { quando: fmtWhen(b.criadoEm), motivo: reasonText(b.motivo) }));
+        await msg.reply(t('adm.backup.removed', { when: fmtWhen(b.createdAt), reason: reasonText(b.reason) }));
         return;
     }
 

@@ -8,14 +8,14 @@ const assert = require('node:assert/strict');
 
 const { OWNER, GROUP, OTHERAlt } = bot;
 const { domainsAlt, normalizeDomain, prohibited } = bot.src('antilink');
-const CICLANO = { jid: '5521922222222@c.us', nome: 'Ciclano' };
+const CICLANO = { jid: '5521922222222@c.us', name: 'Ciclano' };
 
 let group;
 let removed;
 
 beforeEach(async () => {
     await bot.restart();
-    bot.createContact(CICLANO.jid, CICLANO.nome);
+    bot.createContact(CICLANO.jid, CICLANO.name);
     group = bot.createGroup(GROUP, 'Família', [{ jid: OWNER.jid, isAdmin: true }, OTHERAlt.jid, CICLANO.jid]);
     removed = [];
     group.removeParticipants = async (ids) => { removed.push(ids); return { status: 200 }; };
@@ -23,9 +23,9 @@ beforeEach(async () => {
 
 // Fulano (regular member) sends a text in the group
 async function send(textAlt, de = OTHERAlt.jid) {
-    const msg = bot.createMessage({ texto: textAlt, de });
+    const msg = bot.createMessage({ text: textAlt, de });
     const replies = await bot.deliver(msg);
-    return { msg, respostas: replies };
+    return { msg, answers: replies };
 }
 
 test('dominiosDe: http(s), www, domínio solto e convite; sem falso positivo em texto comum', () => {
@@ -54,28 +54,28 @@ test('/antilink: mostra o modo, muda e libera/tira domínios; só em grupo', asy
 test('-delete: apaga o link de quem não é admin; texto comum, domínio liberado e comandos passam', async () => {
     await bot.replyAlt('/antilink -delete -allow youtube.com');
 
-    const { msg, respostas: replies } = await send('olha isso https://golpe.xyz/promo');
-    assert.equal(msg.apagadaPara, 'todos');
-    assert.ok(bot.client.enviadas.some(e => e.content === '🔗 Link de Fulano apagado.'), JSON.stringify(replies));
+    const { msg, answers: replies } = await send('olha isso https://golpe.xyz/promo');
+    assert.equal(msg.deletedFor, 'todos');
+    assert.ok(bot.client.sent.some(e => e.content === '🔗 Link de Fulano apagado.'), JSON.stringify(replies));
 
     const ok = await send('bom dia, tudo bem?');
-    assert.equal(ok.msg.apagadaPara, undefined);
+    assert.equal(ok.msg.deletedFor, undefined);
     const released = await send('https://m.youtube.com/watch?v=1');
-    assert.equal(released.msg.apagadaPara, undefined);
+    assert.equal(released.msg.deletedFor, undefined);
 });
 
 test('quem nunca é pego: admin do grupo, o dono, e o bot sem ser admin não apaga', async () => {
     await bot.replyAlt('/antilink -delete');
     group.participants.find(p => p.id._serialized === OTHERAlt.jid).isAdmin = true;
-    assert.equal((await send('https://golpe.xyz')).msg.apagadaPara, undefined, 'admin do grupo');
+    assert.equal((await send('https://golpe.xyz')).msg.deletedFor, undefined, 'admin do grupo');
     group.participants.find(p => p.id._serialized === OTHERAlt.jid).isAdmin = false;
 
-    const my = bot.createMessage({ texto: 'https://meu.site/x', fromMe: true, chat: GROUP });
+    const my = bot.createMessage({ text: 'https://meu.site/x', fromMe: true, chat: GROUP });
     await bot.deliver(my);
-    assert.equal(my.apagadaPara, undefined, 'o dono');
+    assert.equal(my.deletedFor, undefined, 'o dono');
 
     group.participants.find(p => p.id._serialized === OWNER.jid).isAdmin = false;
-    assert.equal((await send('https://golpe.xyz')).msg.apagadaPara, undefined, 'bot sem admin: não apaga');
+    assert.equal((await send('https://golpe.xyz')).msg.deletedFor, undefined, 'bot sem admin: não apaga');
 });
 
 test('-warn: apaga e soma um aviso do /warn; no limite, remove a pessoa', async () => {
@@ -83,19 +83,19 @@ test('-warn: apaga e soma um aviso do /warn; no limite, remove a pessoa', async 
     await bot.replyAlt('/antilink -warn');
 
     await send('https://golpe.xyz/1');
-    assert.ok(bot.client.enviadas.some(e => /Link de Fulano apagado\.\n⚠️ \*Aviso 1\/2\* para Fulano: mandou link/.test(e.content)));
+    assert.ok(bot.client.sent.some(e => /Link de Fulano apagado\.\n⚠️ \*Aviso 1\/2\* para Fulano: mandou link/.test(e.content)));
     await send('https://golpe.xyz/2');
-    assert.ok(bot.client.enviadas.some(e => /Aviso 2\/2.*\n🚪 Fulano chegou a 2 avisos e foi removido do grupo/s.test(e.content)));
+    assert.ok(bot.client.sent.some(e => /Aviso 2\/2.*\n🚪 Fulano chegou a 2 avisos e foi removido do grupo/s.test(e.content)));
     assert.deepEqual(removed, [[OTHERAlt.jid]]);
 });
 
 test('-remove: apaga e remove na hora; -off volta ao normal', async () => {
     await bot.replyAlt('/antilink -remove');
     const { msg } = await send('https://golpe.xyz');
-    assert.equal(msg.apagadaPara, 'todos');
+    assert.equal(msg.deletedFor, 'todos');
     assert.deepEqual(removed, [[OTHERAlt.jid]]);
-    assert.ok(bot.client.enviadas.some(e => e.content === '🚪 Fulano mandou link e foi removido do grupo.'));
+    assert.ok(bot.client.sent.some(e => e.content === '🚪 Fulano mandou link e foi removido do grupo.'));
 
     await bot.replyAlt('/antilink -off');
-    assert.equal((await send('https://golpe.xyz')).msg.apagadaPara, undefined);
+    assert.equal((await send('https://golpe.xyz')).msg.deletedFor, undefined);
 });

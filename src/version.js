@@ -1,6 +1,6 @@
 /*
  * The bot version with the commit that is running and where it came from:
- * "2.0.0 (git+0c6164f/v2.0.0)" numa tag, "2.0.1 (devel) (git+7a89b92/HEAD)" fora dela.
+ * "2.0.0 (git+0c6164f/v2.0.0)" numa tag, "2.0.1 (devel) (git+7a89b92/HEAD)" out dela.
  */
 
 const fs = require('fs');
@@ -96,7 +96,7 @@ function objectTagCommit(read, hash) {
     if (!raw) return null;
 
     try {
-        // "tag <tamanho>\0object <commit>\ntype commit\n..."
+        // "tag <size>\0object <commit>\ntype commit\n..."
         const textAlt = zlib.inflateSync(raw).toString('utf8');
         return textAlt.startsWith('tag ') ? (textAlt.match(/\0object ([0-9a-f]{40})\n/)?.[1] ?? null) : null;
     } catch {

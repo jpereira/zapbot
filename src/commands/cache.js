@@ -23,11 +23,11 @@ async function cmdCache({ msg, opts }) {
             textMsg = t('cache.allDone', {
                 dir: CACHE_DIR,
                 total: r.total,
-                deleted: countAlt('cache.deletedCount', r.apagadas),
-                edited: r.editadas,
-                reactions: r.reacoes,
+                deleted: countAlt('cache.deletedCount', r.deleted),
+                edited: r.edited,
+                reactions: r.reactions,
                 backups: r.backups,
-                freed: humanSize(r.liberado)
+                freed: humanSize(r.allowed)
             });
         } else if (opts.opt.clean || opts.opt.media || opts.opt.backup) {
             const partsAlt = [];
@@ -47,7 +47,7 @@ async function cmdCache({ msg, opts }) {
 
             if (opts.opt.media) {
                 const r = await cleanMedia();
-                partsAlt.push(t('cache.mediaDeleted', { dir: MEDIA_DIR, count: r.arquivos, size: humanSize(r.bytes) }));
+                partsAlt.push(t('cache.mediaDeleted', { dir: MEDIA_DIR, count: r.files, size: humanSize(r.bytes) }));
             }
 
             if (opts.opt.backup) {
@@ -57,11 +57,11 @@ async function cmdCache({ msg, opts }) {
 
             textMsg = partsAlt.join('\n');
         } else {
-            const { total, apagadas: deletedAlt } = await dbGet(
-                'SELECT COUNT(*) AS total, COALESCE(SUM(revoked), 0) AS apagadas FROM messages'
+            const { total, deleted: deletedAlt } = await dbGet(
+                'SELECT COUNT(*) AS total, COALESCE(SUM(revoked), 0) AS deleted FROM messages'
             );
-            const { editadas: edited } = await dbGet('SELECT COUNT(*) AS editadas FROM message_edits');
-            const { reacoes: reactions } = await dbGet('SELECT COUNT(*) AS reacoes FROM reaction_changes');
+            const { edited } = await dbGet('SELECT COUNT(*) AS edited FROM message_edits');
+            const { reactions } = await dbGet('SELECT COUNT(*) AS reactions FROM reaction_changes');
 
             textMsg = t('cache.showing', { dir: CACHE_DIR });
             textMsg += '\n\n```' + listCacheLevelOnly(CACHE_DIR) + '```\n\n';

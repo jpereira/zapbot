@@ -17,13 +17,13 @@ const MEDIA_DIR = path.join(CACHE_DIR, 'media');
 const TMP_DIR = path.join(CACHE_DIR, 'tmp');
 const { BACKUP_DIR } = bot.src('constants');
 const { createBackup, listBackups, removeBackup } = bot.src('backup');
-const URL = 'http://8.8.8.8/video'; // IP literal: sem consulta de DNS
+const URL = 'http://8.8.8.8/video'; // IP literal: no consulta de DNS
 const DAY = 24 * 60 * 60 * 1000;
 
 beforeEach(bot.restart);
 
-const binaries = () => processes.chamadas.map(c => path.basename(c.bin));
-const argsDo = (nameAlt) => processes.chamadas.find(c => path.basename(c.bin) === nameAlt).args;
+const binaries = () => processes.calls.map(c => path.basename(c.bin));
+const argsDo = (nameAlt) => processes.calls.find(c => path.basename(c.bin) === nameAlt).args;
 const filesTemporary = () => fs.readdirSync(TMP_DIR).filter(f => !f.startsWith('.'));
 
 describe('URLs (anti-SSRF do /get)', () => {
@@ -52,11 +52,11 @@ describe('/get', () => {
     beforeEach(() => bot.setSetting('get.cache.tmp', false));
 
     test('vídeo: baixa com yt-dlp, converte com ffmpeg e manda como documento', async () => {
-        const r = await bot.executar(`/get ${URL}`, { de: OTHERAlt.jid });
+        const r = await bot.execute(`/get ${URL}`, { de: OTHERAlt.jid });
         assert.ok(r[1].content instanceof MessageMedia);
         assert.equal(r[1].options.sendMediaAsDocument, true);
         assert.equal(r[1].options.caption, '📥 Aqui está a mídia para download.');
-        assert.equal(r[0].texto, '✅ Mídia baixada com sucesso!', 'o aviso vira a confirmação');
+        assert.equal(r[0].text, '✅ Mídia baixada com sucesso!', 'o aviso vira a confirmação');
 
         assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg']);
         const yt = argsDo('yt-dlp');
@@ -68,16 +68,16 @@ describe('/get', () => {
     });
 
     test('-a: só o áudio em mp3', async () => {
-        await bot.executar(`/get -a ${URL}`);
+        await bot.execute(`/get -a ${URL}`);
         const ff = argsDo('ffmpeg');
         assert.ok(ff.includes('-vn') && ff.includes('libmp3lame'));
         assert.match(ff.at(-1), /_output\.mp3$/);
     });
 
     test('-st: figurinha animada de até 6 s', async () => {
-        const r = await bot.executar(`/get -st ${URL}`);
+        const r = await bot.execute(`/get -st ${URL}`);
         assert.equal(r[1].options.sendMediaAsSticker, true);
-        assert.equal(r[0].texto, '✅ Sticker criado com sucesso!', 'o aviso vira a confirmação');
+        assert.equal(r[0].text, '✅ Sticker criado com sucesso!', 'o aviso vira a confirmação');
         assert.equal(r.length, 2);
         const ff = argsDo('ffmpeg');
         assert.equal(ff[ff.indexOf('-t') + 1], '6');
@@ -86,10 +86,10 @@ describe('/get', () => {
 
     // The snippet yt-dlp downloads (--download-sections) and the ffmpeg cuts
     const snippet = () => {
-        const yt = processes.chamadas.find(c => path.basename(c.bin) === 'yt-dlp' && c.args.includes('-o')).args;
+        const yt = processes.calls.find(c => path.basename(c.bin) === 'yt-dlp' && c.args.includes('-o')).args;
         const ff = argsDo('ffmpeg');
         return {
-            secao: yt.includes('--download-sections') ? yt[yt.indexOf('--download-sections') + 1] : null,
+            section: yt.includes('--download-sections') ? yt[yt.indexOf('--download-sections') + 1] : null,
             keyframes: yt.includes('--force-keyframes-at-cuts'),
             ss: ff.includes('-ss') ? ff[ff.indexOf('-ss') + 1] : null,
             t: ff.includes('-t') ? ff[ff.indexOf('-t') + 1] : null
@@ -97,94 +97,94 @@ describe('/get', () => {
     };
 
     test('-ss e -es: o yt-dlp baixa só o trecho, e o ffmpeg não corta de novo o início', async () => {
-        await bot.executar(`/get -ss 10 -es 25 ${URL}`);
-        assert.deepEqual(snippet(), { secao: '*10-25', keyframes: true, ss: null, t: '15' });
+        await bot.execute(`/get -ss 10 -es 25 ${URL}`);
+        assert.deepEqual(snippet(), { section: '*10-25', keyframes: true, ss: null, t: '15' });
     });
 
     test('-ss e -es aceitam min:seg e h:min:seg', async () => {
-        await bot.executar(`/get -ss 09:33 -es 09:45 ${URL}`);
-        assert.deepEqual(snippet(), { secao: '*573-585', keyframes: true, ss: null, t: '12' });
-        processes.chamadas.length = 0;
-        await bot.executar(`/get -ss 1:00:00.5 -es 1:00:02 ${URL}`);
-        assert.deepEqual(snippet(), { secao: '*3600.5-3602', keyframes: true, ss: null, t: '1.5' });
+        await bot.execute(`/get -ss 09:33 -es 09:45 ${URL}`);
+        assert.deepEqual(snippet(), { section: '*573-585', keyframes: true, ss: null, t: '12' });
+        processes.calls.length = 0;
+        await bot.execute(`/get -ss 1:00:00.5 -es 1:00:02 ${URL}`);
+        assert.deepEqual(snippet(), { section: '*3600.5-3602', keyframes: true, ss: null, t: '1.5' });
     });
 
     test('só -ss: o trecho vai até o final; sem corte, baixa o vídeo inteiro', async () => {
-        await bot.executar(`/get -a -ss 30 ${URL}`);
-        assert.deepEqual(snippet(), { secao: '*30-inf', keyframes: true, ss: null, t: null });
-        processes.chamadas.length = 0;
-        await bot.executar(`/get -a ${URL}`);
-        assert.deepEqual(snippet(), { secao: null, keyframes: false, ss: null, t: null });
+        await bot.execute(`/get -a -ss 30 ${URL}`);
+        assert.deepEqual(snippet(), { section: '*30-inf', keyframes: true, ss: null, t: null });
+        processes.calls.length = 0;
+        await bot.execute(`/get -a ${URL}`);
+        assert.deepEqual(snippet(), { section: null, keyframes: false, ss: null, t: null });
     });
 
     test('-ss e -es negativos contam do final: a duração vem do yt-dlp e o trecho é baixado', async () => {
-        processes.duracao = 200;
-        await bot.executar(`/get -ss -10 ${URL}`);
+        processes.duration = 200;
+        await bot.execute(`/get -ss -10 ${URL}`);
         assert.deepEqual(binaries(), ['yt-dlp', 'yt-dlp', 'ffmpeg']);
-        assert.deepEqual(processes.chamadas[0].args, ['--no-playlist', '--print', 'duration', '--', URL]);
-        assert.equal(snippet().secao, '*190-inf');
+        assert.deepEqual(processes.calls[0].args, ['--no-playlist', '--print', 'duration', '--', URL]);
+        assert.equal(snippet().section, '*190-inf');
 
-        processes.chamadas.length = 0;
-        await bot.executar(`/get -ss -01:44 -es -00:30 ${URL}`);
-        assert.deepEqual(snippet(), { secao: '*96-170', keyframes: true, ss: null, t: '74' });
+        processes.calls.length = 0;
+        await bot.execute(`/get -ss -01:44 -es -00:30 ${URL}`);
+        assert.deepEqual(snippet(), { section: '*96-170', keyframes: true, ss: null, t: '74' });
 
-        processes.chamadas.length = 0;
-        await bot.executar(`/get -ss 150 -es -10 ${URL}`);
-        assert.deepEqual(snippet(), { secao: '*150-190', keyframes: true, ss: null, t: '40' });
+        processes.calls.length = 0;
+        await bot.execute(`/get -ss 150 -es -10 ${URL}`);
+        assert.deepEqual(snippet(), { section: '*150-190', keyframes: true, ss: null, t: '40' });
 
         // Larger than the video: starts from 0
-        processes.chamadas.length = 0;
-        await bot.executar(`/get -ss -999 -es 5 ${URL}`);
-        assert.equal(snippet().secao, '*0-5');
+        processes.calls.length = 0;
+        await bot.execute(`/get -ss -999 -es 5 ${URL}`);
+        assert.equal(snippet().section, '*0-5');
     });
 
     test('/sticker -ss -10: os 6 s a partir de 10 s antes do fim; -ss é o valor, não outra opção', async () => {
-        processes.duracao = 200;
-        await bot.executar(`/sticker -ss -10 ${URL}`);
-        assert.deepEqual(snippet(), { secao: '*190-196', keyframes: true, ss: null, t: '6' });
-        processes.chamadas.length = 0;
-        await bot.executar(`/sticker -es -194 -ss -200 ${URL}`);
-        assert.equal(snippet().secao, '*0-6');
+        processes.duration = 200;
+        await bot.execute(`/sticker -ss -10 ${URL}`);
+        assert.deepEqual(snippet(), { section: '*190-196', keyframes: true, ss: null, t: '6' });
+        processes.calls.length = 0;
+        await bot.execute(`/sticker -es -194 -ss -200 ${URL}`);
+        assert.equal(snippet().section, '*0-6');
     });
 
     test('cache/cookies.txt: o yt-dlp recebe --cookies só se o arquivo existe', async () => {
         const cookies = path.join(CACHE_DIR, 'cookies.txt');
         fs.rmSync(cookies, { force: true });
-        await bot.executar(`/get ${URL}`);
+        await bot.execute(`/get ${URL}`);
         assert.equal(argsDo('yt-dlp').includes('--cookies'), false, 'sem arquivo: sem cookies');
 
         fs.writeFileSync(cookies, '# Netscape HTTP Cookie File\n');
         try {
-            processes.chamadas.length = 0;
-            await bot.executar(`/get ${URL}`);
+            processes.calls.length = 0;
+            await bot.execute(`/get ${URL}`);
             const yt = argsDo('yt-dlp');
             assert.equal(yt[yt.indexOf('--cookies') + 1], cookies);
 
             // Also in the duration query (negative -ss)
-            processes.chamadas.length = 0;
-            await bot.executar(`/get -ss -10 ${URL}`);
-            assert.ok(processes.chamadas[0].args.includes('--cookies'));
+            processes.calls.length = 0;
+            await bot.execute(`/get -ss -10 ${URL}`);
+            assert.ok(processes.calls[0].args.includes('--cookies'));
         } finally {
             fs.rmSync(cookies, { force: true });
         }
     });
 
     test('negativo sem a duração do site: baixa o vídeo inteiro, mede com o ffprobe e o ffmpeg corta', async () => {
-        processes.siteSemDuracao = true;
-        const r = await bot.executar(`/get -a -ss -10 ${URL}`);
-        assert.equal(r[0].texto, '✅ Mídia baixada com sucesso!');
+        processes.siteWithoutDuration = true;
+        const r = await bot.execute(`/get -a -ss -10 ${URL}`);
+        assert.equal(r[0].text, '✅ Mídia baixada com sucesso!');
         assert.deepEqual(binaries(), ['yt-dlp', 'yt-dlp', 'ffprobe', 'ffmpeg']);
-        assert.equal(processes.chamadas[2].args.at(-1), argsDo('ffmpeg')[argsDo('ffmpeg').indexOf('-i') + 1]);
-        processes.chamadas.length = 0;
-        processes.siteSemDuracao = false;
+        assert.equal(processes.calls[2].args.at(-1), argsDo('ffmpeg')[argsDo('ffmpeg').indexOf('-i') + 1]);
+        processes.calls.length = 0;
+        processes.siteWithoutDuration = false;
         // ffprobe only runs if yt-dlp did not report it
-        await bot.executar(`/get -a -ss -10 ${URL}`);
+        await bot.execute(`/get -a -ss -10 ${URL}`);
         assert.deepEqual(binaries(), ['yt-dlp', 'yt-dlp', 'ffmpeg']);
     });
 
     test('negativo: início e final que não formam um trecho, e valores inválidos', async () => {
-        processes.duracao = 100;
-        const errorAlt = async (line) => (await bot.executar(line, { erroEsperado: true }))[0].texto;
+        processes.duration = 100;
+        const errorAlt = async (line) => (await bot.execute(line, { expectedError: true }))[0].text;
         assert.match(await errorAlt(`/get -ss -10 -es -20 ${URL}`), /❌ O segundo final \(-es\)/);
         assert.match(await errorAlt(`/get -ss 95 -es -10 ${URL}`), /O trecho pedido ficou vazio: o vídeo tem 100 s/);
         assert.match(await errorAlt(`/get -ss -0 ${URL}`), /❌ -startSec precisa de um tempo[\s\S]*conta do final/);
@@ -192,11 +192,11 @@ describe('/get', () => {
     });
 
     test('o site não deixa baixar o trecho: baixa o vídeo inteiro e o ffmpeg corta', async () => {
-        processes.falharTrecho = true;
-        const r = await bot.executar(`/get -ss 10 -es 25 ${URL}`);
-        assert.equal(r[0].texto, '✅ Mídia baixada com sucesso!');
+        processes.failSnippet = true;
+        const r = await bot.execute(`/get -ss 10 -es 25 ${URL}`);
+        assert.equal(r[0].text, '✅ Mídia baixada com sucesso!');
         assert.deepEqual(binaries(), ['yt-dlp', 'yt-dlp', 'ffmpeg']);
-        const [withSnippet, integer] = processes.chamadas.map(c => c.args);
+        const [withSnippet, integer] = processes.calls.map(c => c.args);
         assert.ok(withSnippet.includes('--download-sections') && !integer.includes('--download-sections'));
         const ff = argsDo('ffmpeg');
         assert.equal(ff[ff.indexOf('-ss') + 1], '10');
@@ -205,27 +205,27 @@ describe('/get', () => {
     });
 
     test('-v manda os comandos executados antes da mídia', async () => {
-        const r = await bot.executar(`/get -v ${URL}`);
-        assert.match(r[1].texto, /🛠️ \*Verbose Mode\*[\s\S]*yt-dlp[\s\S]*ffmpeg/);
+        const r = await bot.execute(`/get -v ${URL}`);
+        assert.match(r[1].text, /🛠️ \*Verbose Mode\*[\s\S]*yt-dlp[\s\S]*ffmpeg/);
         assert.ok(r[2].content instanceof MessageMedia);
     });
 
     test('-es sozinho corta a partir do início e aceita frações de segundo', async () => {
-        await bot.executar(`/get -es 2.5 ${URL}`);
-        assert.deepEqual(snippet(), { secao: '*0-2.5', keyframes: true, ss: null, t: '2.5' });
+        await bot.execute(`/get -es 2.5 ${URL}`);
+        assert.deepEqual(snippet(), { section: '*0-2.5', keyframes: true, ss: null, t: '2.5' });
         const ff = argsDo('ffmpeg');
         assert.ok(ff.indexOf('-t') > ff.indexOf('-i'));
     });
 
     test('figurinha respeita o fim pedido e o limite de seis segundos', async () => {
-        await bot.executar(`/get -st -ss 3 -es 6 ${URL}`);
-        assert.deepEqual(snippet(), { secao: '*3-6', keyframes: true, ss: null, t: '3' });
-        processes.chamadas.length = 0;
-        await bot.executar(`/get -st -ss 3 -es 20 ${URL}`);
-        assert.deepEqual(snippet(), { secao: '*3-9', keyframes: true, ss: null, t: '6' }, 'baixa só os 6 s');
-        processes.chamadas.length = 0;
-        await bot.executar(`/get -st ${URL}`);
-        assert.deepEqual(snippet(), { secao: '*0-6', keyframes: true, ss: null, t: '6' });
+        await bot.execute(`/get -st -ss 3 -es 6 ${URL}`);
+        assert.deepEqual(snippet(), { section: '*3-6', keyframes: true, ss: null, t: '3' });
+        processes.calls.length = 0;
+        await bot.execute(`/get -st -ss 3 -es 20 ${URL}`);
+        assert.deepEqual(snippet(), { section: '*3-9', keyframes: true, ss: null, t: '6' }, 'baixa só os 6 s');
+        processes.calls.length = 0;
+        await bot.execute(`/get -st ${URL}`);
+        assert.deepEqual(snippet(), { section: '*0-6', keyframes: true, ss: null, t: '6' });
     });
 
     test('cortes inválidos e áudio junto com figurinha são recusados antes de baixar', async () => {
@@ -234,62 +234,62 @@ describe('/get', () => {
             '-ss 1:', '-ss 1:2:3:4', '-ss 09:45 -es 09:33', '-a -st']) {
             assert.match((await bot.replyAlt(`/get ${URL} ${optionsAlt}`))[0], /^❌/);
         }
-        assert.deepEqual(processes.chamadas, []);
+        assert.deepEqual(processes.calls, []);
     });
 
     test('link da mensagem respondida', async () => {
-        const quoted = bot.createMessage({ texto: `veja ${URL}`, de: OTHERAlt.jid });
-        await bot.executar('/get', { citada: quoted });
+        const quoted = bot.createMessage({ text: `veja ${URL}`, de: OTHERAlt.jid });
+        await bot.execute('/get', { quoted });
         assert.equal(argsDo('yt-dlp').at(-1), URL);
     });
 
     test('opção desconhecida é recusada (sem isto, viraria a URL)', async () => {
         assert.deepEqual(await bot.replyAlt(`/get -x ${URL}`), ['❌ Opção desconhecida: -x\n💡 _Veja as opções com /get -h_']);
-        assert.deepEqual(await bot.replyAlt('/sticker -a', { citada: bot.createMessage({ texto: URL, de: OTHERAlt.jid }) }),
+        assert.deepEqual(await bot.replyAlt('/sticker -a', { quoted: bot.createMessage({ text: URL, de: OTHERAlt.jid }) }),
             ['❌ Opção desconhecida: -a\n💡 _Veja as opções com /sticker -h_']);
-        assert.deepEqual(processes.chamadas, []);
+        assert.deepEqual(processes.calls, []);
     });
 
     test('a URL digitada vale mais que a mensagem respondida', async () => {
-        const quoted = bot.createMessage({ texto: 'http://1.1.1.1/outro', de: OTHERAlt.jid });
-        await bot.executar(`/get ${URL}`, { citada: quoted });
+        const quoted = bot.createMessage({ text: 'http://1.1.1.1/outro', de: OTHERAlt.jid });
+        await bot.execute(`/get ${URL}`, { quoted });
         assert.equal(argsDo('yt-dlp').at(-1), URL);
     });
 
     test('mensagem respondida sem mídia nem link', async () => {
-        assert.deepEqual(await bot.replyAlt('/get', { citada: bot.createMessage({ texto: 'só texto', de: OTHERAlt.jid }) }),
+        assert.deepEqual(await bot.replyAlt('/get', { quoted: bot.createMessage({ text: 'só texto', de: OTHERAlt.jid }) }),
             ['❌ A mensagem respondida não tem mídia nem link.']);
     });
 
     test('sem URL mostra a sintaxe; URL inválida ou privada é recusada', async () => {
         assert.match((await bot.replyAlt('/get'))[0], /^```Usage: \/get/);
-        assert.match((await bot.replyAlt('/get ftp://x.com', { erroEsperado: true }))[0], /A URL 'ftp:\/\/x\.com' é inválida/);
-        assert.match((await bot.replyAlt('/get http://127.0.0.1:2375/', { erroEsperado: true }))[0], /aponta para um endereço não permitido/);
-        assert.deepEqual(processes.chamadas, []);
+        assert.match((await bot.replyAlt('/get ftp://x.com', { expectedError: true }))[0], /A URL 'ftp:\/\/x\.com' é inválida/);
+        assert.match((await bot.replyAlt('/get http://127.0.0.1:2375/', { expectedError: true }))[0], /aponta para um endereço não permitido/);
+        assert.deepEqual(processes.calls, []);
     });
 
     test('falhas do yt-dlp, do ffmpeg, download vazio e arquivo grande demais editam o aviso', async () => {
         // The error replaces the "Processando…": nothing besides it is sent
         const errorInNotice = async (line) => {
-            const r = await bot.executar(line, { erroEsperado: true });
+            const r = await bot.execute(line, { expectedError: true });
             assert.equal(r.length, 1);
             assert.equal(r[0].editada, true);
-            return r[0].texto;
+            return r[0].text;
         };
 
-        processes.falhar = 'yt-dlp';
+        processes.fail = 'yt-dlp';
         assert.match(await errorInNotice(`/get -st ${URL}`), /Problemas para baixar com '\/venv\/bin\/yt-dlp'[\s\S]*🛠️ \*Cmd\*/);
 
-        processes.falhar = 'ffmpeg';
+        processes.fail = 'ffmpeg';
         assert.match(await errorInNotice(`/get ${URL}`), /Problemas para decodificar com '\/usr\/bin\/ffmpeg'/);
 
-        processes.falhar = null;
-        processes.naoBaixar = true;
+        processes.fail = null;
+        processes.skipDownload = true;
         assert.match(await errorInNotice(`/get ${URL}`), /Nada foi baixado \(acima de 200 MB\?/);
 
-        processes.naoBaixar = false;
+        processes.skipDownload = false;
         await bot.setSetting('get.maxSizeMB', 1);
-        processes.tamanhoSaida = 2 * 1024 * 1024;
+        processes.outputSize = 2 * 1024 * 1024;
         assert.match(await errorInNotice(`/get ${URL}`), /Arquivo muito grande para WhatsApp Web \(máx\. 1 MB\)/);
 
         assert.deepEqual(filesTemporary(), [], 'os temporários foram apagados mesmo com erro');
@@ -297,27 +297,27 @@ describe('/get', () => {
 
     test('a edição do aviso não vira "mensagem editada" no cache nem avisa no privado', async () => {
         await bot.setSetting('show.alert.edited', true);
-        const r = await bot.executar(`/get -st ${URL}`);
+        const r = await bot.execute(`/get -st ${URL}`);
         assert.equal(r.length, 2, 'só o aviso e a figurinha');
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 0);
 
-        processes.falhar = 'yt-dlp';
-        await bot.executar(`/get -st ${URL}`, { erroEsperado: true });
+        processes.fail = 'yt-dlp';
+        await bot.execute(`/get -st ${URL}`, { expectedError: true });
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 0);
     });
 
     test('se o WhatsApp não deixa editar o aviso, o erro vai em outra mensagem', async () => {
-        bot.client.recusarEdicao = true;
-        processes.falhar = 'yt-dlp';
-        const r = await bot.executar(`/get -st ${URL}`, { erroEsperado: true });
-        assert.equal(r[0].texto, '⏳ Processando seu sticker, aguarde.');
-        assert.match(r[1].texto, /Problemas para baixar com/);
+        bot.client.refuseEdit = true;
+        processes.fail = 'yt-dlp';
+        const r = await bot.execute(`/get -st ${URL}`, { expectedError: true });
+        assert.equal(r[0].text, '⏳ Processando seu sticker, aguarde.');
+        assert.match(r[1].text, /Problemas para baixar com/);
     });
 
     test('no máximo 2 downloads ao mesmo tempo', async () => {
         // The three run together: counts what the bot sent in total
-        await Promise.all([1, 2, 3].map(() => bot.executar(`/get ${URL}`)));
-        const texts = bot.client.enviadas.map(e => bot.text(e.content, e.options));
+        await Promise.all([1, 2, 3].map(() => bot.execute(`/get ${URL}`)));
+        const texts = bot.client.sent.map(e => bot.text(e.content, e.options));
         assert.equal(texts.filter(t => /⏳ Já existem 2 downloads em andamento/.test(t)).length, 1);
         assert.equal(texts.filter(t => /✅ Mídia baixada com sucesso!/.test(t)).length, 2);
         assert.deepEqual(binaries(), ['yt-dlp', 'yt-dlp', 'ffmpeg', 'ffmpeg']);
@@ -330,86 +330,86 @@ describe('/get respondendo uma mídia do WhatsApp', () => {
     const video = { mimetype: 'video/mp4', data: Buffer.from('mp4').toString('base64'), filename: 'v.mp4' };
     const photo = { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') };
     const audio = { mimetype: 'audio/ogg; codecs=opus', data: Buffer.from('ogg').toString('base64') };
-    const replying = (mediaAlt) => ({ citada: bot.createMessage({ de: OTHERAlt.jid, midia: mediaAlt }) });
+    const replying = (mediaAlt) => ({ quoted: bot.createMessage({ de: OTHERAlt.jid, media: mediaAlt }) });
 
     test('sem opção: o arquivo original como documento, sem yt-dlp nem ffmpeg', async () => {
-        const r = await bot.executar('/get', replying(video));
+        const r = await bot.execute('/get', replying(video));
         assert.equal(r.length, 1);
         assert.equal(r[0].content, video, 'com nome, vai como veio');
         assert.equal(r[0].options.sendMediaAsDocument, true);
 
         // Without a name (camera photo), it gets one from the extension: WhatsApp would show "Sem título"
-        const [f] = await bot.executar('/get', replying(photo));
+        const [f] = await bot.execute('/get', replying(photo));
         assert.deepEqual([f.content.mimetype, f.content.data, f.content.filename], [photo.mimetype, photo.data, 'zapbot.jpeg']);
-        assert.deepEqual(processes.chamadas, []);
+        assert.deepEqual(processes.calls, []);
     });
 
     test('-a: o áudio do vídeo em mp3, só com o ffmpeg', async () => {
-        const r = await bot.executar('/get -a', replying(video));
+        const r = await bot.execute('/get -a', replying(video));
         assert.deepEqual(binaries(), ['ffmpeg']);
         const ff = argsDo('ffmpeg');
         assert.match(ff[ff.indexOf('-i') + 1], /_original\.mp4$/);
         assert.match(ff.at(-1), /_output\.mp3$/);
-        assert.equal(r[0].texto, '✅ Mídia baixada com sucesso!');
+        assert.equal(r[0].text, '✅ Mídia baixada com sucesso!');
         assert.equal(r[1].options.sendMediaAsDocument, true);
         assert.deepEqual(filesTemporary(), []);
     });
 
     test('-st com -ss: figurinha de 6 s a partir do segundo pedido', async () => {
-        const r = await bot.executar('/get -st -ss 2', replying(video));
+        const r = await bot.execute('/get -st -ss 2', replying(video));
         const ff = argsDo('ffmpeg');
         assert.equal(ff[ff.indexOf('-ss') + 1], '2');
         assert.equal(ff[ff.indexOf('-t') + 1], '6');
         assert.match(ff[ff.indexOf('-vf') + 1], /crop=512:512/);
-        assert.equal(r[0].texto, '✅ Sticker criado com sucesso!');
+        assert.equal(r[0].text, '✅ Sticker criado com sucesso!');
         assert.equal(r[1].options.sendMediaAsSticker, true);
     });
 
     test('-ss e -es negativos na mídia respondida: o ffprobe mede o arquivo', async () => {
-        processes.duracao = 60;
-        await bot.executar('/get -ss -10', replying(video));
+        processes.duration = 60;
+        await bot.execute('/get -ss -10', replying(video));
         assert.deepEqual(binaries(), ['ffprobe', 'ffmpeg']);
         const ff = argsDo('ffmpeg');
         assert.equal(ff[ff.indexOf('-ss') + 1], '50');
         assert.equal(ff.includes('-t'), false);
 
-        processes.chamadas.length = 0;
-        await bot.executar('/get -st -ss -01:00 -es -50', replying(video));
+        processes.calls.length = 0;
+        await bot.execute('/get -st -ss -01:00 -es -50', replying(video));
         const st = argsDo('ffmpeg');
         assert.equal(st[st.indexOf('-ss') + 1], '0');
         assert.equal(st[st.indexOf('-t') + 1], '6');
 
-        processes.chamadas.length = 0;
-        processes.duracao = null;
-        const [r] = await bot.executar('/get -ss -10', { ...replying(video), erroEsperado: true });
-        assert.match(r.texto, /Não consegui descobrir a duração do vídeo/);
+        processes.calls.length = 0;
+        processes.duration = null;
+        const [r] = await bot.execute('/get -ss -10', { ...replying(video), expectedError: true });
+        assert.match(r.text, /Não consegui descobrir a duração do vídeo/);
     });
 
     test('-ss e -es sem formato: o trecho do vídeo como documento', async () => {
-        const r = await bot.executar('/get -ss 1 -es 3', replying(video));
+        const r = await bot.execute('/get -ss 1 -es 3', replying(video));
         const ff = argsDo('ffmpeg');
         assert.equal(ff[ff.indexOf('-t') + 1], '2');
         assert.equal(r[1].options.sendMediaAsDocument, true);
     });
 
     test('-v: sem o yt-dlp, que não rodou', async () => {
-        const r = await bot.executar('/get -v -a', replying(video));
-        assert.match(r[1].texto, /🔗 \*ffmpeg\*/);
-        assert.doesNotMatch(r[1].texto, /yt-dlp/);
+        const r = await bot.execute('/get -v -a', replying(video));
+        assert.match(r[1].text, /🔗 \*ffmpeg\*/);
+        assert.doesNotMatch(r[1].text, /yt-dlp/);
     });
 
     test('imagem: -st enquadra no sharp; -ss, -es e -a são recusados', async () => {
-        const [st] = await bot.executar('/get -st', replying(photo));
+        const [st] = await bot.execute('/get -st', replying(photo));
         assert.equal(Buffer.from(st.content.data, 'base64').toString(), 'webp-enquadrado');
         assert.equal(st.options.sendMediaAsSticker, true);
 
         assert.deepEqual(await bot.replyAlt('/get -st -ss 1', replying(photo)), ['❌ O -ss e o -es só valem para vídeo.']);
         assert.deepEqual(await bot.replyAlt('/get -a', replying(photo)), ['❌ A imagem respondida não tem áudio.']);
-        assert.deepEqual(processes.chamadas, []);
+        assert.deepEqual(processes.calls, []);
     });
 
     test('áudio: com corte sai em mp3; figurinha é recusada', async () => {
-        await bot.executar('/get -ss 2', replying(audio));
+        await bot.execute('/get -ss 2', replying(audio));
         const ff = argsDo('ffmpeg');
         assert.match(ff[ff.indexOf('-i') + 1], /_original\.ogg$/);
         assert.match(ff.at(-1), /_output\.mp3$/);
@@ -422,7 +422,7 @@ describe('/get respondendo uma mídia do WhatsApp', () => {
         assert.deepEqual(await bot.replyAlt('/get', replying(pdf)), ['❌ A mídia respondida não é imagem, vídeo nem áudio.']);
 
         const quoted = bot.createMessage({ de: OTHERAlt.jid, extras: { hasMedia: true, async downloadMedia() { throw new Error('sumiu'); } } });
-        assert.deepEqual(await bot.replyAlt('/get -st', { citada: quoted, erroEsperado: true }),
+        assert.deepEqual(await bot.replyAlt('/get -st', { quoted, expectedError: true }),
             ['❌ Não consegui baixar a mídia respondida: ela pode não estar mais disponível no WhatsApp.']);
     });
 });
@@ -431,59 +431,59 @@ describe('cache dos downloads (get.cache.tmp)', () => {
     const savedAlt = () => filesTemporary().filter(f => f.endsWith('_original.mp4'));
 
     test('ligado (padrão): o mesmo link não baixa de novo e o original fica em cache/tmp', async () => {
-        const r = await bot.executar(`/get ${URL}`);
-        assert.equal(r[0].texto, '✅ Mídia baixada com sucesso!');
+        const r = await bot.execute(`/get ${URL}`);
+        assert.equal(r[0].text, '✅ Mídia baixada com sucesso!');
         assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg']);
         assert.match(savedAlt()[0] ?? '', /^[0-9a-f]{40}_original\.mp4$/);
         assert.equal(filesTemporary().length, 1, 'só o original: a saída e o log são apagados');
 
-        processes.chamadas.length = 0;
-        const monday = await bot.executar(`/get -a ${URL}`);
-        assert.equal(monday[0].texto, '✅ Mídia baixada com sucesso!');
+        processes.calls.length = 0;
+        const monday = await bot.execute(`/get -a ${URL}`);
+        assert.equal(monday[0].text, '✅ Mídia baixada com sucesso!');
         assert.deepEqual(binaries(), ['ffmpeg'], 'sem yt-dlp: veio do cache');
         assert.equal(savedAlt().length, 1);
         assert.equal(monday[1].options.sendMediaAsDocument, true);
     });
 
     test('o /sticker usa o mesmo cache do /get; outro link baixa', async () => {
-        await bot.executar(`/get ${URL}`);
-        processes.chamadas.length = 0;
-        await bot.executar(`/sticker ${URL}`);
+        await bot.execute(`/get ${URL}`);
+        processes.calls.length = 0;
+        await bot.execute(`/sticker ${URL}`);
         assert.deepEqual(binaries(), ['ffmpeg']);
 
-        processes.chamadas.length = 0;
-        await bot.executar(`/get ${URL}?outro`);
+        processes.calls.length = 0;
+        await bot.execute(`/get ${URL}?outro`);
         assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg']);
         assert.equal(savedAlt().length, 2);
     });
 
     test('imagem com a legenda /sticker (sem responder ninguém) vira figurinha', async () => {
         const mediaAlt = { mimetype: 'image/png', data: Buffer.from('png').toString('base64'), filename: 'foto.png' };
-        const r = await bot.executar('/sticker', { tipo: 'image', midia: mediaAlt });
+        const r = await bot.execute('/sticker', { type: 'image', media: mediaAlt });
         assert.ok(r.some(e => e.options?.sendMediaAsSticker), 'enviou a figurinha');
-        assert.equal(processes.chamadas.length, 0, 'imagem não precisa de yt-dlp nem ffmpeg');
+        assert.equal(processes.calls.length, 0, 'imagem não precisa de yt-dlp nem ffmpeg');
     });
 
     test('o trecho é parte da chave; o vídeo inteiro em cache serve a qualquer trecho', async () => {
-        await bot.executar(`/get -ss 10 -es 25 ${URL}`);
+        await bot.execute(`/get -ss 10 -es 25 ${URL}`);
         assert.equal(savedAlt().length, 1);
 
-        processes.chamadas.length = 0;
-        await bot.executar(`/get -ss 10 -es 25 ${URL}`);
+        processes.calls.length = 0;
+        await bot.execute(`/get -ss 10 -es 25 ${URL}`);
         assert.deepEqual(binaries(), ['ffmpeg'], 'o mesmo trecho vem do cache');
         const ff = argsDo('ffmpeg');
         assert.equal(ff.includes('-ss'), false, 'o trecho já começa no 0');
         assert.equal(ff[ff.indexOf('-t') + 1], '15');
 
-        processes.chamadas.length = 0;
-        await bot.executar(`/get -ss 30 -es 40 ${URL}`);
+        processes.calls.length = 0;
+        await bot.execute(`/get -ss 30 -es 40 ${URL}`);
         assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg'], 'outro trecho baixa');
         assert.equal(savedAlt().length, 2);
 
         // The whole downloaded video serves any snippet (ffmpeg cuts)
-        await bot.executar(`/get ${URL}?inteiro`);
-        processes.chamadas.length = 0;
-        await bot.executar(`/get -ss 5 -es 8 ${URL}?inteiro`);
+        await bot.execute(`/get ${URL}?inteiro`);
+        processes.calls.length = 0;
+        await bot.execute(`/get -ss 5 -es 8 ${URL}?inteiro`);
         assert.deepEqual(binaries(), ['ffmpeg'], 'sem yt-dlp');
         const cut = argsDo('ffmpeg');
         assert.equal(cut[cut.indexOf('-ss') + 1], '5');
@@ -491,25 +491,25 @@ describe('cache dos downloads (get.cache.tmp)', () => {
 
     test('desligado: o original é apagado a cada execução e nada é aproveitado', async () => {
         await bot.setSetting('get.cache.tmp', false);
-        await bot.executar(`/get ${URL}`);
+        await bot.execute(`/get ${URL}`);
         assert.deepEqual(filesTemporary(), []);
 
-        processes.chamadas.length = 0;
-        await bot.executar(`/get ${URL}`);
+        processes.calls.length = 0;
+        await bot.execute(`/get ${URL}`);
         assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg']);
         assert.deepEqual(filesTemporary(), []);
     });
 
     test('a mídia respondida não vai para o cache', async () => {
         const video = new MessageMedia('video/mp4', Buffer.from('video').toString('base64'), 'v.mp4');
-        await bot.executar('/get -a', { citada: bot.createMessage({ de: OTHERAlt.jid, midia: video }) });
+        await bot.execute('/get -a', { quoted: bot.createMessage({ de: OTHERAlt.jid, media: video }) });
         assert.deepEqual(filesTemporary(), []);
     });
 });
 
 describe('/cache', () => {
     test('sem opção: conteúdo do cache e contagem de mensagens', async () => {
-        await bot.executar('oi', { de: OTHERAlt.jid });
+        await bot.execute('oi', { de: OTHERAlt.jid });
         const [r] = await bot.replyAlt('/cache');
         assert.match(r, new RegExp(`🗂️ Exibindo conteúdo de ${CACHE_DIR}`));
         assert.match(r, /🗄️ 2 mensagens no cache\.\n🗑️ 0 apagadas\.\n✏️ 0 edições\.\n😶 0 reações removidas ou trocadas\.\n📦 Backups: 0 \(veja \/backup\)\.$/);
@@ -543,7 +543,7 @@ describe('/cache', () => {
     });
 
     test('-a: apaga tudo (mensagens, edições, mídias, temporários e backups)', async () => {
-        await bot.executar('oi', { de: OTHERAlt.jid, midia: { mimetype: 'image/png', data: 'AA==' } });
+        await bot.execute('oi', { de: OTHERAlt.jid, media: { mimetype: 'image/png', data: 'AA==' } });
         await bot.dbRun("INSERT INTO message_edits (message_id, edited_at) VALUES ('x', 1)");
         fs.writeFileSync(path.join(TMP_DIR, 'lixo.mp4'), 'x');
         await createBackup();
@@ -560,7 +560,7 @@ describe('/cache', () => {
     test('-b: apaga só os backups; junta com -c e -m', async () => {
         await createBackup();
         await createBackup();
-        await bot.executar('oi', { de: OTHERAlt.jid });
+        await bot.execute('oi', { de: OTHERAlt.jid });
 
         const [r] = await bot.replyAlt('/cache -backup');
         assert.match(r, new RegExp(`^📦 Backups apagados de ${BACKUP_DIR}: \\*2\\* _\\([\\d.]+ \\w+\\)_$`));
@@ -571,7 +571,7 @@ describe('/cache', () => {
     });
 
     test('-m: apaga as mídias baixadas; as mensagens ficam, sem o arquivo', async () => {
-        await bot.executar('foto', { de: OTHERAlt.jid, id: 'COMFOTO', midia: { mimetype: 'image/png', data: Buffer.alloc(2048).toString('base64') } });
+        await bot.execute('foto', { de: OTHERAlt.jid, id: 'COMFOTO', media: { mimetype: 'image/png', data: Buffer.alloc(2048).toString('base64') } });
         fs.writeFileSync(path.join(TMP_DIR, 'temporario.mp4'), 'x');
 
         const [r] = await bot.replyAlt('/cache -media');
@@ -635,15 +635,15 @@ describe('limpeza periódica', () => {
             fs.writeFileSync(fileAlt, 'x');
             return fileAlt;
         };
-        const meio = create('meio.jpg');
+        const middle = create('meio.jpg');
         const longe = create('longe.jpg');
         await bot.setSetting('cache.messageRetentionHours', 240);
         await bot.dbRun('INSERT INTO messages (id, timestamp, revoked, media_path) VALUES (?, ?, 0, ?), (?, ?, 0, ?)',
-            ['meio', Date.now() - 100 * hour, meio, 'longe', Date.now() - 300 * hour, longe]);
+            ['meio', Date.now() - 100 * hour, middle, 'longe', Date.now() - 300 * hour, longe]);
 
         // Media at the default (68 h): the 100 h one goes, but the text stays; the 300 h one goes with everything
         await cleanup.cleanCacheOld();
-        assert.ok(!fs.existsSync(meio));
+        assert.ok(!fs.existsSync(middle));
         assert.ok(!fs.existsSync(longe));
         assert.deepEqual(await bot.dbAll("SELECT id, media_path FROM messages WHERE id IN ('meio', 'longe') ORDER BY id"),
             [{ id: 'meio', media_path: null }]);
@@ -731,8 +731,8 @@ describe('/get -transcribe', () => {
     beforeEach(() => bot.setSetting('get.cache.tmp', false));
 
     test('de um link: baixa só o áudio mais leve, converte para wav 16 kHz mono e responde o texto', async () => {
-        const r = await bot.executar(`/get -t ${URL}`, { de: OTHERAlt.jid });
-        assert.equal(r[0].texto, '📝 *Transcrição* · 🗣️ pt · 1:40\n\nolá mundo, isto é um teste', 'o aviso vira o texto');
+        const r = await bot.execute(`/get -t ${URL}`, { de: OTHERAlt.jid });
+        assert.equal(r[0].text, '📝 *Transcrição* · 🗣️ pt · 1:40\n\nolá mundo, isto é um teste', 'o aviso vira o texto');
         assert.equal(r.length, 1, 'nenhum arquivo é enviado');
 
         assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg', 'ffprobe', 'python']);
@@ -740,8 +740,8 @@ describe('/get -transcribe', () => {
         assert.equal(yt[yt.indexOf('-f') + 1], 'worstaudio[language_preference>0]/worstaudio/worst');
         assert.deepEqual(yt.slice(-2), ['--', URL]);
         const ff = argsDo('ffmpeg');
-        for (const par of [['-ac', '1'], ['-ar', '16000'], ['-c:a', 'pcm_s16le']]) {
-            assert.equal(ff[ff.indexOf(par[0]) + 1], par[1], par[0]);
+        for (const pair of [['-ac', '1'], ['-ar', '16000'], ['-c:a', 'pcm_s16le']]) {
+            assert.equal(ff[ff.indexOf(pair[0]) + 1], pair[1], pair[0]);
         }
         assert.ok(ff.includes('-vn'));
         const py = argsDo('python');
@@ -753,7 +753,7 @@ describe('/get -transcribe', () => {
     test('-ss e -es viram o corte do ffmpeg, e o modelo e o idioma vêm dos settings', async () => {
         bot.setSetting('transcribe.model', 'medium');
         bot.setSetting('transcribe.language', 'pt');
-        await bot.executar(`/get -t -ss 30 -es 1:30 ${URL}`);
+        await bot.execute(`/get -t -ss 30 -es 1:30 ${URL}`);
         const ff = argsDo('ffmpeg');
         assert.equal(ff[ff.indexOf('-ss') + 1], '30');
         assert.equal(ff[ff.indexOf('-to') + 1], '90');
@@ -763,58 +763,58 @@ describe('/get -transcribe', () => {
 
     test('respondendo um áudio do WhatsApp: transcreve sem baixar nada', async () => {
         const audio = { mimetype: 'audio/ogg; codecs=opus', data: Buffer.from('ogg').toString('base64') };
-        const r = await bot.executar('/get -t', { citada: bot.createMessage({ de: OTHERAlt.jid, midia: audio }) });
-        assert.match(r[0].texto, /olá mundo/);
+        const r = await bot.execute('/get -t', { quoted: bot.createMessage({ de: OTHERAlt.jid, media: audio }) });
+        assert.match(r[0].text, /olá mundo/);
         assert.deepEqual(binaries(), ['ffmpeg', 'ffprobe', 'python']);
     });
 
     test('respondendo uma foto: recusa', async () => {
         const photo = { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') };
-        const r = await bot.executar('/get -t', { citada: bot.createMessage({ de: OTHERAlt.jid, midia: photo }) });
-        assert.match(r[0].texto, /responda um vídeo ou um áudio/);
+        const r = await bot.execute('/get -t', { quoted: bot.createMessage({ de: OTHERAlt.jid, media: photo }) });
+        assert.match(r[0].text, /responda um vídeo ou um áudio/);
         assert.deepEqual(binaries(), []);
     });
 
     test('áudio acima de transcribe.maxMinutes é recusado, sem rodar o whisper', async () => {
-        processes.duracao = 21 * 60;
-        const r = await bot.executar(`/get -t ${URL}`, { erroEsperado: true });
-        assert.match(r[0].texto, /Áudio longo demais para transcrever \(21:00; máx\. 20 min/);
+        processes.duration = 21 * 60;
+        const r = await bot.execute(`/get -t ${URL}`, { expectedError: true });
+        assert.match(r[0].text, /Áudio longo demais para transcrever \(21:00; máx\. 20 min/);
         assert.ok(!binaries().includes('python'));
         assert.deepEqual(filesTemporary(), []);
     });
 
     test('sem fala: avisa', async () => {
-        processes.fala = '';
-        const r = await bot.executar(`/get -t ${URL}`);
-        assert.equal(r[0].texto, '🔇 Não achei fala no áudio.');
+        processes.speech = '';
+        const r = await bot.execute(`/get -t ${URL}`);
+        assert.equal(r[0].text, '🔇 Não achei fala no áudio.');
     });
 
     test('link sem vídeo (carrossel só de fotos): diz que não há mídia, em vez de "problemas para baixar"', async () => {
-        processes.falhar = 'yt-dlp';
-        processes.saidaErro = 'ERROR: [Instagram] Dfx26KXKQuo: No video formats found!; please report this issue\n';
-        const r = await bot.executar(`/transcribe ${URL}`, { erroEsperado: true });
-        assert.match(r.at(-1).texto, /Esse link não tem vídeo nem áudio para baixar \(é um post só de fotos\?\)/);
-        assert.doesNotMatch(r.at(-1).texto, /Problemas para baixar/);
+        processes.fail = 'yt-dlp';
+        processes.errorOutput = 'ERROR: [Instagram] Dfx26KXKQuo: No video formats found!; please report this issue\n';
+        const r = await bot.execute(`/transcribe ${URL}`, { expectedError: true });
+        assert.match(r.at(-1).text, /Esse link não tem vídeo nem áudio para baixar \(é um post só de fotos\?\)/);
+        assert.doesNotMatch(r.at(-1).text, /Problemas para baixar/);
 
-        const g = await bot.executar(`/get ${URL}`, { erroEsperado: true });
-        assert.match(g.at(-1).texto, /não tem vídeo nem áudio/);
+        const g = await bot.execute(`/get ${URL}`, { expectedError: true });
+        assert.match(g.at(-1).text, /não tem vídeo nem áudio/);
 
         // Another yt-dlp error is still the general one
-        processes.saidaErro = 'ERROR: HTTP Error 403';
-        assert.match((await bot.executar(`/transcribe ${URL}`, { erroEsperado: true })).at(-1).texto, /Problemas para baixar com/);
+        processes.errorOutput = 'ERROR: HTTP Error 403';
+        assert.match((await bot.execute(`/transcribe ${URL}`, { expectedError: true })).at(-1).text, /Problemas para baixar com/);
     });
 
     test('não mistura com -a, -st nem -pos', async () => {
         for (const o of ['-a', '-st', '-pos meio']) {
-            const r = await bot.executar(`/get -t ${o} ${URL}`);
-            assert.match(r[0].texto, /O -transcribe responde com texto/, o);
+            const r = await bot.execute(`/get -t ${o} ${URL}`);
+            assert.match(r[0].text, /O -transcribe responde com texto/, o);
         }
         assert.deepEqual(binaries(), []);
     });
 
     test('URL interna é recusada, como no resto do /get', async () => {
-        const r = await bot.executar('/get -t http://127.0.0.1/x', { erroEsperado: true });
-        assert.match(r.at(-1).texto, /endereço não permitido/);
+        const r = await bot.execute('/get -t http://127.0.0.1/x', { expectedError: true });
+        assert.match(r.at(-1).text, /endereço não permitido/);
         assert.deepEqual(binaries(), []);
     });
 });
@@ -823,50 +823,50 @@ describe('/transcribe', () => {
     beforeEach(() => bot.setSetting('get.cache.tmp', false));
 
     test('é o /get -t: a URL vira texto', async () => {
-        const r = await bot.executar(`/transcribe ${URL}`);
-        assert.equal(r[0].texto, '📝 *Transcrição* · 🗣️ pt · 1:40\n\nolá mundo, isto é um teste');
+        const r = await bot.execute(`/transcribe ${URL}`);
+        assert.equal(r[0].text, '📝 *Transcrição* · 🗣️ pt · 1:40\n\nolá mundo, isto é um teste');
         assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg', 'ffprobe', 'python']);
     });
 
     test('-v: manda os comandos do yt-dlp, ffmpeg e faster-whisper antes do texto', async () => {
-        const r = await bot.executar(`/transcribe -v ${URL}`);
-        assert.match(r[1].texto, /🛠️ \*Verbose Mode\*[\s\S]*yt-dlp[\s\S]*ffmpeg[\s\S]*faster-whisper\* \(\d+\.\d s\)[\s\S]*transcribe\.py[\s\S]*small/);
-        assert.match(r[0].texto, /olá mundo/, 'o aviso vira o texto');
-        const g = await bot.executar(`/get -t -v ${URL}`);
-        assert.match(g[1].texto, /Verbose Mode/);
+        const r = await bot.execute(`/transcribe -v ${URL}`);
+        assert.match(r[1].text, /🛠️ \*Verbose Mode\*[\s\S]*yt-dlp[\s\S]*ffmpeg[\s\S]*faster-whisper\* \(\d+\.\d s\)[\s\S]*transcribe\.py[\s\S]*small/);
+        assert.match(r[0].text, /olá mundo/, 'o aviso vira o texto');
+        const g = await bot.execute(`/get -t -v ${URL}`);
+        assert.match(g[1].text, /Verbose Mode/);
     });
 
     test('-sum: o resumo do ChatGPT no alto e a transcrição embaixo', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: '• fala de um teste' } }] });
-        const r = await bot.executar(`/transcribe -sum ${URL}`);
-        assert.equal(r[0].texto, '📝 *Resumo* · 🗣️ pt · 1:40\n\n• fala de um teste\n\n📄 *Transcrição*\nolá mundo, isto é um teste');
-        const call = network.chamadas.find(c => c.url.endsWith('/chat/completions'));
+        const r = await bot.execute(`/transcribe -sum ${URL}`);
+        assert.equal(r[0].text, '📝 *Resumo* · 🗣️ pt · 1:40\n\n• fala de um teste\n\n📄 *Transcrição*\nolá mundo, isto é um teste');
+        const call = network.calls.find(c => c.url.endsWith('/chat/completions'));
         assert.match(call.cfg.body.messages[1].content, /olá mundo, isto é um teste/);
         assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg', 'ffprobe', 'python']);
-        const g = await bot.executar(`/get -t -sum ${URL}`);
-        assert.match(g[0].texto, /^📝 \*Resumo\*/);
+        const g = await bot.execute(`/get -t -sum ${URL}`);
+        assert.match(g[0].text, /^📝 \*Resumo\*/);
     });
 
     test('-sum sem a chave da OpenAI: avisa antes de baixar, sem gastar a CPU', async () => {
-        const r = await bot.executar(`/transcribe -sum ${URL}`, { erroEsperado: true });
-        assert.match(r.at(-1).texto, /OPENAI_API_KEY|gpt\.api\.key/);
+        const r = await bot.execute(`/transcribe -sum ${URL}`, { expectedError: true });
+        assert.match(r.at(-1).text, /OPENAI_API_KEY|gpt\.api\.key/);
         assert.deepEqual(binaries(), []);
     });
 
     test('-sum com a OpenAI falhando: a transcrição sai mesmo assim', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/chat/completions', network.http({ status: 429, data: {} }));
-        const r = await bot.executar(`/transcribe -sum ${URL}`, { erroEsperado: true });
-        assert.match(r[0].texto, /📄 \*Transcrição\*\nolá mundo/);
+        const r = await bot.execute(`/transcribe -sum ${URL}`, { expectedError: true });
+        assert.match(r[0].text, /📄 \*Transcrição\*\nolá mundo/);
     });
 
     test('respondendo qualquer vídeo, áudio ou arquivo de mídia (documento): transcreve sem baixar', async () => {
         for (const mimetype of ['video/mp4', 'audio/mpeg', 'application/octet-stream']) {
-            processes.chamadas.length = 0;
+            processes.calls.length = 0;
             const mediaAlt = { mimetype, data: Buffer.from('x').toString('base64') };
-            const r = await bot.executar('/transcribe', { citada: bot.createMessage({ de: OTHERAlt.jid, midia: mediaAlt }) });
-            assert.match(r[0].texto, /olá mundo/, mimetype);
+            const r = await bot.execute('/transcribe', { quoted: bot.createMessage({ de: OTHERAlt.jid, media: mediaAlt }) });
+            assert.match(r[0].text, /olá mundo/, mimetype);
             assert.deepEqual(binaries(), ['ffmpeg', 'ffprobe', 'python'], mimetype);
         }
     });
@@ -874,25 +874,25 @@ describe('/transcribe', () => {
     test('respondendo uma imagem ou um PDF: recusa', async () => {
         for (const mimetype of ['image/jpeg', 'application/pdf']) {
             const mediaAlt = { mimetype, data: Buffer.from('x').toString('base64') };
-            const r = await bot.executar('/transcribe', { citada: bot.createMessage({ de: OTHERAlt.jid, midia: mediaAlt }) });
-            assert.match(r[0].texto, /responda um vídeo ou um áudio/, mimetype);
+            const r = await bot.execute('/transcribe', { quoted: bot.createMessage({ de: OTHERAlt.jid, media: mediaAlt }) });
+            assert.match(r[0].text, /responda um vídeo ou um áudio/, mimetype);
         }
         assert.deepEqual(binaries(), []);
     });
 
     test('-ss e -es valem; opção do /get que não é dele é recusada', async () => {
-        await bot.executar(`/transcribe -ss 30 -es 90 ${URL}`);
+        await bot.execute(`/transcribe -ss 30 -es 90 ${URL}`);
         assert.equal(argsDo('ffmpeg')[argsDo('ffmpeg').indexOf('-to') + 1], '90');
-        const r = await bot.executar(`/transcribe -a ${URL}`);
-        assert.match(r[0].texto, /Opção desconhecida: -a[\s\S]*\/transcribe -h/);
+        const r = await bot.execute(`/transcribe -a ${URL}`);
+        assert.match(r[0].text, /Opção desconhecida: -a[\s\S]*\/transcribe -h/);
     });
 });
 
 describe('/get de um post só de fotos (carrossel)', () => {
     beforeEach(() => {
         bot.setSetting('get.cache.tmp', false);
-        processes.falhar = 'yt-dlp';
-        processes.saidaErro = 'ERROR: [Instagram] X: No video formats found!; please report this issue\n';
+        processes.fail = 'yt-dlp';
+        processes.errorOutput = 'ERROR: [Instagram] X: No video formats found!; please report this issue\n';
     });
 
     const photo = (n) => `http://8.8.8.8/foto${n}.jpg`;
@@ -907,55 +907,55 @@ describe('/get de um post só de fotos (carrossel)', () => {
         processes.post = post(3);
         for (let i = 0; i < 3; i++) network.responder('get', photo(i), jpeg(i));
 
-        const r = await bot.executar(`/get ${URL}`);
+        const r = await bot.execute(`/get ${URL}`);
         const mediaAltAlt = r.filter(x => x.content instanceof MessageMedia);
         assert.equal(mediaAltAlt.length, 3);
         assert.equal(mediaAltAlt[0].options.caption, '🖼️ Imagem 1/3');
         assert.equal(mediaAltAlt[1].options.caption, '🖼️ Imagem 2/3');
         assert.equal(mediaAltAlt[2].options.caption, '🖼️ Imagem 3/3\n\nEnquanto Suzane vê sua história virar filme...', 'o texto do post na última');
         assert.equal(Buffer.from(mediaAltAlt[0].content.data, 'base64').toString(), 'jpeg-0');
-        assert.ok(network.chamadas.every(c => !/pequena/.test(c.url)), 'só a maior de cada item');
-        assert.equal(r[0].texto, '✅ 3 fotos enviadas!', 'o aviso vira a confirmação');
+        assert.ok(network.calls.every(c => !/pequena/.test(c.url)), 'só a maior de cada item');
+        assert.equal(r[0].text, '✅ 3 fotos enviadas!', 'o aviso vira a confirmação');
         assert.deepEqual(binaries().filter(b => b === 'ffmpeg'), [], 'nada de ffmpeg');
     });
 
     test('texto acima de 1000 caracteres: a legenda é cortada e o resto vai numa mensagem', async () => {
         processes.post = post(1, 'x'.repeat(1500));
         network.responder('get', photo(0), jpeg(0));
-        const r = await bot.executar(`/get ${URL}`);
+        const r = await bot.execute(`/get ${URL}`);
         const mediaAlt = r.find(x => x.content instanceof MessageMedia);
         // "🖼️ Imagem 1/1" + blank line + the text, all within 1000 characters; the rest goes after
         assert.equal(mediaAlt.options.caption.length, 1000);
         assert.ok(mediaAlt.options.caption.startsWith('🖼️ Imagem 1/1\n\nxxx') && mediaAlt.options.caption.endsWith('…'));
         const inside = mediaAlt.options.caption.length - '🖼️ Imagem 1/1\n\n'.length - 1;
-        assert.ok(r.some(x => x.texto === 'x'.repeat(1500 - inside)), 'o resto em outra mensagem');
+        assert.ok(r.some(x => x.text === 'x'.repeat(1500 - inside)), 'o resto em outra mensagem');
     });
 
     test('uma foto que não baixa fica de fora e o aviso conta; nenhuma baixando: o erro de sempre', async () => {
         processes.post = post(2);
         network.responder('get', photo(0), new Error('timeout'));
         network.responder('get', photo(1), jpeg(1));
-        const r = await bot.executar(`/get ${URL}`, { erroEsperado: true });
+        const r = await bot.execute(`/get ${URL}`, { expectedError: true });
         assert.equal(r.filter(x => x.content instanceof MessageMedia).length, 1);
-        assert.equal(r[0].texto, '✅ 1 foto enviada! (1 não baixaram)');
+        assert.equal(r[0].text, '✅ 1 foto enviada! (1 não baixaram)');
 
-        network.limpar();
+        network.clear();
         network.responder('get', photo(0), new Error('timeout'));
         network.responder('get', photo(1), new Error('timeout'));
-        const r2 = await bot.executar(`/get ${URL}`, { erroEsperado: true });
-        assert.match(r2.at(-1).texto, /Esse link não tem vídeo nem áudio/);
+        const r2 = await bot.execute(`/get ${URL}`, { expectedError: true });
+        assert.match(r2.at(-1).text, /Esse link não tem vídeo nem áudio/);
     });
 
     test('-a, -st e /transcribe não mandam fotos; sem os dados do post, o erro de sempre', async () => {
         processes.post = post(2);
         for (let i = 0; i < 2; i++) network.responder('get', photo(i), jpeg(i));
-        const a = await bot.executar(`/get -a ${URL}`, { erroEsperado: true });
+        const a = await bot.execute(`/get -a ${URL}`, { expectedError: true });
         assert.ok(!a.some(x => x.content instanceof MessageMedia));
-        const t = await bot.executar(`/transcribe ${URL}`, { erroEsperado: true });
-        assert.match(t.at(-1).texto, /Esse link não tem vídeo nem áudio/);
+        const t = await bot.execute(`/transcribe ${URL}`, { expectedError: true });
+        assert.match(t.at(-1).text, /Esse link não tem vídeo nem áudio/);
 
         processes.post = null;
-        const s = await bot.executar(`/get ${URL}`, { erroEsperado: true });
-        assert.match(s.at(-1).texto, /Esse link não tem vídeo nem áudio/);
+        const s = await bot.execute(`/get ${URL}`, { expectedError: true });
+        assert.match(s.at(-1).text, /Esse link não tem vídeo nem áudio/);
     });
 });

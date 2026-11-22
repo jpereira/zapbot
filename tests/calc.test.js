@@ -11,7 +11,7 @@ const { round, evaluate, format, paraNumber, looksAccount, totalDeclared, values
 
 beforeEach(bot.restart);
 
-const sum = (textAlt, o = {}) => valuesAlt(textAlt, { pt: true, ...o }).reduce((s, v) => s + v.valor, 0);
+const sum = (textAlt, o = {}) => valuesAlt(textAlt, { pt: true, ...o }).reduce((s, v) => s + v.value, 0);
 
 test('números: vírgula e ponto, milhar e decimal, nos dois idiomas', () => {
     assert.equal(paraNumber('1.234,56', true), 1234.56);
@@ -33,8 +33,8 @@ test('lista: o primeiro número de cada linha, com sinais, moeda, datas e telefo
     assert.equal(sum('ligar 5521999999999 depois 10'), 10, 'telefone não é valor');
     assert.equal(sum('*437* maromba\n_351_ corrida'), 788, 'formatação do WhatsApp');
     assert.equal(sum('Dia 1 - 437'), 1, 'o traço solto é separador (o 1 é o primeiro número)');
-    assert.equal(sum('Dia 1 - 437', { coluna: -1 }), 437);
-    assert.equal(sum('10 e 20\n5 e 6', { todos: true }), 41);
+    assert.equal(sum('Dia 1 - 437', { column: -1 }), 437);
+    assert.equal(sum('10 e 20\n5 e 6', { all: true }), 41);
     assert.equal(round(sum('0,1\n0,2')), 0.3, 'o ruído de 0,1 + 0,2 some');
 });
 
@@ -76,8 +76,8 @@ test('formatar: milhar e decimal do idioma, sem ruído de ponto flutuante', () =
 });
 
 test('/calc respondendo a lista: o total, a soma e as estatísticas', async () => {
-    const quoted = bot.createMessage({ texto: '437 maromba\n351 corrida', de: OTHERAlt.jid });
-    const [r] = await bot.replyAlt('/calc', { citada: quoted });
+    const quoted = bot.createMessage({ text: '437 maromba\n351 corrida', de: OTHERAlt.jid });
+    const [r] = await bot.replyAlt('/calc', { quoted });
     assert.equal(r, '🧮 *Total: 788*\n\n```  437  Maromba\n+ 351  Corrida\n─────\n= 788```\n_2 números · média 394_');
 });
 
@@ -89,16 +89,16 @@ test('/calc e os apelidos /math e /sum; a conta digitada e a lista no próprio t
 });
 
 test('-group soma por nome; -list mostra cada linha; -all e -col escolhem os números', async () => {
-    const quoted = bot.createMessage({ texto: '437 maromba\n351 corrida\n200 maromba\n80 corrida', de: OTHERAlt.jid });
-    assert.equal((await bot.replyAlt('/calc -group', { citada: quoted }))[0],
+    const quoted = bot.createMessage({ text: '437 maromba\n351 corrida\n200 maromba\n80 corrida', de: OTHERAlt.jid });
+    assert.equal((await bot.replyAlt('/calc -group', { quoted }))[0],
         '🧮 *Total: 1.068*\n\n```    637  Maromba\n+   431  Corrida\n───────\n= 1.068```\n_4 números · média 267_');
-    assert.equal((await bot.replyAlt('/calc -short', { citada: quoted }))[0], '🧮 *Total: 1.068*\n_4 números · média 267_');
-    assert.match((await bot.replyAlt('/calc', { citada: quoted }))[0], /```    437  Maromba\n\+   351  Corrida\n\+   200  Maromba\n\+    80  Corrida\n───────\n= 1\.068```/);
+    assert.equal((await bot.replyAlt('/calc -short', { quoted }))[0], '🧮 *Total: 1.068*\n_4 números · média 267_');
+    assert.match((await bot.replyAlt('/calc', { quoted }))[0], /```    437  Maromba\n\+   351  Corrida\n\+   200  Maromba\n\+    80  Corrida\n───────\n= 1\.068```/);
 
-    const daysAlt = bot.createMessage({ texto: 'Dia 1 - 437\nDia 2 - 351', de: OTHERAlt.jid });
-    assert.match((await bot.replyAlt('/calc -col -1', { citada: daysAlt }))[0], /Total: 788\*/);
-    assert.match((await bot.replyAlt('/calc -all', { citada: daysAlt }))[0], /Total: 791\*/);
-    assert.match((await bot.replyAlt('/calc -col 0', { citada: daysAlt }))[0], /O -col precisa de um número inteiro/);
+    const daysAlt = bot.createMessage({ text: 'Dia 1 - 437\nDia 2 - 351', de: OTHERAlt.jid });
+    assert.match((await bot.replyAlt('/calc -col -1', { quoted: daysAlt }))[0], /Total: 788\*/);
+    assert.match((await bot.replyAlt('/calc -all', { quoted: daysAlt }))[0], /Total: 791\*/);
+    assert.match((await bot.replyAlt('/calc -col 0', { quoted: daysAlt }))[0], /O -col precisa de um número inteiro/);
 });
 
 test('sem nada, com texto sem números ou conta quebrada: avisa', async () => {
@@ -109,8 +109,8 @@ test('sem nada, com texto sem números ou conta quebrada: avisa', async () => {
 
 test('no idioma inglês: 1,234.56 e os textos em inglês', async () => {
     await bot.setSetting('zapbot.lang', 'en_US');
-    const quoted = bot.createMessage({ texto: '1,234.56 gym\n100 running', de: OTHERAlt.jid });
-    assert.equal((await bot.replyAlt('/calc', { citada: quoted }))[0], '🧮 *Total: 1,334.56*\n\n```  1,234.56  Gym\n+   100.00  Running\n──────────\n= 1,334.56```\n_2 numbers · average 667.28_');
+    const quoted = bot.createMessage({ text: '1,234.56 gym\n100 running', de: OTHERAlt.jid });
+    assert.equal((await bot.replyAlt('/calc', { quoted }))[0], '🧮 *Total: 1,334.56*\n\n```  1,234.56  Gym\n+   100.00  Running\n──────────\n= 1,334.56```\n_2 numbers · average 667.28_');
 });
 
 // The debt list, as it came from WhatsApp: bullets, invisibles (U+2060), "R$." and the total at the end
@@ -133,30 +133,30 @@ test('moedas: R$, US$, USD$, EUR$, $, € e os códigos USD e EUR (maiúsculas o
         ['US$ 50', 'US$'], ['$ 50', '$'], ['€ 50', '€'], ['R$ 50', 'R$'], ['- EUR$ 50', 'EUR']];
     for (const [line, currency] of cases) {
         const [v] = valuesAlt(`${line} item`, { pt: true });
-        assert.equal(v.moeda, currency, line);
-        assert.equal(Math.abs(v.valor), 50, line);
+        assert.equal(v.currency, currency, line);
+        assert.equal(Math.abs(v.value), 50, line);
     }
-    assert.equal(valuesAlt('- EUR$ 50 item', { pt: true })[0].valor, -50);
+    assert.equal(valuesAlt('- EUR$ 50 item', { pt: true })[0].value, -50);
     // EUR$ and EUR are the same currency: the whole list comes out with it
     const list = valuesAlt('EUR$ 10 a\nEUR 5 b\nUSD 3 c', { pt: true });
-    assert.deepEqual(list.map(v => v.moeda), ['EUR', 'EUR', 'USD']);
+    assert.deepEqual(list.map(v => v.currency), ['EUR', 'EUR', 'USD']);
     // Words that only start similarly are not a currency
-    assert.equal(valuesAlt('EURO 50 item', { pt: true })[0].moeda, null);
+    assert.equal(valuesAlt('EURO 50 item', { pt: true })[0].currency, null);
 });
 
 test('lista da dívida: sinal antes do R$ (com espaço), invisíveis, R$. e a linha de total fora da soma', () => {
     const values = valuesAlt(DEBT, { pt: true });
-    assert.deepEqual(values.map(v => v.valor), [3375, -1055, -144.93, -55.02, -430.62, -462.7, -80, -231.84, -250]);
-    assert.equal(round(values.reduce((s, v) => s + v.valor, 0)), 664.89);
-    assert.ok(values.every(v => v.moeda === 'R$'));
+    assert.deepEqual(values.map(v => v.value), [3375, -1055, -144.93, -55.02, -430.62, -462.7, -80, -231.84, -250]);
+    assert.equal(round(values.reduce((s, v) => s + v.value, 0)), 664.89);
+    assert.ok(values.every(v => v.currency === 'R$'));
     assert.equal(totalDeclared(DEBT, true), 664.89);
-    assert.equal(values[1].rotulo, 'Casaco', 'o nome como foi digitado');
-    assert.equal(values[5].rotulo, 'Ressola TC-Pro', 'hífen no meio fica');
+    assert.equal(values[1].label, 'Casaco', 'o nome como foi digitado');
+    assert.equal(values[5].label, 'Ressola TC-Pro', 'hífen no meio fica');
 });
 
 test('/calc na dívida: o total com R$, a conferência com o total do texto, entradas e saídas', async () => {
-    const quoted = bot.createMessage({ texto: DEBT, de: OTHERAlt.jid });
-    assert.equal((await bot.replyAlt('/calc', { citada: quoted }))[0], [
+    const quoted = bot.createMessage({ text: DEBT, de: OTHERAlt.jid });
+    assert.equal((await bot.replyAlt('/calc', { quoted }))[0], [
         '🧮 *Saldo: R$ 664,89*',
         '✅ _Confere com o total do texto_',
         '',
@@ -178,24 +178,24 @@ test('/calc na dívida: o total com R$, a conferência com o total do texto, ent
     ].join('\n'));
 
     // The wrong text's total: warns about the difference
-    const wrong = bot.createMessage({ texto: DEBT.replace('R$664,89', 'R$600,00'), de: OTHERAlt.jid });
-    assert.match((await bot.replyAlt('/calc', { citada: wrong }))[0], /⚠️ _O texto diz R\$ 600,00: diferença de R\$ 64,89_/);
+    const wrong = bot.createMessage({ text: DEBT.replace('R$664,89', 'R$600,00'), de: OTHERAlt.jid });
+    assert.match((await bot.replyAlt('/calc', { quoted: wrong }))[0], /⚠️ _O texto diz R\$ 600,00: diferença de R\$ 64,89_/);
 
-    assert.match((await bot.replyAlt('/calc -group', { citada: quoted }))[0], /```\+ R\$ 3\.375,00  15 kit x 225\n- R\$ 1\.055,00  Casaco/);
+    assert.match((await bot.replyAlt('/calc -group', { quoted }))[0], /```\+ R\$ 3\.375,00  15 kit x 225\n- R\$ 1\.055,00  Casaco/);
 });
 
 test('sem moeda os números saem simples, e "total" sozinho numa lista sem número não atrapalha', () => {
-    assert.deepEqual(valuesAlt('Total de gastos\n10 a\n20 b', { pt: true }).map(v => v.valor), [10, 20]);
+    assert.deepEqual(valuesAlt('Total de gastos\n10 a\n20 b', { pt: true }).map(v => v.value), [10, 20]);
     assert.equal(totalDeclared('10 a\n20 b', true), null);
     assert.equal(totalDeclared('10 a\n20 b\nTotal: 30', true), 30);
 });
 
 test('o sinal no começo da linha vale, mesmo solto; lista toda de "-" é de marcadores', () => {
-    assert.deepEqual(valuesAlt('+ 100 salário\n- 30 mercado\n-  20,5 uber', { pt: true }).map(v => v.valor), [100, -30, -20.5]);
-    assert.deepEqual(valuesAlt('•\u2060 - 144,93 Verdana\n437 maromba', { pt: true }).map(v => v.valor), [-144.93, 437]);
-    assert.deepEqual(valuesAlt('- 437 maromba\n- 351 corrida', { pt: true }).map(v => v.valor), [437, 351], 'todas com "-": marcadores');
-    assert.equal(valuesAlt('+ 100 salário', { pt: true })[0].rotulo, 'salário', 'o + sai do nome');
-    assert.deepEqual(valuesAlt('Dia 1 - 437', { pt: true }).map(v => v.valor), [1], 'o traço depois do texto não é sinal');
+    assert.deepEqual(valuesAlt('+ 100 salário\n- 30 mercado\n-  20,5 uber', { pt: true }).map(v => v.value), [100, -30, -20.5]);
+    assert.deepEqual(valuesAlt('•\u2060 - 144,93 Verdana\n437 maromba', { pt: true }).map(v => v.value), [-144.93, 437]);
+    assert.deepEqual(valuesAlt('- 437 maromba\n- 351 corrida', { pt: true }).map(v => v.value), [437, 351], 'todas com "-": marcadores');
+    assert.equal(valuesAlt('+ 100 salário', { pt: true })[0].label, 'salário', 'o + sai do nome');
+    assert.deepEqual(valuesAlt('Dia 1 - 437', { pt: true }).map(v => v.value), [1], 'o traço depois do texto não é sinal');
 });
 
 test('contas encadeadas e com parênteses; conta mal escrita dá erro; numa lista a conta aparece na fita', async () => {
@@ -204,17 +204,17 @@ test('contas encadeadas e com parênteses; conta mal escrita dá erro; numa list
     assert.deepEqual(await bot.replyAlt('/calc 7%2'), ['🧮 7%2 = *1*']);
     assert.match((await bot.replyAlt('/calc (1+2'))[0], /Não entendi a conta: \(1\+2/);
 
-    const quoted = bot.createMessage({ texto: '100/2*6\n((1+7)*8)/2\n10 pizza\n15/11', de: OTHERAlt.jid });
-    assert.equal((await bot.replyAlt('/calc', { citada: quoted }))[0],
+    const quoted = bot.createMessage({ text: '100/2*6\n((1+7)*8)/2\n10 pizza\n15/11', de: OTHERAlt.jid });
+    assert.equal((await bot.replyAlt('/calc', { quoted }))[0],
         '🧮 *Total: 342*\n\n```  300  100/2*6\n+  32  ((1+7)*8)/2\n+  10  Pizza\n─────\n= 342```\n_3 números · média 114_');
 });
 
 test('as casas decimais são as mesmas na lista toda, e o nome da linha não se repete no -all', async () => {
-    const market = bot.createMessage({ texto: 'arroz 22,90\nfeijão 8,50\ncarne 54,30', de: OTHERAlt.jid });
-    assert.equal((await bot.replyAlt('/calc', { citada: market }))[0],
+    const market = bot.createMessage({ text: 'arroz 22,90\nfeijão 8,50\ncarne 54,30', de: OTHERAlt.jid });
+    assert.equal((await bot.replyAlt('/calc', { quoted: market }))[0],
         '🧮 *Total: 85,70*\n\n```  22,90  Arroz\n+  8,50  Feijão\n+ 54,30  Carne\n───────\n= 85,70```\n_3 números · média 28,57_');
 
-    const ida = bot.createMessage({ texto: 'ida 45 volta 38\nalmoço 52 gorjeta 5', de: OTHERAlt.jid });
-    assert.equal((await bot.replyAlt('/calc -all', { citada: ida }))[0],
+    const ida = bot.createMessage({ text: 'ida 45 volta 38\nalmoço 52 gorjeta 5', de: OTHERAlt.jid });
+    assert.equal((await bot.replyAlt('/calc -all', { quoted: ida }))[0],
         '🧮 *Total: 140*\n\n```   45  Ida volta\n+  38\n+  52  Almoço gorjeta\n+   5\n─────\n= 140```\n_4 números · média 35_');
 });

@@ -72,9 +72,9 @@ describe('/help', () => {
 
         await bot.setSetting('bot.users.cmds', [`${OTHERAlt.user}=/ping,/show`]);
         await bot.setSetting('bot.users', [OTHERAlt.user]);
-        const [deleg] = await bot.replyAlt('/help -r', { de: OTHERAlt.jid });
-        assert.match(deleg, /Role: admin\n\*\/show\* - _[^]*\n\n🔸 Role: user\n\*\/help\* - _[^]*\n\*\/ping\* - _/);
-        assert.doesNotMatch(deleg, /Role: owner/);
+        const [delegated] = await bot.replyAlt('/help -r', { de: OTHERAlt.jid });
+        assert.match(delegated, /Role: admin\n\*\/show\* - _[^]*\n\n🔸 Role: user\n\*\/help\* - _[^]*\n\*\/ping\* - _/);
+        assert.doesNotMatch(delegated, /Role: owner/);
 
         // with the command, -r does not get in the way
         assert.match((await bot.replyAlt('/help -r get'))[0], /Usage: \/get/);
@@ -87,7 +87,7 @@ describe('/help', () => {
 });
 
 describe('"digitando..." ao executar um comando', () => {
-    const typing = () => bot.client.chats.get(bot.GROUP).digitando;
+    const typing = () => bot.client.chats.get(bot.GROUP).typing;
 
     test('todo comando mostra, menos os que declaram digitando: false (responde na hora)', async () => {
         await bot.replyAlt('/ping');
@@ -104,11 +104,11 @@ describe('"digitando..." ao executar um comando', () => {
         const group = bot.client.chats.get(bot.GROUP);
         await bot.replyAlt('/ping');
         await bot.replyAlt('/me oi');
-        assert.equal(group.lidas, 2);
+        assert.equal(group.read, 2);
 
         await bot.setSetting('commands.seen', false);
         await bot.replyAlt('/ping');
-        assert.equal(group.lidas, 2, 'desligado: não marca');
+        assert.equal(group.read, 2, 'desligado: não marca');
     });
 
     test('segue aceso enquanto o comando roda (a resposta do meio apaga o aviso) e apaga ao terminar', async () => {
@@ -121,7 +121,7 @@ describe('"digitando..." ao executar um comando', () => {
         const resultAlt = await withTyping(msg, {}, async () => {
             await new Promise(r => setTimeout(r, 75));
             return 'ok';
-        }, { cada: 20 });
+        }, { each: 20 });
         assert.equal(resultAlt, 'ok');
         assert.ok(sentAlt3.length >= 3, `reenviou ${sentAlt3.length}x`);
         await new Promise(setImmediate);
@@ -133,13 +133,13 @@ describe('"digitando..." ao executar um comando', () => {
         assert.equal(sentAlt3.length, total);
 
         // The command error goes through, and the notice also deletes
-        await assert.rejects(withTyping(msg, {}, async () => { throw new Error('falhou'); }, { cada: 20 }), /falhou/);
+        await assert.rejects(withTyping(msg, {}, async () => { throw new Error('falhou'); }, { each: 20 }), /falhou/);
         await new Promise(setImmediate);
         assert.equal(deleted, 2);
 
         // typing: false does not touch the chat
         const beforeAlt = sentAlt3.length;
-        await withTyping(msg, { digitando: false }, async () => {}, { cada: 20 });
+        await withTyping(msg, { typing: false }, async () => {}, { each: 20 });
         assert.equal(sentAlt3.length, beforeAlt);
     });
 });
@@ -166,9 +166,9 @@ describe('/uptime e /version', () => {
     });
 
     test('"não conectado" antes de autenticar; tempo depois', async () => {
-        bot.estado.autenticadoEm = 0;
+        bot.state.authenticatedAt = 0;
         assert.match((await bot.replyAlt('/uptime'))[0], /Conectado: \*não conectado\*/);
-        bot.estado.autenticadoEm = Date.now() - 2 * 60 * 1000;
+        bot.state.authenticatedAt = Date.now() - 2 * 60 * 1000;
         assert.match((await bot.replyAlt('/uptime'))[0], /Conectado: \*2 minutos, 0 segundos\*/);
     });
 });
@@ -179,8 +179,8 @@ describe('/noffa', () => {
     });
 
     test('usa o texto da mensagem respondida', async () => {
-        const quoted = bot.createMessage({ texto: 'olá mundo', de: OTHERAlt.jid });
-        assert.deepEqual(await bot.replyAlt('/noffa', { citada: quoted }), ['olá 🌈 mundo']);
+        const quoted = bot.createMessage({ text: 'olá mundo', de: OTHERAlt.jid });
+        assert.deepEqual(await bot.replyAlt('/noffa', { quoted }), ['olá 🌈 mundo']);
     });
 
     test('sem texto mostra a sintaxe', async () => {
@@ -244,13 +244,13 @@ describe('/bot', () => {
         assert.match(r, /• whatsapp-web\.js: [\d.]+ \(commit [0-9a-f]{7}\) · ⬆️ \*nova: 99\.0\.0\* · ⬆️ 3 commits novos no main\n/);
 
         // Kept for 6 h: does not query again
-        const calls = bot.network.chamadas.length;
+        const calls = bot.network.calls.length;
         await bot.replyAlt('/bot -info');
-        assert.equal(bot.network.chamadas.length, calls);
+        assert.equal(bot.network.calls.length, calls);
 
         // Down: no note (and no error)
         cleanNews();
-        bot.network.limpar();
+        bot.network.clear();
         assert.match((await bot.replyAlt('/bot -i'))[0], /• whatsapp-web\.js: [\d.]+ \(commit [0-9a-f]{7}\)\n/);
         cleanNews();
     });

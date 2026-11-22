@@ -1,6 +1,6 @@
 /*
  * Removed or changed reactions: the 'message_reaction' event, the notice in your
- * privado, o /show -r e o /mute -r.
+ * ownerOnly, o /show -r e o /mute -r.
  */
 const bot = require('./helpers/bot');
 
@@ -17,7 +17,7 @@ beforeEach(async () => {
 
 // Message received in the group and Fulano's reaction to it
 async function messageReacted(textAlt = 'o chefe vai adorar', emoji = '😂', optionsAlt = {}) {
-    const msg = bot.createMessage({ texto: textAlt, de: OTHERAlt.jid, ...optionsAlt });
+    const msg = bot.createMessage({ text: textAlt, de: OTHERAlt.jid, ...optionsAlt });
     await bot.deliver(msg);
     assert.deepEqual(await bot.react(msg, OTHERAlt.jid, emoji), [], 'reagir só guarda');
     return msg;
@@ -31,10 +31,10 @@ describe('evento: reação removida ou trocada', () => {
         const [notice, ...rest] = await bot.react(msg, OTHERAlt.jid, '');
         assert.deepEqual(rest, []);
         assert.equal(notice.chatId, OWNER.jid);
-        assert.match(notice.texto, /^😶 \*REAÇÃO REMOVIDA DETECTADA\*\n\n/);
-        assert.match(notice.texto, /👥 \*Grupo:\* Família\n👤 \*Nome:\* Fulano\n📱 \*Número:\* \+5521911111111\n/);
-        assert.match(notice.texto, /🗑️ \*Removida em:\* /);
-        assert.match(notice.texto, /😶 \*Reação:\* 😂\n💬 \*Na mensagem:\* "o chefe vai adorar"$/);
+        assert.match(notice.text, /^😶 \*REAÇÃO REMOVIDA DETECTADA\*\n\n/);
+        assert.match(notice.text, /👥 \*Grupo:\* Família\n👤 \*Nome:\* Fulano\n📱 \*Número:\* \+5521911111111\n/);
+        assert.match(notice.text, /🗑️ \*Removida em:\* /);
+        assert.match(notice.text, /😶 \*Reação:\* 😂\n💬 \*Na mensagem:\* "o chefe vai adorar"$/);
 
         const row = await bot.dbGet('SELECT * FROM reaction_changes WHERE message_id = ?', [msg.id.id]);
         assert.deepEqual([row.old_reaction, row.new_reaction, row.chat_id, row.sender_number], ['😂', '', GROUP, OTHERAlt.user]);
@@ -44,18 +44,18 @@ describe('evento: reação removida ou trocada', () => {
     test('a menção crua (@número) da mensagem vira o nome no aviso', async () => {
         const msg = await messageReacted(`@${OTHERAlt.user} parabéns! Tudo de bom`, '❤️');
         const [notice] = await bot.react(msg, OTHERAlt.jid, '');
-        assert.match(notice.texto, /💬 \*Na mensagem:\* "@Fulano parabéns! Tudo de bom"$/);
+        assert.match(notice.text, /💬 \*Na mensagem:\* "@Fulano parabéns! Tudo de bom"$/);
         assert.equal((await bot.dbGet('SELECT body FROM reaction_changes WHERE message_id = ?', [msg.id.id])).body, `@${OTHERAlt.user} parabéns! Tudo de bom`);
     });
 
     test('trocada: a de antes e a nova; na sua mensagem, diz que é sua', async () => {
-        const sent = bot.createMessage({ texto: 'chego às 8' });
+        const sent = bot.createMessage({ text: 'chego às 8' });
         await bot.deliver(sent);
         await bot.react(sent, OTHERAlt.jid, '👍');
 
         const [notice] = await bot.react(sent, OTHERAlt.jid, '❤️');
-        assert.match(notice.texto, /^🔄 \*REAÇÃO TROCADA DETECTADA\*/);
-        assert.match(notice.texto, /🔄 \*Trocada em:\* .*\n😶 \*Reação:\* 👍 → ❤️\n💬 \*Na sua mensagem:\* "chego às 8"$/);
+        assert.match(notice.text, /^🔄 \*REAÇÃO TROCADA DETECTADA\*/);
+        assert.match(notice.text, /🔄 \*Trocada em:\* .*\n😶 \*Reação:\* 👍 → ❤️\n💬 \*Na sua mensagem:\* "chego às 8"$/);
         assert.equal((await bot.dbGet('SELECT reaction FROM reactions WHERE message_id = ?', [sent.id.id])).reaction, '❤️');
     });
 
@@ -63,14 +63,14 @@ describe('evento: reação removida ou trocada', () => {
         const msg = await messageReacted();
         assert.deepEqual(await bot.react(msg, OTHERAlt.jid, '😂'), [], 'a mesma, avisada de novo');
 
-        const other = bot.createMessage({ texto: 'x', de: OTHERAlt.jid });
+        const other = bot.createMessage({ text: 'x', de: OTHERAlt.jid });
         await bot.deliver(other);
         assert.deepEqual(await bot.react(other, OTHERAlt.jid, ''), [], 'sem a anterior: não sabe qual era');
 
         await bot.react(msg, OWNER.jid, '👍');
         assert.deepEqual(await bot.react(msg, OWNER.jid, ''), [], 'a sua');
 
-        const channel = bot.createMessage({ texto: 'notícia', chat: '120363000000000099@newsletter', de: OTHERAlt.jid });
+        const channel = bot.createMessage({ text: 'notícia', chat: '120363000000000099@newsletter', de: OTHERAlt.jid });
         await bot.react(channel, OTHERAlt.jid, '🔥');
         assert.deepEqual(await bot.react(channel, OTHERAlt.jid, ''), [], 'canal');
 
@@ -78,10 +78,10 @@ describe('evento: reação removida ou trocada', () => {
     });
 
     test('mensagem fora do cache: o aviso diz', async () => {
-        const ghost = bot.createMessage({ texto: 'nunca vista', de: OTHERAlt.jid });
+        const ghost = bot.createMessage({ text: 'nunca vista', de: OTHERAlt.jid });
         await bot.react(ghost, OTHERAlt.jid, '😮');
         const [notice] = await bot.react(ghost, OTHERAlt.jid, '');
-        assert.match(notice.texto, /💬 \*Na mensagem:\* _\(fora do cache\)_$/);
+        assert.match(notice.text, /💬 \*Na mensagem:\* _\(fora do cache\)_$/);
     });
 
     test('a chave da mensagem reagida também sai do _serialized', () => {
@@ -98,9 +98,9 @@ describe('/show -r e /mute -r', () => {
         const msg = await messageReacted();
         assert.deepEqual(await bot.react(msg, OTHERAlt.jid, ''), []);
 
-        const [summary, item] = await bot.executar('/show -r');
-        assert.equal(summary.texto, '😶 *1 reação removida ou trocada*');
-        assert.match(item.texto, /^😶 \*REAÇÃO REMOVIDA\* \(1\/1\)\n/);
+        const [summary, item] = await bot.execute('/show -r');
+        assert.equal(summary.text, '😶 *1 reação removida ou trocada*');
+        assert.match(item.text, /^😶 \*REAÇÃO REMOVIDA\* \(1\/1\)\n/);
         assert.equal(item.chatId, GROUP);
     });
 
@@ -139,8 +139,8 @@ describe('/show -r e /mute -r', () => {
         const msg = await messageReacted();
         const [notice] = await bot.react(msg, OTHERAlt.jid, '');
 
-        const quoted = bot.createMessage({ texto: notice.texto, chat: OWNER.jid, id: notice.id.id });
-        const [r] = await bot.replyAlt('/mute -r', { chat: OWNER.jid, citada: quoted });
+        const quoted = bot.createMessage({ text: notice.text, chat: OWNER.jid, id: notice.id.id });
+        const [r] = await bot.replyAlt('/mute -r', { chat: OWNER.jid, quoted });
         assert.match(r, /^🔇 \*Silenciado:\* 👥 Família — reações\n/);
     });
 

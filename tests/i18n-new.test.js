@@ -26,9 +26,9 @@ test('/welcome e /goodbye', async () => {
 
     const sentAlt2 = [];
     for (const h of bot.client.listeners('group_join')) {
-        const beforeAlt = bot.client.enviadas.length;
+        const beforeAlt = bot.client.sent.length;
         await h({ chatId: GROUP, recipientIds: [OTHERAlt.jid] });
-        sentAlt2.push(...bot.client.enviadas.slice(beforeAlt));
+        sentAlt2.push(...bot.client.sent.slice(beforeAlt));
     }
     assert.equal(sentAlt2[0].content, '👋 Welcome to Family, @5521911111111!');
 });
@@ -59,8 +59,8 @@ test('/forward', async () => {
     assert.match((await bot.replyAlt('/forward'))[0], /^```Usage: \/forward /);
     assert.deepEqual(await bot.replyAlt('/forward /Fulano/'), ['Reply to the message you want to forward, or give its position (e.g. /forward -1 /Fulano/).\n💡 _/forward -h for help_']);
 
-    const quoted = bot.createMessage({ texto: 'Meeting at 10', de: OTHERAlt.jid });
-    const sendings = await bot.executar('/forward /Fulano/', { citada: quoted });
+    const quoted = bot.createMessage({ text: 'Meeting at 10', de: OTHERAlt.jid });
+    const sendings = await bot.execute('/forward /Fulano/', { quoted });
     assert.equal(sendings.find(e => e.chatId === OTHERAlt.jid).content, '🤖 Message forwarded by ZapBot!\n\nMeeting at 10');
-    assert.equal(sendings.find(e => /forwarded successfully/.test(e.texto)).texto, '✉️ Message forwarded successfully!\n\n👤 Fulano');
+    assert.equal(sendings.find(e => /forwarded successfully/.test(e.text)).text, '✉️ Message forwarded successfully!\n\n👤 Fulano');
 });

@@ -25,5 +25,5 @@ module.exports = {
             desc: 'Deletes the downloaded media (the messages stay).'
         }
     ],
-    role: ADMIN // apaga dados
+    role: ADMIN // apaga data
 };

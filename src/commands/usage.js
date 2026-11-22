@@ -19,7 +19,7 @@ const TOP = 10;
 
 // -all (owner and admins): who used the commands with a limit the most, and which commands go out the most
 async function allShowConsumption(msg) {
-    const { dias: daysAlt, total, pessoas: people, porCmd: byCmd } = await allConsumption();
+    const { days: daysAlt, total, people, byCmd } = await allConsumption();
     if (!total) {
         await msg.reply(t('usage.allEmpty', { days: daysAlt }));
         return;
@@ -27,10 +27,10 @@ async function allShowConsumption(msg) {
 
     const linesAlt = [];
     for (const [i, p] of people.slice(0, TOP).entries()) {
-        const nameAlt = p.grupo
-            ? `👥 ${await groupResolverName(p.chave).catch(() => null) ?? p.chave}`
-            : `👤 ${contactName(await client.getContactById(`${p.chave}@c.us`).catch(() => null)) ?? `+${p.chave}`}`;
-        const cmds = [...p.porCmd].sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c} ${n}`).join(', ');
+        const nameAlt = p.group
+            ? `👥 ${await groupResolverName(p.key).catch(() => null) ?? p.key}`
+            : `👤 ${contactName(await client.getContactById(`${p.key}@c.us`).catch(() => null)) ?? `+${p.key}`}`;
+        const cmds = [...p.byCmd].sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c} ${n}`).join(', ');
         linesAlt.push(`${i + 1}. ${nameAlt} — ${p.total} (${cmds})`);
     }
     const commands = [...byCmd].sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c} ${n}`).join(' · ');
@@ -78,19 +78,19 @@ async function cmdUsage({ msg, opts, quotedMsg, senderNumber, chatId, isGroup, a
 
     const blocks = [];
     for (const numberAlt of numbers) {
-        const who = { numero: numberAlt, chatId, isGroup };
+        const who = { number: numberAlt, chatId, isGroup };
         const heSame = numbers.length === 1 && !textAlt && !quotedMsg;
 
         if (opts.opt.log) {
             const uses = await lastUses(itemsAlt(who));
             blocks.push(uses.length
-                ? uses.map(u => `• ${fmtWhen(u.quando)} · ${u.cmd}${u.params ? ` ${u.params.slice(0, 80)}` : ''}`).join('\n')
+                ? uses.map(u => `• ${fmtWhen(u.when)} · ${u.cmd}${u.params ? ` ${u.params.slice(0, 80)}` : ''}`).join('\n')
                 : t('usage.logEmpty'));
         } else {
             const limits = await limitsWithUsage(who);
             blocks.push(limits.length
                 ? limits.map(l => `• ${usageLine(l)}`).join('\n')
-                : t(heSame ? 'usage.none' : 'usage.noneOf', { quem: `+${numberAlt}` }));
+                : t(heSame ? 'usage.none' : 'usage.noneOf', { who: `+${numberAlt}` }));
         }
     }
 
