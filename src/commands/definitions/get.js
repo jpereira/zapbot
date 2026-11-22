@@ -7,10 +7,10 @@ const { OPTION_VERBOSE_FFMPEG, OPTION_QUIET_TIP } = require('./_options');
 
 module.exports = {
     cmd: '/get',
-    usage: '/get [OPTION]... <url>  or  /get [OPTION]... (replying to a link or media)',
+    usage: '/get [OPTION]... <url>...  or  /get [OPTION]... (replying to a link or media)',
     aliases: [],
     summary: 'Downloads video or audio from social networks',
-    help: 'Downloads video or audio from social networks (Instagram, YouTube, X, TikTok and other yt-dlp sites), from the URL or by replying to a message with a link. Replying to a WhatsApp video, image or audio uses that media itself: with no option, returns the original file. Pick audio, sticker or transcription per run; video and audio are sent as a document.',
+    help: 'Several links at once (up to 10): one after the other, with -a or -stt for all (no -ss, -es, -photo, -pos or -st). Downloads video or audio from social networks (Instagram, YouTube, X, TikTok and other yt-dlp sites), from the URL or by replying to a message with a link. Replying to a WhatsApp video, image or audio uses that media itself: with no option, returns the original file. Pick audio, sticker or transcription per run; video and audio are sent as a document.',
     cmd_opts: [
         { ...OPTION_QUIET_TIP, desc: 'Returns ONLY the transcribed text: no header (language and duration), no engine tip and no "⏳" notice. With -sum, the summary and the text, with no titles. To hide the tip always: the stt.footer setting off.' },
         {

@@ -5,6 +5,17 @@ Baixa vídeos de Instagram, YouTube, X/Twitter, TikTok e outros sites suportados
 numa mensagem que contenha o link. A URL digitada vale mais que a mensagem respondida. Um vídeo, imagem ou áudio enviado com `/get`
 na legenda (sem responder) é tratado como se tivesse sido respondido.
 
+**Vários links** de uma vez: `/get <url> <url> <url>` (até 10) baixa um depois do outro, cada um com a sua resposta
+marcada `🔗 1/3`, `🔗 2/3`... Um link que falha não para os outros. O `-a` e a transcrição (`-stt`) valem para todos;
+o que escolhe um pedaço de **um** link (`-ss`, `-es`, `-photo`, `-st` e `-pos`/`-pt`/`-pc`/`-pb`) é recusado, e o
+`/sticker` com mais de um link também: para esses, um link por vez. Os links vêm do comando, não de uma mensagem
+respondida.
+
+```text
+/get https://www.instagram.com/p/Df77hpuFFDI/ https://www.instagram.com/p/DffQZ0ex6Fm/ https://x.com/ParadigmaEdu/status/2123460271964381214
+/get -a <url> <url>      → o áudio dos dois
+```
+
 Dando reply num vídeo, numa imagem ou num áudio do WhatsApp, o `/get` usa a própria mídia, sem o
 yt-dlp: sem opção, devolve o arquivo original como documento; com `-a`, `-st`, `-ss` ou `-es`, passa
 pelo ffmpeg. Se a mídia tiver um link na legenda, vale a mídia.

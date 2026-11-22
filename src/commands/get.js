@@ -41,8 +41,49 @@ async function cmdGet(ctx) {
  * @param {string} o.cmd  the typed command (for the syntax)
  */
 async function downloadMedia({ msg, opts, quotedMsg, senderName }, { cmd }) {
-    if (!(await optionsValid(msg, opts, cmd))) return;
+    // Several links typed (/get <url> <url> ...): one after the other, each with its own reply
+    const urls = typedLinks(opts);
+    if (urls.length > 1) {
+        // What picks a piece of ONE link (the time, the photo of the carousel, the sticker and its position) has no
+        // meaning for several: -audio and the transcription (-stt) are the same for all
+        const perLink = PER_LINK_OPTIONS.filter(o => opts.given.has(o) || (o === 'sticker' && opts.opt.sticker));
+        if (cmd === '/sticker') {
+            await msg.reply(t('get.stickerOneLink'));
+            return;
+        }
+        if (perLink.length) {
+            await msg.reply(t('get.perLinkOptions', { options: perLink.map(o => `-${o}`).join(', '), cmd }));
+            return;
+        }
+        if (urls.length > MAX_LINKS) {
+            await msg.reply(t('get.tooManyLinks', { max: MAX_LINKS, n: urls.length }));
+            return;
+        }
+        if (!(await optionsValid(msg, opts, cmd))) return;
+        for (const [i, url] of urls.entries()) {
+            await msg.reply(t('get.linkOf', { i: i + 1, n: urls.length }));
+            await downloadOne({ msg, opts: { ...opts, argv: [url] }, quotedMsg: null, senderName });
+        }
+        return;
+    }
 
+    if (!(await optionsValid(msg, opts, cmd))) return;
+    await downloadOne({ msg, opts, quotedMsg, senderName }, { cmd });
+}
+
+/*
+ * The links typed in the command: only when there are two or more and all of them are http(s) addresses (a text with a
+ * word that is not a link is, as always, the first argument alone).
+ */
+const MAX_LINKS = 10;
+const PER_LINK_OPTIONS = ['startSec', 'endSec', 'photo', 'sticker', 'pos', 'pb', 'pc', 'pt'];
+function typedLinks(opts) {
+    const urls = opts.argv.filter(Boolean);
+    return urls.length > 1 && urls.every(u => /^https?:\/\/\S+$/i.test(u)) ? urls : [];
+}
+
+// Downloads and sends one source (the typed link, the replied media or the replied message's link)
+async function downloadOne({ msg, opts, quotedMsg, senderName }, { cmd = '/get' } = {}) {
     const origin = mediaOrigin(opts, quotedMsg, msg);
     if (!origin) {
         await msg.reply(quotedMsg ? t('get.quotedNoMedia') : commandUsage(cmd));

@@ -5,6 +5,17 @@ Downloads videos from Instagram, YouTube, X/Twitter, TikTok and other sites supp
 message that contains the link. The typed URL wins over the replied message. A video, image or audio sent with `/get` as the
 caption (no reply) is handled as if it had been replied to.
 
+**Several links** at once: `/get <url> <url> <url>` (up to 10) downloads them one after the other, each with its own
+reply marked `🔗 1/3`, `🔗 2/3`... A link that fails does not stop the others. `-a` and the transcription (`-stt`)
+apply to all; what picks a piece of **one** link (`-ss`, `-es`, `-photo`, `-st` and `-pos`/`-pt`/`-pc`/`-pb`) is refused,
+and so is `/sticker` with more than one link: use one link at a time for those. The links come from the command, not
+from a replied message.
+
+```text
+/get https://www.instagram.com/p/Df77hpuFFDI/ https://www.instagram.com/p/DffQZ0ex6Fm/ https://x.com/ParadigmaEdu/status/2123460271964381214
+/get -a <url> <url>      → the audio of both
+```
+
 Replying to a WhatsApp video, image or audio, `/get` uses the media itself, without yt-dlp: with no
 option, it returns the original file as a document; with `-a`, `-st`, `-ss` or `-es`, it goes
 through ffmpeg. If the media has a link in the caption, the media wins.
