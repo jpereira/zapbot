@@ -19,6 +19,8 @@ good `-desc`.
 | Option | Value | Description |
 |---|---|---|
 | `-quiet`, `-q` | | When running, omits the `🔗 Alias ...` header; works before or after the name |
+| `-private`, `-p` | | Makes the alias private: only the owner sees and runs it (not in the lists, not in [`/help`](help.md), and for anyone else it does not exist). Without a command, changes the alias that exists (`/alias -p /end.froes`). See [Private aliases](#private-aliases) |
+| `-public`, `-pub` | | Takes the lock off a private alias (`/alias -public /end.froes`) |
 | `-desc`, `-d` | `<text>` | Optional description in quotes, before the command or the text; without a command, updates only the description of an existing alias |
 | `-list`, `-l` | | Lists the aliases; same as `/alias` without arguments. With only a name (`/alias /demo`), it shows what that alias does (description and command); if the name isn't an alias, it lists the ones with that text in the name (`/alias dol` finds `/dollar`, `/dollar2` and `/my.dol`; up to 10), or an error if none matches |
 | `-examples`, `-ex` | `[<file>]` | Without a name, lists the example files (`examples/*.zb`: aliases ready to use). With a name, loads that file; an alias that already exists stays as it is, unless `-yes` (`-y`): then the file's definition replaces it (to apply a newer version of an example) |
@@ -344,6 +346,25 @@ Most use `-q` (no "🔗 Alias" header). Take the whole file with `/alias -exampl
 | `/nopt.add` | `/forward -add #nopt` |
 | `/rec` | `/sticker -ss $1` |
 | `/sts` | `/sticker -ss` |
+
+## Private aliases
+
+`-private` (`-p`) makes an alias **the owner's**: only you see and run it. For anyone else it **does not exist**: it is not
+in `/alias`, not in `/help alias`, not at the end of the user's [`/help`](help.md), the bot answers as for a command that
+does not exist, and it cannot be called inside the `{/command}` of a text, a `/cron` or a `/batch` of someone else. An extra
+admin (`+a`) does not see it either, and cannot overwrite, rename or remove it (the name is taken).
+
+```text
+/alias -q -p /meu /me only I see this     → creates a private alias (works with -q, in any order)
+/alias -p /end.froes                      → makes the one that exists private
+/alias -public /end.froes                 → takes the lock off (whoever can run the target sees it again)
+/alias /end.froes                         → shows it, with 🔒
+```
+
+A ready example with private aliases is [`examples/secret-notes.zb`](https://github.com/jpereira/zapbot/blob/main/examples/secret-notes.zb)
+(`/stash.add`, `/stash.view` and `/stash.lock`, all `-q -p`). Only the owner can use `-p` and `-public`. In a `.zb` file ([examples](#example-files-zb)) the line
+`/alias -q -p /meu /me only I see this` loads a private alias too. A shortcut that leads to a command the user can use
+is listed in their `/help`; mark the personal ones (your voice, your contacts) with `-p`.
 
 ## Text with commands
 

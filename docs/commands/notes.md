@@ -244,7 +244,7 @@ The password can also come in the command, instead of the question: one message 
 ```text
 /notes -v -lock mypassword #stash        → unlocks #stash and shows its notes
 /notes -lock "my long password" #stash   → unlocks only (quotes for a password with spaces)
-/stash.lock mypassword                   → with an alias like /alias -q /stash.lock /notes -v -lock $@ #stash
+/stash.lock mypassword                   → with an alias like /alias -q -p /stash.lock /notes -v -lock $@ #stash
 ```
 
 The password is the first word after `-lock` (or `-lo`, or `-l` beside `-v`/`-e`/`-s`/`-c`) that does not start with `#`
@@ -293,12 +293,13 @@ preview on the phone can show it for an instant; the question is safer).
 
 For a tag you use all the time (the `#stash` below), three [aliases](alias.md) make each use one word. They are in
 [`examples/secret-notes.zb`](https://github.com/jpereira/zapbot/blob/main/examples/secret-notes.zb) (load them with
-`/alias -examples secret-notes`), or create them by hand. The `-desc` of each one explains it in `/alias`:
+`/alias -examples secret-notes`), or create them by hand. They are **private** (`-p`, see [Private aliases](alias.md#private-aliases)): only you see and run
+them. The `-desc` of each one explains it in `/alias`:
 
 ```text
-/alias -q /stash.add  -desc "Saves a note in the protected tag #stash, encrypted. The tag has to be unlocked first (/stash.view); locked, or outside your own private chat (a group, someone's chat), it refuses and the command stays out of the history"  /notes #stash $@
-/alias -q /stash.lock -desc "Locks the protected tag #stash right now: afterwards only a lock shows. Use it before lending the phone or sharing the screen (it also locks by itself after notes.lockMinutes without use and when the bot restarts)"  /notes -lock #stash -now
-/alias -q /stash.view -desc "Unlocks the protected tag #stash and shows its notes: asks the password in your private chat (or /stash.view password, less safe: it travels in a normal command, the bot deletes it and hides it from logs and history). Never opens in a group or with -to; locks again after notes.lockMinutes without use"  /notes -v -lock $1 #stash
+/alias -q -p /stash.add  -desc "Saves a note in the protected tag #stash, encrypted. The tag has to be unlocked first (/stash.view); locked, or outside your own private chat (a group, someone's chat), it refuses and the command stays out of the history"  /notes #stash $@
+/alias -q -p /stash.lock -desc "Locks the protected tag #stash right now: afterwards only a lock shows. Use it before lending the phone or sharing the screen (it also locks by itself after notes.lockMinutes without use and when the bot restarts)"  /notes -lock #stash -now
+/alias -q -p /stash.view -desc "Unlocks the protected tag #stash and shows its notes: asks the password in your private chat (or /stash.view password, less safe: it travels in a normal command, the bot deletes it and hides it from logs and history). Never opens in a group or with -to; locks again after notes.lockMinutes without use"  /notes -v -lock $1 #stash
 ```
 
 Once, by hand, protect the tag (it asks the **new** password twice, there is no recovery):

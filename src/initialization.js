@@ -124,7 +124,7 @@ async function initializeDb() {
         description TEXT NOT NULL DEFAULT '',
         command TEXT NOT NULL
     )`);
-    await addColumns('command_aliases', { quiet: 'INTEGER NOT NULL DEFAULT 0' });
+    await addColumns('command_aliases', { quiet: 'INTEGER NOT NULL DEFAULT 0', owner_only: 'INTEGER NOT NULL DEFAULT 0' });
 
     // Received messages (to recover the deleted ones)
     await dbRun(`

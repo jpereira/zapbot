@@ -56,27 +56,29 @@ async function cmdAlias({ msg, args }) {
         if (botConfig.commands.some(c => c.cmd === freshAlt || c.aliases?.includes(freshAlt))) {
             return msg.reply(t('adm.alias.isCommand', { name: freshAlt }));
         }
-        if (!(await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [oldAlt2]))) {
+        if (!(await dbGet(`SELECT 1 FROM command_aliases WHERE name = ?${msg.fromMe ? '' : ' AND owner_only = 0'}`, [oldAlt2]))) {
             return msg.reply(t('adm.alias.notFound', { name: oldAlt2 }));
         }
         if (oldAlt2 === freshAlt) return msg.reply(t('adm.alias.sameName', { name: freshAlt }));
-        if (await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [freshAlt])) {
+        if (await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [freshAlt])) { // a private one counts: the name is taken
             return msg.reply(t('adm.alias.exists', { name: freshAlt }));
         }
         await dbRun('UPDATE command_aliases SET name = ? WHERE name = ?', [freshAlt, oldAlt2]);
         return msg.reply(t('adm.alias.renamed', { old: oldAlt2, fresh: freshAlt }));
     }
     const removeAlt2 = textAlt.match(/^-rm\s+(\S[\s\S]*)$/);
+    // A private alias is the owner's: whoever else registers or removes does not see it (it "does not exist" for them)
+    const hidden = msg.fromMe ? '' : ' AND owner_only = 0';
     if (removeAlt2) {
         const names = [...new Set(removeAlt2[1].split(/[\s,]+/).filter(Boolean).map(aliasName))];
         if (names.includes('/all')) {
-            const r = await dbRun('DELETE FROM command_aliases');
+            const r = await dbRun(`DELETE FROM command_aliases WHERE 1 = 1${hidden}`);
             return msg.reply(t('adm.alias.allRemoved', { n: r.changes }));
         }
         const removed = [];
         const missing = [];
         for (const nameAlt of names) {
-            const r = await dbRun('DELETE FROM command_aliases WHERE name = ?', [nameAlt]);
+            const r = await dbRun(`DELETE FROM command_aliases WHERE name = ?${hidden}`, [nameAlt]);
             (r.changes ? removed : missing).push(nameAlt);
         }
         if (names.length === 1) {
@@ -90,12 +92,12 @@ async function cmdAlias({ msg, args }) {
     // Only the name (/alias /dolar): shows what the alias does; if it is not an alias, the error
     if (/^\/?[\p{L}\p{N}_.][\p{L}\p{N}_.-]*$/u.test(textAlt)) {
         const nameAlt = aliasName(textAlt);
-        const alias = await dbGet('SELECT * FROM command_aliases WHERE name = ?', [nameAlt]);
+        const alias = await dbGet(`SELECT * FROM command_aliases WHERE name = ?${hidden}`, [nameAlt]);
         if (alias) return msg.reply(aliasBlock(alias), undefined, { linkPreview: false });
         // Not an alias: the ones whose name has the text (/alias foo finds /foo, /foobar and /my.foo)
         const term = nameAlt.slice(1).toLowerCase();
         const like = `%${term.replace(/[\\%_]/g, '\\$&')}%`;
-        const found = await dbAll("SELECT * FROM command_aliases WHERE lower(name) LIKE ? ESCAPE '\\' ORDER BY name", [like]);
+        const found = await dbAll(`SELECT * FROM command_aliases WHERE lower(name) LIKE ? ESCAPE '\\'${hidden} ORDER BY name`, [like]);
         if (found.length) {
             const shown = found.slice(0, MATCH_MAX);
             const more = found.length > MATCH_MAX ? `\n\n${t('adm.alias.matchMore', { n: found.length - MATCH_MAX })}` : '';
@@ -105,14 +107,38 @@ async function cmdAlias({ msg, args }) {
         const isCommand = botConfig.commands.some(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt));
         return msg.reply(t(isCommand ? 'adm.alias.isCommand' : 'adm.alias.notFound', { name: nameAlt }));
     }
-    // -q|-quiet: without the "🔗 Alias ..." header when running; works before the name, after it or after the description
+    // -q|-quiet: without the "🔗 Alias ..." header when running; -p|-private: only the owner sees and runs it (it is not
+    // listed, not in /help, and for anyone else it does not exist). They work before the name, after it or after the
+    // description, in any order; -public takes the lock off
     let quiet = false;
-    const removeQuiet = (s) => s.replace(/^-(?:quiet|q)(?:\s+|$)/, () => { quiet = true; return ''; });
-    const registration = removeQuiet(textAlt).match(/^(\S+)\s+([\s\S]+)$/);
+    let privateFlag = null;
+    const removeQuiet = (s) => {
+        for (let m; (m = s.match(/^-(quiet|q|private|p|public)(?:\s+|$)/));) {
+            if (m[1] === 'quiet' || m[1] === 'q') quiet = true;
+            else privateFlag = m[1] !== 'public';
+            s = s.slice(m[0].length);
+        }
+        return s;
+    };
+    const flagged = removeQuiet(textAlt);
+    // Only the flag(s) and the name (/alias -p /end.froes): changes the alias that exists
+    if (privateFlag !== null && /^\/?[\p{L}\p{N}_.][\p{L}\p{N}_.-]*$/u.test(flagged)) {
+        if (!msg.fromMe) return msg.reply(t('adm.alias.ownerOnlyPrivate'));
+        const nameOnly = aliasName(flagged);
+        const r = await dbRun('UPDATE command_aliases SET owner_only = ? WHERE name = ?', [privateFlag ? 1 : 0, nameOnly]);
+        if (!r.changes) return msg.reply(t('adm.alias.notFound', { name: nameOnly }));
+        return msg.reply(t(privateFlag ? 'adm.alias.madePrivate' : 'adm.alias.madePublic', { name: nameOnly }));
+    }
+    const registration = flagged.match(/^(\S+)\s+([\s\S]+)$/);
     if (!registration || !NAME.test(registration[1])) {
         return msg.reply(t('adm.alias.usage'));
     }
+    if (privateFlag !== null && !msg.fromMe) return msg.reply(t('adm.alias.ownerOnlyPrivate'));
     const nameAlt = aliasName(registration[1]);
+    // Overwriting a private alias: only the owner (for anyone else it does not exist, and the name is taken)
+    if (!msg.fromMe && await dbGet('SELECT 1 FROM command_aliases WHERE name = ? AND owner_only = 1', [nameAlt])) {
+        return msg.reply(t('adm.alias.exists', { name: nameAlt }));
+    }
     if (nameAlt === '/all') return msg.reply(t('adm.alias.allReserved'));
     if (botConfig.commands.some(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt))) {
         return msg.reply(t('adm.alias.isCommand', { name: nameAlt }));
@@ -154,10 +180,11 @@ async function cmdAlias({ msg, args }) {
         }
     }
     commandAlt = fixDash(commandAlt);
-    await dbRun(`INSERT INTO command_aliases (name, description, command, quiet) VALUES (?, ?, ?, ?)
+    await dbRun(`INSERT INTO command_aliases (name, description, command, quiet, owner_only) VALUES (?, ?, ?, ?, ?)
         ON CONFLICT(name) DO UPDATE SET description = excluded.description,
-        command = excluded.command, quiet = excluded.quiet`, [nameAlt, description, commandAlt, quiet ? 1 : 0]);
-    const detail = (description ? `\n📝 ${description}` : '') + (quiet ? '\n🔇 quiet' : '');
+        command = excluded.command, quiet = excluded.quiet, owner_only = excluded.owner_only`,
+    [nameAlt, description, commandAlt, quiet ? 1 : 0, privateFlag ? 1 : 0]);
+    const detail = (description ? `\n📝 ${description}` : '') + (quiet ? '\n🔇 quiet' : '') + (privateFlag ? '\n🔒 private' : '');
     await msg.reply(t('adm.alias.saved', { name: nameAlt, command: commandAlt, detail }), undefined, { linkPreview: false });
 }
 
