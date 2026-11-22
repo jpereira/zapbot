@@ -27,22 +27,42 @@ const ATTEMPTS_STICKER = [
  * that is left out before the crop (0, 0.5 or 1); `sharp`, the resize position.
  */
 const POSITIONS = {
-    topo: { factor: 0, sharp: 'left top' },
-    middle: { factor: 0.5, sharp: 'centre' },
-    baixo: { factor: 1, sharp: 'right bottom' }
+    top: { factor: 0, sharp: 'left top' },
+    center: { factor: 0.5, sharp: 'centre' },
+    bottom: { factor: 1, sharp: 'right bottom' }
 };
-const SYNONYMS = { topo: 'topo', cima: 'topo', top: 'topo', middle: 'meio', centro: 'meio', middle: 'meio',
-    center: 'meio', baixo: 'baixo', bottom: 'baixo' };
 
-/** "topo" | "cima" | "top" → 'topo' (same for middle and bottom); no value → 'middle'; invalid → null */
-const readPosition = (valueAlt) => (valueAlt == null ? 'meio' : SYNONYMS[String(valueAlt).trim().toLowerCase()] ?? null);
+/** "top" | "center" | "bottom" (any case); no value → 'center'; invalid → null */
+const readPosition = (valueAlt) => {
+    const pos = valueAlt == null ? 'center' : String(valueAlt).trim().toLowerCase();
+    if (pos in POSITIONS) return pos;
+    const half = pos ? Object.keys(POSITIONS).filter((k) => k.startsWith(pos)) : [];   // "bot" → bottom
+    return half.length === 1 ? half[0] : null;
+};
+
+// -pt, -pc and -pb: shortcuts for -pos top|center|bottom
+const POS_SHORTCUTS = { pt: 'top', pc: 'center', pb: 'bottom' };
+
+/**
+ * Turns the shortcuts into -pos (opts.opt.pos and opts.given). Together, or with -pos, they conflict.
+ * @returns {boolean} false = conflict
+ */
+function applyPosShortcuts(opts) {
+    const used = Object.keys(POS_SHORTCUTS).filter((k) => opts.given.has(k));
+    if (!used.length) return true;
+    if (used.length > 1 || opts.given.has('pos')) return false;
+    opts.opt.pos = POS_SHORTCUTS[used[0]];
+    opts.given.add('pos');
+    opts.given.delete(used[0]);   // applied: a second call (the /sticker, then the /get) does not see a conflict
+    return true;
+}
 
 /**
  * @param {object} [sticker]  the sticker attempt (ATTEMPTS_STICKER), with -st
  */
 function argsDoFfmpeg(opts, originalFile, outputFile, sticker = ATTEMPTS_STICKER[0]) {
     const isSticker = opts.opt.sticker;  // -sticker  | -st
-    const { factor } = POSITIONS[readPosition(opts.opt.pos) ?? 'meio']; // -pos
+    const { factor } = POSITIONS[readPosition(opts.opt.pos) ?? 'center']; // -pos
     const isAudio   = opts.opt.audio;    // -audio    | -a
     const startSec  = opts.opt.startSec; // -startSec | -ss
     const endSec    = opts.opt.endSec;   // -endSec   | -es
@@ -113,7 +133,7 @@ const STICKER_SIZE = 512;
 const STICKER_MAX_BYTES = 100 * 1024;          // WhatsApp limit: static sticker
 const STICKER_ANIMATED_MAX_BYTES = 500 * 1024;  // WhatsApp limit: animated sticker
 
-async function fitSticker(media, pos = 'meio') {
+async function fitSticker(media, pos = 'center') {
     if (!media?.mimetype?.startsWith('image/') || media.mimetype === 'image/webp') return media;
 
     try {
@@ -126,7 +146,7 @@ async function fitSticker(media, pos = 'meio') {
         for (const quality of [80, 60, 40, 20]) {
             outputAlt = await sharp(inputAlt, { animated: animated })
                 .rotate() // respects the EXIF orientation of phone photos
-                .resize(STICKER_SIZE, STICKER_SIZE, { fit: 'cover', position: POSITIONS[readPosition(pos) ?? 'meio'].sharp })
+                .resize(STICKER_SIZE, STICKER_SIZE, { fit: 'cover', position: POSITIONS[readPosition(pos) ?? 'center'].sharp })
                 .webp({ quality })
                 .toBuffer();
 
@@ -198,6 +218,7 @@ module.exports = {
     ATTEMPTS_STICKER,
     argsDoFfmpeg,
     fitSticker,
+    applyPosShortcuts,
     readPosition,
     thumbnailDoLink
 };

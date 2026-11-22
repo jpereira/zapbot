@@ -5,7 +5,9 @@ video/GIF or an image, and returns the sticker. The sticker's name and author co
 `sticker.name` and `sticker.author` settings.
 
 - **URL or replied link**: downloads the video with yt-dlp and makes the animated sticker. If the link
-  has no video (an article, a photo post), it uses the link preview's thumbnail.
+  has no video (an article), it uses the link preview's thumbnail. A **photo post** (Instagram, X/Twitter)
+  becomes a sticker of its photo; on a carousel, `-photo N` picks the photo (`1` is the first, `-1` the last;
+  an Instagram `?img_index=N` link also works).
 - **Replied video or GIF**: animated sticker via ffmpeg.
 - **Replied image**: a 512x512 square **framed on the middle of the image**: on a landscape photo the
   sides are cropped, on a portrait one the top and bottom. GIFs (image) keep the animation. Stickers
@@ -27,6 +29,7 @@ lower quality and, if it still doesn't fit, suggests a shorter clip with `-ss` a
 (reply to a link)                /sticker
 (reply to a video)               /sticker -ss 12            → from 0:12 to 0:18
 (reply to a link)                /sticker -ss 10 -es 13     → from 0:10 to 0:13
+(Instagram carousel)             /sticker -photo 2 https://www.instagram.com/p/...  → the 2nd photo
 (reply to a video)               /sticker -ss 01:10 -es 01:13 → from 1:10 to 1:13
 (reply to a video)               /sticker -ss -10           → starts 10 s before the end (6 s)
 /sticker https://www.instagram.com/p/XXXXXXXX/
@@ -36,7 +39,11 @@ lower quality and, if it still doesn't fit, suggests a shorter clip with `-ss` a
 
 | Option | Value | Description |
 |---|---|---|
-| `-pos` | `<top\|middle\|bottom>` | Where the square crop of the image or video sits (default `middle`; `topo`, `meio`, `baixo`, `cima` and `centro` also work). On media wider than tall, `top` is the left and `bottom` the right. Doesn't work with `-txt` |
+| `-photo`, `-ph` | `<n>` | Photo post (Instagram, X/Twitter): which photo of the carousel to use (`1` is the first, the default; with a leading `-`, counts from the end: `-1` is the last) |
+| `-pos` | `<top\|center\|bottom>` | Where the square crop of the image or video sits (default `center`). On media wider than tall, `top` is the left and `bottom` the right. Doesn't work with `-txt` |
+| `-pb` | | Same as `-pos bottom` |
+| `-pc` | | Same as `-pos center` |
+| `-pt` | | Same as `-pos top` |
 | `-txt` | `<text>` | Animated sticker with the text, without having to reply to anything. See [Text sticker](#text-sticker) |
 | `-bg` | `<color>` | With `-txt`: the background color, in `#RRGGBB` (default `#FFFFFF`, white) |
 | `-fg` | `<color>` | With `-txt`: the letter color, in `#RRGGBB` (default `#000000`, black) |

@@ -18,11 +18,20 @@ module.exports = {
             desc: 'Sends as an animated sticker (up to 6 s, square crop from the middle of the video). Same as /sticker.'
         },
         {
-            opts: ['pos'],
-            values: ['<top|middle|bottom>'],
-            desc: 'Where the square crop sits: top, middle (default) or bottom.',
-            ex: ['/get -st -pos topo <url>']
+            opts: ['photo', 'ph'],
+            values: ['<n>'],
+            desc: 'Photo post (Instagram, X/Twitter): sends only this photo of the carousel, instead of all. 1 is the first; with a leading -, counts from the end (-1 is the last). With -st, the sticker is made from it.',
+            ex: ['/get -photo 2 https://www.instagram.com/p/...']
         },
+        {
+            opts: ['pos'],
+            values: ['<top|center|bottom>'],
+            desc: 'Where the square crop sits: top, center (default) or bottom.',
+            ex: ['/get -st -pos top <url>']
+        },
+        { opts: ['pb'], values: [], desc: 'Same as -pos bottom.' },
+        { opts: ['pc'], values: [], desc: 'Same as -pos center.' },
+        { opts: ['pt'], values: [], desc: 'Same as -pos top.' },
         { opts: ['audio', 'a'], values: [], desc: 'Audio only, as .mp3.' },
         {
             opts: ['transcribe', 't'],

@@ -13,15 +13,49 @@
     },
     {
       "opts": [
+        "photo",
+        "ph"
+      ],
+      "values": [
+        "<n>"
+      ],
+      "desc": "Post de fotos (Instagram, X/Twitter): manda só esta foto do carrossel, em vez de todas. 1 é a primeira; com - na frente, conta do final (-1 é a última). Com -st, a figurinha sai dela.",
+      "ex": [
+        "/get -photo 2 https://www.instagram.com/p/..."
+      ]
+    },
+    {
+      "opts": [
         "pos"
       ],
       "values": [
-        "<topo|meio|baixo>"
+        "<top|center|bottom>"
       ],
-      "desc": "Onde fica o recorte quadrado: topo, meio (padrão) ou baixo.",
+      "desc": "Onde fica o recorte quadrado: top, center (padrão) ou bottom.",
       "ex": [
-        "/get -st -pos topo <url>"
+        "/get -st -pos top <url>"
       ]
+    },
+    {
+      "opts": [
+        "pb"
+      ],
+      "values": [],
+      "desc": "O mesmo que -pos bottom."
+    },
+    {
+      "opts": [
+        "pc"
+      ],
+      "values": [],
+      "desc": "O mesmo que -pos center."
+    },
+    {
+      "opts": [
+        "pt"
+      ],
+      "values": [],
+      "desc": "O mesmo que -pos top."
     },
     {
       "opts": [

@@ -388,11 +388,11 @@ describe('/gpt', () => {
         assert.equal(network.calls.at(-1).cfg.body.messages[1].content, 'legenda do vídeo\n\nresuma');
     });
 
-    test('1ª palavra que parece opção e não existe (/gpt -price): erro com a dica do -h, sem chamar a OpenAI', async () => {
+    test('1ª palavra que parece opção e não existe (/gpt -cost): erro com a dica do -h, sem chamar a OpenAI', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: 'Oi.' } }] });
 
-        assert.deepEqual(await bot.replyAlt('/gpt -price'), ['❌ Opção desconhecida: -price\n💡 _Veja as opções com /gpt -h|-help_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -cost'), ['❌ Opção desconhecida: -cost\n💡 _Veja as opções com /gpt -h|-help_']);
         assert.deepEqual(await bot.replyAlt('/gpt -x oi'), ['❌ Opção desconhecida: -x\n💡 _Veja as opções com /gpt -h|-help_']);
         assert.equal(network.calls.length, 0);
 

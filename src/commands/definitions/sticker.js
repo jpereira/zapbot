@@ -9,7 +9,7 @@ module.exports = {
     cmd: '/sticker',
     usage: '/sticker [OPTION]... [url]  (or replying to an image, video or link)  or  /sticker -txt <text> [-bg <color>] [-fg <color>]',
     summary: 'Creates a sticker',
-    help: 'Creates a sticker: same as /get -sticker. Downloads the video from the URL or from the replied link; with no video, uses the link preview. From a video, up to 6 s with a square crop from the middle, from the -ss to -es range. From an image, the square crop from the middle. -pos moves the crop to the top or the bottom. With -txt, an animated sticker with the text, blinking between the -fg and -bg colors.',
+    help: 'Creates a sticker: same as /get -sticker. Downloads the video from the URL or from the replied link; with no video, uses the link preview. On a photo post (Instagram, X/Twitter) uses the photo; on a carousel, -photo picks which one. From a video, up to 6 s with a square crop from the middle, from the -ss to -es range. From an image, the square crop from the middle. -pos moves the crop to the top or the bottom. With -txt, an animated sticker with the text, blinking between the -fg and -bg colors.',
     cmd_opts: [
         {
             opts: ['bg'],
@@ -22,11 +22,20 @@ module.exports = {
             desc: 'With -txt: the text color, as #RRGGBB (default #000000, black).'
         },
         {
+            opts: ['photo', 'ph'],
+            values: ['<n>'],
+            desc: 'Photo post (Instagram, X/Twitter): which photo of the carousel to use. 1 is the first (default; an Instagram ?img_index=N link also works); with a leading -, counts from the end (-1 is the last).',
+            ex: ['/sticker -photo 2 https://www.instagram.com/p/...']
+        },
+        {
             opts: ['pos'],
-            values: ['<top|middle|bottom>'],
-            desc: 'Where the square crop of the image or video goes: top, middle (default) or bottom. On media wider than tall, top is the left and bottom is the right.',
+            values: ['<top|center|bottom>'],
+            desc: 'Where the square crop of the image or video goes: top, center (default) or bottom. On media wider than tall, top is the left and bottom is the right.',
             ex: ['/sticker -pos top', '/sticker -ss 10 -pos bottom']
         },
+        { opts: ['pb'], values: [], desc: 'Same as -pos bottom.' },
+        { opts: ['pc'], values: [], desc: 'Same as -pos center.' },
+        { opts: ['pt'], values: [], desc: 'Same as -pos top.' },
         {
             opts: ['txt'],
             values: ['<text>'],
