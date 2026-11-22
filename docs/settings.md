@@ -28,6 +28,12 @@ shows are in Portuguese; the ones here are in English).
 | `cache.messageRetentionHours` | 68–2160 | `68` | Hours the text of regular messages stays in the database (68, the delete-for-everyone window; up to 2160 = 90 days): the more, the further back `/tldr` reaches. Media has its own limit, `cache.messageMediaRetentionHours` |
 | `cache.reactionRetentionDays` | 1–365 | `30` | Days removed or changed reactions are kept for `/show -r` |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Days deleted messages are kept for `/show` |
+| `calendar.addEmoji` | on/off | `on` | Starts the `/calendar` event title with an emoji of its kind (`🩺 Consulta`, `🧗 Escalada`, `🏋🏽‍♂️ Treino`...). With `-gpt`, ChatGPT picks it. `off` turns it off |
+| `calendar.duration` | 5–1440 | `60` | Minutes of the [`/calendar`](commands/calendar.md) event when the text does not say. `-duration` changes it per call |
+| `calendar.engine` | text | `local` | Engine of `/calendar`: `local` (labels and shape of the dates, no key) or `gpt` (ChatGPT answers with the Google Calendar JSON). `-gpt` and `-local` choose per call |
+| `calendar.footer` | on/off | `on` | Ends the `/calendar` reply with the `💡 Processed by <engine>` tip. `-quiet` hides it per call |
+| `calendar.googleLink` | on/off | `on` | `/calendar` sends the "➕ Add to Google Calendar" link. `-quiet` already hides it per call; this setting turns it off always. The `.ics` still goes (opens in Apple Calendar and Outlook) |
+| `calendar.timezone` | text | `America/Sao_Paulo` | Time zone in which `/calendar` reads the dates and times of the text (IANA name) |
 | `call.allow` | list | *(empty)* | Numbers (with country code) whose calls are never rejected, even with `call.reject` on. `bot.admins` always get through too. Same as `/call -allow`. |
 | `call.message` | text (can be empty) | `""` | Message sent to whoever had the call rejected (at most one every 10 minutes per person). Empty: the default text of the bot's language (`zapbot.lang`). `off`: rejects in silence. Same as `/call -msg`: see [`/call`](commands/call.md) |
 | `call.reject` | on/off | `off` | Rejects incoming voice and video calls (except `call.allow` and `bot.admins`) and replies with `call.message`. See [Rejecting calls](commands/bot.md#rejecting-calls). Same as `/call -on\|-off`. |

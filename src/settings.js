@@ -240,6 +240,46 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 365,
         desc: 'Dias que as mensagens apagadas ficam guardadas para o /show.'
     },
+    'calendar.addEmoji': {
+        default: true,
+        type: 'boolean',
+        desc: 'Começa o título do evento do /calendar com um emoji do tipo dele (🩺 Consulta, 🧗 Escalada, 🏋🏽‍♂️ Treino...). No motor gpt, o ChatGPT escolhe o emoji. Desligue com off.'
+    },
+    'calendar.duration': {
+        default: 60,
+        type: 'number', min: 5, max: 1440,
+        desc: 'Quantos minutos dura o evento do /calendar quando o texto não diz. O -duration (-du) muda na chamada.'
+    },
+    'calendar.engine': {
+        default: 'local',
+        type: 'string',
+        options: ['local', 'gpt'],
+        normalize: (v) => v.toLowerCase(),
+        desc: 'Motor do /calendar: local (lê pelos rótulos e pelo formato das datas, sem chave) ou gpt (o ChatGPT devolve o evento no JSON do Google Calendar). -gpt e -local escolhem na chamada.'
+    },
+    'calendar.footer': {
+        default: true,
+        type: 'boolean',
+        desc: 'Termina a resposta do /calendar com a dica "💡 Processado por <motor>". O -quiet (-q) esconde na chamada.'
+    },
+    'calendar.googleLink': {
+        default: true,
+        type: 'boolean',
+        desc: 'O /calendar manda o link "➕ Adicionar ao Google Agenda". O -quiet (-q) já esconde na chamada; este setting desliga sempre. O .ics continua indo (abre no Apple Calendar e no Outlook).'
+    },
+    'calendar.timezone': {
+        default: 'America/Sao_Paulo',
+        type: 'string',
+        validate: (v) => {
+            try {
+                new Intl.DateTimeFormat('en-US', { timeZone: v });
+            } catch {
+                throw new Error(t('calendar.badTimezone', { value: v }));
+            }
+            return v;
+        },
+        desc: 'O fuso horário em que o /calendar entende a data e a hora do texto (nome IANA, ex.: America/Sao_Paulo, Europe/Lisbon).'
+    },
     'call.allow': {
         default: [],
         type: 'list',

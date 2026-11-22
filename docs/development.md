@@ -122,6 +122,7 @@ src/
   stickerText.js       /sticker -txt: the PNG frames (sharp) and the animated WebP (ffmpeg)
   greetings.js          /welcome and /goodbye: the message of each group (table `group_greetings`) and the group_join/group_leave events
   screenshot.js         /screenshot: a page's picture (isolated context, anti-SSRF on every request)
+  calendar.js           /calendar: the event of a text (local reader, ChatGPT JSON), the .ics, the Google Calendar link and JSON
   web/                  the web interface: server.js (login, sessions), data.js, notes.js, lists.js, stats.js, manage.js, export.js, public/ (the page)
   carbon.js             /carbon: the code as an editor-window image (SVG turned into PNG by sharp)
   openai.js             models accepted by /gpt
@@ -250,6 +251,7 @@ The messages the bot sends have whatsapp-web.js's `edit()`: it swaps the text in
 | `presenca.test.js` | Presence reading by LID, shared subscription, cache and absence of valid times without fabricating data |
 | `saudacoes.test.js` | `/welcome` and `/goodbye`: the text per group (`{name}`, `{group}`, mention), `-on`, `-off`, `-test`, the `group_join`/`group_leave` events and who doesn't trigger them |
 | `ocr-qr-carbon.test.js` | `/ocr` (photo to ChatGPT), `/tts`, `/qr` (`-d`, reading the pixels with jsqr), `/carbon` (SVG, themes, limits) and `/profile -set` (group, account, refusal) |
+| `calendar.test.js` | `/calendar`: the local reader on the two confirmation messages, dates and times, the .ics, the Google Calendar link and JSON, the ChatGPT reader |
 | `web.test.js` | The web interface: login, sessions, TOTP, chats and messages (edits, deleted, replies), media with Range, notes (locked tags), lists, changes, statistics, export and the wrong-password alerts |
 | `screenshot.test.js` | `/screenshot` (isolated context, User-Agent, `-full`, `-mobile`, `-pdf`, anti-SSRF on every request) with a fake browser |
 | `api.test.js` | The local HTTP API (key, `/send` rules and the 10-per-minute limit) and the experimental MCP server (`initialize`, `tools/list`, `tools/call`) |

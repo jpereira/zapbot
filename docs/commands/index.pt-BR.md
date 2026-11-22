@@ -187,16 +187,16 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 <!-- gerado:roles -->
 ### Comandos por role
 
-**user** (de quem está no `bot.users`) (31):
+**user** (de quem está no `bot.users`) (32):
 
-[`/ascii`](ascii.md), [`/bills`](bills.md), [`/calc`](calc.md), [`/carbon`](carbon.md),
-[`/crypto`](crypto.md), [`/cve`](cve.md), [`/games`](games.md), [`/get`](get.md),
-[`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md), [`/kernel`](kernel.md),
-[`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md), [`/noffa`](noffa.md), [`/ocr`](ocr.md),
-[`/ping`](ping.md), [`/pixelart`](pixelart.md), [`/qr`](qr.md), [`/sticker`](sticker.md),
-[`/stocks`](stocks.md), [`/stt`](stt.md), [`/translate`](translate.md), [`/tts`](tts.md),
-[`/uptime`](uptime.md), [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md),
-[`/weather`](weather.md), [`/whois`](whois.md)
+[`/ascii`](ascii.md), [`/bills`](bills.md), [`/calc`](calc.md), [`/calendar`](calendar.md),
+[`/carbon`](carbon.md), [`/crypto`](crypto.md), [`/cve`](cve.md), [`/games`](games.md),
+[`/get`](get.md), [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md),
+[`/kernel`](kernel.md), [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md),
+[`/noffa`](noffa.md), [`/ocr`](ocr.md), [`/ping`](ping.md), [`/pixelart`](pixelart.md),
+[`/qr`](qr.md), [`/sticker`](sticker.md), [`/stocks`](stocks.md), [`/stt`](stt.md),
+[`/translate`](translate.md), [`/tts`](tts.md), [`/uptime`](uptime.md), [`/usage`](usage.md),
+[`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
 **admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (19):
 
@@ -258,6 +258,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/bot`](bot.md) | | `admin` | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+a`/`-a`) e usuários (`+u`/`-u`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema; `-test` (`-t`): testa cache, disco, banco, WhatsApp, internet, SMTP, IMAP e programas |
 | [`/cache`](cache.md) | | `owner` | Árvore do cache com tamanhos, contagens de mensagens e limpeza |
 | [`/calc`](calc.md) | `/math`, `/sum` | `user` | Calcula e soma os números de uma lista: responda "437 maromba / 351 corrida" e leia 788; entende 1.234,56, sinais, mostra a fita do que leu e o `-group` por nome |
+| [`/calendar`](calendar.md) | `/cal` | `user` | Um texto com um compromisso vira um evento de agenda |
 | [`/call`](call.md) | | `admin` | Recusa ligações de voz e de vídeo e responde com uma mensagem: liga/desliga, muda o texto e quem sempre toca |
 | [`/carbon`](carbon.md) | | `user` | O código numa imagem de janela de editor |
 | [`/contacts`](contacts.md) | | `owner` | Exporta a sua agenda em vCard (`.vcf`) com nome, número, recado e foto de perfil, pronto para Android e iPhone; fotos em cache em `cache/contacts`. Só no seu próprio privado |

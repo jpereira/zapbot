@@ -35,6 +35,9 @@ Yep, we've been busy. The best of the latest batch:
   6-digit code, if you want): the chats with their photos, the **deleted** and **edited** messages in a frame with the
   *before and after*, stickers, videos you can play, notes (even the encrypted ones), charts of your conversations,
   and shortcuts, alerts and settings you can edit. [Web interface](docs/web.md)
+- 📅 **From a message to your calendar.** Reply to an "appointment confirmed" message with `/calendar`: you get an
+  `.ics` for Google Calendar, Apple or Outlook, a link that adds it to Google Calendar and, with `-gpt`, the event in the
+  Google Calendar JSON. [`/calendar`](docs/commands/calendar.md)
 - 🔐 **Private notes, for real.** `/notes -lock #stash` protects a tag with a password: the text and the files are
   **encrypted** (AES-256-GCM), it only unlocks and opens in **your own private chat**, locks again by itself and never goes
   out with `-to`. The password is never stored, logged or kept in the history, and an alias like `/stash.view` makes it one
@@ -115,6 +118,7 @@ and open `http://<your-server>:3200`. Everything below is made-up data. [All the
 | 🕵️ | **Recover what was erased** | Shows again the deleted and edited messages (and statuses, and removed reactions), with the original media | [`/show`](docs/commands/show.md) · `/show -e` · `/show -s` |
 | 🤖 | **Talk to ChatGPT** | Answers questions, reads photos and PDFs, transcribes voice notes, summarizes conversations, draws images and GIFs, turns text into voice and reads text in pictures | [`/gpt`](docs/commands/gpt.md) · [`/tldr`](docs/commands/tldr.md) · [`/draw`](docs/commands/draw.md) · [`/tts`](docs/commands/tts.md) · [`/ocr`](docs/commands/ocr.md) |
 | 📱 | **QR Codes** | Makes a QR Code from any text and reads one when you reply to its photo | [`/qr`](docs/commands/qr.md) |
+| 📅 | **Calendar** | Turns an "appointment confirmed" message into an `.ics` file and a Google Calendar link; with `-gpt`, ChatGPT answers the event in the Google Calendar JSON | [`/calendar`](docs/commands/calendar.md) |
 | 🎞️ | **Media and stickers** | Downloads videos and audio from social networks, makes stickers (from images, videos or text), memes, GIFs, code snapshots and ASCII art | [`/get`](docs/commands/get.md) · [`/sticker`](docs/commands/sticker.md) · [`/meme`](docs/commands/meme.md) · [`/giphy`](docs/commands/giphy.md) · [`/carbon`](docs/commands/carbon.md) · [`/ascii`](docs/commands/ascii.md) |
 | 🎙️ | **Transcribe speech** | Turns the speech of any link, video, audio or voice note into text, on your own server (no API, no cost per minute); `-ss` and `-es` pick a part | [`/stt`](docs/commands/stt.md) · [`/get -t`](docs/commands/get.md#transcribe-the-speech--stt) |
 | 🔔 | **Watch and alerts** | Watches messages by text or regex, alerts on currency and crypto prices, DeFi positions out of range and contacts coming online, in your private chat, in a group or by e-mail | [`/watch`](docs/commands/watch.md) · [`/stocks`](docs/commands/stocks.md) · [`/crypto`](docs/commands/crypto.md) · [`/defi`](docs/commands/defi.md) · [`/monitor`](docs/commands/monitor.md) |
@@ -478,6 +482,7 @@ and make the bot your own:
 | [`/bot`](https://jpereira.github.io/zapbot/commands/bot/) | | `admin` | Bot status (24 h report and the users); turns the commands on/off (`-on`/`-off`) and says who uses them: admins (`+a`/`-a`) and users (`+u`/`-u`, in any chat or only in one group, and each one's commands with `+cmd`/`-cmd`); `-reset` goes back to the default; `-status` (`-s`): report of the last 24 h, and `-s 06h` sends it every day; `-info` (`-i`): versions and system; `-test` (`-t`): tests cache, disk, database, WhatsApp, internet, SMTP, IMAP and programs; `-flush-email [true]`: counts and clears the messages in Sent and Trash; `-passwd <password\|off>` (owner) and `-login <password>`: an outsider becomes admin with the password |
 | [`/cache`](https://jpereira.github.io/zapbot/commands/cache/) | | `owner` | Cache tree with sizes, message counts and cleanup |
 | [`/calc`](https://jpereira.github.io/zapbot/commands/calc/) | `/math`, `/sum` | `user` | Calculates and sums the numbers of a list: reply to "437 gym / 351 running" and get 788; understands 1.234,56, signs, shows a tape of what it read and `-group` by name |
+| [`/calendar`](https://jpereira.github.io/zapbot/commands/calendar/) | `/cal` | `user` | A text with an appointment becomes a calendar event |
 | [`/call`](https://jpereira.github.io/zapbot/commands/call/) | | `admin` | Rejects voice and video calls and replies with a message: turn it on/off, set the text and who always rings |
 | [`/carbon`](https://jpereira.github.io/zapbot/commands/carbon/) | | `user` | The code in an editor-window image |
 | [`/contacts`](https://jpereira.github.io/zapbot/commands/contacts/) | | `owner` | Exports your address book as a vCard (`.vcf`) with name, number, about and profile photo, ready for Android and iPhone. Only in your own private chat |

@@ -220,7 +220,7 @@ describe('documentação', () => {
     test('a tabela de opções de cada página tem as mesmas opções do commands.js', () => {
         for (const c of CONFIG.commands) for (const language of LANGUAGES) {
             const fileAlt = `commands/${c.cmd.slice(1)}${language.suffix}`;
-            const doConfig = new Set((c.cmd_opts ?? []).flatMap(o => o.opts ?? []));
+            const doConfig = new Set((c.cmd_opts ?? []).filter(o => !o.hidden).flatMap(o => o.opts ?? []));
 
             // 1st column of the tables: "| `-name`, `-n` |" (the argument rows, like `<url>` or `-N`, are left out)
             const pageAlt = new Set();

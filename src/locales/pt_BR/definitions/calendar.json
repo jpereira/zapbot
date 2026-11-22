@@ -1,0 +1,76 @@
+{
+  "summary": "Um texto com um compromisso vira um evento de agenda",
+  "usage": "/calendar [-quiet|-q] [-gpt|-g] [-local|-l] [-status|-s] [<texto>]",
+  "help": "Lê um compromisso do texto (ou da mensagem respondida) e manda um arquivo .ics, que abre no Google Agenda, no Calendário da Apple e no Outlook, com um link que o adiciona ao Google Agenda. Acha a data, a hora, o local e o profissional pelos rótulos de uma confirmação (\"Data:\", \"Horário:\", \"Endereço:\", \"Médico:\"...) e pelo formato (25/11/2026, 10:45h, \"25 de novembro\"). Por padrão lê localmente; com -gpt (-g) o ChatGPT lê o texto e responde o evento no JSON do Google Calendar, que passa pelas mesmas checagens. Também dá para digitar o evento numa frase (\"criar evento para dia 21 de maio as 22h, gere avisos\", \"dentista sexta às 15h\", \"meeting tomorrow at 9am\"): a data pode ser um dia (\"dia 25\"), \"hoje\", \"amanhã\", um dia da semana ou uma data completa, o título é o que sobra depois dos verbos, da data e da hora, e \"gere avisos\" ou \"me avise 30 minutos antes\" definem os lembretes. O título começa com um emoji do tipo do evento (calendar.addEmoji). Lembretes: 1 dia e 2 horas antes (e antes da hora de chegada, quando o texto diz \"chegar 20 minutos antes\").",
+  "ex": [
+    "/calendar (respondendo uma mensagem de confirmação)",
+    "/calendar Consulta dia 25/11/2026 às 10:45 no Centro Médico",
+    "/calendar criar evento para dia 21 de maio às 22h, gere avisos",
+    "/calendar dentista sexta às 15h, me avise 30 minutos antes",
+    "/calendar -g (respondendo)",
+    "/cal -q (respondendo)"
+  ],
+  "cmd_opts": [
+    {
+      "opts": [
+        "quiet",
+        "q"
+      ],
+      "values": [],
+      "desc": "Só o arquivo .ics: sem aviso, sem resumo, sem link e sem rodapé.",
+      "ex": [
+        "/calendar -q (respondendo)"
+      ]
+    },
+    {
+      "opts": [
+        "gpt",
+        "g"
+      ],
+      "values": [],
+      "desc": "O ChatGPT lê o texto e responde o evento no JSON do Google Calendar (gasta a sua conta da OpenAI). Sem -gpt nem -local, vale o setting calendar.engine.",
+      "ex": [
+        "/calendar -gpt (respondendo)"
+      ]
+    },
+    {
+      "opts": [
+        "local",
+        "l"
+      ],
+      "values": [],
+      "desc": "Lê localmente (sem chave, pelos rótulos e pelo formato das datas e horas), mesmo com o calendar.engine em gpt.",
+      "ex": [
+        "/calendar -local (respondendo)"
+      ]
+    },
+    {
+      "opts": [
+        "json",
+        "j"
+      ],
+      "values": [],
+      "desc": "Manda também o evento como a API do Google Calendar quer (recurso Events, para salvar com o events.insert).",
+      "ex": [
+        "/calendar -json (respondendo)"
+      ]
+    },
+    {
+      "opts": [
+        "status",
+        "s"
+      ],
+      "values": [],
+      "desc": "Com -gpt: acrescenta o consumo da chamada no rodapé da resposta: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo.",
+      "ex": [
+        "/calendar -g -s (respondendo)"
+      ]
+    },
+    {
+      "argv": [
+        "[<texto>]"
+      ],
+      "desc": "O texto com o compromisso. O texto digitado vale mais; sem ele, a mensagem respondida."
+    }
+  ]
+}

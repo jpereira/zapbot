@@ -28,6 +28,12 @@ em português).
 | `cache.messageRetentionHours` | 68–2160 | `68` | Horas que o texto das mensagens comuns fica no banco (68, a janela de apagar para todos; até 2160 = 90 dias): quanto mais, mais o `/tldr` alcança. As mídias têm o seu prazo, o `cache.messageMediaRetentionHours` |
 | `cache.reactionRetentionDays` | 1–365 | `30` | Dias que as reações removidas ou trocadas ficam guardadas para o `/show -r` |
 | `cache.revokedRetentionDays` | 1–365 | `30` | Dias que as mensagens apagadas ficam guardadas para o `/show` |
+| `calendar.addEmoji` | on/off | `on` | Começa o título do evento do `/calendar` com um emoji do tipo dele (`🩺 Consulta`, `🧗 Escalada`, `🏋🏽‍♂️ Treino`...). No `-gpt`, o ChatGPT escolhe. `off` desliga |
+| `calendar.duration` | 5–1440 | `60` | Minutos do evento do [`/calendar`](commands/calendar.md) quando o texto não diz. O `-duration` muda na chamada |
+| `calendar.engine` | texto | `local` | Motor do `/calendar`: `local` (rótulos e formato das datas, sem chave) ou `gpt` (o ChatGPT responde com o JSON do Google Calendar). `-gpt` e `-local` escolhem na chamada |
+| `calendar.footer` | on/off | `on` | Termina a resposta do `/calendar` com a dica `💡 Processado por <motor>`. O `-quiet` esconde na chamada |
+| `calendar.googleLink` | on/off | `on` | O `/calendar` manda o link "➕ Adicionar ao Google Agenda". O `-quiet` já esconde na chamada; este setting desliga sempre. O `.ics` continua indo (abre no Calendário da Apple e no Outlook) |
+| `calendar.timezone` | texto | `America/Sao_Paulo` | Fuso em que o `/calendar` lê as datas e horas do texto (nome IANA) |
 | `call.allow` | lista | *(vazia)* | Números (com DDI) cujas ligações nunca são recusadas, mesmo com `call.reject` ligado. O `bot.admins` também passa sempre. O mesmo que `/call -allow`. |
 | `call.message` | texto (pode ser vazio) | `""` | Mensagem enviada a quem teve a ligação recusada (no máximo uma a cada 10 minutos por pessoa). Vazio: o texto padrão do idioma do bot (`zapbot.lang`). `off`: recusa em silêncio. O mesmo que `/call -msg`: veja o [`/call`](commands/call.md) |
 | `call.reject` | on/off | `off` | Recusa as ligações de voz e de vídeo que chegam (exceto `call.allow` e `bot.admins`) e responde com a `call.message`. Veja [Recusando ligações](commands/bot.md#recusando-ligações). O mesmo que `/call -on\|-off`. |

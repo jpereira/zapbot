@@ -35,6 +35,9 @@ Pois é, a gente andou ocupado. O melhor da última leva:
   (e de um código de 6 dígitos, se você quiser): as conversas com as fotos, as mensagens **apagadas** e **editadas**
   num quadro com o *antes e depois*, figurinhas, vídeos que você toca, notas (até as criptografadas), gráficos das
   suas conversas, e atalhos, alertas e settings que você edita. [Interface web](docs/web.md)
+- 📅 **De uma mensagem para a sua agenda.** Responda uma mensagem de "agendamento realizado" com `/calendar`: você
+  recebe um `.ics` para o Google Agenda, a Apple ou o Outlook, um link que o adiciona ao Google Agenda e, com
+  `-gpt`, o evento no JSON do Google Calendar. [`/calendar`](docs/commands/calendar.md)
 - 🔐 **Notas privadas de verdade.** O `/notes -lock #stash` protege uma tag com senha: o texto e os arquivos ficam
   **cifrados** (AES-256-GCM), ela só libera e abre no **seu próprio privado**, trava sozinha de novo e nunca sai com
   `-to`. A senha nunca é guardada, registrada em log nem mantida no histórico, e um alias como `/stash.view` deixa tudo em
@@ -115,6 +118,7 @@ Ligue com `/set zapbot.web.login <nome>`, `/set zapbot.web.password <senha>` e `
 | 🕵️ | **Recuperar o que foi apagado** | Reexibe as mensagens apagadas e editadas (e os status, e as reações removidas), com a mídia original | [`/show`](docs/commands/show.md) · `/show -e` · `/show -s` |
 | 🤖 | **Conversar com o ChatGPT** | Responde perguntas, lê fotos e PDFs, transcreve notas de voz, resume conversas, desenha imagens e GIFs, transforma texto em voz e lê o texto de figuras | [`/gpt`](docs/commands/gpt.md) · [`/tldr`](docs/commands/tldr.md) · [`/draw`](docs/commands/draw.md) · [`/tts`](docs/commands/tts.md) · [`/ocr`](docs/commands/ocr.md) |
 | 📱 | **QR Codes** | Gera um QR Code de qualquer texto e lê um quando você responde a foto dele | [`/qr`](docs/commands/qr.md) |
+| 📅 | **Agenda** | Transforma uma mensagem de "agendamento realizado" num arquivo `.ics` e num link do Google Agenda; com `-gpt`, o ChatGPT responde o evento no JSON do Google Calendar | [`/calendar`](docs/commands/calendar.md) |
 | 🎞️ | **Mídia e figurinhas** | Baixa vídeos e áudios de redes sociais, cria figurinhas (de imagens, vídeos ou texto), memes, GIFs, imagens de código e arte ASCII | [`/get`](docs/commands/get.md) · [`/sticker`](docs/commands/sticker.md) · [`/meme`](docs/commands/meme.md) · [`/giphy`](docs/commands/giphy.md) · [`/carbon`](docs/commands/carbon.md) · [`/ascii`](docs/commands/ascii.md) |
 | 🎙️ | **Transcrição de fala** | Transforma a fala de qualquer link, vídeo, áudio ou nota de voz em texto, no seu próprio servidor (sem API, sem custo por minuto); `-ss` e `-es` escolhem um trecho | [`/stt`](docs/commands/stt.md) · [`/get -t`](docs/commands/get.md#transcrever-a-fala--stt) |
 | 🔔 | **Vigiar e avisar** | Vigia mensagens por texto ou regex, avisa de cotações de moedas e cripto, de posições DeFi fora da faixa e de contatos que ficaram online, no seu privado, num grupo ou por e-mail | [`/watch`](docs/commands/watch.md) · [`/stocks`](docs/commands/stocks.md) · [`/crypto`](docs/commands/crypto.md) · [`/defi`](docs/commands/defi.md) · [`/monitor`](docs/commands/monitor.md) |
@@ -476,6 +480,7 @@ e deixe o bot do seu jeito:
 | [`/bot`](https://jpereira.github.io/zapbot/pt-BR/commands/bot/) | | `admin` | Status do bot (relatório de 24 h e os usuários); liga/desliga os comandos (`-on`/`-off`) e diz quem usa: admins (`+a`/`-a`) e usuários (`+u`/`-u`, em qualquer chat ou só num grupo, e os comandos de cada um com `+cmd`/`-cmd`); `-reset` volta ao padrão; `-status` (`-s`): relatório das últimas 24 h, e `-s 06h` manda todo dia; `-info` (`-i`): versões e sistema; `-test` (`-t`): testa cache, disco, banco, WhatsApp, internet, SMTP, IMAP e programas; `-flush-email [true]`: conta e limpa as mensagens de Sent e Trash; `-passwd <senha\|off>` (dono) e `-login <senha>`: quem é de fora vira admin com a senha |
 | [`/cache`](https://jpereira.github.io/zapbot/pt-BR/commands/cache/) | | `owner` | Árvore do cache com tamanhos, contagens de mensagens e limpeza |
 | [`/calc`](https://jpereira.github.io/zapbot/pt-BR/commands/calc/) | `/math`, `/sum` | `user` | Calcula e soma os números de uma lista: responda "437 maromba / 351 corrida" e leia 788; entende 1.234,56, sinais, mostra a fita do que leu e o `-group` por nome |
+| [`/calendar`](https://jpereira.github.io/zapbot/pt-BR/commands/calendar/) | `/cal` | `user` | Um texto com um compromisso vira um evento de agenda |
 | [`/call`](https://jpereira.github.io/zapbot/pt-BR/commands/call/) | | `admin` | Recusa ligações de voz e de vídeo e responde com uma mensagem: liga/desliga, muda o texto e quem sempre toca |
 | [`/carbon`](https://jpereira.github.io/zapbot/pt-BR/commands/carbon/) | | `user` | O código numa imagem de janela de editor |
 | [`/contacts`](https://jpereira.github.io/zapbot/pt-BR/commands/contacts/) | | `owner` | Exporta a sua agenda em vCard (`.vcf`) com nome, número, recado e foto de perfil, pronto para Android e iPhone. Só no seu próprio privado |

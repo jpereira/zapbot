@@ -139,7 +139,7 @@ function formatCommandHelp(command, { protocol } = {}) {
     command = locate(command);
     const protocolAlt = protocol ? command.protocols?.[protocol] : null;
     if (protocolAlt) command = { ...command, usage: protocolAlt.usage, summary: firstPhrase(protocolAlt.help), ex: protocolAlt.ex };
-    const isWorthHere = (o) => !protocolAlt || !o.protocols?.length || o.protocols.includes(protocol);
+    const isWorthHere = (o) => !o.hidden && (!protocolAlt || !o.protocols?.length || o.protocols.includes(protocol));
 
     const lines = usageLines(command);
 
