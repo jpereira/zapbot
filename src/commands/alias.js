@@ -2,7 +2,7 @@
  * /alias: separates the registration options from the options of the command that will be saved.
  */
 const { botConfig } = require('../botConfig');
-const { dbGet, dbReady, dbRun } = require('../db');
+const { dbAll, dbGet, dbReady, dbRun } = require('../db');
 const { aliasBlock, fixDash, textIsAlias, listAliases } = require('../aliases');
 const { commandsInText, commandsError, breakLines } = require('../textCommands');
 const { findCommand } = require('./base');
@@ -12,6 +12,7 @@ const { t } = require('../i18n');
 
 const aliasName = nameAlt => '/' + nameAlt.replace(/^\//, '');
 const NAME = /^\/?[\p{L}\p{N}_.-]+$/u;
+const MATCH_MAX = 10;   // aliases shown when /alias <part> finds several
 
 // /alias -examples: lists the examples/*.zb files; with a name, loads it (an alias that already exists stays)
 async function examplesReply(msg, name, overwrite = false) {
@@ -91,6 +92,16 @@ async function cmdAlias({ msg, args }) {
         const nameAlt = aliasName(textAlt);
         const alias = await dbGet('SELECT * FROM command_aliases WHERE name = ?', [nameAlt]);
         if (alias) return msg.reply(aliasBlock(alias), undefined, { linkPreview: false });
+        // Not an alias: the ones whose name has the text (/alias foo finds /foo, /foobar and /my.foo)
+        const term = nameAlt.slice(1).toLowerCase();
+        const like = `%${term.replace(/[\\%_]/g, '\\$&')}%`;
+        const found = await dbAll("SELECT * FROM command_aliases WHERE lower(name) LIKE ? ESCAPE '\\' ORDER BY name", [like]);
+        if (found.length) {
+            const shown = found.slice(0, MATCH_MAX);
+            const more = found.length > MATCH_MAX ? `\n\n${t('adm.alias.matchMore', { n: found.length - MATCH_MAX })}` : '';
+            return msg.reply(`${t('adm.alias.match', { term, n: found.length })}\n\n${shown.map(aliasBlock).join('\n\n')}${more}`,
+                undefined, { linkPreview: false });
+        }
         const isCommand = botConfig.commands.some(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt));
         return msg.reply(t(isCommand ? 'adm.alias.isCommand' : 'adm.alias.notFound', { name: nameAlt }));
     }

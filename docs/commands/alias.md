@@ -18,7 +18,7 @@ aliases. Whoever runs a shortcut needs permission for the target commands.
 |---|---|---|
 | `-quiet`, `-q` | | When running, omits the `🔗 Alias ...` header; works before or after the name |
 | `-desc`, `-d` | `<text>` | Optional description in quotes, before the command or the text; without a command, updates only the description of an existing alias |
-| `-list`, `-l` | | Lists the aliases; same as `/alias` without arguments. With only a name (`/alias /demo`), it shows what that alias does (description and command); if the name isn't an alias, the bot replies with an error |
+| `-list`, `-l` | | Lists the aliases; same as `/alias` without arguments. With only a name (`/alias /demo`), it shows what that alias does (description and command); if the name isn't an alias, it lists the ones with that text in the name (`/alias dol` finds `/dollar`, `/dollar2` and `/my.dol`; up to 10), or an error if none matches |
 | `-examples`, `-ex` | `[<file>]` | Without a name, lists the example files (`examples/*.zb`: aliases ready to use). With a name, loads that file; an alias that already exists stays as it is, unless `-yes` (`-y`): then the file's definition replaces it (to apply a newer version of an example) |
 | `-move`, `-m` | `<current name> <new name>` | Renames an alias, keeping command, description and quiet; the new name can't exist |
 | `-rm` | `<name...\|all>` | Removes one or more aliases (separated by space or comma), with or without `/`; `all` removes all of them |
