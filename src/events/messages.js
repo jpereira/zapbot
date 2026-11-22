@@ -9,6 +9,8 @@ const { client, botConsumeSending, wasSentByBot, messageToSelf } = require('../c
 const { getCommandSyntax, helpProtocol } = require('../commands/base');
 const { textRunAlias, resolverAlias } = require('../aliases');
 const { ttsRewrite } = require('../ttsOption');
+const { handlePassword: handlePasswordNotes } = require('../notesLock');
+const { extractPassword, maskSecret } = require('../util/lockPassword');
 const { HANDLERS } = require('../commands/index');
 const {
     scheduleName, contactName, removeDeviceSuffix, resolveLidToPhone, groupResolverName, privateResolverName
@@ -269,6 +271,9 @@ client.on('message_create', (msg) => withContextDebug({
         // Only the no., replying to a command's list (e.g.: several contacts with the name): does not go through /watch
         if (await replyChoice(msg, chatId, body)) return;
 
+        // The password that /notes -lock #tag asked for (the next message in your private chat): not a command
+        if (msg.fromMe && await handlePasswordNotes(msg, chatId, body)) return;
+
         // Replying (reply) to a bot game message (/games), without the command
         if (await replyGame(msg, chatId, body, { senderNumber, isGroup })) return;
 
@@ -313,6 +318,12 @@ client.on('message_create', (msg) => withContextDebug({
         if (!caller) return;
 
         const args = resolved?.args ?? body.slice(caller.length).trim();
+
+        // A /notes -lock <password> carries the password: it does not go to the logs, to the echo of an alias or to the
+        // messages table (what the log and the history show is the command with ***)
+        const secret = command?.cmd === '/notes' ? extractPassword(args)?.password ?? null : null;
+        const logBody = maskSecret(body, secret);
+        if (secret) await dbRun('UPDATE messages SET body = ? WHERE id = ?', [logBody, msgIdPure]).catch(() => {});
 
         if (!command) {
             if (msg.fromMe || isDebugMode()) {
@@ -414,12 +425,12 @@ client.on('message_create', (msg) => withContextDebug({
 
         if (resolved.prefix) printDebug(`Command '${resolved.prefix}' completed to '${command.cmd}'`);
         printDebug(isGroup
-            ? `Running command '${body}' from '${senderName}' in group '${chatName}'`
-            : `Running command '${body}' in '${chatName}'`);
+            ? `Running command '${logBody}' from '${senderName}' in group '${chatName}'`
+            : `Running command '${logBody}' in '${chatName}'`);
 
         // Text alias: the {/command}s run here, with the permissions of whoever called (the arguments stay out)
         if (resolved.text) {
-            printCall(msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName, body, chatName);
+            printCall(msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName, logBody, chatName);
             const runAlias = () => withTyping(msg, command, () => textRunAlias(msg, resolved, {
                 chatId, chatName, isGroup,
                 who: { level, admin, canUse: admin ? () => true : permission.can, senderContact, senderName, senderNumber }
@@ -431,7 +442,7 @@ client.on('message_create', (msg) => withContextDebug({
         }
 
         if (resolved.alias) {
-            const call = [resolved.destination, args].filter(Boolean).join(' ');
+            const call = maskSecret([resolved.destination, args].filter(Boolean).join(' '), secret);
             if (!resolved.quiet) await msg.reply(t('mensagens.alias', { alias: resolved.alias, call }), undefined, { linkPreview: false });
         }
 
@@ -439,7 +450,7 @@ client.on('message_create', (msg) => withContextDebug({
         const opts = readOptions(command, args);
         contextDebug().maskPhones = askedMask(command, opts);
 
-        if (isDebugMode()) {
+        if (isDebugMode() && !secret) {
             printDebug('Command parser:', command.cmd, dataParserCommand(args, command, opts));
         }
 
@@ -457,7 +468,7 @@ client.on('message_create', (msg) => withContextDebug({
         }
 
         // In private, the senderName of your messages is the OTHER participant's (see rawSenderId)
-        printCall(msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName, body, chatName);
+        printCall(msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName, logBody, chatName);
 
         const handler = HANDLERS[command.cmd];
 

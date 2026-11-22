@@ -703,6 +703,11 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 10,
         desc: 'Manchetes exibidas pelo /news (o /news <quantidade> sobrepõe).'
     },
+    'notes.lockMinutes': {
+        default: 5,
+        type: 'number', min: 1, max: 120,
+        desc: 'Minutos sem usar uma tag protegida (/notes -lock) até ela travar sozinha.'
+    },
     'ocr.engine': {
         default: 'local',
         type: 'string',

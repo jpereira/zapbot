@@ -3,6 +3,10 @@
 Notes saved in the database, valid for any chat (group or private). Each one has an ID, and
 `-alert` notifies you about it at a date/time. Only the owner (and admins) can use it.
 
+> 🔐 **Private notes:** a tag can be **protected with a password** (`/notes -lock #stash`): the text and the files
+> are encrypted, they only unlock and open in **your own private chat**, lock again by themselves and never go out with
+> `-to`. See [Protected tags](#protected-tags--lock) and the [privacy scenarios](#privacy-scenarios).
+
 ```text
 /notes [-list|-l] [#tag...] [-to <destination>]...
 /notes -compact|-c [#tag...]
@@ -17,6 +21,8 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 /notes -rm|-r <id...|#tag...|all>
 /notes -alert [<id|#tag...> [<when> [-to <destination>]...]]
 /notes -alert -r <id...|#tag...|all>
+/notes -lock|-lo [<password>] #tag [-now|-n|-no | -clean -yes]
+/notes -view|-export|-list|-search -lock [<password>] #tag
 ```
 
 | Option | Value | Description |
@@ -29,6 +35,9 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 | `-move`, `-m` | `#tag #newtag` | Renames the tag in all notes. If the new one already exists, the two merge |
 | `-desc`, `-d` | `#tag [<description>\|-rm]` | Tag description, shown in the list and in `/notes` alone. With no text, shows the current one; with `-rm`, deletes it. `-move` carries the description along |
 | `-export`, `-e` | `[#tag...]` | Sends the notes in a PDF, with the images and the text as the caption (header, footer with version, host, date and time, and pagination). With tags, only theirs. See [Export](#export) |
+| `-lock`, `-lo` | `[password] #tag` | Protects a tag with a password (text and files encrypted) or unlocks it; the password can come in the command. See [Protected tags](#protected-tags--lock) and [Password in the command](#password-in-the-command) |
+| `-now`, `-n`, `-no` | | Locks the tag right now, alone or with `-lock` in any order (`-n #foo`, `-lock #foo -now`, `-n -lock #foo`) |
+| `-clean` | | With `-lock #tag`: deletes from the history the old commands you typed for that tag (needs `-yes`) |
 | `#tag <text>` | | With no option in front, it becomes a new note, same as `-add`: `/notes #home do not forget to remove that option`. The `#tag` is required: `/notes meu texto` gives an error. Just `/notes #home`, with no text, lists the tag's notes |
 | `-add`, `-a` | `#tag <text>` | Adds a note; the `#tag` is required and comes at the start of the text. The text goes up to the `-alert`, if there is one, and accepts multiple lines |
 | `-rm`, `-r` | `<id...\|#tag...\|all>` | Removes the notes with those IDs (`-r 2`, `-r 1 2 3` or `-r 1,2,3`), of a tag (`-r #home`) or all (`all`). With a `#tag`, the numbers are the **positions in that tag's list** (`-r #home 1` is the 1st of `#home`), not IDs. A whole tag or `all` asks for `-yes`. If any ID, position or tag doesn't exist, none is removed. Together with `-alert`, removes only the alert, keeping the notes |
@@ -180,6 +189,139 @@ work with `-rm`.
   warning on the note's line. Documents, audio and video don't go into the PDF; the note's line
   says so.
 - The PDF font is Latin-1: accents come out fine, but emojis and symbols outside it are omitted.
+
+## Protected tags (`-lock`)
+
+> **Protected notes are only unlocked and accessed in your own private chat** (the messages with yourself). In a
+> group, in the chat of another person or with `-to` (to send them somewhere), they stay locked for whoever reads:
+> only the 🔒 shows, even if the tag is unlocked in your private chat.
+
+For notes that cannot be read by whoever gets the database or a backup. A **protected tag** has the text of its notes
+and its files encrypted (AES-256-GCM) with a key made from a password that is **never stored**.
+
+```text
+/notes -lock #foo
+🔑 Create a password for #foo:            ← first time: asks twice; no recovery
+(you type the password; the bot deletes your message and keeps it out of the history)
+🔓 The tag #foo is now protected (3 notes encrypted) and unlocked, it will be locked in 5m without use.
+
+/notes -lock #foo                          ← later: unlocks
+🔑 Type your password:
+🔓 The tag #foo is unlocked, it will be locked in 5m without use.
+
+/notes -lock #foo -now                     → locks right now (also /notes -n #foo, /notes -n -lock #foo)
+
+/notes -v -lock #foo                       → asks the password and then shows the notes (also -e, -l and -s)
+```
+
+- **Unlocked**, the tag works as any other (add, list, search, view, PDF). Each use renews the time; after
+  `notes.lockMinutes` ([setting](../settings.md), default 5) without use it **locks by itself**, and a bot restart
+  locks everything.
+- **Everything in one line:** `/notes -v -lock #foo` (or `-e`, `-l`, `-s`) asks the password and, once unlocked, runs
+  the command. If the tag is already unlocked it just shows. It needs one protected tag.
+- **Only in your private chat:** unlocking (the password), reading (`-v`, `-l`, `-s`, `-e`, a lone `#tag`), adding
+  (`/notes #foo ...`) and editing (`-u`) only work there. In any other chat the same tag, even unlocked, behaves as
+  locked: lists, search and PDF show only the 🔒, adding and editing are refused (`🔒 The notes of #foo only open in
+  your own private chat`) and the command you typed there stays out of the history.
+- **Never sent to others:** `-v`, `-e`, `-l` or `-s` of a protected tag with `-to` (a contact, a group or an email) is
+  refused (`🔒 The notes of #foo are protected: they are not sent to other chats or emails (no -to)`). A list of all
+  the notes sent with `-to` shows the 🔒 where the protected ones are, never their text. An alert of a protected note
+  says only that there is one.
+- **Locked**, lists, search and PDF show only `🔒 (protected note)`, an alert says only that there is a note, and
+  adding to it is refused (`/notes -lock #foo` first).
+- **The password is typed only in your own private chat** (the messages with yourself), as the answer to the question.
+  The bot deletes your message and replaces it in the history; if WhatsApp does not let it delete, it asks you to.
+  5 wrong passwords block the tag for 15 minutes.
+- **Nothing in the clear is left:** a note saved in a protected tag has its command and the media you sent removed from
+  the history. For the commands you typed **before** protecting, `/notes -lock #foo -clean -yes` deletes them.
+- **There is no recovery:** forgot the password, lost the notes. Backups carry only the encrypted content.
+- A protected tag cannot be renamed or merged (`-move`) and its notes cannot change tag.
+
+### Password in the command
+
+The password can also come in the command, instead of the question: one message and it is done.
+
+```text
+/notes -v -lock mypassword #stash        → unlocks #stash and shows its notes
+/notes -lock "my long password" #stash   → unlocks only (quotes for a password with spaces)
+/stash.lock mypassword                   → with an alias like /alias -q /stash.lock /notes -v -lock $@ #stash
+```
+
+The password is the first word after `-lock` (or `-lo`, or `-l` beside `-v`/`-e`/`-s`/`-c`) that does not start with `#`
+or `-`; it has to be among the options at the start (a `-lock word` in the text of a note is just text). Whatever the
+result, **the message with the password is deleted** (right, wrong, a tag that is not protected, a group, a missing
+tag): the right one unlocks and shows, the wrong one answers `❌ Wrong password.` (5 mistakes block the tag for 15
+minutes, same as the question) and `❌ The tag #x is not protected` explains that the password only **opens** (creating
+the protection still asks twice, with `/notes -lock #tag`).
+
+What the bot hides, so that the password does not stay anywhere it writes:
+
+| Where | What shows |
+|---|---|
+| The log (`docker logs`, debug included) | `executed '/notes -v -lock *** #stash'` |
+| The echo of an alias without `-q` | `🔗 Alias /stash.lock -> /notes -v -lock *** #stash` |
+| The messages table (history, `/show`, backups) | the command with `***` (and `/stash.lock ***` for the alias) |
+| The bot's answers | never repeat it; they are direct messages, not replies to your command |
+
+It only works in your own private chat (in a group the bot deletes the message and says where to type it). **It is less
+safe than the question:** the password travels inside an ordinary command, so the notification preview on the phone
+and the linked WhatsApp Web devices can see it for the instant before it is deleted, and an alias keeps the word
+you typed in the chat before that. For the daily use prefer the question (`/notes -lock #stash`); use the password in
+the command only if you accept that.
+
+### Privacy scenarios
+
+What a protected tag protects, and what it does not, in the situations that matter:
+
+| Scenario | What happens |
+|---|---|
+| The database or a backup leaks (`cache/zapbot.db`, `cache/backups`, `cache/notes`) | The text and the files of the protected notes are encrypted (AES-256-GCM); only the password opens them. Without it they are noise |
+| You lend your phone, or someone sees your WhatsApp Web | Lock the tag before (`/notes -lock #foo -now`): only `🔒 (protected note)` shows. It also locks by itself after `notes.lockMinutes` without use |
+| You share your screen, or type in a group by mistake | Protected notes only unlock and open in **your own private chat**; in a group or in someone's chat they stay locked even if the tag is unlocked, adding and editing are refused |
+| `-to` by mistake (sending a view, a list or a PDF to someone) | Refused: protected notes are never sent to other chats or emails. A list of all the notes sent with `-to` shows `🔒` where they are |
+| An alert of a protected note | Says only that there is a note in the tag, never its text |
+| Someone reads the logs, `/show` or the history | The password never appears (`-lock ***`), and the commands you typed for the tag leave the `messages` table |
+| Someone with access to the running bot **while the tag is unlocked** | They can read it: the key is in memory until it locks. Lock it when you stop (`-now`), or keep `notes.lockMinutes` low |
+| You forget the password | The notes are lost. There is no recovery, by design |
+
+What it does **not** cover: the original messages you replied to or sent (they stay in the WhatsApp chat and, if they had
+media, in `cache/media`: `/show -f` or `/cache` remove them), the **backups made before** you protected the tag (they
+keep the text in the clear: delete them with `/backup`), and the password typed **in the command** (the notification
+preview on the phone can show it for an instant; the question is safer).
+
+### Example: a secret tag with shortcuts
+
+For a tag you use all the time (the `#stash` below), three [aliases](alias.md) make each use one word. They are in
+[`examples/secret-notes.zb`](https://github.com/jpereira/zapbot/blob/main/examples/secret-notes.zb) (load them with
+`/alias -examples secret-notes`), or create them by hand. The `-desc` of each one explains it in `/alias`:
+
+```text
+/alias -q /stash.add  -desc "Saves a note in the protected tag #stash, encrypted. The tag has to be unlocked first (/stash.view); locked, or outside your own private chat (a group, someone's chat), it refuses and the command stays out of the history"  /notes #stash $@
+/alias -q /stash.lock -desc "Locks the protected tag #stash right now: afterwards only a lock shows. Use it before lending the phone or sharing the screen (it also locks by itself after notes.lockMinutes without use and when the bot restarts)"  /notes -lock #stash -now
+/alias -q /stash.view -desc "Unlocks the protected tag #stash and shows its notes: asks the password in your private chat (or /stash.view password, less safe: it travels in a normal command, the bot deletes it and hides it from logs and history). Never opens in a group or with -to; locks again after notes.lockMinutes without use"  /notes -v -lock $1 #stash
+```
+
+Once, by hand, protect the tag (it asks the **new** password twice, there is no recovery):
+
+```text
+/notes -lock #stash
+```
+
+After that, a normal day:
+
+```text
+/stash.view                          → 🔑 Type your password:     (you type it; the bot deletes your message)
+                                       🔓 The tag #stash is unlocked, it will be locked in 5m without use.
+                                       (and its notes, shown)
+/stash.add the bank PIN is 1234      → 📝 #7 · #stash · 🔒     (encrypted; your message leaves the history)
+/stash.lock                          → 🔒 The tag #stash is locked.   (or wait 5 minutes without using it)
+/stash.view mypassword               → the same as /stash.view, with the password in the command (the $1)
+```
+
+`/stash.add` only works while the tag is unlocked (locked, it answers `🔒 The tag #stash is locked`) and in your own
+private chat. `/stash.view` asks the password and, with one typed after it, takes it from the command (see
+[Password in the command](#password-in-the-command)). It does **not** create the protection (a typo in the tag
+would ask for a password out of nowhere): for a tag that is not protected it says to use `/notes -lock #tag`.
 
 ## Alerts
 

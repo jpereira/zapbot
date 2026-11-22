@@ -3,6 +3,10 @@
 Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Cada uma tem um ID, e o
 `-alert` avisa dela numa data/hora. Só o dono (e os admins) usa.
 
+> 🔐 **Notas privadas:** uma tag pode ser **protegida com senha** (`/notes -lock #stash`): o texto e os arquivos são
+> cifrados, só liberam e abrem no **seu próprio privado**, travam de novo sozinhos e nunca saem com `-to`. Veja
+> [Tags protegidas](#tags-protegidas--lock) e os [cenários de privacidade](#cenários-de-privacidade).
+
 ```text
 /notes [-list|-l] [#tag...] [-to <destino>]...
 /notes -compact|-c [#tag...]
@@ -17,6 +21,8 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes -rm|-r <id...|#tag...|all>
 /notes -alert [<id|#tag...> [<quando> [-to <destino>]...]]
 /notes -alert -r <id...|#tag...|all>
+/notes -lock|-lo [<senha>] #tag [-now|-n|-no | -clean -yes]
+/notes -view|-export|-list|-search -lock [<senha>] #tag
 ```
 
 | Opção | Valor | Descrição |
@@ -29,6 +35,9 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 | `-move`, `-m` | `#tag #novatag` | Renomeia a tag em todas as anotações. Se a nova já existe, as duas se juntam |
 | `-desc`, `-d` | `#tag [<descrição>\|-rm]` | Descrição da tag, que aparece na lista e no `/notes` sozinho. Sem texto, mostra a atual; com `-rm`, apaga. O `-move` leva a descrição junto |
 | `-export`, `-e` | `[#tag...]` | Manda as anotações num PDF, com as imagens e o texto como legenda (cabeçalho, rodapé com versão, host, data e hora, e paginação). Com tags, só as delas. Veja [Exportar](#exportar) |
+| `-lock`, `-lo` | `[senha] #tag` | Protege uma tag com senha (texto e arquivos cifrados) ou libera; a senha pode vir no comando. Veja [Tags protegidas](#tags-protegidas--lock) e [Senha no comando](#senha-no-comando) |
+| `-now`, `-n`, `-no` | | Trava a tag agora, sozinha ou com `-lock` em qualquer ordem (`-n #foo`, `-lock #foo -now`, `-n -lock #foo`) |
+| `-clean` | | Com `-lock #tag`: apaga do histórico os comandos antigos que você digitou para a tag (precisa de `-yes`) |
 | `#tag <texto>` | | Sem opção na frente, vira uma anotação nova, igual ao `-add`: `/notes #casa não esquecer de remover a opção tal`. A `#tag` é obrigatória: `/notes meu texto` dá erro. Só `/notes #casa`, sem texto, lista as da tag |
 | `-add`, `-a` | `#tag <texto>` | Adiciona uma anotação; a `#tag` é obrigatória e vem no começo do texto. O texto vai até o `-alert`, se houver, e aceita várias linhas |
 | `-rm`, `-r` | `<id...\|#tag...\|all>` | Remove as anotações com esses IDs (`-r 2`, `-r 1 2 3` ou `-r 1,2,3`), de uma tag (`-r #casa`) ou todas (`all`). Com uma `#tag`, os números são as **posições na lista dela** (`-r #casa 1` é a 1ª da `#casa`), não IDs. Uma tag inteira ou `all` pede o `-yes`. Se algum ID, posição ou tag não existe, nenhuma sai. Junto com `-alert`, tira só o alerta, mantendo as anotações |
@@ -176,6 +185,139 @@ O `-to` funciona como nos outros comandos (veja
   (JPEG, fundo branco no lugar de transparência). Uma imagem que não abre fica de fora, com um aviso
   na linha da anotação. Documentos, áudios e vídeos não entram no PDF; a linha da anotação avisa.
 - A fonte do PDF é Latin-1: acentos saem normais, mas emojis e símbolos fora dela são omitidos.
+
+## Tags protegidas (`-lock`)
+
+> **As notas protegidas só são liberadas e acessadas no seu próprio privado** (as mensagens com você mesmo). Num grupo,
+> no chat de outra pessoa ou com `-to` (para mandá-las a algum lugar), elas continuam travadas para quem lê: só aparece
+> o 🔒, mesmo com a tag liberada no seu privado.
+
+Para notas que não podem ser lidas por quem pegar o banco ou um backup. Uma **tag protegida** tem o texto das notas e
+os arquivos cifrados (AES-256-GCM) com uma chave feita de uma senha que **nunca é guardada**.
+
+```text
+/notes -lock #foo
+🔑 Crie uma senha para a #foo:             ← primeira vez: pede duas vezes; sem recuperação
+(você digita a senha; o bot apaga a sua mensagem e a mantém fora do histórico)
+🔓 A tag #foo agora está protegida (3 notas cifradas) e liberada, vai ser travada em 5m sem interagir.
+
+/notes -lock #foo                          ← depois: libera
+🔑 Digite sua senha:
+🔓 A tag #foo está liberada, vai ser travada em 5m sem interagir.
+
+/notes -lock #foo -now                     → trava agora (também /notes -n #foo, /notes -n -lock #foo)
+
+/notes -v -lock #foo                       → pede a senha e depois mostra as notas (também -e, -l e -s)
+```
+
+- **Liberada**, a tag funciona como qualquer outra (anotar, listar, buscar, ver, PDF). Cada uso renova o tempo; passados
+  `notes.lockMinutes` ([setting](../settings.md), padrão 5) sem uso ela **trava sozinha**, e reiniciar o bot trava
+  tudo.
+- **Tudo em uma linha:** `/notes -v -lock #foo` (ou `-e`, `-l`, `-s`) pede a senha e, liberada a tag, já executa o
+  comando. Se a tag já estiver liberada, só mostra. Precisa de uma tag protegida.
+- **Só no seu privado:** liberar (a senha), ler (`-v`, `-l`, `-s`, `-e`, uma `#tag` sozinha), anotar (`/notes #foo ...`) e
+  editar (`-u`) só funcionam lá. Em qualquer outro chat a mesma tag, mesmo liberada, se comporta como travada: listas,
+  busca e PDF mostram só o 🔒, anotar e editar são recusados (`🔒 As notas da #foo só abrem no seu próprio privado`) e o
+  comando que você digitou ali fica fora do histórico.
+- **Nunca enviadas a outros:** `-v`, `-e`, `-l` ou `-s` de uma tag protegida com `-to` (um contato, um grupo ou um e-mail)
+  é recusado (`🔒 As notas da #foo são protegidas: não vão para outros chats nem e-mails (sem -to)`). Uma lista de todas
+  as notas enviada com `-to` mostra o 🔒 onde estão as protegidas, nunca o texto. O alerta de uma nota protegida diz só
+  que existe uma.
+- **Travada**, listas, busca e PDF mostram só `🔒 (nota protegida)`, um alerta diz apenas que há uma nota, e anotar nela é
+  recusado (antes, `/notes -lock #foo`).
+- **A senha só é digitada no seu próprio privado** (as mensagens com você mesmo), como resposta à pergunta. O bot apaga
+  a sua mensagem e a troca no histórico; se o WhatsApp não deixar apagar, ele pede que você apague. 5 senhas erradas
+  bloqueiam a tag por 15 minutos.
+- **Nada fica em claro:** uma nota salva numa tag protegida tem o comando e a mídia que você mandou removidos do
+  histórico. Para os comandos que você digitou **antes** de proteger, `/notes -lock #foo -clean -yes` apaga.
+- **Não há recuperação:** esqueceu a senha, perdeu as notas. Os backups levam só o conteúdo cifrado.
+- Uma tag protegida não pode ser renomeada nem unida (`-move`) e as notas dela não mudam de tag.
+
+### Senha no comando
+
+A senha também pode vir no comando, no lugar da pergunta: uma mensagem só e pronto.
+
+```text
+/notes -v -lock minhasenha #stash        → libera a #stash e mostra as notas
+/notes -lock "minha senha longa" #stash  → só libera (aspas para uma senha com espaços)
+/stash.lock minhasenha                   → com um alias como /alias -q /stash.lock /notes -v -lock $@ #stash
+```
+
+A senha é a primeira palavra depois do `-lock` (ou `-lo`, ou `-l` ao lado de `-v`/`-e`/`-s`/`-c`) que não começa com `#` nem
+`-`; o `-lock` precisa estar entre as opções do início (um `-lock palavra` no texto de uma nota é só texto). Seja qual
+for o resultado, **a mensagem com a senha é apagada** (certa, errada, tag que não é protegida, grupo, tag que falta): a
+certa libera e mostra, a errada responde `❌ Senha incorreta` (5 erros bloqueiam a tag por 15 minutos, como na
+pergunta) e `❌ A tag #x não é protegida` explica que a senha só **abre** (criar a proteção continua pedindo duas
+vezes, com `/notes -lock #tag`).
+
+O que o bot esconde, para a senha não ficar em nada que ele escreve:
+
+| Onde | O que aparece |
+|---|---|
+| O log (`docker logs`, inclusive o debug) | `executed '/notes -v -lock *** #stash'` |
+| O eco de um alias sem `-q` | `🔗 Alias /stash.lock -> /notes -v -lock *** #stash` |
+| A tabela de mensagens (histórico, `/show`, backups) | o comando com `***` (e `/stash.lock ***` no alias) |
+| As respostas do bot | nunca a repetem; são mensagens diretas, não respostas ao seu comando |
+
+Só funciona no seu próprio privado (em grupo o bot apaga a mensagem e diz onde digitar). **É menos seguro que a
+pergunta:** a senha viaja dentro de um comando comum, então a pré-visualização da notificação no celular e os aparelhos
+com o WhatsApp Web vinculado podem vê-la no instante antes de ela ser apagada, e um alias guarda no chat a palavra que
+você digitou antes disso. No dia a dia prefira a pergunta (`/notes -lock #stash`); use a senha no comando só se você
+aceita isso.
+
+### Cenários de privacidade
+
+O que uma tag protegida protege, e o que não protege, nas situações que importam:
+
+| Cenário | O que acontece |
+|---|---|
+| O banco ou um backup vaza (`cache/zapbot.db`, `cache/backups`, `cache/notes`) | O texto e os arquivos das notas protegidas estão cifrados (AES-256-GCM); só a senha abre. Sem ela, é ruído |
+| Você empresta o celular, ou alguém vê o seu WhatsApp Web | Trave a tag antes (`/notes -lock #foo -now`): só aparece `🔒 (nota protegida)`. Ela também trava sozinha após `notes.lockMinutes` sem uso |
+| Você compartilha a tela, ou digita num grupo por engano | As notas protegidas só liberam e abrem no **seu próprio privado**; num grupo ou no chat de outra pessoa continuam travadas mesmo com a tag liberada, e anotar e editar são recusados |
+| `-to` por engano (mandar uma visualização, uma lista ou um PDF para alguém) | Recusado: as notas protegidas nunca vão para outros chats nem e-mails. Uma lista de todas as notas enviada com `-to` mostra `🔒` onde elas estão |
+| Um alerta de uma nota protegida | Diz só que há uma nota na tag, nunca o texto |
+| Alguém lê os logs, o `/show` ou o histórico | A senha nunca aparece (`-lock ***`), e os comandos que você digitou para a tag saem da tabela `messages` |
+| Alguém com acesso ao bot rodando **enquanto a tag está liberada** | Consegue ler: a chave fica na memória até travar. Trave ao parar de usar (`-now`), ou deixe o `notes.lockMinutes` baixo |
+| Você esquece a senha | As notas se perdem. Não há recuperação, de propósito |
+
+O que **não** cobre: as mensagens originais que você respondeu ou enviou (ficam no chat do WhatsApp e, se tinham mídia, em
+`cache/media`: o `/show -f` ou o `/cache` removem), os **backups feitos antes** de proteger a tag (guardam o texto em claro:
+apague com o `/backup`) e a senha digitada **no comando** (a pré-visualização da notificação no celular pode mostrá-la por
+um instante; a pergunta é mais segura).
+
+### Exemplo: uma tag secreta com atalhos
+
+Para uma tag que você usa toda hora (a `#stash` abaixo), três [aliases](alias.md) deixam cada uso em uma palavra. Eles
+estão em [`examples/secret-notes.zb`](https://github.com/jpereira/zapbot/blob/main/examples/secret-notes.zb) (carregue
+com `/alias -examples secret-notes`), ou crie à mão. O `-desc` de cada um o explica no `/alias`:
+
+```text
+/alias -q /stash.add  -desc "Guarda uma nota na tag protegida #stash, cifrada. A tag precisa estar liberada antes (/stash.view); travada, ou fora do seu privado (um grupo, o chat de outra pessoa), ela recusa e o comando fica fora do histórico"  /notes #stash $@
+/alias -q /stash.lock -desc "Trava a tag protegida #stash agora: depois só aparece um cadeado. Use antes de emprestar o celular ou compartilhar a tela (ela também trava sozinha após notes.lockMinutes sem uso e quando o bot reinicia)"  /notes -lock #stash -now
+/alias -q /stash.view -desc "Libera a tag protegida #stash e mostra as notas: pede a senha no seu privado (ou /stash.view senha, menos seguro: viaja num comando comum, o bot a apaga e a esconde dos logs e do histórico). Nunca abre em grupo nem com -to; trava de novo após notes.lockMinutes sem uso"  /notes -v -lock $1 #stash
+```
+
+Uma vez, à mão, proteja a tag (ela pede a senha **nova** duas vezes, não há recuperação):
+
+```text
+/notes -lock #stash
+```
+
+Depois disso, um dia normal:
+
+```text
+/stash.view                          → 🔑 Digite sua senha:      (você digita; o bot apaga a sua mensagem)
+                                       🔓 A tag #stash está liberada, vai ser travada em 5m sem interagir.
+                                       (e as notas dela, exibidas)
+/stash.add o PIN do banco é 1234     → 📝 #7 · #stash · 🔒     (cifrada; a sua mensagem some do histórico)
+/stash.lock                          → 🔒 A tag #stash foi travada.   (ou espere 5 minutos sem usar)
+/stash.view minhasenha               → o mesmo que /stash.view, com a senha no comando (o $1)
+```
+
+O `/stash.add` só funciona com a tag liberada (travada, responde `🔒 A tag #stash está travada`) e no seu próprio
+privado. O `/stash.view` pede a senha e, com uma digitada depois, a pega do comando (veja
+[Senha no comando](#senha-no-comando)). Ele **não** cria a proteção (um erro de digitação na tag pediria uma
+senha do nada): para uma tag que não é protegida ele manda usar `/notes -lock #tag`.
 
 ## Alertas
 
