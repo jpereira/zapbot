@@ -1,5 +1,5 @@
 /*
- * /stocks: quotes for stocks, ETFs, indexes and exchange rates through Yahoo Finance (the same as /rates).
+ * /stocks: quotes for stocks, ETFs, indexes and exchange rates through Yahoo Finance.
  * The ticker is Yahoo's: MSTR, NVDA, PETR4.SA (B3), BRK-B, ^GSPC (S&P 500), BTC-USD...
  */
 

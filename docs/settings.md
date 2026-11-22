@@ -124,7 +124,7 @@ shows are in Portuguese; the ones here are in English).
 | `sticker.name` | text | `ZapBot` | Sticker pack name |
 | `stocks.alert.intervalMin` | 1–60 | `5` | Interval, in minutes, between [price alert](commands/stocks.md#price-alerts) checks of `/stocks` |
 | `stocks.alert.max` | 1–100 | `20` | Max price alerts of `/stocks` |
-| `stocks.symbols` | list | `USD, EUR, USDT, MSTR` | Symbols shown by [`/stocks`](commands/stocks.md) (and `/rates`): currencies against the real (`USD`, `EUR`, `GBP`, `USDT`) and Yahoo Finance tickers (`MSTR`, `NVDA`, `PETR4.SA`, `BRK-B`, `^GSPC`); usually changed with `/stocks -a`/`-d` |
+| `stocks.symbols` | list | `USD, EUR, USDT, MSTR` | Symbols shown by [`/stocks`](commands/stocks.md) : currencies against the real (`USD`, `EUR`, `GBP`, `USDT`) and Yahoo Finance tickers (`MSTR`, `NVDA`, `PETR4.SA`, `BRK-B`, `^GSPC`); usually changed with `/stocks -a`/`-d` |
 | `stt.beam` | 1–10 | `1` | Beam size of the faster-whisper search in [`/stt`](commands/stt.md) (`1` is the fastest; more can get a little more right and takes longer). `-beam` changes it per call |
 | `stt.engine` | `local`, `gpt` | `local` | Engine of [`/stt`](commands/stt.md) and `/get -stt`: `local` (faster-whisper, no key) or `gpt` (ChatGPT, OpenAI API). `-gpt` and `-local` pick it per call |
 | `stt.footer` | on/off | `on` | Ends the /stt and /get -stt transcription with the tip "💡 Transcribed by <engine>". -quiet (-q) hides it on the call. |

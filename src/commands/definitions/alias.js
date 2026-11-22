@@ -37,7 +37,7 @@ module.exports = {
             opts: ['desc', 'd'],
             values: ['<text>'],
             desc: 'Optional description, in quotes, before the command or the text. Straight or curly quotes work, even mixed. Without a command, updates only the description of an alias that already exists.',
-            ex: ['/alias /demo -d "Dollar" /rates USD', '/alias /demo -d "New text"']
+            ex: ['/alias /demo -d "Dollar" /stocks USD', '/alias /demo -d "New text"']
         },
         { opts: ['list', 'l'], values: [], desc: 'Lists the registered shortcuts.' },
         {

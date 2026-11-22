@@ -270,7 +270,7 @@ function readShortcut(textAlt) {
     };
 }
 
-// "/rates,/crypto meme" → ['/rates', '/crypto', '/meme']; "all" → ['all']; invalid: throws
+// "/stocks,/crypto meme" → ['/stocks', '/crypto', '/meme']; "all" → ['all']; invalid: throws
 function readCommands(textAlt) {
     const names = textAlt.split(/[\s,]+/).filter(Boolean);
     if (!names.length) throw new Error(t('adm.bot.needCommands'));

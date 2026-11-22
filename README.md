@@ -38,7 +38,7 @@ Yep, we've been busy. The best of the latest batch:
 - 🎙️ **Transcribe any video or audio.** Send a link (Instagram, YouTube, X, TikTok...) or reply to a video or a voice
   note and get the **text of the speech**, or `-sum` for a **summary** on top. It runs on your own server
   (faster-whisper), so no OpenAI bill and the audio never leaves home. [`/stt`](docs/commands/stt.md) · [`/get -t`](docs/commands/get.md)
-- 📈 **Quotes in one command.** `/stocks` has the dollar, euro and USDT (it replaces `/rates`) and any stock, ETF or
+- 📈 **Quotes in one command.** `/stocks` has the dollar, euro and USDT and any stock, ETF or
   index (`MSTR`, `NVDA`, `PETR4.SA`, `^GSPC`...), with alerts like `/stocks MSTR -alert < 90`. `/crypto` now also
   shows the price **in reais** (🇧🇷, straight from Binance) and gold as `XAUT`. [`/stocks`](docs/commands/stocks.md) · [`/crypto`](docs/commands/crypto.md)
 - 🧮 **A calculator for lists.** Reply to `437 gym / 351 running` (or a debt list in `R$`, `EUR`, `USD`, with signs
@@ -506,7 +506,7 @@ and make the bot your own:
 | [`/stats`](https://jpereira.github.io/zapbot/commands/stats/) | | `admin` · delegable | Ranking of this chat or another (`/Group/`): who talks, deletes and edits the most, peak hours; `-me` for yours, `-l` lists the chats, `-flush` deletes |
 | [`/status`](https://jpereira.github.io/zapbot/commands/status/) | | `admin` | Posts on your WhatsApp Status (text, photo or video); `/cron -status` schedules it |
 | [`/sticker`](https://jpereira.github.io/zapbot/commands/sticker/) | | `user` | Sticker from an image, video or link (`/get -st`), replying or as the caption of the media; with `-txt`, an animated text sticker |
-| [`/stocks`](https://jpereira.github.io/zapbot/commands/stocks/) | `/stock`, `/rates` | `user` | Quotes of the dollar, euro, pound and USDT against the real, and of stocks, ETFs and indexes (Yahoo Finance): USD, EUR, MSTR, PETR4.SA, `^GSPC`; `-alert` for price alerts |
+| [`/stocks`](https://jpereira.github.io/zapbot/commands/stocks/) | | `user` | Quotes of the dollar, euro, pound and USDT against the real, and of stocks, ETFs and indexes (Yahoo Finance): USD, EUR, MSTR, PETR4.SA, `^GSPC`; `-alert` for price alerts |
 | [`/stt`](https://jpereira.github.io/zapbot/commands/stt/) | | `user` | Text of the speech of a link, video or audio (`/get -t` is a shortcut), replying or as the caption; `-ss` and `-es` pick a part |
 | [`/tldr`](https://jpereira.github.io/zapbot/commands/tldr/) | | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
 | [`/translate`](https://jpereira.github.io/zapbot/commands/translate/) | | `user` | Translates the text or the replied message with Google Translate, no key needed; `-to en` changes the language |

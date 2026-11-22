@@ -51,7 +51,7 @@
       ],
       "desc": "Descrição opcional, entre aspas, antes do comando ou do texto. Aspas retas ou curvas valem, inclusive misturadas. Sem comando, atualiza só a descrição de um alias que já existe.",
       "ex": [
-        "/alias /eita -d \"Dólar\" /rates USD",
+        "/alias /eita -d \"Dólar\" /stocks USD",
         "/alias /eita -d \"Novo texto\""
       ]
     },

@@ -305,7 +305,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/stats`](stats.md) | | `admin` · delegable | Ranking for this chat or another (`/Grupo/`): who talks, deletes, and edits the most, peak hours; `-me` for yours, `-l` lists the chats, `-flush` deletes |
 | [`/status`](status.md) | | `admin` | Posts on your WhatsApp Status (text, photo or video); `/cron -status` schedules it |
 | [`/sticker`](sticker.md) | | `user` | Sticker from an image, video, or link (the `/get -st`), replying or as the caption of the media; with `-txt`, an animated text sticker |
-| [`/stocks`](stocks.md) | `/stock`, `/rates` | `user` | Quotes of the dollar, euro, pound and USDT against the real, and of stocks, ETFs and indexes (Yahoo Finance): USD, EUR, MSTR, PETR4.SA, `^GSPC`; `-alert` for price alerts |
+| [`/stocks`](stocks.md) | | `user` | Quotes of the dollar, euro, pound and USDT against the real, and of stocks, ETFs and indexes (Yahoo Finance): USD, EUR, MSTR, PETR4.SA, `^GSPC`; `-alert` for price alerts |
 | [`/stt`](stt.md) | | `user` | Text of the speech of a link, video or audio (`/get -t` is a shortcut), replying or as the caption; `-ss` and `-es` pick a part |
 | [`/tldr`](tldr.md) | | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
 | [`/translate`](translate.md) | | `user` | Translates the text or the replied message with Google Translate, no key; `-to en` changes the language |

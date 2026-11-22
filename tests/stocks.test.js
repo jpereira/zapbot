@@ -72,7 +72,6 @@ test('/stocks sem nada: o MSTR (o padrão), com o preço, a variação, o dia, o
     assert.match(r, /📊 Volume: 14,79 mi/);
     assert.match(r, /🗓️ 52 semanas: US\$ 50,00 – US\$ 200,00/);
     assert.match(r, /Yahoo Finance/);
-    assert.match((await bot.replyAlt('/stock'))[0], /^📈 \*MERCADOS\*[\s\S]*MSTR/, 'o /stock é o mesmo comando');
 });
 
 test('/stocks NVDA PETR4.SA: só esses; a ação da B3 sai em reais; um que não existe vira aviso na linha', async () => {

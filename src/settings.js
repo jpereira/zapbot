@@ -829,7 +829,7 @@ const SETTINGS_SCHEMA = {
     'stocks.symbols': {
         default: ['USD', 'EUR', 'USDT', 'MSTR'],
         type: 'list',
-        desc: 'Símbolos exibidos pelo /stocks (e /rates): moedas contra o real (USD, EUR, GBP, USDT) e tickers do Yahoo Finance (MSTR, NVDA, PETR4.SA, BRK-B, ^GSPC).',
+        desc: 'Símbolos exibidos pelo /stocks: moedas contra o real (USD, EUR, GBP, USDT) e tickers do Yahoo Finance (MSTR, NVDA, PETR4.SA, BRK-B, ^GSPC).',
         item: (v) => {
             const ticker = normalizeTicker(v);
             if (!ticker) throw new Error(t('stocks.badTicker', { value: v }));

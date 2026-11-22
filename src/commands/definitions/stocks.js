@@ -8,9 +8,9 @@ const { OPTION_ALERT_MSG, OPTION_ALERT_RM, OPTION_ALERT_TO } = require('./_optio
 module.exports = {
     cmd: '/stocks',
     usage: '/stocks [OPTION] [TICKER...]  or  /stocks [TICKER] -alert [rule] [-to <target>]... [-msg <text>]  or  /stocks -alert -rm <num...|all>',
-    aliases: ['/stock', '/rates'],
+    aliases: [],
     summary: 'Quotes of currencies, stocks, ETFs and indexes',
-    help: 'Market quotes in one place: the dollar, euro, pound and USDT against the real (USD, EUR, GBP, USDT) and stocks, ETFs and indexes (Yahoo Finance), with the change since the previous close, open, high and low, and, for stocks, volume and the 52-week range. Without symbols, the enabled ones (setting stocks.symbols: USD, EUR, USDT and MSTR by default); with symbols, only those (e.g. /stocks usd MSTR PETR4.SA). The ticker is the Yahoo Finance one: MSTR, NVDA, PETR4.SA (B3), BRK-B, ^GSPC (S&P 500). For crypto, /crypto. /rates is the same command.',
+    help: 'Market quotes in one place: the dollar, euro, pound and USDT against the real (USD, EUR, GBP, USDT) and stocks, ETFs and indexes (Yahoo Finance), with the change since the previous close, open, high and low, and, for stocks, volume and the 52-week range. Without symbols, the enabled ones (setting stocks.symbols: USD, EUR, USDT and MSTR by default); with symbols, only those (e.g. /stocks usd MSTR PETR4.SA). The ticker is the Yahoo Finance one: MSTR, NVDA, PETR4.SA (B3), BRK-B, ^GSPC (S&P 500). For crypto, /crypto.',
     ex: ['/stocks', '/stocks usd eur', '/stocks MSTR NVDA', '/stocks PETR4.SA', '/stocks USD -alert > 5.30', '/stocks MSTR -alert < 90'],
     cmd_opts: [
         {

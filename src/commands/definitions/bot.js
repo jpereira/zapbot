@@ -40,9 +40,9 @@ module.exports = {
             values: ['<commands>'],
             desc: 'The commands of a user (comma between them). With +u, it sets: +u +cmd /a,/b, only those; +u -cmd /a, all but that one. Alone, +cmd allows and -cmd removes (whoever is not a user gets in with only those); +cmd all allows all again. In the list, below the person: → Apenas: ... /help and /whois always go through. Owner only.',
             ex: [
-                '/bot +cmd /rates,/crypto +u /Sofia Izabel/',
+                '/bot +cmd /stocks,/crypto +u /Sofia Izabel/',
                 '/bot -cmd /meme /Fulano/',
-                '/bot +u +cmd /rates'
+                '/bot +u +cmd /stocks'
             ],
             cron: false
         },

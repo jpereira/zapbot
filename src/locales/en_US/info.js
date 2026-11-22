@@ -59,7 +59,7 @@ module.exports = {
     'weather.cityNotFound': '❌ City not found: {city}\n💡 _Try with state and country: /weather Niteroi, Rio de Janeiro, Brazil_',
     'weather.failed': "❌ I couldn't check the weather right now.",
 
-    // price alerts (/rates -alert, /crypto -alert)
+    // price alerts (/stocks -alert, /crypto -alert)
     'alerts.above': 'above',
     'alerts.below': 'below',
     'alerts.minute': 'minute',
@@ -90,7 +90,7 @@ module.exports = {
     'alerts.fired': '🔔 *PRICE ALERT*\n\n{opIcon} {icon} *{pair}* went {op} {target}\n💰 Now: *{price}*{change}\n📅 Alert created on {date}',
     'alerts.subject': '🔔 Price alert: {pair} {op} {target}',
 
-    // /rates
+    // /stocks
     'stocks.name.USD': 'Dollar',
     'stocks.name.EUR': 'Euro',
     'stocks.name.GBP': 'Pound',

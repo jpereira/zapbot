@@ -1,7 +1,7 @@
 {
   "summary": "Cotações de moedas, ações, ETFs e índices",
   "usage": "/stocks [OPÇÃO] [TICKER...]  ou  /stocks [TICKER] -alert [regra] [-to <destino>]... [-msg <texto>]  ou  /stocks -alert -rm <nº...|all>",
-  "help": "Cotações de mercado num lugar só: o dólar, o euro, a libra e o USDT contra o real (USD, EUR, GBP, USDT) e ações, ETFs e índices (Yahoo Finance), com a variação desde o fechamento anterior, abertura, máxima e mínima e, nas ações, o volume e a faixa de 52 semanas. Sem símbolos, os habilitados (setting stocks.symbols: USD, EUR, USDT e MSTR por padrão); com símbolos, só eles (ex.: /stocks usd MSTR PETR4.SA). O ticker é o do Yahoo Finance: MSTR, NVDA, PETR4.SA (B3), BRK-B, ^GSPC (S&P 500). Para cripto, o /crypto. O /rates é o mesmo comando.",
+  "help": "Cotações de mercado num lugar só: o dólar, o euro, a libra e o USDT contra o real (USD, EUR, GBP, USDT) e ações, ETFs e índices (Yahoo Finance), com a variação desde o fechamento anterior, abertura, máxima e mínima e, nas ações, o volume e a faixa de 52 semanas. Sem símbolos, os habilitados (setting stocks.symbols: USD, EUR, USDT e MSTR por padrão); com símbolos, só eles (ex.: /stocks usd MSTR PETR4.SA). O ticker é o do Yahoo Finance: MSTR, NVDA, PETR4.SA (B3), BRK-B, ^GSPC (S&P 500). Para cripto, o /crypto.",
   "ex": [
     "/stocks",
     "/stocks usd eur",

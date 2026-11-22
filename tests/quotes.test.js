@@ -69,7 +69,7 @@ beforeEach(async () => {
     simulateMarket();
 });
 
-describe('/stocks (moedas e ações; o /rates é o mesmo comando)', () => {
+describe('/stocks (moedas e ações)', () => {
     test('sem argumento: as habilitadas (USD, EUR, USDT e MSTR), cada uma com abertura, fechamento e variação', async () => {
         const [r] = await bot.replyAlt('/stocks');
         assert.match(r, /^📈 \*MERCADOS\*\n/);
@@ -81,13 +81,9 @@ describe('/stocks (moedas e ações; o /rates é o mesmo comando)', () => {
         assert.doesNotMatch(r, /GBP\/BRL/);
     });
 
-    test('/rates e /stock são o mesmo comando', async () => {
-        const [a] = await bot.replyAlt('/stocks eur');
-        const [b] = await bot.replyAlt('/rates eur');
-        const [c] = await bot.replyAlt('/stock eur');
-        const withoutHour = (x) => x.replace(/🕐 _.*_/, '');
-        assert.equal(withoutHour(b), withoutHour(a));
-        assert.equal(withoutHour(c), withoutHour(a));
+    test('/rates não existe mais: o /stocks não tem aliases (o /stock ainda vale como abreviação única)', async () => {
+        assert.deepEqual(bot.src('commands/definitions/stocks').aliases, []);
+        assert.doesNotMatch((await bot.replyAlt('/rates eur')).join('\n'), /MERCADOS|USD\/BRL|EUR\/BRL/);
     });
 
     test('com argumentos: só os pedidos, moedas e ações misturadas', async () => {

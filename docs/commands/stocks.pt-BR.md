@@ -1,8 +1,8 @@
-# `/stocks` `/stock` `/rates`
+# `/stocks`
 
 Cotações de mercado num lugar só: **dólar, euro, libra e USDT contra o real**, e **ações, ETFs e índices** (MSTR,
 NVDA, PETR4.SA, o S&P 500...). Mostra os símbolos habilitados (padrão: `USD`, `EUR`, `USDT` e `MSTR`), ou só os
-pedidos. O `/rates` é o mesmo comando (o nome antigo). Para **cripto**, use o [`/crypto`](crypto.md) (BTC, ETH,
+pedidos. Para **cripto**, use o [`/crypto`](crypto.md) (BTC, ETH,
 **XAUT**, o token do ouro...).
 
 | Opção | Valor | Descrição |
@@ -137,7 +137,7 @@ fechamento.
 
 ## Alertas de preço
 
-O `/stocks` (ou `/rates`) e o `/crypto` avisam no **seu privado** (ou, com
+O `/stocks` e o `/crypto` avisam no **seu privado** (ou, com
 [`-to`](#avisar-em-outro-chat-ou-por-e-mail), em contatos, grupos, números ou por e-mail) quando um
 preço passa de um valor, com um texto seu no início, se quiser ([`-msg`](#mensagem-no-aviso)). Cada
 alerta dispara uma vez e é removido. Só o dono do bot (e os [admins extras](bot.md#admins-extras))

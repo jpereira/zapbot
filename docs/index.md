@@ -33,7 +33,7 @@ Yep, we've been busy. The best of the latest batch:
 - 🎙️ **Transcribe any video or audio.** Send a link (Instagram, YouTube, X, TikTok...) or reply to a video or a voice
   note and get the **text of the speech**, or `-sum` for a **summary** on top. It runs on your own server
   (faster-whisper), so no OpenAI bill and the audio never leaves home. [`/stt`](commands/stt.md) · [`/get -t`](commands/get.md)
-- 📈 **Quotes in one command.** `/stocks` has the dollar, euro and USDT (it replaces `/rates`) and any stock, ETF or
+- 📈 **Quotes in one command.** `/stocks` has the dollar, euro and USDT and any stock, ETF or
   index (`MSTR`, `NVDA`, `PETR4.SA`, `^GSPC`...), with alerts like `/stocks MSTR -alert < 90`. `/crypto` now also
   shows the price **in reais** (🇧🇷, straight from Binance) and gold as `XAUT`. [`/stocks`](commands/stocks.md) · [`/crypto`](commands/crypto.md)
 - 🧮 **A calculator for lists.** Reply to `437 gym / 351 running` (or a debt list in `R$`, `EUR`, `USD`, with signs

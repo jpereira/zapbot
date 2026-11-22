@@ -1,5 +1,5 @@
 /*
- * /stocks command (also /stock and /rates): market quotes in one place.
+ * /stocks command: market quotes in one place.
  * - currencies against the real (USD, EUR, GBP) and USDT: value, open, previous close, high and low;
  * - stocks, ETFs and indexes (Yahoo Finance): price, change, the day, volume and the 52 weeks.
  * /stocks                  → the enabled ones (setting stocks.symbols; default: USD, EUR, USDT and MSTR)
@@ -27,7 +27,7 @@ const readSymbols = (argv) => [...new Set(argv.join(' ').split(/[\s,]+/).filter(
 // A symbol's quote: exchange rate against the real (currencies) or the stock price
 const search = (sym) => (isCurrency(sym) ? searchQuote(sym).then((c) => ({ type: 'moeda', ...c })) : quoteAction(sym).then((c) => ({ type: 'acao', ...c })));
 
-// A currency's block (the same output as the old /rates): "🇺🇸 USD/BRL (Dollar)"
+// A currency's block (the same output the old rates command had): "🇺🇸 USD/BRL (Dollar)"
 function currencyBlock(sym, c) {
     const { icon: iconAlt, name: nameAlt } = QUOTE_SUPPORTED[sym];
     const dayAlt = fmtChange(c.current, c.closing);

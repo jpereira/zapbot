@@ -59,7 +59,7 @@ module.exports = {
     'weather.cityNotFound': '❌ Cidade não encontrada: {city}\n💡 _Tente com estado e país: /weather Niteroi, Rio de Janeiro, Brazil_',
     'weather.failed': '❌ Não consegui consultar o tempo agora.',
 
-    // price alerts (/rates -alert, /crypto -alert)
+    // price alerts (/stocks -alert, /crypto -alert)
     'alerts.above': 'acima de',
     'alerts.below': 'abaixo de',
     'alerts.minute': 'minuto',
@@ -90,7 +90,7 @@ module.exports = {
     'alerts.fired': '🔔 *ALERTA DE PREÇO*\n\n{opIcon} {icon} *{pair}* ficou {op} {target}\n💰 Agora: *{price}*{change}\n📅 Alerta criado em {date}',
     'alerts.subject': '🔔 Alerta de preço: {pair} {op} {target}',
 
-    // /rates
+    // /stocks
     'stocks.name.USD': 'Dólar',
     'stocks.name.EUR': 'Euro',
     'stocks.name.GBP': 'Libra',

@@ -1,5 +1,5 @@
 /*
- * Identical options in more than one command (/rates and /crypto, /get and /sticker): the description
+ * Identical options in more than one command (/stocks and /crypto, /get and /sticker): the description
  * stays in one place.
  */
 

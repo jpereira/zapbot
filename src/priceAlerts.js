@@ -21,7 +21,7 @@ const { getSetting } = require('./settings');
 const { formatData, plural } = require('./util/format');
 
 /*
- * Price alerts: /stocks -alert (/rates is the same) and /crypto -alert
+ * Price alerts: /stocks -alert and /crypto -alert
  * -alert                 → lists the command's alerts, numbered
  * -alert USD > 5.30      → (in /stocks) notifies your private chat when USD goes above R$ 5.30
  * -alert BTC < 90000     → (in /crypto) when BTC drops below $90,000

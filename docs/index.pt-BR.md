@@ -34,7 +34,7 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 - 🎙️ **Transcreva qualquer vídeo ou áudio.** Mande um link (Instagram, YouTube, X, TikTok...) ou responda um vídeo ou
   uma nota de voz e receba o **texto da fala**, ou `-sum` para um **resumo** em cima. Roda no seu próprio servidor
   (faster-whisper), então sem conta da OpenAI e o áudio nunca sai de casa. [`/stt`](commands/stt.md) · [`/get -t`](commands/get.md)
-- 📈 **Cotações num comando só.** O `/stocks` traz o dólar, o euro e o USDT (ele substitui o `/rates`) e qualquer ação,
+- 📈 **Cotações num comando só.** O `/stocks` traz o dólar, o euro e o USDT e qualquer ação,
   ETF ou índice (`MSTR`, `NVDA`, `PETR4.SA`, `^GSPC`...), com alertas como `/stocks MSTR -alert < 90`. O `/crypto`
   agora mostra também o preço **em reais** (🇧🇷, direto da Binance) e o ouro como `XAUT`. [`/stocks`](commands/stocks.md) · [`/crypto`](commands/crypto.md)
 - 🧮 **Uma calculadora para listas.** Responda `437 maromba / 351 corrida` (ou uma lista de dívida em `R$`, `EUR`,

@@ -304,7 +304,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/stats`](stats.md) | | `admin` · delegável | Ranking deste chat ou de outro (`/Grupo/`): quem mais fala, apaga e edita, horários de pico; `-me` para as suas, `-l` lista os chats, `-flush` apaga |
 | [`/status`](status.md) | | `admin` | Posta no seu Status do WhatsApp (texto, foto ou vídeo); o `/cron -status` agenda |
 | [`/sticker`](sticker.md) | | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`), respondendo ou na legenda da mídia; com `-txt`, uma figurinha animada de texto |
-| [`/stocks`](stocks.md) | `/stock`, `/rates` | `user` | Cotações do dólar, euro, libra e USDT contra o real, e de ações, ETFs e índices (Yahoo Finance): USD, EUR, MSTR, PETR4.SA, `^GSPC`; `-alert` para alertas de preço |
+| [`/stocks`](stocks.md) | | `user` | Cotações do dólar, euro, libra e USDT contra o real, e de ações, ETFs e índices (Yahoo Finance): USD, EUR, MSTR, PETR4.SA, `^GSPC`; `-alert` para alertas de preço |
 | [`/stt`](stt.md) | | `user` | Texto da fala de um link, vídeo ou áudio (o `/get -t` é um atalho), respondendo ou na legenda; `-ss` e `-es` escolhem um trecho |
 | [`/tldr`](tldr.md) | | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`30m`, `2h`, `1d`, `1h30m` ou `300` mensagens; respondendo uma mensagem, a partir dela) |
 | [`/translate`](translate.md) | | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-to en` muda o idioma |

@@ -1,8 +1,8 @@
-# `/stocks` `/stock` `/rates`
+# `/stocks`
 
 Market quotes in one place: the **dollar, euro, pound and USDT against the real**, and **stocks, ETFs and
 indexes** (MSTR, NVDA, PETR4.SA, the S&P 500...). It shows the enabled symbols (default: `USD`, `EUR`, `USDT` and
-`MSTR`), or only the requested ones. `/rates` is the same command (the old name). For **crypto**, use
+`MSTR`), or only the requested ones. For **crypto**, use
 [`/crypto`](crypto.md) (BTC, ETH, **XAUT**, the gold token...).
 
 | Option | Value | Description |
@@ -138,7 +138,7 @@ close.
 
 ## Price alerts
 
-`/stocks` (or `/rates`) and `/crypto` notify you in your **private chat** (or, with
+`/stocks` and `/crypto` notify you in your **private chat** (or, with
 [`-to`](#notify-another-chat-or-by-email), in contacts, groups, numbers or by email) when a price
 goes past a value, with a text of yours at the start, if you want ([`-msg`](#message-in-the-notice)).
 Each alert fires once and is removed. Only the bot owner (and the

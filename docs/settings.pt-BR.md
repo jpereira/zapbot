@@ -124,7 +124,7 @@ em português).
 | `sticker.name` | texto | `ZapBot` | Nome do pacote das figurinhas |
 | `stocks.alert.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](commands/stocks.md#alertas-de-preço) do `/stocks` |
 | `stocks.alert.max` | 1–100 | `20` | Máximo de alertas de preço do `/stocks` |
-| `stocks.symbols` | lista | `USD, EUR, USDT, MSTR` | Símbolos exibidos pelo [`/stocks`](commands/stocks.md) (e `/rates`): moedas contra o real (`USD`, `EUR`, `GBP`, `USDT`) e tickers do Yahoo Finance (`MSTR`, `NVDA`, `PETR4.SA`, `BRK-B`, `^GSPC`); normalmente alterada pelo `/stocks -a`/`-d` |
+| `stocks.symbols` | lista | `USD, EUR, USDT, MSTR` | Símbolos exibidos pelo [`/stocks`](commands/stocks.md) : moedas contra o real (`USD`, `EUR`, `GBP`, `USDT`) e tickers do Yahoo Finance (`MSTR`, `NVDA`, `PETR4.SA`, `BRK-B`, `^GSPC`); normalmente alterada pelo `/stocks -a`/`-d` |
 | `stt.beam` | 1–10 | `1` | Tamanho do beam da busca do faster-whisper no [`/stt`](commands/stt.md) (`1` é o mais rápido; mais pode acertar um pouco mais e demora mais). O `-beam` muda na chamada |
 | `stt.engine` | `local`, `gpt` | `local` | Motor do [`/stt`](commands/stt.md) e do `/get -stt`: `local` (faster-whisper, sem chave) ou `gpt` (ChatGPT, API da OpenAI). `-gpt` e `-local` escolhem na chamada |
 | `stt.footer` | on/off | `on` | Termina a transcrição do /stt e do /get -stt com a dica "💡 Transcrito por <motor>". O -quiet (-q) esconde na chamada. |
