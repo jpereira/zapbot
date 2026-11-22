@@ -8,7 +8,7 @@ module.exports = {
     cmd: '/notes',
     usage: '/notes #tag <text>  or  /notes [-list|-l] [#tag...] [-to <destination>]...  or  /notes -search|-view|-update|-export|-move|-desc|-rm|-alert <...>',
     summary: 'Notes saved in the database',
-    help: 'Notes saved in the database. To add one, the syntax is /notes #tag <text>: without the #tag it errors, and just /notes #tag lists the tag\'s notes. Replying to a message, its text becomes the note, with ↩️ (/notes #reminder); media (image, document, audio, video...) in the message itself or in the replied one is saved to disk along with the note. With nothing, shows the tags with the count and description of each; -l lists all notes, with the ID, grouped by #tag (one message per tag). The -alert reminds you of a note at a date/time (once; the note stays): in your private chat or at the -to destinations.',
+    help: 'Notes saved in the database. To add one, the syntax is /notes #tag <text>: without the #tag it errors, and just /notes #tag lists the tag\'s notes. Replying to a message, its text becomes the note, with ↩️ (/notes #reminder); with text typed along (/notes #reminder Remember this!), the typed text comes first and the replied message follows it, with ↩️ and its media; media (image, document, audio, video...) in the message itself or in the replied one is saved to disk along with the note. With nothing, shows the tags with the count and description of each; -l lists all notes, with the ID, grouped by #tag (one message per tag). The -alert reminds you of a note at a date/time (once; the note stays): in your private chat or at the -to destinations.',
     ex: [
         '/notes #home buy milk',
         '/notes #home',
@@ -19,7 +19,7 @@ module.exports = {
         '/notes -d #home Home stuff',
         '/notes -u 3 new text',
         '/notes -e #home',
-        '/notes -r #home',
+        '/notes -r #home -yes',
         '/notes #reminder call John -alert tomorrow 9h',
         '/notes -alert 3 +2h -to /Family/',
         '/notes -alert #home 18h -to /Family/',
@@ -90,14 +90,22 @@ module.exports = {
         {
             opts: ['rm', 'r'],
             values: ['<id...|#tag...|all>'],
-            desc: 'Removes the notes with those IDs (-rm 1 2 3 or -rm 1,2,3), of a tag (-rm #home) or all (all). If any ID or tag does not exist, none is removed. The tag must be complete. Together with -alert, removes only the alert, keeping the notes.',
+            desc: 'Removes the notes with those IDs (-rm 1 2 3 or -rm 1,2,3), of a tag (-rm #home) or all (all). With a #tag, the numbers are the positions in that tag\'s list (-rm #home 1 is the 1st of #home), not IDs. A whole tag or all asks for -yes. If any ID, position or tag does not exist, none is removed. The tag must be complete. Together with -alert, removes only the alert, keeping the notes.',
             ex: [
                 '/notes -r 2',
                 '/notes -r 1 2 3',
-                '/notes -r #home',
-                '/notes -r all',
+                '/notes -r #home 1 3',
+                '/notes -r #home -yes',
+                '/notes -r all -yes',
                 '/notes -alert -r 3'
             ],
+            cron: false
+        },
+        {
+            opts: ['yes', 'y'],
+            values: [],
+            desc: 'With -rm: confirms removing a whole tag or all the notes (without it, the bot only says how many would go).',
+            ex: ['/notes -rm #home -yes'],
             cron: false
         },
         {

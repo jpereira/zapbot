@@ -31,7 +31,8 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 | `-export`, `-e` | `[#tag...]` | Manda as anotações num PDF, com as imagens e o texto como legenda (cabeçalho, rodapé com versão, host, data e hora, e paginação). Com tags, só as delas. Veja [Exportar](#exportar) |
 | `#tag <texto>` | | Sem opção na frente, vira uma anotação nova, igual ao `-add`: `/notes #casa não esquecer de remover a opção tal`. A `#tag` é obrigatória: `/notes meu texto` dá erro. Só `/notes #casa`, sem texto, lista as da tag |
 | `-add`, `-a` | `#tag <texto>` | Adiciona uma anotação; a `#tag` é obrigatória e vem no começo do texto. O texto vai até o `-alert`, se houver, e aceita várias linhas |
-| `-rm`, `-r` | `<id...\|#tag...\|all>` | Remove as anotações com esses IDs (`-r 2`, `-r 1 2 3` ou `-r 1,2,3`), de uma tag (`-r #casa`) ou todas (`all`). Se algum ID ou tag não existe, nenhuma sai. Junto com `-alert`, tira só o alerta, mantendo as anotações |
+| `-rm`, `-r` | `<id...\|#tag...\|all>` | Remove as anotações com esses IDs (`-r 2`, `-r 1 2 3` ou `-r 1,2,3`), de uma tag (`-r #casa`) ou todas (`all`). Com uma `#tag`, os números são as **posições na lista dela** (`-r #casa 1` é a 1ª da `#casa`), não IDs. Uma tag inteira ou `all` pede o `-yes`. Se algum ID, posição ou tag não existe, nenhuma sai. Junto com `-alert`, tira só o alerta, mantendo as anotações |
+| `-yes`, `-y` | | Com `-rm`: confirma a remoção de uma tag inteira ou de todas as anotações (sem ele, o bot só diz quantas sairiam) |
 | `-alert` | `<quando>` | Avisa da anotação (ou de todas as de uma `#tag`) numa data/hora. Veja [Alertas](#alertas) |
 | `-to` | `<destino>` | Com `-alert`: avisa num contato, grupo, número ou e-mail em vez do seu privado. Com a lista (`-l`, `#tag`) ou o `-export`: manda a lista ou o PDF lá, em vez de responder no chat. Repita para vários |
 
@@ -41,7 +42,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes -a #contatos ligar pro João -alert amanhã 9h
 /notes -l
 /notes -r 2
-/notes -r all
+/notes -r all -yes
 /notes -u 3 comprar pão e leite             → troca o texto da nº 3
 /notes -u #3 #casa comprar pão\ne leite          → troca o texto e passa para a #casa
 /notes -m #casa #lar                           → renomeia a #casa para #lar
@@ -59,12 +60,15 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 /notes                → as tags, com a quantidade de anotações
 /notes -l             → lista tudo, uma mensagem por #tag (as sem tag, de antes, por último)
 /notes #casa          → só as da #casa (o mesmo que /notes -l #casa)
-/notes -r #casa     → remove todas as da #casa
-/notes -r all       → remove tudo
+/notes -r #casa 1 3   → remove a 1ª e a 3ª da #casa (as posições na lista dela)
+/notes -r #casa -yes → remove todas as da #casa (sem o -yes, só diz quantas sairiam)
+/notes -r all -yes   → remove tudo
 ```
 
 - Respondendo uma mensagem, `/notes #lembrete` (ou `/notes -a #lembrete`) anota o texto dela, com o
-  ↩️ na frente. Texto digitado junto vale no lugar do da mensagem (sem o ↩️). Dá para juntar com
+  ↩️ na frente. Com texto digitado junto (`/notes #lembrete Lembrar de salvar isso!`), o que você digitou
+  vem primeiro (é o título) e a mensagem respondida vem depois, após uma linha em branco, com ↩️; a mídia
+  dela (imagem, documento, áudio, vídeo) é guardada na mesma anotação. Dá para juntar com
   `-alert`: `/notes -a #lembrete -alert amanhã 9h`. No PDF, o ↩️ vira `[resp.]`.
 - No texto da anotação, `\n` vira quebra de linha (`/notes #casa pão\nleite`); `\\n` fica como está.
 - A primeira linha é o título (o único em negrito), o resto vem como foi digitado e todo link

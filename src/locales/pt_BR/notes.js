@@ -22,7 +22,12 @@ module.exports = {
 
     // ---- /notes: -rm
     'notes.rm.missingMany': `❌ {what} não existem. Nada foi mexido; veja a lista com /notes -l`,
-    'notes.rm.missingOne': `❌ {what} não existe. Veja a lista com /notes -l\n💡 _Uso: {cmd} <id...|#tag...|all>_`,
+    'notes.add.optionAfterTag': `❌ As opções vão antes da tag, então não salvei nada: {option} veio depois de #{tag}.\n💡 _Exemplo: /notes {option} #{tag} ... (ou /notes #{tag} <texto> para anotar)_`,
+    'notes.rm.missingPos': `❌ Essa posição não existe na lista da tag: {list}.\n💡 _Os números com uma #tag são as posições na lista dela (/notes -l #tag). Uso: {cmd} #tag <posição...>_`,
+    'notes.rm.manyTags': `❌ Com posições, use uma #tag só (os números são as posições na lista dela). Sem #tag, os números são IDs.`,
+    'notes.rm.confirm': { one: `⚠️ Isso remove {count} anotação ({what}). Para confirmar: {cmd}`, other: `⚠️ Isso remove {count} anotações ({what}). Para confirmar: {cmd}` },
+    'notes.rm.whatAll': `todas`,
+    'notes.rm.missingOne': `❌ {what} não existe. Veja a lista com /notes -l\n💡 _Uso: {cmd} <id...|#tag... <posição>|all>_`,
     'notes.rm.alertsRemoved': { one: `🔕 {count} alerta removido.`, other: `🔕 {count} alertas removidos.` },
     'notes.rm.removed': { one: `🗑️ {count} anotação removida.`, other: `🗑️ {count} anotações removidas.` },
     'notes.rm.noTo': `❌ O -to não vale ao remover. Ele serve para -list, #tag e -export (e, no -add, para o -alert).`,
@@ -56,7 +61,7 @@ module.exports = {
     'notes.alert.fired': `🔔 *ANOTAÇÃO #{id}*\n\n{text}\n\n📅 Anotada em {date}`,
 
     // ---- /notes: listas
-    'notes.tips': `\n\n💡 *Dicas*\n/notes #tag <texto> anota\n/notes -v <id...|#tag...> mostra com a imagem\n/notes -r <id...|#tag...|all> remove\n-alert <quando> avisa.`,
+    'notes.tips': `\n\n💡 *Dicas*\n/notes #tag <texto> anota\n/notes -v <id...|#tag...> mostra com a imagem\n/notes -r <id...|#tag... <posição>> remove (tag inteira ou all: -yes)\n-alert <quando> avisa.`,
     'notes.tipsCompact': `\n\n💡 _🖼️ mídia · ⏰ alerta · 🔗 link_\n💡 _-v <nº> abre a nota inteira_\n💡 _sem o -c, a lista completa_`,
     'notes.tipsTags': `\n\n💡 _/notes #tag lista as anotações de uma tag_`,
     'notes.sentTo': `📝 Anotações enviadas em {where}.`,
