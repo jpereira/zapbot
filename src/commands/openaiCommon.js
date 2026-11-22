@@ -26,8 +26,8 @@ async function replyConsumption(msg) {
 // The message for whoever is neither owner nor admin
 const SO_OWNER_GENERATE = (action) => t('openai.ownerOnly', { action });
 
-// The request text without the option (-img, -gif)
-const withoutOption = (args, names) => args.replace(new RegExp(`(^|\\s)-(?:${names})(?=\\s|$)`), '').trim();
+// The request text without the options (-img, -gif; every one of them, so "-q -local text" leaves only the text)
+const withoutOption = (args, names) => args.replace(new RegExp(`(^|\\s)-(?:${names})(?=\\s|$)`, 'g'), ' ').replace(/ {2,}/g, ' ').trim();
 
 /*
  * For the model error and for -m: the model setting, the account's model list filter and the
