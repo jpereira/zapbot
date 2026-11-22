@@ -39,6 +39,7 @@ resto do texto, um `-x` é pergunta. O `/tldr` e o `/draw` agem igual (o `-2h` e
 
 | Opção | Valor | Descrição |
 |---|---|---|
+| `-quiet`, `-q` | | Não mostra a dica do motor ("💡 ... por ChatGPT, Tesseract, Piper...") no fim da resposta. Para esconder sempre: o setting `gpt.footer` em `off` |
 | `-model`, `-m` | `[modelo]` | Só dono e admins. Lista os modelos por uso, os que a sua chave vê, e troca o de cada um (veja [Escolhendo o modelo](#escolhendo-o-modelo)) |
 | `-audio` | | Só dono e admins. Junto do `-m`: o modelo da transcrição de áudio |
 | `-img` | | Só dono e admins. Cria uma imagem com o pedido (respondendo uma foto, a edita). Veja [Imagem e GIF](#imagem-e-gif--img--gif) |

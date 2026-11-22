@@ -215,7 +215,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
 
         const textAlt = t('tldr.header', { name: nameAlt, messages, start: hour(first), end: hour(last) }) +
             (notices.length ? `\n_(${notices.join('; ')})_` : '') +
-            `${withEngineTip(`\n\n${summary}`, 'tldr', CHATGPT, { sep: '\n\n' })}${await consumptionFooter()}`;
+            `${withEngineTip(`\n\n${summary}`, 'tldr', CHATGPT, { sep: '\n\n', quiet: opts.opt.quiet })}${await consumptionFooter()}`;
 
         if (opts.opt.private) {
             await completeNotice(msg, notice, t('tldr.sentPrivate'));

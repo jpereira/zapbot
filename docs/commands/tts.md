@@ -13,6 +13,7 @@ the voice and the style come from the `gpt.tts.*` settings.
 
 | Option | Value | Description |
 |---|---|---|
+| `-quiet`, `-q` | | Does not show the engine tip ("💡 ... by ChatGPT, Tesseract, Piper...") at the end of the reply. To hide it always: the `tts.footer` setting off |
 | *(none)* | `[<text>]` | What to speak, up to 4096 characters. Replying to a message, the style of the speech |
 | `-gpt`, `-g` | | Speaks with ChatGPT (OpenAI speech API, spends your account) instead of the local Piper voice. Without `-gpt` or `-local`, the [`tts.engine`](../settings.md) setting decides |
 | `-local`, `-l` | | Speaks with the local Piper voice (no key, uses the server CPU), even with `tts.engine` at `gpt` |

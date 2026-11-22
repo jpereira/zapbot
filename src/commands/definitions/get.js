@@ -3,7 +3,7 @@
  */
 
 const { USER } = require('../../roles').ROLES;
-const { OPTION_VERBOSE_FFMPEG } = require('./_options');
+const { OPTION_VERBOSE_FFMPEG, OPTION_QUIET_TIP } = require('./_options');
 
 module.exports = {
     cmd: '/get',
@@ -12,6 +12,7 @@ module.exports = {
     summary: 'Downloads video or audio from social networks',
     help: 'Downloads video or audio from social networks (Instagram, YouTube, X, TikTok and other yt-dlp sites), from the URL or by replying to a message with a link. Replying to a WhatsApp video, image or audio uses that media itself: with no option, returns the original file. Pick audio, sticker or transcription per run; video and audio are sent as a document.',
     cmd_opts: [
+        { ...OPTION_QUIET_TIP, desc: 'Returns ONLY the transcribed text: no header (language and duration), no engine tip and no "⏳" notice. With -sum, the summary and the text, with no titles. To hide the tip always: the stt.footer setting off.' },
         {
             opts: ['sticker', 'st'],
             values: [],

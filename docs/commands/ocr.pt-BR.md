@@ -15,6 +15,7 @@ idiomas do local (`por+eng`).
 
 | Opção | Valor | Descrição |
 |---|---|---|
+| `-quiet`, `-q` | | Não mostra a dica do motor ("💡 ... por ChatGPT, Tesseract, Piper...") no fim da resposta. Para esconder sempre: o setting `ocr.footer` em `off` |
 | `-gpt`, `-g` | | Lê com o ChatGPT (visão da OpenAI, gasta a sua conta) em vez do Tesseract local. Sem `-gpt` nem `-local`, o setting `ocr.engine` decide |
 | `-local`, `-l` | | Lê com o Tesseract local (sem chave, roda na CPU do servidor), mesmo com `ocr.engine` em `gpt` |
 | `-status`, `-s` | | Com `-gpt`: acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo. Para deixar sempre ligado: `/set gpt.status true` |

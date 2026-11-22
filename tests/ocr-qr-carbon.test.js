@@ -300,4 +300,54 @@ describe('motor nos comandos (ampulheta e dica do fim)', () => {
         assert.equal(withEngineTip('ok', 'tldr', 'ChatGPT'), 'ok\n\n💡 _Resumido por ChatGPT_');
         assert.equal(withEngineTip('ok', 'ocr', 'Tesseract', { sep: '\n' }), 'ok\n💡 _Lido por Tesseract_');
     });
+
+    test('-quiet (-q) não mostra a dica do fim', () => {
+        assert.equal(withEngineTip('ok', 'gpt', 'ChatGPT', { quiet: true }), 'ok');
+    });
+});
+
+describe('-quiet (-q) e <comando>.footer', () => {
+    const { processes } = bot;
+    const chat = (textAlt) => network.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: textAlt } }] });
+
+    test('/ocr -q e ocr.footer off escondem a dica; o texto continua', async () => {
+        processes.ocr = 'NOTA';
+        assert.equal((await bot.replyAlt('/ocr', { quoted: photo() })).at(-1), '📝 NOTA\n\n💡 _Lido por Tesseract_');
+        assert.equal((await bot.replyAlt('/ocr -q', { quoted: photo() })).at(-1), '📝 NOTA');
+        assert.equal((await bot.replyAlt('/ocr -quiet', { quoted: photo() })).at(-1), '📝 NOTA');
+        await bot.setSetting('ocr.footer', false);
+        assert.equal((await bot.replyAlt('/ocr', { quoted: photo() })).at(-1), '📝 NOTA');
+    });
+
+    test('/gpt -q: a pergunta vai sem o -q e a resposta sem a dica; gpt.footer off faz o mesmo', async () => {
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        await bot.setSetting('gpt.status', false);
+        chat('Oi.');
+        assert.deepEqual(await bot.replyAlt('/gpt -q olá'), ['🤖 Oi.']);
+        assert.equal(network.calls.at(-1).cfg.body.messages.at(-1).content, 'olá');
+        await bot.setSetting('gpt.footer', false);
+        assert.deepEqual(await bot.replyAlt('/gpt olá'), ['🤖 Oi.']);
+    });
+});
+
+describe('-quiet (-q): sem o aviso "⏳" e sem a dica', () => {
+    const { processes } = bot;
+    const sent = () => bot.client.sent.map(e => (typeof e.content === 'string' ? e.content : '[mídia]'));
+
+    test('/ocr -q responde direto, sem o aviso de leitura', async () => {
+        processes.ocr = 'NOTA';
+        await bot.replyAlt('/ocr -q', { quoted: photo() });
+        assert.deepEqual(sent().filter(c => !c.startsWith('/')), ['📝 NOTA']);
+        await bot.restart();
+        processes.ocr = 'NOTA';
+        await bot.replyAlt('/ocr', { quoted: photo() });
+        assert.ok(sent().some(c => c.includes('Lendo o texto com Tesseract') || c.includes('Lido por Tesseract')));
+    });
+
+    test('/tts -q manda só o áudio (nada de "Gerando..." nem "áudio gerado abaixo")', async () => {
+        await bot.execute('/tts -q bom dia');
+        const texts = sent().filter(c => c !== '[mídia]' && !c.startsWith('/'));
+        assert.deepEqual(texts, []);
+        assert.ok(sent().includes('[mídia]'), 'o áudio foi enviado');
+    });
 });

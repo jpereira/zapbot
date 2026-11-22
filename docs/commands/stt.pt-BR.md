@@ -9,6 +9,7 @@ Roda **dentro do servidor**, com o [faster-whisper](https://github.com/SYSTRAN/f
 
 | Opção | Valor | Descrição |
 |---|---|---|
+| `-quiet`, `-q` | | Devolve **só** o texto transcrito: sem cabeçalho (idioma e duração), sem a dica do motor e sem o aviso `⏳`. Com `-sum`, o resumo e o texto, sem títulos. Para esconder a dica sempre: o setting `stt.footer` em `off` |
 | `-startSec`, `-ss` | `<tempo>` | Começa neste ponto (padrão 0), em segundos (`30`) ou em `min:seg` (`09:33`). Com `-` na frente, conta do **final** (`-60` é o último minuto) |
 | `-endSec`, `-es` | `<tempo>` | Termina neste ponto, no mesmo formato do `-ss`; deve ser maior que o início |
 | `-gpt`, `-g` | | Transcreve pelo ChatGPT (API da OpenAI, gasta a sua conta) em vez do faster-whisper local. Sem `-gpt` nem `-local`, vale o setting [`stt.engine`](../settings.md) |

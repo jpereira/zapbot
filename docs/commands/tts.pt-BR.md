@@ -13,6 +13,7 @@ Transforma texto numa **nota de voz** de robô pelo ChatGPT (a API de voz da Ope
 
 | Opção | Valor | Descrição |
 |---|---|---|
+| `-quiet`, `-q` | | Não mostra a dica do motor ("💡 ... por ChatGPT, Tesseract, Piper...") no fim da resposta. Para esconder sempre: o setting `tts.footer` em `off` |
 | *(nenhuma)* | `[<texto>]` | O que falar, até 4096 caracteres. Respondendo uma mensagem, o estilo da fala |
 | `-gpt`, `-g` | | Fala pelo ChatGPT (API de voz da OpenAI, gasta a sua conta) em vez da voz local do Piper. Sem `-gpt` nem `-local`, vale o setting [`tts.engine`](../settings.md) |
 | `-local`, `-l` | | Fala com a voz local do Piper (sem chave, usa a CPU do servidor), mesmo com o `tts.engine` em `gpt` |

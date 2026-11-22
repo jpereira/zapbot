@@ -445,6 +445,11 @@ const SETTINGS_SCHEMA = {
         validate: validateUrlFeed,
         desc: 'RPC da Solana usado pelo /defi (o público limita as consultas; um RPC próprio costuma ter a chave na URL).'
     },
+    'draw.footer': {
+        default: true,
+        type: 'boolean',
+        desc: 'Acrescenta a dica "💡 Desenhado por ChatGPT" no aviso "imagem gerada abaixo" do /draw e do /gpt -img|-gif. O -quiet (-q) esconde na chamada.'
+    },
     'forward.delayMs': {
         default: 1000,
         type: 'number', min: 0, max: 10000,
@@ -536,6 +541,11 @@ const SETTINGS_SCHEMA = {
         default: 0,
         type: 'number', min: 0, max: 100000,
         desc: 'Total de créditos comprados na OpenAI, em dólares (a API não informa o saldo): o /gpt -usage mostra $usado/$total. 0: não mostra.'
+    },
+    'gpt.footer': {
+        default: true,
+        type: 'boolean',
+        desc: 'Termina as respostas do /gpt com a dica "💡 Respondido por ChatGPT". O -quiet (-q) esconde na chamada.'
     },
     'gpt.gif.frameMs': {
         default: 200,
@@ -689,6 +699,11 @@ const SETTINGS_SCHEMA = {
         normalize: (v) => v.toLowerCase(),
         desc: 'Motor do /ocr: local (Tesseract, sem chave) ou gpt (ChatGPT, visão da OpenAI). -gpt e -local escolhem na chamada.'
     },
+    'ocr.footer': {
+        default: true,
+        type: 'boolean',
+        desc: 'Termina a resposta do /ocr com a dica "💡 Lido por <motor>". O -quiet (-q) esconde na chamada.'
+    },
     'ocr.language': {
         default: 'por+eng',
         type: 'string',
@@ -799,6 +814,11 @@ const SETTINGS_SCHEMA = {
         normalize: (v) => v.toLowerCase(),
         desc: 'Motor do /stt e do /get -stt: local (faster-whisper, sem chave) ou gpt (ChatGPT, API da OpenAI). -gpt e -local escolhem na chamada.'
     },
+    'stt.footer': {
+        default: true,
+        type: 'boolean',
+        desc: 'Termina a transcrição do /stt e do /get -stt com a dica "💡 Transcrito por <motor>". O -quiet (-q) esconde na chamada.'
+    },
     'stt.language': {
         default: 'auto',
         type: 'string',
@@ -813,6 +833,11 @@ const SETTINGS_SCHEMA = {
         default: 'small',
         type: 'string',
         desc: 'Modelo do faster-whisper no /get -stt: tiny, base, small, medium ou large-v3-turbo (maior = melhor e mais lento). O small vem na imagem; outro é baixado na primeira vez.'
+    },
+    'tldr.footer': {
+        default: true,
+        type: 'boolean',
+        desc: 'Termina o resumo do /tldr com a dica "💡 Resumido por ChatGPT". O -quiet (-q) esconde na chamada.'
     },
     'tldr.maxMsgs': {
         default: 500,
@@ -830,6 +855,11 @@ const SETTINGS_SCHEMA = {
         options: ['local', 'gpt'],
         normalize: (v) => v.toLowerCase(),
         desc: 'Motor do /tts: local (voz Piper, sem chave) ou gpt (ChatGPT, API de voz da OpenAI). -gpt e -local escolhem na chamada.'
+    },
+    'tts.footer': {
+        default: true,
+        type: 'boolean',
+        desc: 'Acrescenta a dica "💡 Gerado por <motor>" no aviso "áudio gerado abaixo" do /tts e do /gpt -voice. O -quiet (-q) esconde na chamada.'
     },
     'tts.voice.en': {
         default: 'en_US-lessac-medium',

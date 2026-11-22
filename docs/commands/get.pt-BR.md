@@ -11,6 +11,7 @@ pelo ffmpeg. Se a mídia tiver um link na legenda, vale a mídia.
 
 | Opção | Valor | Descrição |
 |---|---|---|
+| `-quiet`, `-q` | | Devolve **só** o texto transcrito: sem cabeçalho (idioma e duração), sem a dica do motor e sem o aviso `⏳`. Com `-sum`, o resumo e o texto, sem títulos. Para esconder a dica sempre: o setting `stt.footer` em `off` |
 | `-sticker`, `-st` | | Envia como figurinha animada (até 6 s), enquadrada no meio do vídeo. É o mesmo que o [`/sticker`](sticker.md) |
 | `-photo`, `-ph` | `<n>` | Post de fotos (Instagram, X/Twitter): manda só esta foto do carrossel, em vez de todas (`1` é a primeira; com `-` na frente, conta do final: `-1` é a última). Com `-st`, a figurinha sai dela |
 | `-pos` | `<top\|center\|bottom>` | Com `-st`: onde fica o recorte quadrado (padrão `center`). Em mídia mais larga que alta, `top` é a esquerda e `bottom` a direita |

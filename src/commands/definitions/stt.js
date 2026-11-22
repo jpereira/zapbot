@@ -4,12 +4,15 @@
 
 const { USER } = require('../../roles').ROLES;
 
+const { OPTION_QUIET_TIP } = require('./_options');
+
 module.exports = {
     cmd: '/stt',
     usage: '/stt [OPTION]... <url>  or  /stt [OPTION]... (replying to a video, audio or link)',
     summary: 'Transcribes the speech of a video or audio',
     help: 'Transcribes the speech of a video or audio to text. /get -stt (-t) is a shortcut for it. From a URL (Instagram, YouTube, X, TikTok and other yt-dlp sites) or the replied link, downloads only the lowest-quality audio. Replying to any video or audio file (a voice note too), uses it. By default it runs on the server (faster-whisper, Portuguese, English and other languages detected by itself), with no cost per minute; with -gpt (-g), through ChatGPT, which needs the OpenAI key.',
     cmd_opts: [
+        { ...OPTION_QUIET_TIP, desc: 'Returns ONLY the transcribed text: no header (language and duration), no engine tip and no "⏳" notice. With -sum, the summary and the text, with no titles. To hide the tip always: the stt.footer setting off.' },
         {
             opts: ['startSec', 'ss'],
             values: ['<time>'],

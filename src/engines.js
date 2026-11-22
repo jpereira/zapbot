@@ -32,11 +32,14 @@ const CHATGPT = 'ChatGPT';
 const engineProcessing = (cmd, engine, params = {}) => t('engine.processing', { action: t(`engine.action.${cmd}`, params), engine });
 
 /**
- * The "💡 Read by {engine}" line that ends the reply.
+ * The "💡 Read by {engine}" line that ends the reply. -quiet (-q) and the <command>.footer setting off hide it.
  * @param {string} text   the reply
  * @param {string} sep    what goes between the reply and the tip
+ * @param {boolean} [quiet]   the -quiet|-q of the call
+ * @param {string} [command]  whose <command>.footer setting applies (default: cmd)
  */
-function withEngineTip(text, cmd, engine, { sep = '\n\n' } = {}) {
+function withEngineTip(text, cmd, engine, { sep = '\n\n', quiet = false, command = cmd } = {}) {
+    if (quiet || !getSetting(`${command}.footer`)) return text;
     return `${text}${sep}${t('engine.tip', { verb: t(`engine.verb.${cmd}`), engine })}`;
 }
 

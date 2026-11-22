@@ -83,7 +83,7 @@ async function sendGif(msg, b64, captionAlt, cmd) {
  * @param {Array<{ name: string, image: object }>} [o.profiles]  the -p profile photos: they go along with the base photo
  * @param {string} o.withoutRequest  the reply when there is nothing to draw
  */
-async function drawAlt({ msg, cmd, request, quotedMsg = null, gif = null, profiles = [], noRequest: withoutRequest }) {
+async function drawAlt({ msg, cmd, request, quotedMsg = null, gif = null, profiles = [], noRequest: withoutRequest, quiet = false }) {
     const base = await referencePhoto(msg, quotedMsg, cmd);
     if (base?.error) {
         await msg.reply(base.error);
@@ -118,7 +118,7 @@ async function drawAlt({ msg, cmd, request, quotedMsg = null, gif = null, profil
             images: photo ? await Promise.all(photo.map(image => photoInPng({ image }))) : []
         });
         // Media does not become an edit of the notice: it says the result comes below (and stays), and the media goes out afterward
-        await completeNotice(msg, notice, withEngineTip(t(animation ? 'draw.gifBelow' : 'draw.imageBelow'), 'draw', CHATGPT, { sep: '\n' }));
+        await completeNotice(msg, notice, withEngineTip(t(animation ? 'draw.gifBelow' : 'draw.imageBelow'), 'draw', CHATGPT, { sep: '\n', quiet, command: cmd.slice(1) }));
         if (animation) await sendGif(msg, b64, captionAlt, cmd);
         else await msg.reply(new MessageMedia('image/png', b64, 'desenho.png'), null, { caption: captionAlt });
         await replyConsumption(msg);
@@ -179,7 +179,7 @@ async function draw({ msg, args, opts, quotedMsg, chatId, isGroup }) {
         if (!profiles) return;
     }
 
-    await drawAlt({ msg, cmd: '/draw', request, quotedMsg, gif, profiles, noRequest: commandUsage('/draw') });
+    await drawAlt({ msg, cmd: '/draw', request, quotedMsg, gif, profiles, noRequest: commandUsage('/draw'), quiet: opts?.opt?.quiet });
 }
 
 // The -status|-s (or the gpt.status setting) shows the call usage in the footer

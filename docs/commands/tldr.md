@@ -13,6 +13,7 @@ WhatsApp formatting conversion as `/gpt` (see
 
 | Option | Value | Description |
 |---|---|---|
+| `-quiet`, `-q` | | Does not show the engine tip ("💡 ... by ChatGPT, Tesseract, Piper...") at the end of the reply. To hide it always: the `tldr.footer` setting off |
 | `[period]` | | A time, as in [`/cron`](cron.md) (`30m`, `2h`, `1d`, `1h30m`, `2d4h`): the messages from that time until now; a number (`300`): the last 300 (default limit 500, configurable from 10 to 2000 in `tldr.maxMsgs`). Default: the last 100. The `-` in front is optional (`-2h`) |
 | *(replying)* | | Summarizes from the replied message until now; a typed period or `-chat` win |
 | `-chat`, `-c` | `<chat>` | Summarizes another chat, the group or contact name (all the words, in any order, ignoring accents), `/regex/` or `@contact`. A name with a space goes in quotes: `-c "work rio"`. If several chats match, it lists them and waits for the number |

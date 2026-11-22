@@ -5,6 +5,14 @@
   "cmd_opts": [
     {
       "opts": [
+        "quiet",
+        "q"
+      ],
+      "values": [],
+      "desc": "Devolve SÓ o texto transcrito: sem cabeçalho (idioma e duração), sem a dica do motor e sem o aviso \"⏳\". Com -sum, o resumo e o texto, sem títulos. Para esconder a dica sempre: o setting stt.footer em off."
+    },
+    {
+      "opts": [
         "sticker",
         "st"
       ],

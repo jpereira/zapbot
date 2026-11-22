@@ -15,6 +15,7 @@ the `gpt.api.key` setting), like [`/gpt`](gpt.md). The `ocr.engine` setting pick
 
 | Option | Value | Description |
 |---|---|---|
+| `-quiet`, `-q` | | Does not show the engine tip ("💡 ... by ChatGPT, Tesseract, Piper...") at the end of the reply. To hide it always: the `ocr.footer` setting off |
 | `-gpt`, `-g` | | Reads with ChatGPT (OpenAI vision, spends your account) instead of the local Tesseract. Without `-gpt` or `-local`, the `ocr.engine` setting decides |
 | `-local`, `-l` | | Reads with the local Tesseract (no key, runs on the server CPU), even when `ocr.engine` is `gpt` |
 | `-status`, `-s` | | With `-gpt`: adds the call usage to the reply footer: bytes sent (TX) and received (RX), tokens spent, estimated cost, and balance. To keep it always on: `/set gpt.status true` |

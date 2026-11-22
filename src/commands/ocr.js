@@ -43,14 +43,15 @@ async function extract({ msg, quotedMsg, opts }) {
     }
 
     const name = isGpt ? CHATGPT : 'Tesseract';
-    const notice = await msg.reply(engineProcessing('ocr', name), null, { linkPreview: false });
+    // -quiet: no "reading..." notice either (the reply comes straight away)
+    const notice = opts.opt.quiet ? null : await msg.reply(engineProcessing('ocr', name), null, { linkPreview: false });
     try {
         const textAlt = isGpt
             ? await askOnChat({ cmd: '/ocr', system: t('ocr.instructions', { empty: WITHOUT_TEXT }), text: t('ocr.prompt'), image: photo.image })
             : await readLocal(photo.image);
         // The 📝 in front also guarantees the reply never starts with "/" (see markSentByBot)
         const reply = !textAlt.trim() || textAlt.trim() === WITHOUT_TEXT ? t('ocr.noText') : `📝 ${textAlt.trim()}`;
-        await completeNotice(msg, notice, withEngineTip(reply, 'ocr', name) + (isGpt ? await consumptionFooter() : ''));
+        await completeNotice(msg, notice, withEngineTip(reply, 'ocr', name, { quiet: opts.opt.quiet }) + (isGpt ? await consumptionFooter() : ''));
     } catch (err) {
         if (isGpt) {
             await completeNotice(msg, notice, errorOpenAi(err, '/ocr'));
