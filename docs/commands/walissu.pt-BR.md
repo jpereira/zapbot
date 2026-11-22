@@ -1,5 +1,10 @@
 # `/walissu`
 
+> ⚠️ **Vem desativado por padrão.** O `/walissu` já vem desligado (está no setting `commands.disabled`, veja o [`/set`](set.md)): ele não
+> aparece no `/help` e, para você e os admins, o bot responde `🚫 O /walissu está desativado. Para ligar: /set -rm commands.disabled walissu`.
+> Para ligar, mande `/set -rm commands.disabled walissu` (os três de uma vez: `/set -rm commands.disabled kernel cve walissu`,
+> ou `/set commands.disabled ""` para nenhum desativado). Para desligar de novo: `/set -a commands.disabled walissu`.
+
 Uma **piada**. Só em grupos: o Walissu CVE BOT sorteia 2 membros diferentes (fora o bot), os marca e responde com
 uma CVE aleatória entre as 50 publicadas mais recentemente no [NVD](https://nvd.nist.gov/) nos
 últimos 2 dias.

@@ -1,5 +1,10 @@
 # `/kernel`
 
+> ⚠️ **Disabled by default.** `/kernel` comes turned off (it is in the `commands.disabled` setting, see [`/set`](set.md)): it is not in
+> `/help` and, for you and the admins, the bot answers `🚫 The /kernel is disabled. To turn it on: /set -rm commands.disabled kernel`.
+> To turn it on, send `/set -rm commands.disabled kernel` (the three at once: `/set -rm commands.disabled kernel cve walissu`,
+> or `/set commands.disabled ""` for none disabled). To turn it off again: `/set -a commands.disabled kernel`.
+
 Mainline, stable and longterm versions published at `kernel.org/releases.json` (up to 6 lines, in
 kernel.org order), with the release date of each one.
 

@@ -1,5 +1,10 @@
 # `/cve`
 
+> ⚠️ **Vem desativado por padrão.** O `/cve` já vem desligado (está no setting `commands.disabled`, veja o [`/set`](set.md)): ele não
+> aparece no `/help` e, para você e os admins, o bot responde `🚫 O /cve está desativado. Para ligar: /set -rm commands.disabled cve`.
+> Para ligar, mande `/set -rm commands.disabled cve` (os três de uma vez: `/set -rm commands.disabled kernel cve walissu`,
+> ou `/set commands.disabled ""` para nenhum desativado). Para desligar de novo: `/set -a commands.disabled cve`.
+
 Lista as CVEs publicadas mais recentemente no [NVD](https://nvd.nist.gov/) (base oficial do NIST),
 da mais nova para a mais antiga. Cada uma vem com o ID, a nota CVSS e a severidade, um resumo da
 descrição e o link para a página no NVD.

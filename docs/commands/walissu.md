@@ -1,5 +1,10 @@
 # `/walissu`
 
+> ⚠️ **Disabled by default.** `/walissu` comes turned off (it is in the `commands.disabled` setting, see [`/set`](set.md)): it is not in
+> `/help` and, for you and the admins, the bot answers `🚫 The /walissu is disabled. To turn it on: /set -rm commands.disabled walissu`.
+> To turn it on, send `/set -rm commands.disabled walissu` (the three at once: `/set -rm commands.disabled kernel cve walissu`,
+> or `/set commands.disabled ""` for none disabled). To turn it off again: `/set -a commands.disabled walissu`.
+
 A **joke**. Groups only: the Walissu CVE BOT picks 2 different members (not counting the bot), tags them and
 replies with a random CVE among the 50 most recently published on [NVD](https://nvd.nist.gov/) in the
 last 2 days.
