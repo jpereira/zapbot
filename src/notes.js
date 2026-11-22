@@ -345,7 +345,7 @@ async function addAlt(msg, textTyped, quotedMsg) {
     // A protected tag only takes notes while unlocked (/notes -lock #tag); what is saved goes encrypted
     await lock.refresh();
     const protectedTag = lock.isProtected(tag.toLowerCase());
-    if (protectedTag && !(lock.isUnlocked(tag.toLowerCase()) && lock.inPrivate())) {
+    if (protectedTag && !(lock.isUnlocked(tag.toLowerCase()) && lock.allowedHere())) {
         await lock.purgeCopies(msg, `/notes #${tag} ***`);
         await msg.reply(lock.lockedNotice(tag.toLowerCase()));
         return;

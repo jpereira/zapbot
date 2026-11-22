@@ -105,6 +105,7 @@ shows are in Portuguese; the ones here are in English).
 | `news.hack` | list | The Hacker News, BleepingComputer, Krebs on Security | RSS feeds for `/news -hack` |
 | `news.max` | 1–10 | `5` | Headlines shown by `/news` (`/news <count>` overrides it) |
 | `notes.lockMinutes` | 1–120 | `5` | Minutes without using a protected tag ([`/notes -lock`](commands/notes.md#protected-tags--lock)) until it locks by itself |
+| `notes.lockPrivateOnly` | on/off | `on` | A protected tag ([`/notes -lock`](commands/notes.md#protected-tags--lock)) only opens in your own private chat. `off`: it opens in any chat (never with `-to`; the password is still typed only in your private chat) |
 | `ocr.engine` | `local`, `gpt` | `local` | Engine of [`/ocr`](commands/ocr.md): `local` (Tesseract, no key) or `gpt` (ChatGPT, OpenAI vision). `-gpt` and `-local` pick it per call |
 | `ocr.footer` | on/off | `on` | Ends the /ocr reply with the tip "💡 Read by <engine>". -quiet (-q) hides it on the call. |
 | `ocr.language` | text | `por+eng` | Languages of the local [`/ocr`](commands/ocr.md) (Tesseract), joined by `+`: `por+eng`, `por`, `eng`, `spa`... One that is not in the Docker image is not read |

@@ -41,7 +41,18 @@ const PLAIN_DIR = path.join(TMP_DIR, 'notes');
 const context = new AsyncLocalStorage();
 const runIn = (ctx, fn) => context.run(ctx, fn);
 const inPrivate = () => context.getStore()?.privateChat === true;
-const canRead = () => inPrivate() && !context.getStore()?.sending;
+// notes.lockPrivateOnly (on by default): a protected tag only opens in your own private chat. Off: in any chat (never
+// sent to others with -to, and the password is still typed only in your private chat)
+const allowedHere = () => inPrivate() || !getSetting('notes.lockPrivateOnly');
+const canRead = () => allowedHere() && !context.getStore()?.sending;
+
+// A decrypted note was read in this command: whatever the bot sends from here on may carry it, so it is never saved
+// (not in the messages table, not in the media folder): see client.sendMessage and 'message_create'
+const markSecret = () => {
+    const store = context.getStore();
+    if (store) store.secret = true;
+};
+const isSecretOutput = () => context.getStore()?.secret === true;
 
 async function isOwnPrivate(chatId) {
     return (await chatCurrentIds(chatId)).includes(client.info.wid._serialized);
@@ -150,6 +161,7 @@ function open(n) {
         return { ...n, text: t('notes.lock.lockedText'), locked: true, media_file: stored };
     }
     const plain = stored ? path.join(PLAIN_DIR, path.basename(stored).replace(/\.enc$/, '')) : stored;
+    markSecret();
     return { ...n, text, media_file: stored, media_path: plain, plain: Boolean(stored) };
 }
 
@@ -380,7 +392,7 @@ function reset() {
 }
 
 module.exports = {
-    canRead, inPrivate, isOwnPrivate, lockedNotice, runIn,
+    allowedHere, canRead, inPrivate, isSecretOutput, markSecret, isOwnPrivate, lockedNotice, runIn,
     isUnlocked, reset, cleanCopies, cleanLeftovers, ensurePlain, handlePassword, isProtected, isSealedText, lockNow, oldCopies,
     eraseMessage, open, purgeCopies, refresh, sealFile, sealText, start, stop, tryInline, unsealText
 };

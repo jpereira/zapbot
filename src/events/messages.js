@@ -5,7 +5,7 @@
 const path = require('path');
 const fs = require('fs-extra');
 
-const { client, botConsumeSending, wasSentByBot, messageToSelf } = require('../client');
+const { client, botConsumeSending, isNoStore, wasSentByBot, messageToSelf } = require('../client');
 const { getCommandSyntax, helpProtocol } = require('../commands/base');
 const { textRunAlias, resolverAlias } = require('../aliases');
 const { ttsRewrite } = require('../ttsOption');
@@ -170,6 +170,9 @@ client.on('message_create', (msg) => withContextDebug({
                 name: contact?.name || null
             });
         }
+
+        // What the bot sent with a decrypted note (/notes of a protected tag) is not kept: no row, no media, no stats
+        if (msg.fromMe && isNoStore(msg)) return;
 
         /*
          * Persistence (to recover deleted messages)

@@ -723,6 +723,11 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 120,
         desc: 'Minutos sem usar uma tag protegida (/notes -lock) até ela travar sozinha.'
     },
+    'notes.lockPrivateOnly': {
+        default: true,
+        type: 'boolean',
+        desc: 'Uma tag protegida (/notes -lock) só abre no seu privado (as mensagens com você mesmo). Com off, abre em qualquer chat (nunca com -to, e a senha continua sendo digitada só no seu privado). O que o bot envia com uma nota decifrada nunca é guardado no banco.'
+    },
     'ocr.engine': {
         default: 'local',
         type: 'string',

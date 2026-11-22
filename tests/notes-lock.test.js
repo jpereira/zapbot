@@ -576,3 +576,65 @@ describe('/notes -lock', () => {
         assert.doesNotMatch(sent, /velho/);
     });
 });
+
+describe('o que o bot envia com uma nota decifrada nunca é guardado', () => {
+    // The reply of the bot comes back on 'message_create' as yours: it is what the messages table would save
+    const comeBack = async (content, chat = OWNER.jid) => bot.deliver(bot.createMessage({ text: String(content), chat, de: OWNER.jid }));
+    const savedBodies = async () => (await dbAll('SELECT body FROM messages')).map(r => r.body);
+
+    test('a nota decifrada que o bot mostra no privado não vai para o banco (nem a lista, nem a busca); uma resposta comum vai', async () => {
+        await bot.replyAlt('/notes #foo segredo 123', PRIVATE);
+        await bot.replyAlt('/notes #livre texto comum', PRIVATE);
+        await protectFoo();
+
+        const shown = await bot.replyAlt('/notes -v #foo', PRIVATE);
+        assert.match(shown.join('\n'), /segredo 123/, 'it shows');
+        for (const content of shown) await comeBack(content);
+        const listed = await bot.replyAlt('/notes -l #foo', PRIVATE);
+        for (const content of listed) await comeBack(content);
+        // (the command typed before protecting the tag is another matter: -lock -clean -yes)
+        assert.ok(!(await savedBodies()).some(b => /\*segredo 123\*/.test(b)), 'what the bot showed is nowhere in the messages table');
+
+        // the one of an open tag is saved as always (it is not secret)
+        const free = await bot.replyAlt('/notes -v #livre', PRIVATE);
+        for (const content of free) await comeBack(content);
+        assert.ok((await savedBodies()).some(b => /texto comum/.test(b)), 'a normal reply is kept');
+    });
+
+    test('if the event came before the send resolved, the row that was saved (and its media) is deleted when it resolves', async () => {
+        const { forgetSent } = bot.src('client');
+        const file = path.join(CACHE_DIR, 'media-secreta.pdf');
+        fs.mkdirSync(CACHE_DIR, { recursive: true });
+        fs.writeFileSync(file, 'x');
+        await bot.dbRun("INSERT INTO messages (id, chat_id, body, type, timestamp, has_media, media_path, from_me) VALUES ('SEC1', ?, 'segredo', 'document', 1, 1, ?, 1)", [OWNER.jid, file]);
+        await forgetSent({ id: { _serialized: `true_${OWNER.jid}_SEC1`, id: 'SEC1' } });
+        assert.equal(await dbGet("SELECT 1 AS ok FROM messages WHERE id = 'SEC1'"), undefined);
+        assert.equal(fs.existsSync(file), false, 'the media too');
+    });
+});
+
+describe('notes.lockPrivateOnly', () => {
+    test('on by default: in a group the tag stays locked, even unlocked in the private chat', async () => {
+        assert.equal(bot.getSetting('notes.lockPrivateOnly'), true);
+        await bot.replyAlt('/notes #foo segredo 789', PRIVATE);
+        await protectFoo();
+        const inGroup = await bot.replyAlt('/notes -v #foo', { chat: GROUP });
+        assert.doesNotMatch(inGroup.join('\n'), /segredo 789/);
+        assert.match(inGroup.join('\n'), /só abre no seu privado|privado/);
+    });
+
+    test('off: it opens in any chat, still never with -to, and what is shown is not saved', async () => {
+        await bot.setSetting('notes.lockPrivateOnly', false);
+        await bot.replyAlt('/notes #foo segredo 789', PRIVATE);
+        await protectFoo();
+
+        const inGroup = await bot.replyAlt('/notes -v #foo', { chat: GROUP });
+        assert.match(inGroup.join('\n'), /segredo 789/, 'shown in the group');
+        for (const content of inGroup) await bot.deliver(bot.createMessage({ text: String(content), chat: GROUP, de: OWNER.jid }));
+        assert.ok(!(await dbAll('SELECT body FROM messages')).some(r => /\*segredo 789\*/.test(r.body)), 'and not saved');
+
+        const sent = await bot.replyAlt(`/notes -v #foo -to /Fulano/`, { chat: GROUP });
+        assert.doesNotMatch(sent.join('\n'), /segredo 789/, 'never sent to others');
+    });
+});
+

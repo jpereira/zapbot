@@ -194,7 +194,11 @@ work with `-rm`.
 
 > **Protected notes are only unlocked and accessed in your own private chat** (the messages with yourself). In a
 > group, in the chat of another person or with `-to` (to send them somewhere), they stay locked for whoever reads:
-> only the 🔒 shows, even if the tag is unlocked in your private chat.
+> only the 🔒 shows, even if the tag is unlocked in your private chat. `/set notes.lockPrivateOnly off` lets them open in
+> any chat (still never with `-to`, and the password is still typed only in your private chat).
+>
+> **What the bot sends with a decrypted note is never saved**: not the text in the messages table, not a PDF or an
+> image in the media folder, whatever the chat.
 
 For notes that cannot be read by whoever gets the database or a backup. A **protected tag** has the text of its notes
 and its files encrypted (AES-256-GCM) with a key made from a password that is **never stored**.

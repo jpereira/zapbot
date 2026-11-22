@@ -157,6 +157,54 @@ function botRegisterSending(sent) {
 // true: this message was sent by the bot (reply, notice, status...)
 const sentByBot = (m) => idsSentByBot.has(m?.id?._serialized);
 
+/*
+ * What the bot sends with a decrypted note (/notes of a protected tag) must not stay anywhere: the 'message_create' of
+ * that message does not save it (neither the text, nor the media it would download), and if it was saved before we knew
+ * its id, it is deleted when the send resolves. Marked by chat and text (the event may come before the id) and by id.
+ */
+const noStoreTexts = new Map(); // "chat|text" -> [expires at, ...]
+const noStoreIds = new Set();
+
+function markNoStore(chatId, content, options = {}) {
+    const key = `${chatId}|${String(sendingText(content, options) ?? '').trim() || `file:${content?.filename ?? ''}`}`;
+    const nowAlt = Date.now();
+    if (noStoreTexts.size > 200) for (const [k, v] of noStoreTexts) if (v.every(t => t <= nowAlt)) noStoreTexts.delete(k);
+    noStoreTexts.set(key, [...(noStoreTexts.get(key) ?? []).filter(t => t > nowAlt), nowAlt + SENT_TTL_MS]);
+}
+
+/** true if the message that came back on 'message_create' is one the bot sent with a decrypted note (it must not be saved) */
+function isNoStore(msg) {
+    const id = msg?.id?._serialized;
+    if (id && noStoreIds.has(id)) return true;
+    const chatId = msg?.fromMe ? msg?.id?.remote ?? msg?.to : null;
+    const text = String(msg?.body ?? '').trim() || `file:${msg?._data?.filename ?? msg?.filename ?? ''}`;
+    const key = `${chatId}|${text}`;
+    const valid = (noStoreTexts.get(key) ?? []).filter(t => t > Date.now());
+    if (!valid.length) return false;
+    valid.shift();
+    if (valid.length) noStoreTexts.set(key, valid);
+    else noStoreTexts.delete(key);
+    return true;
+}
+
+// The send resolved: if the event was faster and the message is already in the database, it goes (with its media)
+async function forgetSent(sent) {
+    const id = sent?.id?._serialized;
+    if (!id) return;
+    noStoreIds.add(id);
+    if (noStoreIds.size > 500) noStoreIds.delete(noStoreIds.values().next().value);
+    try {
+        const { dbGet, dbRun } = require('./db');
+        const fs = require('fs-extra');
+        const row = await dbGet('SELECT media_path FROM messages WHERE id = ?', [sent.id.id]);
+        if (!row) return;
+        await dbRun('DELETE FROM messages WHERE id = ?', [sent.id.id]);
+        if (row.media_path) await fs.remove(row.media_path).catch(() => {});
+    } catch (err) {
+        printError('Could not forget a message with a decrypted note:', err.message);
+    }
+}
+
 const sendMessageOriginal = client.sendMessage.bind(client);
 
 client.sendMessage = (chatId, content, options = {}) => {
@@ -172,8 +220,12 @@ client.sendMessage = (chatId, content, options = {}) => {
     markSentByBot(sendingText(content, options));
     markText(chatId, sendingText(content, options));
     botMarkSending(chatId);
-    return sendMessageOriginal(chatId, content, options).then((sent) => {
+    // Lazy: notesLock requires this file
+    const secret = require('./notesLock').isSecretOutput();
+    if (secret) markNoStore(chatId, content, options);
+    return sendMessageOriginal(chatId, content, options).then(async (sent) => {
         botRegisterSending(sent);
+        if (secret) await forgetSent(sent);
         return sent;
     });
 };
@@ -227,6 +279,8 @@ module.exports = {
     sentByBot,
     wasSentByBot,
     wasBotText,
+    isNoStore,
+    forgetSent,
     marksStartCleanup,
     cleanMarks,
     markSentByBot,

@@ -190,7 +190,11 @@ O `-to` funciona como nos outros comandos (veja
 
 > **As notas protegidas só são liberadas e acessadas no seu próprio privado** (as mensagens com você mesmo). Num grupo,
 > no chat de outra pessoa ou com `-to` (para mandá-las a algum lugar), elas continuam travadas para quem lê: só aparece
-> o 🔒, mesmo com a tag liberada no seu privado.
+> o 🔒, mesmo com a tag liberada no seu privado. `/set notes.lockPrivateOnly off` deixa abrirem em qualquer chat (ainda
+> nunca com `-to`, e a senha continua sendo digitada só no seu privado).
+>
+> **O que o bot envia com uma nota decifrada nunca é guardado**: nem o texto na tabela de mensagens, nem um PDF ou uma
+> imagem na pasta de mídia, em qualquer chat.
 
 Para notas que não podem ser lidas por quem pegar o banco ou um backup. Uma **tag protegida** tem o texto das notas e
 os arquivos cifrados (AES-256-GCM) com uma chave feita de uma senha que **nunca é guardada**.
