@@ -11,7 +11,8 @@
  */
 const { t } = require('../i18n');
 const { withoutAccents } = require('../util/format');
-const { MAX_TEXT_TESTED, regexDangerous } = require('../util/safeRegex');
+const { regexDangerous } = require('../util/safeRegex');
+const { matchBatch, regexTest } = require('../util/regexRunner');
 
 const RULE_REGEX = /^\/(.+)\/([a-z]*)$/s;
 const RULE_MAX_LEN = 200;
@@ -38,13 +39,40 @@ function compileSearch(search) {
         } catch (e) {
             throw new Error(t('watch.err.invalidRegex', { error: e.message }), { cause: e });
         }
-        // The tested text (the body of any received message) is truncated: defense
-        // in depth against the cases the static check does not catch
-        return (textAlt) => re.test(String(textAlt ?? '').slice(0, MAX_TEXT_TESTED));
+        return regexTest(re);
     }
 
     const target = withoutAccents(search);
     return (textAlt) => withoutAccents(textAlt).includes(target);
+}
+
+/**
+ * Where the rule matches in a text (to mark it on the page): { start, end } in the text as it is, or null.
+ * A text rule ignores the case and the accents, as the rule does.
+ */
+async function findMatch(rule, text) {
+    const original = String(text ?? '');
+    const m = String(rule ?? '').match(RULE_REGEX);
+    if (m) {
+        if (regexDangerous(m[1])) return null;
+        try {
+            const [found] = await matchBatch(new RegExp(m[1], m[2].replace(/[gy]/g, '')), [original]);
+            return found && found.end > found.start ? found : null;
+        } catch {
+            return null;
+        }
+    }
+    // The text without accents, remembering which character of the original each piece came from
+    let normalized = '';
+    const origin = [];
+    for (let i = 0; i < original.length; i++) {
+        const piece = withoutAccents(original[i]);
+        normalized += piece;
+        for (let k = 0; k < piece.length; k++) origin.push(i);
+    }
+    const target = withoutAccents(rule);
+    const at = target ? normalized.indexOf(target) : -1;
+    return at < 0 ? null : { start: origin[at], end: origin[at + target.length - 1] + 1 };
 }
 
 function compileRuleWatch(rule) {
@@ -55,6 +83,7 @@ function compileRuleWatch(rule) {
     }
 
     const test = compileSearch(rule);
+    if (rulesCompiled.size >= 256) rulesCompiled.delete(rulesCompiled.keys().next().value);
     rulesCompiled.set(rule, test);
     return test;
 }
@@ -62,5 +91,6 @@ function compileRuleWatch(rule) {
 module.exports = {
     RULE_REGEX,
     compileSearch,
-    compileRuleWatch
+    compileRuleWatch,
+    findMatch
 };

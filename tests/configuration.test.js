@@ -250,7 +250,7 @@ describe('documentação', () => {
                 titles: linesAlt.filter(l => /^#{1,6} /.test(l)).map(l => l.match(/^#+/)[0].length),
                 tables: linesAlt.filter(l => l.startsWith('|')).length,
                 blocks: [...md.matchAll(/^```(\w*)/gm)].map(m => m[1]),
-                links: [...linesAlt.join('\n').matchAll(/\]\(([^)\s#]+)(?:#[^)\s]*)?\)/g)].map(m => m[1].replace('/zapbot/pt-BR/', '/zapbot/')).sort()
+                links: [...linesAlt.join('\n').matchAll(/\]\(([^)\s#]+)(?:#[^)\s]*)?\)/g)].map(m => m[1].replace('/zapbot/pt-BR/', '/zapbot/').replace('assets/web/pt-BR/', 'assets/web/')).sort()
             };
         };
         for (const f of pagesEn()) {
@@ -270,7 +270,7 @@ describe('documentação', () => {
         // The same links to the documentation and the same code blocks (commands and .env are not translated)
         // (without the anchor, which follows the title of each language, and without the site's /pt-BR/ in Portuguese)
         const links = (md) => [...withoutCode(md).matchAll(/\]\(((?!https?:\/\/github\.com|README)[^)\s#]+)(?:#[^)\s]*)?\)/g)]
-            .map(m => m[1].replace('/zapbot/pt-BR/', '/zapbot/'));
+            .map(m => m[1].replace('/zapbot/pt-BR/', '/zapbot/').replace('assets/web/pt-BR/', 'assets/web/'));
         assert.deepEqual(links(README), links(README_PT), 'os READMEs apontam para páginas diferentes');
         const blocks = (md) => [...md.matchAll(/^```(\w*)/gm)].map(m => m[1]);
         assert.deepEqual(blocks(README), blocks(README_PT), 'os READMEs têm blocos de código diferentes');

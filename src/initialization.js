@@ -180,6 +180,12 @@ async function initializeDb() {
     await addColumns('messages', { transcription: 'TEXT' });
     // mentions: the ids (@lid/@c.us) of the message mentions, in JSON, to swap @number for the name on display
     await addColumns('messages', { mentions: 'TEXT' });
+    // quoted_id: the id of the message this one replies to (the web interface shows the quote)
+    await addColumns('messages', { quoted_id: 'TEXT' });
+    // The value of a secret setting sent as "/set <key> <value>" (before it was masked) must not stay in the history
+    for (const key of ['zapbot.web.password', 'zapbot.web.totp', 'bot.login']) {
+        await dbRun('UPDATE messages SET body = ? WHERE body LIKE ?', [`/set ${key} ***`, `/set ${key} %`]).catch(() => {});
+    }
 
     // /show query: a chat's deleted messages, from most recent to oldest
     await dbRun('CREATE INDEX IF NOT EXISTS idx_messages_chat_revoked ON messages (chat_id, revoked, revoked_at)');
@@ -597,6 +603,9 @@ async function initializeDb() {
     // /watch rules with the 🔒 (-mask N): the notices and occurrences come out with obfuscated phones.
     // Without a row, the rule shows everything as it came.
     await dbRun('CREATE TABLE IF NOT EXISTS watch_masks (rule TEXT PRIMARY KEY)');
+
+    // /watch rules with the notice turned off (from the web interface): the occurrence is still saved, nobody is told.
+    await dbRun('CREATE TABLE IF NOT EXISTS watch_muted (rule TEXT PRIMARY KEY)');
 
     await migrateRecipientsKeys();
     await loadSettings();

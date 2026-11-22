@@ -21,6 +21,7 @@ const { humanSize, mediaIsPath } = require('../util/files');
 const { countAlt } = require('../util/count');
 const { wait, formatData, paraMs, withoutAccents } = require('../util/format');
 const { isChannelAlt } = require('../util/origin');
+const { matchingRows, regexTest } = require('../util/regexRunner');
 const { regexDangerous } = require('../util/safeRegex');
 const { compileSearch } = require('../watch/rules');
 
@@ -214,7 +215,7 @@ async function chatsThatMatch(msg, textAlt, chats, { number: numberAlt = true } 
             await msg.reply(tr('show.regexInvalid', { text: textAlt, error: err.message }));
             return null;
         }
-        match = chats.filter(c => re.test(removeAccents(chatNameAlt(c))));
+        match = await matchingRows(regexTest(re), chats, c => [removeAccents(chatNameAlt(c))]);
     } else {
         // "@Maria Lucia" typed, without picking from the @ list: the name counts
         const words = withoutAccents(textAlt.replace(/^@/, '')).split(/\s+/).filter(Boolean);
@@ -656,7 +657,7 @@ async function showHistory({ msg, opts, chatId, chatName: currentName, words, n,
 
     const name = target?.name ?? (allChats ? tr('show.history.allChats') : null);
     let items = rows.map(r => ({ ...r, ms: paraMs(r.timestamp), when: whenOf(paraMs(r.timestamp)) }));
-    if (home) items = items.filter(r => [r.body, r.transcription].filter(Boolean).some(home));
+    if (home) items = await matchingRows(home, items, r => [r.body, r.transcription].filter(Boolean));
     const slice = items.filter(r => (!period.month || r.when.month === period.month) && (!period.day || r.when.day === period.day) &&
         (!period.hour || r.when.hour === period.hour));
 
@@ -891,7 +892,7 @@ async function cmdShow({ msg, opts, chatId, chatName, admin }) {
             search ? params : [...params, n]
         );
 
-        rows.push(...(home ? typeAlt.filter(r => t.texts(r).some(home)) : typeAlt));
+        rows.push(...(home ? await matchingRows(home, typeAlt, r => t.texts(r)) : typeAlt));
     }
 
     rows.sort((a, b) => paraMs(b.when) - paraMs(a.when));

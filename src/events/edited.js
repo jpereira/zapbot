@@ -2,7 +2,7 @@
  * Edited messages: 'message_edit' event and the renderer also used by /show -e.
  */
 
-const { client } = require('../client');
+const { client, sentByBot } = require('../client');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { resolverAuthorDeleted } = require('./deleted');
 const { printError, printInfo } = require('../log');
@@ -49,8 +49,9 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
          */
         if (!msg.latestEditSenderTimestampMs && !msg.latestEditMsgKey) return;
 
-        // Your edits (and the bot's own) do not matter
-        if (msg.fromMe) return;
+        // The bot's own edits (the notice that becomes the result) are not edits of a conversation. Yours are saved
+        // (the web interface shows them), but they do not notify you: you know what you edited
+        if (msg.fromMe && sentByBot(msg)) return;
 
         const beforeAlt = String(prevBody ?? '');
         const afterAlt = String(newBody ?? '');
@@ -116,7 +117,7 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
 
         // /mute: this chat's or this person's notice is muted (the edit stays saved for /show -e)
         const senders = [original?.sender_jid, original?.sender_number, row.sender_number];
-        if (getSetting('show.alert.edited') && !(await ignoreNotice('editada', { chatId, senders }))) {
+        if (!msg.fromMe && getSetting('show.alert.edited') && !(await ignoreNotice('editada', { chatId, senders }))) {
             await sendMessageEdited(client.info.wid._serialized, row, info);
         }
     } catch (err) {

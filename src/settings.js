@@ -7,6 +7,7 @@ const { compileFilterDebug } = require('./debugOptions');
 const { botConfig } = require('./botConfig');
 const { ROLES } = require('./roles');
 const { t } = require('./i18n');
+const { createHash } = require('./util/password');
 const { parseQuality, parseSize } = require('./imageOptions');
 const { dbAll, dbGet, dbRun } = require('./db');
 const { limitHistoryMonitor } = require('./monitorHistory');
@@ -1067,6 +1068,94 @@ const SETTINGS_SCHEMA = {
         default: false,
         type: 'boolean',
         desc: 'EXPERIMENTAL. Liga o servidor MCP da API (POST /mcp), para um cliente de IA enviar mensagens (para o zapbot.api.sendTo) e ler as notas do /notes. Exige zapbot.api.enabled e zapbot.api.key.'
+    },
+    'zapbot.web.enabled': {
+        default: false,
+        type: 'boolean',
+        desc: 'Liga a interface web (src/web): o histórico de mensagens do banco, no estilo do WhatsApp Web, só com senha (zapbot.web.password). Desligada por padrão; muda só ao reiniciar o bot.'
+    },
+    'zapbot.web.host': {
+        default: '127.0.0.1',
+        type: 'string',
+        desc: 'Endereço em que a interface web escuta. O padrão (127.0.0.1) só atende a própria máquina; fora dele, ponha um proxy com HTTPS na frente. Muda só ao reiniciar o bot.'
+    },
+    'zapbot.web.login': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        validate: (v) => {
+            if (v && !/^[\w.@-]{3,40}$/.test(v)) throw new Error(t('adm.settings.badWebLogin'));
+            return v;
+        },
+        desc: 'O nome de usuário (login) da interface web, que você escolhe: /set zapbot.web.login <nome>. Vale junto com a zapbot.web.password; vazio: a interface não inicia.'
+    },
+    'zapbot.web.pageSize': {
+        default: 100,
+        type: 'number', min: 20, max: 500,
+        desc: 'Quantas mensagens a interface web carrega por vez (as mais antigas vêm ao rolar).'
+    },
+    'zapbot.web.password': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        secret: true,
+        validate: (v) => {
+            if (!v || v.startsWith('scrypt$')) return v;
+            if (v.length < 8) throw new Error(t('login.senhaCurta', { min: 8 }));
+            return createHash(v);
+        },
+        desc: 'A senha da interface web. Digite a senha em /set zapbot.web.password <senha> (mínimo 8 caracteres): o bot guarda só o hash (scrypt). Vazia: a interface não inicia.'
+    },
+    'zapbot.web.port': {
+        default: 3200,
+        type: 'number', min: 1024, max: 65535,
+        desc: 'Porta da interface web. Muda só ao reiniciar o bot.'
+    },
+    'zapbot.web.refreshSeconds': {
+        default: 15,
+        type: 'number', min: 0, max: 300,
+        desc: 'De quantos em quantos segundos a interface web busca as mensagens novas da conversa aberta (0 desliga).'
+    },
+    'zapbot.web.sessionHours': {
+        default: 12,
+        type: 'number', min: 1, max: 720,
+        desc: 'Horas que o login da interface web vale (depois pede a senha de novo). Reiniciar o bot encerra todos os logins.'
+    },
+    'zapbot.web.totp': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        secret: true,
+        validate: (v) => {
+            if (v && !/^[A-Za-z2-7 =-]{16,}$/.test(v)) throw new Error(t('adm.settings.badTotp'));
+            return v.replace(/[\s=-]/g, '').toUpperCase();
+        },
+        desc: 'Segredo (base32) do código de 6 dígitos (TOTP: Google Authenticator, Authy...) pedido além da senha no login da interface web. Vazio: só a senha. Não precisa digitar: no seu privado, /set zapbot.web.totp new cria o segredo e manda o QR code, e o 2FA só liga quando você digita o código do app (/set zapbot.web.totp 123456).'
+    },
+    'zapbot.web.trustProxy': {
+        default: false,
+        type: 'boolean',
+        desc: 'Lê os cabeçalhos X-Forwarded-For e X-Forwarded-Proto dos proxies listados em ZAPBOT_WEB_TRUSTED_PROXIES.'
+    },
+    'zapbot.web.url': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        validate: (v) => {
+            if (v && !/^https?:\/\/[^\s]+$/i.test(v)) throw new Error(t('adm.settings.badUrl', { v }));
+            return v.replace(/\/+$/, '');
+        },
+        desc: 'O endereço pelo qual você abre a interface web (ex.: http://192.168.1.253:3200 ou https://zap.exemplo.com), que o bot mostra ao iniciar. Vazio: o bot descobre o IP da máquina (no Docker, preencha: o container não sabe o IP do servidor).'
+    },
+    'zapbot.web.warnAccess': {
+        default: true,
+        type: 'boolean',
+        desc: 'Avisa no seu privado (⚠️) quando alguém abre a página de login da interface web e ainda não está logado: um aviso por endereço a cada 10 minutos e no máximo 5 avisos em 10 minutos (o resto é só contado). Desligue com off.'
+    },
+    'zapbot.web.warnChangedPhone': {
+        default: true,
+        type: 'boolean',
+        desc: 'A interface web mostra os avisos do WhatsApp de que o código de segurança de alguém mudou (troca de aparelho: "🔒 o código de segurança de Fulano mudou"). Desligado, eles somem do histórico e das contagens.'
     }
 };
 

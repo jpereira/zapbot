@@ -166,6 +166,19 @@ shows are in Portuguese; the ones here are in English).
 | `zapbot.email.alerts` | on/off | `on` | Email alerts (crash, outage, reconnection...) through the QR Code SMTP. See [Email alerts](emails.md#email-alerts) |
 | `zapbot.lang` | `en_US`, `pt_BR` | `en_US` | Language of the bot: the help (`-h`, `/help`) and all the replies, alerts, errors, dates, and numbers are shown in it. `/set zapbot.lang pt_BR` (or `/set zapbot.lang=pt_BR`) switches to Portuguese; `pt-BR`, `pt` and `en` are accepted too. The descriptions that `/set` shows for each setting stay in Portuguese |
 | `zapbot.mcp.enabled` | on/off | `off` | **Experimental.** Turns on the API's MCP server (`POST /mcp`), so an AI client can send messages (to `zapbot.api.sendTo`) and read your `/notes`. Needs `zapbot.api.enabled` and `zapbot.api.key` |
+| `zapbot.web.enabled` | on/off | `off` | Turns on the [web interface](web.md): the history of the database in the style of WhatsApp Web, behind a password. Takes effect after restarting the bot |
+| `zapbot.web.host` | text | `127.0.0.1` | Address the web interface listens on. The default only serves the machine itself; elsewhere, put an HTTPS proxy in front. In Docker the `ZAPBOT_WEB_HOST` variable (`0.0.0.0` in the image) wins. Takes effect after restarting |
+| `zapbot.web.login` | text (can be empty) | *(empty)* | The login name of the [web interface](web.md), chosen by you (3 to 40 characters: letters, digits, `.`, `-`, `_`, `@`): `/set zapbot.web.login <name>`. Together with `zapbot.web.password`; empty: the interface does not start |
+| `zapbot.web.pageSize` | 20–500 | `100` | How many messages the web interface loads at a time (the older ones come as you scroll) |
+| `zapbot.web.password` | text (can be empty) | *(empty)* | The web interface password: `/set zapbot.web.password <password>` (at least 8 characters); the bot stores only the scrypt hash. Empty: the interface does not start |
+| `zapbot.web.port` | 1024–65535 | `3200` | Port of the web interface. Takes effect after restarting |
+| `zapbot.web.refreshSeconds` | 0–300 | `15` | How often (seconds) the web interface looks for new messages in the open chat (`0` turns it off) |
+| `zapbot.web.sessionHours` | 1–720 | `12` | Hours a web login lasts (then it asks for the password again). Restarting the bot ends every login |
+| `zapbot.web.totp` | text (can be empty) | *(empty)* | Base32 secret of the 6-digit code (Google Authenticator, Authy...) asked at the web login **besides the password**. Empty: only the password. `/set zapbot.web.totp new` makes it and sends the QR code in your private chat; it turns on when you type the code of the app. See [Web interface](web.md#two-step-login-2fa) |
+| `zapbot.web.trustProxy` | on/off | `off` | Reads `X-Forwarded-For` and `X-Forwarded-Proto` from the proxies listed in `ZAPBOT_WEB_TRUSTED_PROXIES` |
+| `zapbot.web.url` | text (can be empty) | *(empty)* | The address you open the [web interface](web.md) at (`http://192.168.1.253:3200`, `https://zap.example.com`), shown by the bot in the startup message. Empty: the bot finds the machine's IP (in Docker, set it: the container does not know the server IP; the compose reads `ZAPBOT_WEB_URL` from `docker/.env`) |
+| `zapbot.web.warnAccess` | on/off | `on` | Warns you (⚠️) in your private chat when someone who is not logged in opens the login page of the web interface: one notice per address every 10 minutes, at most 5 in 10 minutes. `off` turns it off |
+| `zapbot.web.warnChangedPhone` | on/off | `on` | The web interface shows the WhatsApp notices that someone's security code changed (`🔒 <name>'s security code changed`). Off: they leave the history and the counts |
 
 A new key is declared in `SETTINGS_SCHEMA` (`src/settings.js`), **in alphabetical order**, with
 default, type, description and limits (`allowEmpty` for text that can be empty, `secret` to mask

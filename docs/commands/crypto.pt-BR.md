@@ -119,6 +119,12 @@ cada moeda, num bloco monoespaçado, e a que mais subiu:
 /crypto -alert HYPE > 50 -to +5521999999999
 /crypto -alert BTC > 120000 -to email
 /crypto -alert BTC < 90000 -to /Grupo L200/ -to /Jorge Pereira/
+/crypto -alert BTC > 120000 -to eu -to /Grupo L200/
 /crypto BTC -alert > 90000 -to /Jorge Pereira/ -msg Hora de vender!
 /crypto -alert -rm 1 2 3
 ```
+
+Cada `-to` é um destino. Sem `-to` o aviso vai para o seu privado; para ter o seu privado **e** outros, acrescente
+`-to eu` (ou `-to me`): é a sua própria conta, então não precisa digitar o seu contato. Vale igual em todo comando
+com `-to` (`/stocks`, `/watch`, `/cron`, `/notes`...) e no seletor de contatos da interface web (`👤 Eu`). Um contato
+com exatamente esse nome se alcança pelo número.

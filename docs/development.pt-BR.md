@@ -122,6 +122,7 @@ src/
   stickerText.js       /sticker -txt: os quadros em PNG (sharp) e o WebP animado (ffmpeg)
   greetings.js          /welcome e /goodbye: a mensagem de cada grupo (tabela `group_greetings`) e os eventos group_join/group_leave
   screenshot.js         /screenshot: a imagem de uma página (contexto isolado, anti-SSRF em cada requisição)
+  web/                  a interface web: server.js (login, sessões), data.js, notes.js, lists.js, stats.js, manage.js, export.js, public/ (a página)
   carbon.js             /carbon: o código como imagem de janela de editor (SVG transformado em PNG pelo sharp)
   openai.js             modelos aceitos pelo /gpt
   openaiChat.js         chamada ao chat da OpenAI (/gpt e /tldr) e o rodapé de status (bytes, tokens, custo)
@@ -246,6 +247,7 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `presenca.test.js` | Leitura de presença por LID, assinatura compartilhada, cache e ausência de horários válidos sem fabricar dados |
 | `saudacoes.test.js` | `/welcome` e `/goodbye`: o texto por grupo (`{name}`, `{group}`, menção), `-on`, `-off`, `-test`, os eventos `group_join`/`group_leave` e quem não dispara |
 | `ocr-qr-carbon.test.js` | `/ocr` (a foto para o ChatGPT), `/tts`, `/qr` (`-d`, leitura dos pixels com o jsqr), `/carbon` (SVG, temas, limites) e `/profile -set` (grupo, conta, recusa) |
+| `web.test.js` | A interface web: login, sessões, TOTP, conversas e mensagens (edições, apagadas, respostas), mídia com Range, notas (tags travadas), listas, mudanças, estatísticas, exportar e os avisos de senha errada |
 | `screenshot.test.js` | `/screenshot` (contexto isolado, User-Agent, `-full`, `-mobile`, `-pdf`, anti-SSRF em cada requisição) com um navegador falso |
 | `api.test.js` | A API HTTP local (chave, regras do `/send` e o limite de 10 por minuto) e o servidor MCP experimental (`initialize`, `tools/list`, `tools/call`) |
 | `contacts.test.js` | O `/contacts`: o vCard com fotos, os filtros, a exportação só no privado e o cache |

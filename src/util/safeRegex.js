@@ -7,8 +7,7 @@
  * does not even need to be an admin to trigger it.
  */
 
-// Above this the tested text is truncated: limits the cost of regexes that escape
-// of the static check (e.g.: overlapping alternation) without ever hanging the bot.
+// The worker truncates each input and imposes a deadline on the entire batch.
 const MAX_TEXT_TESTED = 20_000;
 
 /*
@@ -38,8 +37,7 @@ function readQuantifier(src, i) {
  * most common catastrophic backtracking, like (x+)+ or ([a-z]+) repeated.
  * Does a single pass, respecting escapes and character classes.
  *
- * Does not detect overlapping alternation (like "(a|ab)+") — that is why the tested text is
- * truncated at MAX_TEXT_TESTED as defense in depth.
+ * The worker deadline also covers cases this heuristic does not detect.
  */
 function regexDangerous(source) {
     const stack = []; // one frame per open group: { hasRepetition }

@@ -98,6 +98,7 @@ module.exports = {
     'conexao.foraPor': { one: 'Ficou {min} min sem conseguir conectar ({n} tentativa falharam).', other: 'Ficou {min} min sem conseguir conectar ({n} tentativas falharam).' },
     'conexao.avisoDesligado': 'Bot desligado: use /bot -on para ativar os comandos.',
     'conexao.avisoSoVoce': 'Só você (e os admins) usa comandos: /bot +u <pessoa|grupo> libera para alguns.',
+    'conexao.web': '🌐 Interface web ativa em {url}',
     'conexao.inicializado': '🤖 ZapBot {version} inicializado.{notices}',
     'conexao.reconectadoTitulo': '🔄 Reconectado',
     'conexao.iniciadoTitulo': '🟢 Bot iniciado',

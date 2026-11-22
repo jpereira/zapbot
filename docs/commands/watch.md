@@ -40,10 +40,8 @@ Rule types:
 
 - **Text:** matches if the message contains the text, ignoring case and accents.
 - **`/regex/flags`:** JavaScript regular expression, with spaces and escapes preserved. The `g`
-  and `y` flags are ignored in detection, so each message is evaluated independently. A regex that
-  risks hanging the bot (a quantifier over a group that already repeats, like `(x+)+`) is refused:
-  since it's tested against every incoming message, exponential backtracking would freeze the whole
-  bot.
+  and `y` flags are ignored in detection, so each message is evaluated independently. Patterns with nested repetitions can be refused. The bot tests up to 20,000 characters
+  per message in a separate worker. If the evaluation times out, it records no match.
 
 Rules are tested against the original message text. In notices and in the history, mentions like
 `@100000000000001` appear with the contact's name when it can be resolved.

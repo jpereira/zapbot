@@ -176,17 +176,28 @@ describe('evento: mensagem editada', () => {
         assert.equal((await bot.dbGet('SELECT body FROM messages WHERE id = ?', [msg.id.id])).body, 'reunião às 15h');
     });
 
-    test('ignora: mudança que não é edição, as suas edições e texto igual', async () => {
+    test('ignora: mudança que não é edição e texto igual', async () => {
         const msg = bot.createMessage({ text: 'a', de: OTHERAlt.jid });
         await bot.deliver(msg);
         assert.deepEqual(await bot.edit(msg, 'b', { really: false }), []);
         assert.deepEqual(await bot.edit(msg, 'a'), []);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 0);
+    });
 
+    test('as suas edições ficam gravadas (a interface web mostra), mas não avisam; as do próprio bot não contam', async () => {
         const my = bot.createMessage({ text: 'x' });
         await bot.deliver(my);
-        assert.deepEqual(await bot.edit(my, 'y'), []);
+        assert.deepEqual(await bot.edit(my, 'y'), [], 'sem aviso no seu privado');
+        const edit = await bot.dbGet('SELECT old_body, new_body FROM message_edits WHERE message_id = ?', [my.id.id]);
+        assert.deepEqual([edit.old_body, edit.new_body], ['x', 'y']);
+        assert.equal((await bot.dbGet('SELECT body FROM messages WHERE id = ?', [my.id.id])).body, 'y');
 
-        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 0);
+        // a notice of the bot that becomes the result is its own edit: never saved
+        const notice = bot.createMessage({ text: '⏳ Processando' });
+        await bot.deliver(notice);
+        bot.src('client').botRegisterSending(notice);
+        assert.deepEqual(await bot.edit(notice, 'pronto'), []);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits WHERE message_id = ?', [notice.id.id])).n, 0);
     });
 
     test('a mesma edição avisada duas vezes (body e caption) é gravada uma vez', async () => {

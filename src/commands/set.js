@@ -3,11 +3,13 @@
  */
 
 const { client } = require('../client');
+const { totpConfirm, totpSetup } = require('../webTotp');
 const { chatCurrentIds, contactName, resolveLidToPhone, groupResolverName } = require('../contacts');
 const { dbReady } = require('../db');
 const { resolverOrChoose } = require('../destinations');
 const { printInfo } = require('../log');
 const { SETTINGS_SCHEMA, getSetting, setSetting, validateSetting } = require('../settings');
+const { matchingRows, regexTest } = require('../util/regexRunner');
 const { regexDangerous } = require('../util/safeRegex');
 const { t } = require('../i18n');
 
@@ -82,7 +84,7 @@ function settingsList(keys) {
  * Keys that match the filter: /regex/flags or a snippet (case-insensitive).
  * @returns {string[]|null} null if the regex is invalid
  */
-function filterKeys(filter) {
+async function filterKeys(filter) {
     const regex = filter.match(/^\/(.+)\/([a-z]*)$/);
     let test;
 
@@ -90,7 +92,7 @@ function filterKeys(filter) {
         if (regexDangerous(regex[1])) return null; // ReDoS: ver util/regexSeguro
         try {
             const re = new RegExp(regex[1], regex[2].replace(/[gy]/g, '') || 'i');
-            test = (k) => re.test(k);
+            test = regexTest(re);
         } catch {
             return null;
         }
@@ -98,7 +100,7 @@ function filterKeys(filter) {
         test = (k) => k.toLowerCase().includes(filter.toLowerCase());
     }
 
-    return Object.keys(SETTINGS_SCHEMA).filter(test);
+    return matchingRows(test, Object.keys(SETTINGS_SCHEMA), k => [k]);
 }
 
 function formatValueSetting(value, sep = ', ', secret = false) {
@@ -310,6 +312,16 @@ async function cmdSet({ msg, opts, args, chatId }) {
     }
 
     const [key, ...rest] = opts.argv;
+    // The 2FA of the web interface: "new" makes the secret and sends the QR code; "qr" sends it again (only in your private chat)
+    if (key === 'zapbot.web.totp' && rest.length === 1 && /^(?:new|qr)$/i.test(rest[0])) {
+        await totpSetup({ msg, chatId, mode: rest[0].toLowerCase() });
+        return;
+    }
+    // ... and a code of 6 digits (the one the app shows) confirms it: the 2FA is only turned on when it is right
+    if (key === 'zapbot.web.totp' && rest.length === 1 && /^\d{6}$/.test(rest[0])) {
+        await totpConfirm({ msg, chatId, code: rest[0] });
+        return;
+    }
 
     if (!key) {
         const env = await inMyPrivate(chatId) ? envText() : soInPrivate();
@@ -335,7 +347,7 @@ async function cmdSet({ msg, opts, args, chatId }) {
 
     // It is not a key: without a value, filters the keys by the snippet (or /regex/)
     if (!schema && !rest.length) {
-        const keys = filterKeys(key);
+        const keys = await filterKeys(key);
 
         if (keys === null) {
             await msg.reply(t('adm.set.badRegex', { key }));
@@ -376,14 +388,17 @@ async function cmdSet({ msg, opts, args, chatId }) {
         if (raw === null) return;
     }
 
+    // A secret setting: the message with the value was deleted, so the answer is a new message, not a reply (a reply
+    // would still show the quoted /set <key> <value>)
+    const say = (text) => schema.secret ? client.sendMessage(chatId, text, { linkPreview: false }) : msg.reply(text);
     try {
         const valueAlt = await setSetting(key, raw);
         printInfo(`Setting '${key}' changed to ${schema.secret ? formatValueSetting(valueAlt, ', ', true) : JSON.stringify(valueAlt)}`);
         const notice = ['monitor.pool', 'monitor.max'].includes(key)
             ? `\n${t('adm.set.pollWarning')}` : '';
-        await msg.reply(`✅ *${key}* = ${formatValueSetting(await showItems(key, valueAlt), schema.separator ? ' | ' : ', ', schema.secret)}${notice}`);
+        await say(`✅ *${key}* = ${formatValueSetting(await showItems(key, valueAlt), schema.separator ? ' | ' : ', ', schema.secret)}${notice}`);
     } catch (e) {
-        await msg.reply(t('adm.set.invalid', { key, error: e.message }));
+        await say(t('adm.set.invalid', { key, error: e.message }));
     }
 }
 

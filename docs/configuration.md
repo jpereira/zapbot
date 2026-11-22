@@ -77,6 +77,23 @@ can change it from WhatsApp with `/set` without restarting.
 The cost estimate in the `-status` footer of `/gpt`, `/tldr` and `/draw` uses the `gpt.pricing`
 setting, which `gpt.pricing.auto` keeps up to date (see [Settings](settings.md)).
 
+## Web interface (optional)
+
+| Variable | Example | Description |
+|---|---|---|
+| `ZAPBOT_WEB_ENABLED` | `true` | `true` or `false` turns the [web interface](web.md) on or off, **over** the `zapbot.web.enabled` setting. If empty, the setting decides. It still needs `zapbot.web.login` and `zapbot.web.password` (`/set` in WhatsApp), and it is read when the bot starts. |
+| `ZAPBOT_WEB_URL` | `http://192.168.1.253:3200` | The address you open the interface at, which the startup message shows. In Docker the container does not know the IP of the server, so fill it in. The `zapbot.web.url` setting, when filled in, has priority over it. |
+| `ZAPBOT_WEB_HOST` | `0.0.0.0` | The address it listens on, **over** the `zapbot.web.host` setting. The Docker image already sets `0.0.0.0`. |
+| `ZAPBOT_WEB_PORT` | `3200` | The port it listens on, **over** the `zapbot.web.port` setting (3200 by default). In Docker Compose the published port follows it. |
+| `ZAPBOT_WEB_BIND` | `127.0.0.1` | Docker Compose only: where the host publishes the port. `127.0.0.1` (default) only serves the host itself; `0.0.0.0` opens it to the network (prefer an HTTPS proxy in front). |
+| `ZAPBOT_WEB_TRUSTED_PROXIES` | `192.0.2.10` | Comma-separated IPs of reverse proxies that connect directly to the web interface. Used when `zapbot.web.trustProxy` is on. |
+
+In Docker the variables of `config/.env` reach the container, and so do the ones of `docker/.env` (which wins). Compose
+reads `ZAPBOT_WEB_BIND` and `ZAPBOT_WEB_PORT`, to publish the port, only from `docker/.env`: put them there. These
+variables are read when the bot starts: after changing one, `make deploy` again.
+
+The page of Settings of the interface shows, as read-only, the settings that one of these variables decides.
+
 ## Aave V3 (optional)
 
 | Variable | Example | Description |

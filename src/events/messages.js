@@ -27,7 +27,7 @@ const { ROLES, answer } = require('../roles');
 const { botConfig } = require('../botConfig');
 const { printCall, printCommandUnknown, printDebug, printError, printInfo } = require('../log');
 const { t } = require('../i18n');
-const { getSetting, isDebugMode } = require('../settings');
+const { getSetting, isDebugMode, SETTINGS_SCHEMA } = require('../settings');
 const { countStats, myIdStats } = require('../stats');
 const { mediaIsPath, nameSafe, getFolderMedia } = require('../util/files');
 const { joinContinuedLines, paraMs } = require('../util/format');
@@ -45,6 +45,14 @@ const { withTyping, optionsError, readOptions, assembleContext, denial, askedMas
 const { dataParserCommand } = require('../debugParser');
 
 // WhatsApp's own notices (joined the group, changed the name, encryption, call...): they have no author
+/** The value of "/set <secret setting> <value>": it must not stay in the messages table or in the logs */
+function secretOfSet(command, args) {
+    if (command?.cmd !== '/set') return null;
+    const m = /^\s*[+-]?([\w.]+)\s+(\S[\s\S]*?)\s*$/.exec(String(args ?? ''));
+    if (!m || !SETTINGS_SCHEMA[m[1]]?.secret) return null;
+    return /^(reset|default|off|on|true|false)$/i.test(m[2]) ? null : m[2];
+}
+
 const SYSTEM_TYPES = new Set([
     'broadcast_notification', 'call_log', 'e2e_notification', 'gp2',
     'notification', 'notification_template', 'protocol'
@@ -240,8 +248,8 @@ client.on('message_create', (msg) => withContextDebug({
                  body, type, timestamp,
                  has_media, media_path,
                  location_lat, location_lng,
-                 raw_json, from_me, mentions)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 raw_json, from_me, mentions, quoted_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(id) DO UPDATE SET
                 sender_name   = excluded.sender_name,
                 sender_jid    = excluded.sender_jid,
@@ -257,7 +265,8 @@ client.on('message_create', (msg) => withContextDebug({
                 location_lng  = excluded.location_lng,
                 raw_json      = excluded.raw_json,
                 from_me       = excluded.from_me,
-                mentions      = COALESCE(excluded.mentions, messages.mentions)
+                mentions      = COALESCE(excluded.mentions, messages.mentions),
+                quoted_id     = COALESCE(excluded.quoted_id, messages.quoted_id)
              WHERE messages.revoked = 0`,
             [
                 msgIdPure, senderName, senderJid, senderNumber,
@@ -265,7 +274,8 @@ client.on('message_create', (msg) => withContextDebug({
                 msg.body || '', msgType, timestamp,
                 hasMedia, localMediaPath,
                 lat, lng,
-                'desativado', msg.fromMe ? 1 : 0, mentionsForRecord(msg.mentionedIds)
+                'desativado', msg.fromMe ? 1 : 0, mentionsForRecord(msg.mentionedIds),
+                (msg.hasQuotedMsg && msg._data?.quotedStanzaID) || null
             ]
         ).catch(err => printError('Error saving message:', err.message));
 
@@ -328,9 +338,12 @@ client.on('message_create', (msg) => withContextDebug({
 
         // A /notes -lock <password> carries the password: it does not go to the logs, to the echo of an alias or to the
         // messages table (what the log and the history show is the command with ***)
-        const secret = command?.cmd === '/notes' ? extractPassword(args)?.password ?? null : null;
+        // The same for the value of a secret setting (/set zapbot.web.password <password>, API keys, the TOTP secret)
+        const secret = command?.cmd === '/notes' ? extractPassword(args)?.password ?? null : secretOfSet(command, args);
         const logBody = maskSecret(body, secret);
         if (secret) await dbRun('UPDATE messages SET body = ? WHERE id = ?', [logBody, msgIdPure]).catch(() => {});
+        // and the message with the value leaves the chat too (when it cannot, the owner deletes it by hand)
+        if (secret && command?.cmd === '/set') await Promise.resolve(msg.delete?.(true)).catch(() => {});
 
         if (!command) {
             if (msg.fromMe || isDebugMode()) {

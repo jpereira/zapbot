@@ -31,6 +31,10 @@ messages stay on your server. You type commands in any chat and it answers (`/he
 
 Yep, we've been busy. The best of the latest batch:
 
+- 🖥️ **Your whole history in a web page.** A WhatsApp Web style interface behind a login and a password (and a
+  6-digit code, if you want): the chats with their photos, the **deleted** and **edited** messages in a frame with the
+  *before and after*, stickers, videos you can play, notes (even the encrypted ones), charts of your conversations,
+  and shortcuts, alerts and settings you can edit. [Web interface](docs/web.md)
 - 🔐 **Private notes, for real.** `/notes -lock #stash` protects a tag with a password: the text and the files are
   **encrypted** (AES-256-GCM), it only unlocks and opens in **your own private chat**, locks again by itself and never goes
   out with `-to`. The password is never stored, logged or kept in the history, and an alias like `/stash.view` makes it one
@@ -92,6 +96,18 @@ Yep, we've been busy. The best of the latest batch:
 /usage -a
 ```
 
+## 🖥️ The web interface
+
+Turn it on with `/set zapbot.web.login <name>`, `/set zapbot.web.password <password>` and `/set zapbot.web.enabled on`,
+and open `http://<your-server>:3200`. Everything below is made-up data. [All the screens and the settings](docs/web.md)
+
+| | |
+|---|---|
+| ![Home: storage, counters and statistics](docs/assets/web/home.png) | ![History: a conversation with an edited and a deleted message](docs/assets/web/history.png) |
+| **Home**: the storage like a phone's, the counters and the charts | **History**: edited (with the before and after) and deleted messages in a frame |
+| ![Statistics](docs/assets/web/stats.png) | ![Notes](docs/assets/web/notes.png) |
+| **Statistics**: charts, heatmap, rankings and the change against the last period | **Notes**: the tags, images, video, PDF, and the encrypted ones locked |
+
 ## ✨ What it can do
 
 | | Skill | What it does | Try it |
@@ -109,6 +125,7 @@ Yep, we've been busy. The best of the latest batch:
 | 🎲 | **Fun and games** | Magic 8 ball, truth, dare and trivia for the group (you can play just by replying), jokes and your friends drawn into pictures | [`/games`](docs/commands/games.md) · [`/joke`](docs/commands/joke.md) · [`/draw`](docs/commands/draw.md) |
 | 📣 | **Your profile and Status** | Posts on your WhatsApp Status (and schedules it), shows anyone's About text and changes yours, exports your contacts with photos | [`/status`](docs/commands/status.md) · [`/profile`](docs/commands/profile.md) · [`/contacts`](docs/commands/contacts.md) |
 | 🔌 | **API and MCP (experimental)** | A local HTTP API (off by default) to send messages and read your notes from scripts, and an experimental MCP server for AI clients | [API and MCP](docs/api.md) |
+| 🖥️ | **Web interface** | Your history in a WhatsApp Web style page, behind a password (off by default): chats with photos, stickers, media to download, and the deleted and edited messages highlighted with the diff | [Web interface](docs/web.md) |
 | ⭐ | **Pro: limits per person** | Share `/gpt` and other commands with friends and groups, with a limit of successful calls per person, per day, week or month, and `/usage` to see what is left | [`/usage`](docs/commands/usage.md) |
 | 🔐 | **Private notes** | Notes with `#tags`, and **protected tags**: text and files encrypted with a password, opened only in your own private chat, locked again by themselves and never sent to others | [`/notes`](docs/commands/notes.md#protected-tags--lock) · [`/notes -lock`](docs/commands/notes.md#password-in-the-command) |
 | 🛡️ | **Yours, and safe** | Owner, admin and user roles per command, flood protection, anti-SSRF in downloads, backups, **encrypted notes**, QR Code login by e-mail, and English or Brazilian Portuguese | [`/bot`](docs/commands/bot.md) · [`/backup`](docs/commands/backup.md) · [`/set`](docs/commands/set.md) |

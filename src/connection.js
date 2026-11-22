@@ -361,7 +361,9 @@ client.on('ready', () => withContextDebug({ noFilter: true }, async () => {
     const notices = listNotices.map(a => ` ${a}`).join('');
 
     printSuccess(`🤖 ZapBot ${versionWithCommit()} ready! Reporting to ${process.env.PHONE_NUMBER}`);
-    messageToSelf(t('conexao.inicializado', { version: versionWithCommit(), notices }));
+    const { isWebRunning, webUrl } = require('./web/server'); // here: it loads the client and the database, like this file
+    const web = isWebRunning() ? `\n${t('conexao.web', { url: webUrl() })}` : '';
+    messageToSelf(`${t('conexao.inicializado', { version: versionWithCommit(), notices })}${web}`);
 
     alertPerEmail(t(jaStayedReady ? 'conexao.reconectadoTitulo' : 'conexao.iniciadoTitulo'),
         [jaStayedReady ? (dropReason ? t('conexao.conectadoDeNovoQueda', { reason: dropReason }) : t('conexao.conectadoDeNovo')) : t('conexao.conectado'),

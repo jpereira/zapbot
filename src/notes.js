@@ -22,6 +22,7 @@ const { language, t } = require('./i18n');
 const { generatePdf } = require('./util/pdf');
 const lock = require('./notesLock');
 const { extractPassword, normalizeLock } = require('./util/lockPassword');
+const { matchingRows } = require('./util/regexRunner');
 const { compileSearch } = require('./watch/rules');
 const { fmtWhen, readWhen } = require('./util/when');
 const packageJson = require('../package.json');
@@ -641,8 +642,10 @@ async function listAlt(msg, filter = '', withSearch = false, compact = false) {
     // The search looks at the text and also the #tag (/notes -s casa finds those of #casa)
     const allAlt = await listNotes();
     tags = resolverTags(tags, allAlt);
-    const notes = allAlt.filter(n => (!tags.length || tags.includes(n.tag)) &&
-        (!test || test(n.text) || (n.tag && test(`#${n.tag}`))));
+    const tagged = allAlt.filter(n => !tags.length || tags.includes(n.tag));
+    const notes = test
+        ? await matchingRows(test, tagged, n => n.tag ? [n.text, `#${n.tag}`] : [n.text])
+        : tagged;
     const label = tags.length ? ` ${tags.map(x => `#${x}`).join(' ')}` : '';
     const foundAlt2 = search ? ` 🔎 ${summarizeText(search, 40)}` : '';
 
@@ -869,26 +872,13 @@ async function imageForPdf(fileAlt) {
     }
 }
 
-async function exportNotes(msg, filter = '') {
-    const { destinations: destinationsText, given: withDestination, rest } = extractDestinations(filter);
-    let tags = rest.trim() ? soTags(rest) : [];
-    if (!tags) {
-        await msg.reply(t('notes.export.usage'));
-        return;
-    }
-
-    const destinations = await sendingDestinations(msg, destinationsText, withDestination);
-    if (destinations === null) return;
-
-    const allAlt = await listNotes();
-    tags = resolverTags(tags, allAlt);
-    const notes = tags.length ? allAlt.filter(n => tags.includes(n.tag)) : allAlt;
-    if (!notes.length) {
-        await msg.reply(tags.length ? t('notes.list.none', { inTags: t('notes.inTags', { tags: ` ${tags.map(x => `#${x}`).join(' ')}` }), withSearch: '' })
-            : t('notes.none'));
-        return;
-    }
-
+/**
+ * The PDF of the notes (already opened: see notesLock.open): the blocks by tag, with the images.
+ * @param {object[]} notes
+ * @param {string[]} tags  the tags asked for ([]: all)
+ * @returns {Promise<{ pdf: Buffer, name: string, label: string }>}
+ */
+async function renderNotesPdf(notes, tags) {
     const nowAlt = Date.now();
     const label = tags.length ? ` ${tags.map(x => `#${x}`).join(' ')}` : '';
     const groups = new Map();
@@ -950,6 +940,30 @@ async function exportNotes(msg, filter = '') {
     const suffix = tags.length ? `tag-${tags.map(t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9_-]/gi, '_')).join('-')}_` : '';
     const nameAlt = `ZapBot_notes_${suffix}${fileStamp(nowAlt)}.pdf`;
+    return { pdf, name: nameAlt, label };
+}
+
+async function exportNotes(msg, filter = '') {
+    const { destinations: destinationsText, given: withDestination, rest } = extractDestinations(filter);
+    let tags = rest.trim() ? soTags(rest) : [];
+    if (!tags) {
+        await msg.reply(t('notes.export.usage'));
+        return;
+    }
+
+    const destinations = await sendingDestinations(msg, destinationsText, withDestination);
+    if (destinations === null) return;
+
+    const allAlt = await listNotes();
+    tags = resolverTags(tags, allAlt);
+    const notes = tags.length ? allAlt.filter(n => tags.includes(n.tag)) : allAlt;
+    if (!notes.length) {
+        await msg.reply(tags.length ? t('notes.list.none', { inTags: t('notes.inTags', { tags: ` ${tags.map(x => `#${x}`).join(' ')}` }), withSearch: '' })
+            : t('notes.none'));
+        return;
+    }
+
+    const { pdf, name: nameAlt, label } = await renderNotesPdf(notes, tags);
 
     const caption = t('notes.export.caption', { tags: label, total: notes.length });
     const media = new MessageMedia('application/pdf', pdf.toString('base64'), nameAlt);
@@ -1212,6 +1226,7 @@ function startNotes() {
 
 module.exports = {
     cmdNote,
+    renderNotesPdf,
     startNotes,
     checkNotes
 };

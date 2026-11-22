@@ -154,6 +154,7 @@ module.exports = {
     'grp.dest.needDest': 'Give the -to destination: a contact, a group or a number ({examples}).',
     'grp.dest.needDestEmail': 'Give the -to destination: a contact, a group or a number ({examples}), or email (the QRCODE_EMAIL_SMTP_TO) and emails.',
     'grp.dest.badNumber': '❌ Invalid number: {text}. Use country code + area code + number (e.g.: +5521999999999).',
+    'grp.dest.notConnected': '❌ The bot is not connected to WhatsApp yet: I do not know which account is yours.',
     'grp.dest.notOnWhatsApp': '❌ The number +{number} is not on WhatsApp.',
     'grp.dest.searchFailed': '⚠️ I could not search "{text}" in the contacts and groups right now ({error}). Try again or use the number: +5521999999999',
     'grp.dest.typeGroup': 'group',

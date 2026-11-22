@@ -16,6 +16,7 @@ const { countAlt } = require('../util/count');
 const { formatData, summarizeText, withoutAccents } = require('../util/format');
 const { isChannelAlt } = require('../util/origin');
 const { maskPhones } = require('../util/phone');
+const { matchingRows } = require('../util/regexRunner');
 const { RULE_REGEX, compileSearch, compileRuleWatch } = require('../watch/rules');
 const { readOptionsWatch } = require('../watch/options');
 
@@ -135,7 +136,7 @@ async function listOccurrences(rule, rules, limitAlt, complete = false, search =
     } else {
         const home = compileSearch(search);
         const allAlt = await dbAll(`SELECT * FROM watch_hits ${filter} ORDER BY timestamp DESC, id DESC`, params);
-        const match = allAlt.filter(h => home(h.body));
+        const match = await matchingRows(home, allAlt, h => [h.body]);
         total = match.length;
         rows = match.slice(0, max);
     }

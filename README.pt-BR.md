@@ -31,6 +31,10 @@ mensalidade, e as suas mensagens ficam no seu servidor. Você digita comandos em
 
 Pois é, a gente andou ocupado. O melhor da última leva:
 
+- 🖥️ **Todo o seu histórico numa página web.** Uma interface no estilo do WhatsApp Web atrás de um login e uma senha
+  (e de um código de 6 dígitos, se você quiser): as conversas com as fotos, as mensagens **apagadas** e **editadas**
+  num quadro com o *antes e depois*, figurinhas, vídeos que você toca, notas (até as criptografadas), gráficos das
+  suas conversas, e atalhos, alertas e settings que você edita. [Interface web](docs/web.md)
 - 🔐 **Notas privadas de verdade.** O `/notes -lock #stash` protege uma tag com senha: o texto e os arquivos ficam
   **cifrados** (AES-256-GCM), ela só libera e abre no **seu próprio privado**, trava sozinha de novo e nunca sai com
   `-to`. A senha nunca é guardada, registrada em log nem mantida no histórico, e um alias como `/stash.view` deixa tudo em
@@ -92,6 +96,18 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 /usage -a
 ```
 
+## 🖥️ A interface web
+
+Ligue com `/set zapbot.web.login <nome>`, `/set zapbot.web.password <senha>` e `/set zapbot.web.enabled on`, e abra
+`http://<seu-servidor>:3200`. Tudo abaixo são dados inventados. [Todas as telas e os settings](docs/web.md)
+
+| | |
+|---|---|
+| ![Início: armazenamento, contadores e estatísticas](docs/assets/web/pt-BR/home.png) | ![Histórico: uma conversa com uma mensagem editada e uma apagada](docs/assets/web/pt-BR/history.png) |
+| **Início**: o armazenamento como o do celular, os contadores e os gráficos | **Histórico**: mensagens editadas (com o antes e depois) e apagadas num quadro |
+| ![Estatísticas](docs/assets/web/pt-BR/stats.png) | ![Notas](docs/assets/web/pt-BR/notes.png) |
+| **Estatísticas**: gráficos, mapa de calor, rankings e a variação contra o período anterior | **Notas**: as tags, imagens, vídeo, PDF, e as criptografadas travadas |
+
 ## ✨ O que ele faz
 
 | | Habilidade | O que faz | Experimente |
@@ -109,6 +125,7 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 | 🎲 | **Diversão e jogos** | Bola 8 mágica, verdade, desafio e trivia para o grupo (dá para jogar só respondendo), piadas e os seus amigos desenhados em imagens | [`/games`](docs/commands/games.md) · [`/joke`](docs/commands/joke.md) · [`/draw`](docs/commands/draw.md) |
 | 📣 | **Seu perfil e Status** | Posta no seu Status do WhatsApp (e agenda), mostra o recado de qualquer pessoa e troca o seu, exporta seus contatos com fotos | [`/status`](docs/commands/status.md) · [`/profile`](docs/commands/profile.md) · [`/contacts`](docs/commands/contacts.md) |
 | 🔌 | **API e MCP (experimental)** | Uma API HTTP local (desligada por padrão) para mandar mensagens e ler as suas notas por scripts, e um servidor MCP experimental para clientes de IA | [API e MCP](docs/api.md) |
+| 🖥️ | **Interface web** | O seu histórico numa página no estilo do WhatsApp Web, atrás de uma senha (desligada por padrão): conversas com fotos, figurinhas, mídias para baixar, e as mensagens apagadas e editadas em destaque com o diff | [Interface web](docs/web.md) |
 | ⭐ | **Pro: limites por pessoa** | Divida o `/gpt` e outros comandos com amigos e grupos, com um limite de chamadas bem-sucedidas por pessoa, por dia, semana ou mês, e o `/usage` para ver o que resta | [`/usage`](docs/commands/usage.md) |
 | 🔐 | **Notas privadas** | Anotações com `#tags` e **tags protegidas**: texto e arquivos cifrados com senha, abertos só no seu próprio privado, travados de novo sozinhos e nunca enviados a outros | [`/notes`](docs/commands/notes.md#tags-protegidas--lock) · [`/notes -lock`](docs/commands/notes.md#senha-no-comando) |
 | 🛡️ | **Seu, e seguro** | Papéis de dono, admin e usuário por comando, proteção contra flood, anti-SSRF nos downloads, backups, **notas cifradas**, login do QR Code por e-mail, em inglês ou português do Brasil | [`/bot`](docs/commands/bot.md) · [`/backup`](docs/commands/backup.md) · [`/set`](docs/commands/set.md) |

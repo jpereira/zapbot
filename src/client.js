@@ -221,7 +221,7 @@ client.sendMessage = (chatId, content, options = {}) => {
     markText(chatId, sendingText(content, options));
     botMarkSending(chatId);
     // Lazy: notesLock requires this file
-    const secret = require('./notesLock').isSecretOutput();
+    const secret = require('./notesLock').isSecretOutput() || require('./secretOutput').inSecret();
     if (secret) markNoStore(chatId, content, options);
     return sendMessageOriginal(chatId, content, options).then(async (sent) => {
         botRegisterSending(sent);
@@ -276,6 +276,7 @@ module.exports = {
     client,
     completeNotice,
     botConsumeSending,
+    botRegisterSending,
     sentByBot,
     wasSentByBot,
     wasBotText,

@@ -38,6 +38,8 @@ const LIMIT = 10;
 
 const EMAIL = /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/;
 const isWordEmail = (s) => /^e-?mail$/i.test(s);
+// "me", "eu" (or "mim"): your own account (your private chat), to put it beside other destinations: -to me -to /Fulano/
+const isWordMe = (s) => /^(?:me|eu|mim)$/i.test(s);
 
 // The QRCODE_EMAIL_SMTP_TO addresses, which may come as "Me <me@example.com>, other@x.com"
 const emailsOfSmtpTo = () => String(process.env.QRCODE_EMAIL_SMTP_TO ?? '').split(',')
@@ -194,7 +196,7 @@ function withYou(contacts, home) {
 
 // Same shape as whatsapp-web.js (Contact and Chat), so the rest of the code does not depend on the origin
 async function contactsAndGroups(words) {
-    const home = (nameAlt) => Boolean(nameAlt) && words.every(p => normalize(nameAlt).includes(p));
+    const home = (nameAlt) => Boolean(nameAlt) && words.every(p => normalize(nameAlt).toLowerCase().includes(p));
 
     if (client.pupPage) {
         const { contacts, groups } = await searchInWhatsApp(words);
@@ -269,6 +271,9 @@ async function resolverDestination(valueAlt, {
     if (!textAlt) {
         return { error: t(acceptsEmail ? 'grp.dest.needDestEmail' : 'grp.dest.needDest', { examples: example() }) };
     }
+
+    // Yourself: "me" / "eu" (a contact with exactly this name is reached by its number)
+    if (type !== 'grupo' && isWordMe(textAlt)) return selfDestination();
 
     // Mention: "@<id>" in the text, with the same id in msg.mentionedIds
     const mention = type === 'grupo' ? null : textAlt.match(/^@(\d+)$/);
@@ -489,6 +494,35 @@ function describeDestinationsBlock(destinations, { indent = '   ', whenEmpty = '
     return destinations.map((d, i) => `\n${indent}${i === 0 ? '📨 ' : '   '}${label(d)}`).join('');
 }
 
+/** Your own account as a destination (your private chat): { id, name, group: false }, or { error } before the bot is connected */
+async function selfDestination() {
+    const id = client.info?.wid?._serialized;
+    if (!id) return { error: t('grp.dest.notConnected') };
+    return { id, name: await contactName(id, client.info.pushname || t('core.voce')), group: false };
+}
+
+/**
+ * Contacts (of the address book) and groups with all the words of the text in the name, or a phone number: for the
+ * pickers of the web interface.
+ * @returns {Promise<{ id: string, name: string, group: boolean, number: string|null }[]>} up to 20, contacts first
+ */
+async function searchPeople(text, limit = 20) {
+    const typed = String(text ?? '').trim();
+    if (isWordMe(typed)) {
+        const me = await selfDestination();
+        if (me.id) return [{ ...me, number: me.id.split('@')[0], self: true }];
+    }
+    const words = normalize(typed).toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return [];
+    const found = [];
+    const digits = typed.replace(/\D/g, '');
+    if (digits.length >= 8 && digits.length === typed.replace(/[\s()+-]/g, '').length) found.push({ id: `${digits}@c.us`, name: `+${digits}`, group: false, number: digits });
+    const { contacts, groups } = await contactsAndGroups(words.map(w => normalize(w).toLowerCase()));
+    found.push(...contacts.map(c => ({ id: c.id._serialized, name: c.name, group: false, number: c.number ?? null })));
+    found.push(...groups.map(g => ({ id: g.id._serialized, name: g.name, group: true, number: null })));
+    return [...new Map(found.map(p => [p.id, p])).values()].slice(0, limit);
+}
+
 module.exports = {
     destinationColumns,
     describeDestination,
@@ -505,5 +539,6 @@ module.exports = {
     recipientsDe,
     resolverDestination,
     resolverDestinations,
-    resolverOrChoose
+    resolverOrChoose,
+    searchPeople
 };

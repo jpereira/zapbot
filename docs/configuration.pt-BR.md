@@ -76,6 +76,23 @@ para trocar pelo WhatsApp com `/set` sem reiniciar.
 A estimativa de custo do rodapé `-status` do `/gpt`, do `/tldr` e do `/draw` usa o setting
 `gpt.pricing`, que o `gpt.pricing.auto` mantém atualizado (veja [Settings](settings.md)).
 
+## Interface web (opcional)
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `ZAPBOT_WEB_ENABLED` | `true` | `true` ou `false` liga ou desliga a [interface web](web.md), **por cima** do setting `zapbot.web.enabled`. Se estiver vazia, vale o setting. Ainda precisa de `zapbot.web.login` e `zapbot.web.password` (`/set` no WhatsApp), e é lida quando o bot inicia. |
+| `ZAPBOT_WEB_URL` | `http://192.168.1.253:3200` | O endereço pelo qual você abre a interface, que a mensagem de inicialização mostra. No Docker o container não sabe o IP do servidor, então preencha. O setting `zapbot.web.url`, quando preenchido, tem prioridade sobre ela. |
+| `ZAPBOT_WEB_HOST` | `0.0.0.0` | O endereço em que ela escuta, **por cima** do setting `zapbot.web.host`. A imagem do Docker já define `0.0.0.0`. |
+| `ZAPBOT_WEB_PORT` | `3200` | A porta em que ela escuta, **por cima** do setting `zapbot.web.port` (3200 por padrão). No Docker Compose a porta publicada acompanha. |
+| `ZAPBOT_WEB_BIND` | `127.0.0.1` | Só no Docker Compose: onde o host publica a porta. `127.0.0.1` (padrão) só atende o próprio host; `0.0.0.0` abre para a rede (prefira um proxy HTTPS na frente). |
+| `ZAPBOT_WEB_TRUSTED_PROXIES` | `192.0.2.10` | IPs dos proxies reversos que se conectam diretamente à interface web, separados por vírgula. Usada quando `zapbot.web.trustProxy` está ligado. |
+
+No Docker as variáveis do `config/.env` chegam ao container, e as do `docker/.env` também (e ganham). O Compose lê
+`ZAPBOT_WEB_BIND` e `ZAPBOT_WEB_PORT`, para publicar a porta, só do `docker/.env`: coloque-as lá. Essas variáveis são
+lidas quando o bot inicia: depois de mudar uma, `make deploy` de novo.
+
+A página de Settings da interface mostra, só para leitura, os settings que uma dessas variáveis decide.
+
 ## Aave V3 (opcional)
 
 | Variável | Exemplo | Descrição |

@@ -118,6 +118,12 @@ monospaced block, and the one that rose the most:
 /crypto -alert HYPE > 50 -to +5521999999999
 /crypto -alert BTC > 120000 -to email
 /crypto -alert BTC < 90000 -to /L200 Group/ -to /Jorge Pereira/
+/crypto -alert BTC > 120000 -to me -to /L200 Group/
 /crypto BTC -alert > 90000 -to /Jorge Pereira/ -msg Hora de vender!
 /crypto -alert -rm 1 2 3
 ```
+
+Each `-to` is one destination. Without `-to` the notice goes to your private chat; to have your private chat **and**
+others, add `-to me` (or `-to eu`): it is your own account, so there is no need to type your own contact. It works
+the same in every command with `-to` (`/stocks`, `/watch`, `/cron`, `/notes`...) and in the contact picker of the web
+interface (`👤 Me`). A contact with exactly that name is reached by its number.

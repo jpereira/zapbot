@@ -27,23 +27,22 @@ async function checkWatch({
     if (!rules.length) return;
     const origins = new Map((await dbAll('SELECT * FROM watch_sources')).map(r => [r.rule, r]));
 
-    const matched = rules
-        .map((rule, i) => ({ rule, n: i + 1 }))
-        .filter(({ rule }) => {
-            const origin = origins.get(rule);
-            if (origin) {
-                const matches = origin.source_kind === 'contato'
-                    ? origin.source_id === senderJid ||
-                        origin.source_id === `${senderNumber}@c.us`
-                    : origin.source_id === chatId;
-                if (!matches) return false;
-            }
-            try {
-                return compileRuleWatch(rule)(body);
-            } catch {
-                return false;
-            }
-        });
+    const matched = [];
+    for (const [i, rule] of rules.entries()) {
+        const origin = origins.get(rule);
+        if (origin) {
+            const matches = origin.source_kind === 'contato'
+                ? origin.source_id === senderJid ||
+                    origin.source_id === `${senderNumber}@c.us`
+                : origin.source_id === chatId;
+            if (!matches) continue;
+        }
+        try {
+            if (await compileRuleWatch(rule)(body)) matched.push({ rule, n: i + 1 });
+        } catch {
+            // The configuration can contain an invalid rule.
+        }
+    }
 
     if (!matched.length) return;
 
@@ -63,6 +62,11 @@ async function checkWatch({
 
     if (!freshAlt2.length) return;
 
+    // A rule with its notice turned off keeps the occurrence (above) and tells nobody
+    const muted = new Set((await dbAll('SELECT rule FROM watch_muted')).map(r => r.rule));
+    const toNotify = freshAlt2.filter(c => !muted.has(c.rule));
+    if (!toNotify.length) return;
+
     const details =
         headerOrigin({ chatId, chatName, isGroup, senderName, senderNumber }) +
         t('watch.sentAt', { date: formatData(timestamp) }) +
@@ -73,10 +77,10 @@ async function checkWatch({
      * a rule with several -to goes into each one's notice.
      */
     const linesAlt = await dbAll(
-        `SELECT * FROM watch_destinations WHERE rule IN (${freshAlt2.map(() => '?').join(', ')})`, freshAlt2.map(c => c.rule));
+        `SELECT * FROM watch_destinations WHERE rule IN (${toNotify.map(() => '?').join(', ')})`, toNotify.map(c => c.rule));
     const destinationsAlt = new Map(linesAlt.map(r => [r.rule, destinationsSaved(r.recipients, lineDestination(r))]));
     const byDestination = new Map();
-    for (const c of freshAlt2) {
+    for (const c of toNotify) {
         const destinations = destinationsAlt.get(c.rule) ?? [];
         for (const d of destinations.length ? destinations : [null]) {
             const keyAlt = d ? (d.email ? `email:${d.email}` : d.id) : 'privado';
@@ -85,7 +89,7 @@ async function checkWatch({
         }
     }
 
-    printInfo(`/watch: rule(s) ${freshAlt2.map(c => `#${c.n}`).join(',')} matched in '${chatName}' (${senderName})`);
+    printInfo(`/watch: rule(s) ${toNotify.map(c => `#${c.n}`).join(',')} matched in '${chatName}' (${senderName})`);
 
     // /mute: the notice in your private chat is muted (the occurrence stays saved and the -to receive it)
     if (byDestination.has('privado') &&

@@ -110,6 +110,7 @@ const { startAlertsDefi } = require('./src/defi/alerts');
 const { startHeartbeat } = require('./src/heartbeat');
 const { startCleanupPeriodic } = require('./src/cleanup');
 const { startApi } = require('./src/api');
+const { startWeb } = require('./src/web/server');
 const { startMonitor } = require('./src/monitor');
 const { startReopenings } = require('./src/groupReopen');
 
@@ -127,5 +128,6 @@ startPricesAutomatic();
 startMonitor();
 startReopenings();
 startApi();
+startWeb();
 
 startBot();

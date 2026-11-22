@@ -318,6 +318,30 @@ describe('alertas de preço (-alert)', () => {
         assert.match(list, /1\. ₿ BTC\/USDT acima de \*\$97,000\.00\*\n   🗓️ \d\d\/\d\d\/\d{4} \d\d:\d\d\n\n2\. ₿ BTC\/USDT acima de \*\$99,000\.00\*/);
     });
 
+    test('-to me (ou eu): a sua conta junto de outros destinos; /me/ também; sem o bot conectado, avisa', async () => {
+        await bot.replyAlt('/crypto BTC -alert > 96000 -to me -to /Fulano/');
+        await bot.replyAlt('/stocks USD -alert > 6 -to /eu/ -to /Fulano/');
+        const rows = await bot.dbAll('SELECT symbol, dest_id, recipients FROM price_alerts ORDER BY id');
+        for (const row of rows) {
+            const list = JSON.parse(row.recipients);
+            assert.deepEqual(list.map(r => r.id), [bot.OWNER.jid, bot.OTHERAlt.jid], row.symbol);
+            assert.equal(row.dest_id, bot.OWNER.jid);
+            assert.equal(list[0].group, false);
+        }
+        // "me" twice is one destination
+        await bot.replyAlt('/crypto BTC -alert > 97000 -to me -to eu');
+        const only = await bot.dbGet('SELECT dest_id, recipients FROM price_alerts ORDER BY id DESC LIMIT 1');
+        assert.deepEqual([only.dest_id, only.recipients], [bot.OWNER.jid, null]);
+
+        const info = bot.client.info;
+        bot.client.info = undefined;
+        try {
+            assert.match((await bot.replyAlt('/crypto BTC -alert > 98000 -to me'))[0], /não está conectado/);
+        } finally {
+            bot.client.info = info;
+        }
+    });
+
     test('-m é o atalho do -msg (no /crypto e no /stocks)', async () => {
         await bot.replyAlt('/crypto BTC -alert > 96000 -to /Fulano/ -m Hora de vender!');
         await bot.replyAlt('/stocks USD -alert > 6 -m Dólar subiu! -to /Fulano/');

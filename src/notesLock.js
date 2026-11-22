@@ -64,7 +64,9 @@ const attempts = new Map();        // tag → { errors, until }
 const pending = new Map();         // chatId → { tag, step, first, expires }
 
 const minutes = () => getSetting('notes.lockMinutes');
-const derive = (password, salt) => crypto.scryptSync(password, Buffer.from(salt, 'hex'), 32);
+const { deriveKey } = require('./util/password');
+const { attemptFor } = require('./util/attempts');
+const derive = (password, salt) => deriveKey(password, Buffer.from(salt, 'hex'));
 
 function seal(buffer, key) {
     const iv = crypto.randomBytes(12);
@@ -293,7 +295,12 @@ async function handlePassword(msg, chatId, body) {
             return true;
         }
         const salt = crypto.randomBytes(16).toString('hex');
-        const key = derive(body, salt);
+        const key = await derive(body, salt);
+        if (!key) {
+            pending.set(chatId, p);
+            await reply(t('notes.lock.blocked', { tag: p.tag, min: 1 }));
+            return true;
+        }
         await dbRun('INSERT OR REPLACE INTO note_locks (tag, salt, verifier, created_at) VALUES (?, ?, ?, ?)',
             [p.tag, salt, PREFIX + seal(Buffer.from(VERIFIER), key).toString('base64'), Date.now()]);
         const n = await protectExisting(p.tag, key);
@@ -318,21 +325,28 @@ async function handlePassword(msg, chatId, body) {
  */
 async function tryOpen(tag, password) {
     const row = await dbGet('SELECT salt, verifier FROM note_locks WHERE tag = ?', [tag]);
+    const tent = attemptFor(attempts, tag, BLOCK_MS);
+    if (!tent || tent.active || tent.until > Date.now()) {
+        const min = Math.max(1, Math.ceil(((tent?.until ?? 0) - Date.now()) / 60_000));
+        return t('notes.lock.blocked', { tag, min });
+    }
     let key;
+    tent.active = true;
     try {
-        key = row ? derive(password, row.salt) : null;
+        key = row ? await derive(password, row.salt) : null;
+        if (row && !key) return t('notes.lock.blocked', { tag, min: 1 });
         if (key) unseal(Buffer.from(row.verifier.slice(PREFIX.length), 'base64'), key);
     } catch {
         key = null; // the verifier does not open with this key: wrong password
+    } finally {
+        tent.active = false;
     }
-    const tent = attempts.get(tag) ?? { errors: 0, until: 0 };
     if (!key) {
         tent.errors += 1;
         if (tent.errors >= MAX_ERRORS) {
             tent.errors = 0;
             tent.until = Date.now() + BLOCK_MS;
         }
-        attempts.set(tag, tent);
         printInfo(`/notes -lock: wrong password for #${tag}`);
         return tent.until > Date.now() ? t('notes.lock.blocked', { tag, min: BLOCK_MS / 60000 }) : t('notes.lock.wrong');
     }
@@ -392,7 +406,7 @@ function reset() {
 }
 
 module.exports = {
-    allowedHere, canRead, inPrivate, isSecretOutput, markSecret, isOwnPrivate, lockedNotice, runIn,
+    PREFIX, derive, seal, allowedHere, canRead, inPrivate, isSecretOutput, markSecret, isOwnPrivate, lockedNotice, runIn,
     isUnlocked, reset, cleanCopies, cleanLeftovers, ensurePlain, handlePassword, isProtected, isSealedText, lockNow, oldCopies,
-    eraseMessage, open, purgeCopies, refresh, sealFile, sealText, start, stop, tryInline, unsealText
+    eraseMessage, open, purgeCopies, refresh, sealFile, sealText, start, stop, tryInline, unseal, unsealText
 };

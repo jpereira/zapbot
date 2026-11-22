@@ -182,6 +182,7 @@ nav:
   - Demo: demo.md
   - Settings: settings.md
   - API and MCP: api.md
+  - Web interface: web.md
   - Operation: operation.md
   - Development:
       - development.md

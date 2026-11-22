@@ -154,6 +154,7 @@ module.exports = {
     'grp.dest.needDest': 'Informe o destino do -to: um contato, um grupo ou um número ({examples}).',
     'grp.dest.needDestEmail': 'Informe o destino do -to: um contato, um grupo ou um número ({examples}), ou email (o QRCODE_EMAIL_SMTP_TO) e e-mails.',
     'grp.dest.badNumber': '❌ Número inválido: {text}. Use DDI + DDD + número (ex.: +5521999999999).',
+    'grp.dest.notConnected': '❌ O bot ainda não está conectado ao WhatsApp: não sei qual é a sua conta.',
     'grp.dest.notOnWhatsApp': '❌ O número +{number} não está no WhatsApp.',
     'grp.dest.searchFailed': '⚠️ Não consegui buscar "{text}" nos contatos e grupos agora ({error}). Tente de novo ou use o número: +5521999999999',
     'grp.dest.typeGroup': 'grupo',
