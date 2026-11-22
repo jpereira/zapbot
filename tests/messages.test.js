@@ -531,19 +531,9 @@ describe('permissões', () => {
         assert.match((await bot.replyAlt('/set -a bot.users email'))[0], /❌ O \*bot\.users\* é de pessoas e grupos: .*não um e-mail/);
     });
 
-    test('bot.users: só o dono altera; o bot.adminMode antigo vira o bot.users', async () => {
+    test('bot.users: só o dono altera', async () => {
         await bot.setSetting('bot.admins', ['5521911111111']);
         assert.deepEqual(await bot.replyAlt('/set bot.users true', { de: OTHERAlt.jid }), ['⛔ Só o dono do bot altera o *bot.users*.']);
-
-        // Migration: off (everyone used it) → true; on → keeps the default (false)
-        const { loadSettings } = bot.src('settings');
-        for (const [mode, expected] of [[false, ['all']], [true, []]]) {
-            await bot.dbRun("DELETE FROM settings WHERE key = 'bot.users'");
-            await bot.dbRun("INSERT INTO settings (key, value) VALUES ('bot.adminMode', ?)", [JSON.stringify(mode)]);
-            await loadSettings();
-            assert.deepEqual(bot.getSetting('bot.users'), expected, `adminMode ${mode}`);
-            assert.equal(await bot.dbGet("SELECT value FROM settings WHERE key = 'bot.adminMode'"), undefined);
-        }
     });
 
     test('/bot +a|-a|+u|-u: a lista deste chat, com ✅ em quem entrou e 🗑️ em quem saiu; grupo não vira admin', async () => {
@@ -883,8 +873,8 @@ describe('permissões', () => {
 
     test('flood: o mesmo comando além do limite no intervalo, um aviso e depois silêncio; admins de fora', async (t) => {
         t.mock.timers.enable({ apis: ['Date'], now: Date.now() });
-        await bot.setSetting('flood.maxCommandRepeated', 3);
-        await bot.setSetting('flood.intervalCommand', 10);
+        await bot.setSetting('bot.flood.maxCommandRepeated', 3);
+        await bot.setSetting('bot.flood.intervalCommand', 10);
         const CICLANO = '5521922222222@c.us';
         bot.createContact(CICLANO, 'Ciclano');
 
@@ -912,7 +902,7 @@ describe('permissões', () => {
 
         // You (and the admins) have no limit; 0 turns it off
         for (let i = 0; i < 5; i++) assert.equal((await bot.replyAlt('/noffa oi')).length, 1);
-        await bot.setSetting('flood.maxCommandRepeated', 0);
+        await bot.setSetting('bot.flood.maxCommandRepeated', 0);
         for (let i = 0; i < 5; i++) {
             assert.equal((await bot.replyAlt('/noffa oi', { de: CICLANO })).length, 1);
         }

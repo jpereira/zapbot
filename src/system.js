@@ -167,7 +167,7 @@ async function infoText() {
         chromium,
         ytDlp: `${ytDlp ?? notFound()}${versionNote(ytDlp, freshAlt2.ytDlp)}`,
         ffmpeg: ffmpeg ?? notFound(),
-        whisper: describeWhisper(whisper, getSetting('transcribe.model')) ?? notFound(),
+        whisper: describeWhisper(whisper, getSetting('stt.model')) ?? notFound(),
         uname: uname ?? `${os.type()} ${os.release()} ${os.arch()}`,
         host: `${os.hostname()}${inDocker() ? ' (Docker)' : ''}`,
         cpu: `${cpus.length}× ${cpus[0]?.model?.trim() ?? os.arch()}`,

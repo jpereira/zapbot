@@ -145,7 +145,7 @@ num grupo vale só nesse grupo; com `/set bot.users true`, todos. O `/bot +cmd`/
 comandos de cada usuário. Veja [Usuários](bot.md#usuários). Para saber o seu nível (ou, sendo dono
 ou admin, o de alguém), use o [`/whois`](whois.md). Quem não é admin tem uma
 [proteção contra flood](bot.md#proteção-contra-flood): o mesmo comando, no máximo 3 vezes em 2
-segundos por padrão (`flood.maxCommandRepeated` e `flood.intervalCommand`).
+segundos por padrão (`bot.flood.maxCommandRepeated` e `bot.flood.intervalCommand`).
 
 ### Delegando um comando admin
 
@@ -194,9 +194,8 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md), [`/kernel`](kernel.md),
 [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md), [`/noffa`](noffa.md), [`/ping`](ping.md),
 [`/pixelart`](pixelart.md), [`/qr`](qr.md), [`/sticker`](sticker.md), [`/stocks`](stocks.md),
-[`/transcribe`](transcribe.md), [`/translate`](translate.md), [`/uptime`](uptime.md),
-[`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md),
-[`/whois`](whois.md)
+[`/stt`](stt.md), [`/translate`](translate.md), [`/uptime`](uptime.md), [`/usage`](usage.md),
+[`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
 **admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (20):
 
@@ -268,7 +267,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/debug`](debug.md) | | `admin` | Logs de debug com níveis, filtro e cópia para chats |
 | [`/defi`](defi.md) | | `admin` | Posições de liquidez da Orca e do Project X: saldo, faixa, preço e taxas a coletar, lidos on-chain; `-alert` avisa quando sai e volta para a faixa e quando as taxas passam de um valor. `liquidswap`: posições de LP na Aptos. `morpho` e `aave`: posição, empréstimos e risco no Morpho e no Aave V3 |
 | [`/demote`](demote.md) | | `admin` · delegável | Tira o admin de alguém do grupo |
-| [`/draw`](draw.md) | | `admin` · delegável | Desenha uma imagem ou um GIF animado (`-gif`) com o GPT Image (OpenAI); numa foto, edita ou anima |
+| [`/draw`](draw.md) | | `admin` · delegável | Desenha uma imagem ou um GIF animado (`-gif`) com o ChatGPT (GPT Image); numa foto, edita ou anima |
 | [`/everybody`](everybody.md) | | `admin` · delegável | Menciona todos do grupo |
 | [`/forward`](forward.md) | | `admin` | Encaminha a mensagem respondida para pessoas, grupos e e-mails (`-to`), só se todos os destinatários forem encontrados |
 | [`/games`](games.md) | | `user` | Jogos de grupo: bola 8 mágica, verdade, desafio e quiz |
@@ -305,10 +304,10 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/status`](status.md) | | `admin` | Posta no seu Status do WhatsApp (texto, foto ou vídeo); o `/cron -status` agenda |
 | [`/sticker`](sticker.md) | | `user` | Figurinha de imagem, vídeo ou link (o `/get -st`), respondendo ou na legenda da mídia; com `-txt`, uma figurinha animada de texto |
 | [`/stocks`](stocks.md) | `/stock`, `/rates` | `user` | Cotações do dólar, euro, libra e USDT contra o real, e de ações, ETFs e índices (Yahoo Finance): USD, EUR, MSTR, PETR4.SA, `^GSPC`; `-alert` para alertas de preço |
+| [`/stt`](stt.md) | | `user` | Texto da fala de um link, vídeo ou áudio (o `/get -t` é um atalho), respondendo ou na legenda; `-ss` e `-es` escolhem um trecho |
 | [`/tldr`](tldr.md) | | `admin` · delegável | Resume a conversa do chat pelo ChatGPT (`30m`, `2h`, `1d`, `1h30m` ou `300` mensagens; respondendo uma mensagem, a partir dela) |
-| [`/transcribe`](transcribe.md) | | `user` | Texto da fala de um link, vídeo ou áudio (o `/get -t` é um atalho), respondendo ou na legenda; `-ss` e `-es` escolhem um trecho |
 | [`/translate`](translate.md) | | `user` | Traduz o texto ou a mensagem respondida pelo Google Translate, sem chave; `-to en` muda o idioma |
-| [`/tts`](tts.md) | | `admin` · delegável | O texto numa nota de voz de robô (OpenAI) |
+| [`/tts`](tts.md) | | `admin` · delegável | O texto numa nota de voz, com uma voz local (Piper) ou o ChatGPT (`-gpt`) |
 | [`/unblock`](unblock.md) | | `admin` | Desbloqueia uma pessoa: pelo nome, pelo número, pelo nº da lista do `/block` ou respondendo uma mensagem |
 | [`/unmute`](unmute.md) | | `admin` | Desfaz o silêncio do `/mute`: pelo nome, pelo nº da lista, respondendo um aviso ou todos (`-all`) |
 | [`/uptime`](uptime.md) | | `user` | Tempo de execução e de conexão |

@@ -1,7 +1,7 @@
 {
   "summary": "Transcreve a fala de um vídeo ou áudio",
-  "usage": "/transcribe [OPÇÃO]... <url>  ou  /transcribe [OPÇÃO]... (respondendo um vídeo, áudio ou link)",
-  "help": "Transcreve a fala de um vídeo ou áudio para texto. O /get -transcribe (-t) é um atalho dele. De uma URL (Instagram, YouTube, X, TikTok e outros sites do yt-dlp) ou do link respondido, baixa só o áudio de menor qualidade. Respondendo qualquer arquivo de vídeo ou áudio (nota de voz também), usa ele. Roda no servidor (faster-whisper), sem custo por minuto.",
+  "usage": "/stt [OPÇÃO]... <url>  ou  /stt [OPÇÃO]... (respondendo um vídeo, áudio ou link)",
+  "help": "Transcreve a fala de um vídeo ou áudio em texto. O /get -stt (-t) é um atalho dele. De uma URL (Instagram, YouTube, X, TikTok e outros sites do yt-dlp) ou do link respondido, baixa só o áudio de menor qualidade. Respondendo qualquer arquivo de vídeo ou áudio (nota de voz também), usa ele. Por padrão roda no servidor (faster-whisper, português, inglês e outros idiomas detectados sozinho), sem custo por minuto; com -gpt (-g), pelo ChatGPT, que exige a chave da OpenAI.",
   "cmd_opts": [
     {
       "opts": [
@@ -34,13 +34,33 @@
     },
     {
       "opts": [
+        "gpt",
+        "g"
+      ],
+      "desc": "Transcreve pelo ChatGPT (API da OpenAI, gasta a sua conta) em vez do faster-whisper local. Sem -gpt nem -local, vale o setting stt.engine.",
+      "ex": [
+        "/stt -gpt https://www.instagram.com/reel/..."
+      ]
+    },
+    {
+      "opts": [
+        "local",
+        "l"
+      ],
+      "desc": "Transcreve com o faster-whisper local (sem chave, usa a CPU do servidor), mesmo com o stt.engine em gpt.",
+      "ex": [
+        "/stt -local https://www.instagram.com/reel/..."
+      ]
+    },
+    {
+      "opts": [
         "summary",
         "sum"
       ],
       "values": [],
       "desc": "Também resume a fala com o ChatGPT (a mesma chave do /gpt, que gasta a sua conta da OpenAI): o resumo em tópicos no alto e a transcrição inteira embaixo.",
       "ex": [
-        "/transcribe -sum https://www.instagram.com/reel/..."
+        "/stt -sum https://www.instagram.com/reel/..."
       ]
     },
     {

@@ -359,7 +359,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
         }
     }
 
-    const max = getSetting('agenda.max');
+    const max = getSetting('cron.max');
     const { n: total } = await dbGet("SELECT COUNT(*) AS n FROM schedules WHERE kind != 'status'");
     if (total + 1 > max) {
         await msg.reply(t('adm.agenda.limit', { max }));

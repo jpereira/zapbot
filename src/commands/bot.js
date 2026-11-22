@@ -741,13 +741,13 @@ async function handleNoticeDenied(valueAlt) {
 }
 
 /*
- * /bot -flood: the flood protection (settings flood.maxCommandRepeated and flood.intervalCommand). With nothing,
+ * /bot -flood: the flood protection (settings bot.flood.maxCommandRepeated and bot.flood.intervalCommand). With nothing,
  * shows; off turns off (0 repetitions); on goes back to the defaults; N[/seconds] changes the max (and the window).
  */
 async function handleFlood(valueAlt) {
     const v = valueAlt.toLowerCase().trim();
-    const max = 'flood.maxCommandRepeated';
-    const window = 'flood.intervalCommand';
+    const max = 'bot.flood.maxCommandRepeated';
+    const window = 'bot.flood.intervalCommand';
     try {
         if (v === 'off') await setSetting(max, 0);
         else if (v === 'on') {

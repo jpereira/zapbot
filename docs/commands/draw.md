@@ -5,7 +5,7 @@ Role `admin`: only you and the extra admins. The owner enables it for a person o
 draw: `-model` (view and switch the model) is for the owner and admins. Each image **spends your
 OpenAI account**.
 
-Draws an image with OpenAI's GPT Image (`v1/images` API) and sends it to the chat, with the request
+Draws an image with ChatGPT (OpenAI's GPT Image, `v1/images` API) and sends it to the chat, with the request
 in the caption (cut at 200 characters). With `-gif`, it makes an **animated GIF**. On a **photo** (the
 message's own, in the caption, or the replied one), the request **edits** the photo or, with
 `-gif`, **animates** it.

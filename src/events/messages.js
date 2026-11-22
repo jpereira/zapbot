@@ -389,7 +389,7 @@ client.on('message_create', (msg) => withContextDebug({
             if (!flood.allowed) {
                 if (flood.notify) {
                     printInfo(`Flood: ${senderName} repeated ${command.cmd}; ignored for ${flood.seconds}s`);
-                    const max = getSetting('flood.maxCommandRepeated');
+                    const max = getSetting('bot.flood.maxCommandRepeated');
                     await msg.reply(t('mensagens.flood', {
                         max: t(max === 1 ? 'mensagens.vez' : 'mensagens.vezes', { n: max }),
                         wait: t(flood.seconds === 1 ? 'mensagens.segundo' : 'mensagens.segundos', { n: flood.seconds })

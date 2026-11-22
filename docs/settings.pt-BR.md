@@ -6,14 +6,6 @@ em português).
 
 | Chave | Tipo | Padrão | Descrição |
 |---|---|---|---|
-| `agenda.max` | 1–500 | `50` | Máximo de itens do [`/cron`](commands/cron.md), somando lembretes e mensagens |
-| `alert.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](commands/stocks.md#alertas-de-preço) |
-| `alert.max` | 1–100 | `20` | Máximo de alertas de preço (somando `/stocks` e `/crypto`) |
-| `api.enabled` | on/off | `off` | Liga a API HTTP local ([API e MCP](api.md)): `/health`, `/status`, `/notes` e `/send`, com a `api.key`. Vale ao reiniciar o bot |
-| `api.host` | texto | `127.0.0.1` | Endereço em que a API escuta. O padrão só atende a própria máquina; fora dele, ponha um proxy com HTTPS na frente. Vale ao reiniciar |
-| `api.key` | texto (pode ser vazio) | *(vazio)* | A chave da API (cabeçalho `Authorization: Bearer <chave>` ou `X-API-Key`). Vazia: a API não inicia. Exibida mascarada; use uma chave longa e aleatória |
-| `api.port` | 1024–65535 | `3100` | Porta da API HTTP. Vale ao reiniciar |
-| `api.sendTo` | lista | *(vazia)* | Para onde o `POST /send` e o `send_message` do MCP podem mandar além do seu próprio chat: telefones com DDI, ids de grupo (`…@g.us`) ou `all` (qualquer destino: só se você confia em quem tem a chave) |
 | `ascii.defaultChar` | 1 caractere | `#` | Caractere do traço das letras do [`/ascii`](commands/ascii.md) quando `-char` não é informado |
 | `backup.enabled` | on/off | `on` | [Backup automático](commands/backup.md#backup-automático) do banco, uma vez por dia |
 | `backup.hour` | 0–23 | `3` | Hora (de Brasília) do backup automático |
@@ -23,6 +15,8 @@ em português).
 | `bot.denied.enabled` | on/off | `on` | Quem digita um comando que não pode usar recebe a `bot.denied.message`, em vez do silêncio (sem repetir enquanto a pessoa insistir, veja `bot.denied.interval`). Desligado: o bot ignora em silêncio. Vem ligado. Veja [Aviso de comando negado](commands/bot.md#aviso-de-comando-negado) |
 | `bot.denied.interval` | 0–1440 | `10` | Minutos de calma do aviso do `bot.denied.enabled`: se a pessoa já foi avisada (ou tentou algum comando) neste chat nos últimos X minutos, o bot fica quieto, e cada nova tentativa renova a espera. `0`: avisa a cada tentativa |
 | `bot.denied.message` | texto (pode ser vazio) | `""` | Texto do aviso do `bot.denied.enabled`. `$cmd` é o comando digitado e `$admin`, o dono do bot (nome e telefone). Vazio: o texto padrão do idioma do bot (`zapbot.lang`): `🚫 Sem permissão para executar $cmd, fale com $admin` |
+| `bot.flood.intervalCommand` | 1–3600 | `2` | Proteção contra flood: a janela, em segundos, em que se conta o `bot.flood.maxCommandRepeated`, e quanto tempo o bot ignora quem passou do limite. Veja [Proteção contra flood](commands/bot.md#proteção-contra-flood). O mesmo que `/bot -flood`. |
+| `bot.flood.maxCommandRepeated` | 0–100 | `3` | Quantas vezes quem não é admin pode repetir o mesmo comando em `bot.flood.intervalCommand` segundos; passou, o bot avisa uma vez e ignora a pessoa até o intervalo acabar. `0` desliga. O mesmo que `/bot -flood`. |
 | `bot.login` | texto (pode ser vazio) | `""` | Hash (scrypt) da senha do `/bot -login`, que faz quem é de fora virar admin. Vazio: login desligado. Defina pelo `/bot -passwd`, não pelo `/set`. Secreto |
 | `bot.paused` | on/off | `off` | Bot desligado: todos os comandos ignorados, exceto o `/bot` (o mesmo do `/bot -on`/`-off`) |
 | `bot.users` | lista | `false` | Quem usa os comandos comuns (os não-admin), além de você e do `bot.admins`: `false` (ninguém), `true` (todos) ou pessoas e grupos (num grupo, todos ali usam, mas só dentro dele); uma pessoa só num grupo fica como `telefone:id-do-grupo`. Só o dono altera; o `/bot +u`/`-u` é o atalho. Veja [Usuários](commands/bot.md#usuários) |
@@ -41,6 +35,9 @@ em português).
 | `contacts.cache` | on/off | `on` | Guarda as fotos de perfil baixadas pelo `/contacts` em `cache/contacts` (entram no backup). Desligado: baixa a cada exportação e não guarda nada |
 | `contacts.cacheDays` | 1–365 | `30` | Dias que uma foto em `cache/contacts` vale antes de ser baixada de novo (`/contacts -r` força) |
 | `contacts.delayMs` | 0–5000 | `300` | Pausa, em milissegundos, entre uma foto e outra no `/contacts`, para não consultar o WhatsApp em rajada |
+| `cron.max` | 1–500 | `50` | Máximo de itens do [`/cron`](commands/cron.md), somando lembretes e mensagens |
+| `crypto.alert.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](commands/stocks.md#alertas-de-preço) do `/crypto` |
+| `crypto.alert.max` | 1–100 | `20` | Máximo de alertas de preço do `/crypto` |
 | `crypto.brl` | on/off | `on` | O [`/crypto`](commands/crypto.md) mostra também o preço de cada moeda em reais (o par da Binance contra o real, ou o preço em dólar × USDTBRL) |
 | `crypto.coins` | lista | `BTC, ETH, SOL, HYPE` | Moedas do `/crypto` (só as suportadas); normalmente alterada pelo `/crypto -a`/`-d` |
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
@@ -62,9 +59,6 @@ em português).
 | `defi.morpho.chains` | lista | `8453` | Redes (chain id) em que o [`/defi morpho`](commands/defi.md#morpho) procura as posições: `8453` (Base), `1` (Ethereum)... |
 | `defi.morpho.wallet` | texto (pode ser vazio) | *(vazio)* | Carteira do [`/defi morpho`](commands/defi.md#morpho) quando não há carteira cadastrada, usada quando `MORPHO_WALLET_ADDRESS` não está no `config/.env` |
 | `defi.solana.rpc` | URL | `https://api.mainnet-beta.solana.com` | RPC da Solana usado pelo [`/defi`](commands/defi.md#rpc-da-solana). Exibido mascarado (a URL costuma levar a chave) |
-| `email.alerts` | on/off | `on` | Alertas por e-mail (crash, queda, reconexão...) pelo SMTP do QR Code. Veja [Alertas por e-mail](emails.md#alertas-por-e-mail) |
-| `flood.intervalCommand` | 1–3600 | `2` | Proteção contra flood: a janela, em segundos, em que se conta o `flood.maxCommandRepeated`, e quanto tempo o bot ignora quem passou do limite. Veja [Proteção contra flood](commands/bot.md#proteção-contra-flood). O mesmo que `/bot -flood`. |
-| `flood.maxCommandRepeated` | 0–100 | `3` | Quantas vezes quem não é admin pode repetir o mesmo comando em `flood.intervalCommand` segundos; passou, o bot avisa uma vez e ignora a pessoa até o intervalo acabar. `0` desliga. O mesmo que `/bot -flood`. |
 | `forward.delayMs` | 0–10000 | `1000` | Pausa (ms) entre as mensagens quando o [`/forward`](commands/forward.md) encaminha várias, para não encher o WhatsApp de uma vez |
 | `forward.header` | on/off | `on` | Cabeçalho "Mensagem encaminhada pelo ZapBot!" no começo do que o [`/forward`](commands/forward.md) envia; desligado, vai só a mensagem. O `-status` força, o `-quiet` e o `-nohdr` tiram. Veja [Cabeçalho](commands/forward.md#cabeçalho) |
 | `forward.max` | 1–50 | `10` | Máximo de mensagens que o [`/forward -N`](commands/forward.md#várias-mensagens--n) encaminha de uma vez |
@@ -74,8 +68,8 @@ em português).
 | `get.cache.tmp` | on/off | `on` | Guarda em `cache/tmp` o que o yt-dlp baixa no `/get` e no `/sticker`: o mesmo link (e o mesmo trecho) não baixa de novo. Veja [Cache dos downloads](commands/get.md#cache-dos-downloads). `off` apaga o original a cada execução |
 | `get.maxDownloadMB` | 10–2000 | `200` | Tamanho máximo baixado pelo yt-dlp no `/get` e no `/sticker`, antes da conversão |
 | `get.maxSizeMB` | 1–100 | `20` | Tamanho máximo do arquivo convertido pelo ffmpeg no `/get` e no `/sticker` |
-| `gif.tag` | texto | `fail` | Tag padrão do `/giphy` |
 | `giphy.api.key` | texto (pode ser vazio) | *(vazio)* | Chave do GIPHY, usada quando `GIPHY_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset giphy.api.key` apaga |
+| `giphy.tag` | texto | `fail` | Tag padrão do `/giphy` |
 | `gpt.admin.key` | texto (pode ser vazio) | *(vazio)* | Chave de admin da OpenAI (`sk-admin-...`) do `/gpt -usage`, usada quando `OPENAI_ADMIN_KEY` não está no `config/.env`. Exibida mascarada; `/set -reset gpt.admin.key` apaga |
 | `gpt.api.key` | texto (pode ser vazio) | *(vazio)* | Chave da OpenAI, usada quando `OPENAI_API_KEY` não está no `config/.env`. Exibida mascarada (`••••1234`); `/set -reset gpt.api.key` apaga |
 | `gpt.api.model` | texto (da lista) | `gpt-4o-mini` | Modelo do `/gpt`, usado quando `OPENAI_MODEL` não está no `config/.env`. Aceitos: os listados por `/gpt -m` |
@@ -94,7 +88,6 @@ em português).
 | `gpt.tts.instructions` | texto | `Fale como um robô: voz metálica, monótona e pausada, sem emoção.` | Estilo da voz do `/gpt -voice` (só o `gpt-4o-mini-tts` usa) |
 | `gpt.tts.model` | texto | `gpt-4o-mini-tts` | Modelo que gera a voz do `/gpt -voice`: o id que a sua conta tem (só os `gpt-4o-*` seguem o estilo) |
 | `gpt.tts.voice` | texto (da lista) | `onyx` | Voz do `/gpt -voice`: `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer` ou `verse` |
-| `mcp.enabled` | on/off | `off` | **Experimental.** Liga o servidor MCP da API (`POST /mcp`), para um cliente de IA enviar mensagens (para o `api.sendTo`) e ler as suas `/notes`. Exige `api.enabled` e `api.key` |
 | `me.maxRepeat` | 1–1000 | `500` | Máximo de repetições do [`/me -repeat`](commands/me.md) (`-r <n>`) |
 | `monitor.enabled` | on/off | `on` | Consultas periódicas do [`/monitor`](commands/monitor.md); `off` pausa sem apagar contatos ou histórico |
 | `monitor.max` | 1–5 | `5` | Máximo de contatos monitorados. Mais contatos aumentam as consultas e o risco de bloqueio; limite absoluto de 5. Remova contatos antes de reduzir abaixo do total cadastrado |
@@ -119,12 +112,18 @@ em português).
 | `status.warnAfter` | 1–50 | `3` | A partir de quantas postagens no Status em 24 horas o `/status` avisa do risco de banimento (não bloqueia) |
 | `sticker.author` | texto | `https://github.com/jpereira/zapbot/` | Autor das figurinhas |
 | `sticker.name` | texto | `ZapBot` | Nome do pacote das figurinhas |
+| `stocks.alert.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](commands/stocks.md#alertas-de-preço) do `/stocks` |
+| `stocks.alert.max` | 1–100 | `20` | Máximo de alertas de preço do `/stocks` |
 | `stocks.symbols` | lista | `USD, EUR, USDT, MSTR` | Símbolos exibidos pelo [`/stocks`](commands/stocks.md) (e `/rates`): moedas contra o real (`USD`, `EUR`, `GBP`, `USDT`) e tickers do Yahoo Finance (`MSTR`, `NVDA`, `PETR4.SA`, `BRK-B`, `^GSPC`); normalmente alterada pelo `/stocks -a`/`-d` |
+| `stt.engine` | `local`, `gpt` | `local` | Motor do [`/stt`](commands/stt.md) e do `/get -stt`: `local` (faster-whisper, sem chave) ou `gpt` (ChatGPT, API da OpenAI). `-gpt` e `-local` escolhem na chamada |
+| `stt.language` | texto | `auto` | Idioma da fala no [`/get -stt`](commands/get.md#transcrever-a-fala--stt) (`pt`, `en`, `es`...). `auto`: o whisper detecta |
+| `stt.maxMinutes` | 1–180 | `20` | Duração máxima (minutos) do áudio que o `/get -stt` transcreve: usa a CPU do servidor |
+| `stt.model` | texto | `small` | Modelo do faster-whisper no `/get -stt`: `tiny`, `base`, `small`, `medium` ou `large-v3-turbo` (maior = melhor e mais lento). O `small` vem na imagem; outro é baixado na primeira vez |
 | `tldr.maxMsgs` | 10–2000 | `500` | Máximo de mensagens enviadas à OpenAI por [`/tldr`](commands/tldr.md) |
-| `transcribe.language` | texto | `auto` | Idioma da fala no [`/get -transcribe`](commands/get.md#transcrever-a-fala--transcribe) (`pt`, `en`, `es`...). `auto`: o whisper detecta |
-| `transcribe.maxMinutes` | 1–180 | `20` | Duração máxima (minutos) do áudio que o `/get -transcribe` transcreve: usa a CPU do servidor |
-| `transcribe.model` | texto | `small` | Modelo do faster-whisper no `/get -transcribe`: `tiny`, `base`, `small`, `medium` ou `large-v3-turbo` (maior = melhor e mais lento). O `small` vem na imagem; outro é baixado na primeira vez |
 | `translate.lang` | texto | `pt` | Idioma de destino padrão do [`/translate`](commands/translate.md) (código: `pt`, `en`, `es`...) |
+| `tts.engine` | `local`, `gpt` | `local` | Motor do [`/tts`](commands/tts.md): `local` (voz Piper, sem chave) ou `gpt` (ChatGPT, API de voz da OpenAI). `-gpt` e `-local` escolhem na chamada |
+| `tts.voice.en` | texto | `en_US-lessac-medium` | Voz local (Piper) do [`/tts`](commands/tts.md) para texto em inglês: `en_US-lessac-medium`, `en_US-amy-medium`, `en_GB-alan-medium`... A que não está na imagem é baixada na primeira vez |
+| `tts.voice.pt` | texto | `pt_BR-faber-medium` | Voz local (Piper) do [`/tts`](commands/tts.md) para texto em português: `pt_BR-faber-medium`, `pt_BR-edresson-low`, `pt_PT-tugão-medium`... A que não está na imagem é baixada na primeira vez |
 | `usage.footer` | on/off | `on` | Depois de um comando com limite de uso, avisa quantas chamadas restam (`📊 /gpt: restam 1 de 3 por dia`) |
 | `usage.logDays` | 1–365 | `90` | Dias que o histórico das chamadas com limite (`/usage -l`) fica guardado |
 | `warn.max` | 0–20 | `3` | Quantos avisos do [`/warn`](commands/warn.md) tiram a pessoa do grupo (o bot precisa ser admin dele). `0`: só conta, nunca remove |
@@ -136,7 +135,14 @@ em português).
 | `weather.maxDays` | 1–16 | `16` | Máximo de dias do `/weather N` (ou `Nd`), contando hoje; 16 é o limite da Open-Meteo |
 | `weather.sources` | lista | `met`, `cptec` | Fontes extras do [`/weather`](commands/weather.md#outras-fontes), além da Open-Meteo: `met` (MET Norway) e `cptec` (CPTEC/INPE, só Brasil). Vazio: só a Open-Meteo |
 | `weather.userAgent` | texto | `weather-bot/1.0` | O User-Agent das consultas às fontes extras. A MET Norway pede que ele identifique o cliente e dê um contato |
+| `zapbot.api.enabled` | on/off | `off` | Liga a API HTTP local ([API e MCP](api.md)): `/health`, `/status`, `/notes` e `/send`, com a `zapbot.api.key`. Vale ao reiniciar o bot |
+| `zapbot.api.host` | texto | `127.0.0.1` | Endereço em que a API escuta. O padrão só atende a própria máquina; fora dele, ponha um proxy com HTTPS na frente. Vale ao reiniciar |
+| `zapbot.api.key` | texto (pode ser vazio) | *(vazio)* | A chave da API (cabeçalho `Authorization: Bearer <chave>` ou `X-API-Key`). Vazia: a API não inicia. Exibida mascarada; use uma chave longa e aleatória |
+| `zapbot.api.port` | 1024–65535 | `3100` | Porta da API HTTP. Vale ao reiniciar |
+| `zapbot.api.sendTo` | lista | *(vazia)* | Para onde o `POST /send` e o `send_message` do MCP podem mandar além do seu próprio chat: telefones com DDI, ids de grupo (`…@g.us`) ou `all` (qualquer destino: só se você confia em quem tem a chave) |
+| `zapbot.email.alerts` | on/off | `on` | Alertas por e-mail (crash, queda, reconexão...) pelo SMTP do QR Code. Veja [Alertas por e-mail](emails.md#alertas-por-e-mail) |
 | `zapbot.lang` | `en_US`, `pt_BR` | `en_US` | Idioma do bot: a ajuda (`-h`, `/help`) e todas as respostas, avisos, erros, datas e números saem nele. `/set zapbot.lang pt_BR` (ou `/set zapbot.lang=pt_BR`) troca para o português; `pt-BR`, `pt` e `en` também valem. As descrições que o `/set` mostra de cada setting continuam em português |
+| `zapbot.mcp.enabled` | on/off | `off` | **Experimental.** Liga o servidor MCP da API (`POST /mcp`), para um cliente de IA enviar mensagens (para o `zapbot.api.sendTo`) e ler as suas `/notes`. Exige `zapbot.api.enabled` e `zapbot.api.key` |
 
 Uma chave nova é declarada em `SETTINGS_SCHEMA` (`src/settings.js`), **em ordem alfabética**, com
 padrão, tipo, descrição e limites (`allowEmpty` para texto que pode ficar vazio, `secret` para

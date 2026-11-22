@@ -121,30 +121,30 @@ test('/bot -denied: mostra, liga, desliga, muda o texto e volta ao padrão', asy
 });
 
 test('/bot -flood|-f: mostra, muda o máximo e a janela, desliga e volta aos padrões', async () => {
-    await bot.setSetting('flood.maxCommandRepeated', 3); // the test helper turns flood off
+    await bot.setSetting('bot.flood.maxCommandRepeated', 3); // the test helper turns flood off
     let [r] = await bot.replyAlt('/bot -flood');
     assert.match(r, /Proteção contra flood:\* ligada\nQuem não é admin pode repetir o mesmo comando no máximo 3 vezes em 2 s/);
 
     [r] = await bot.replyAlt('/bot -f 5/10');
     assert.match(r, /no máximo 5 vezes em 10 s/);
-    assert.equal(bot.getSetting('flood.maxCommandRepeated'), 5);
-    assert.equal(bot.getSetting('flood.intervalCommand'), 10);
+    assert.equal(bot.getSetting('bot.flood.maxCommandRepeated'), 5);
+    assert.equal(bot.getSetting('bot.flood.intervalCommand'), 10);
 
     await bot.replyAlt('/bot -f 7');
-    assert.equal(bot.getSetting('flood.maxCommandRepeated'), 7);
-    assert.equal(bot.getSetting('flood.intervalCommand'), 10, 'só o máximo: a janela fica');
+    assert.equal(bot.getSetting('bot.flood.maxCommandRepeated'), 7);
+    assert.equal(bot.getSetting('bot.flood.intervalCommand'), 10, 'só o máximo: a janela fica');
 
     [r] = await bot.replyAlt('/bot -flood off');
     assert.match(r, /Proteção contra flood:\* desligada\nNão há limite/);
-    assert.equal(bot.getSetting('flood.maxCommandRepeated'), 0);
+    assert.equal(bot.getSetting('bot.flood.maxCommandRepeated'), 0);
 
     await bot.replyAlt('/bot -flood on');
-    assert.equal(bot.getSetting('flood.maxCommandRepeated'), 3);
-    assert.equal(bot.getSetting('flood.intervalCommand'), 2);
+    assert.equal(bot.getSetting('bot.flood.maxCommandRepeated'), 3);
+    assert.equal(bot.getSetting('bot.flood.intervalCommand'), 2);
 
     for (const bad of ['abc', '0', '5/', '5/0', '1000']) {
         [r] = await bot.replyAlt(`/bot -f ${bad}`);
         assert.match(r, /Valor inválido|inválido|invalid/i, bad);
     }
-    assert.equal(bot.getSetting('flood.maxCommandRepeated'), 3, 'valor ruim não muda nada');
+    assert.equal(bot.getSetting('bot.flood.maxCommandRepeated'), 3, 'valor ruim não muda nada');
 });

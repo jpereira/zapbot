@@ -283,11 +283,14 @@ describe('alertas de preço (-alert)', () => {
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 0);
     });
 
-    test('limite do alert.max (somando os dois comandos)', async () => {
-        await bot.setSetting('alert.max', 2);
+    test('limite do stocks.alert.max e do crypto.alert.max (cada comando tem o seu)', async () => {
+        await bot.setSetting('stocks.alert.max', 2);
+        await bot.setSetting('crypto.alert.max', 1);
         await bot.replyAlt('/stocks -alert USD > 6');
         await bot.replyAlt('/crypto -alert BTC > 100000');
-        assert.match((await bot.replyAlt('/stocks -alert EUR > 7'))[0], /❌ Limite de 2 alertas atingido/);
+        await bot.replyAlt('/stocks -alert EUR > 7');
+        assert.match((await bot.replyAlt('/stocks -alert GBP > 8'))[0], /❌ Limite de 2 alertas atingido \(setting stocks\.alert\.max\)/);
+        assert.match((await bot.replyAlt('/crypto -alert ETH > 5000'))[0], /❌ Limite de 1 alertas atingido \(setting crypto\.alert\.max\)/);
     });
 
     test('preço indisponível na criação', async () => {
@@ -488,7 +491,7 @@ describe('alertas de preço (-alert)', () => {
         assert.ok(bot.errorsInLog(logBefore).length > 0);
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 1, 'falha na consulta: mantém');
 
-        // Within the interval (alert.intervalMin) the check without forcing does not query
+        // Within the interval (stocks.alert.intervalMin) the check without forcing does not query
         network.calls.length = 0;
         await priceCheckAlerts();
         assert.equal(network.calls.length, 0);

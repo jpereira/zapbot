@@ -17,6 +17,8 @@ const {
     modelError, messageImage, replyConsumption, withoutOption, swapModel
 } = require('./openaiCommon');
 const { TMP_DIR } = require('../constants');
+const { printError } = require('../log');
+const { speakLocal } = require('../ttsLocal');
 const { language, t } = require('../i18n');
 const { unescape } = require('../util/format');
 const {
@@ -175,7 +177,7 @@ async function contentForTalk(quotedMsg, cmd = '/gpt') {
  * /gpt -voice [text]: the voice of the text (v1/audio/speech), robot by default, in a voice note. Without
  * typed text, speaks the replied message's.
  */
-async function talkText(msg, args, quotedMsg, cmd = '/gpt') {
+async function talkText(msg, args, quotedMsg, cmd = '/gpt', { local = false } = {}) {
     const typed = unescape(args.replace(/(^|\s)-(?:voice|v)(?=\s|$)/, '').trim());
     let textAlt = typed;
     let style = null;
@@ -201,14 +203,16 @@ async function talkText(msg, args, quotedMsg, cmd = '/gpt') {
         return;
     }
 
-    const notice = await notifyProcessing(msg, cmd);
+    const engine = local ? 'Piper' : 'ChatGPT';
+    const notice = await msg.reply(t('tts.processing', { engine }), null, { linkPreview: false });
     try {
-        const voice = await synthesizeVoice({ cmd, text: textAlt, style });
-        await completeNotice(msg, notice, t('gpt.voiceBelow'));
+        const voice = local ? await speakLocal(textAlt) : await synthesizeVoice({ cmd, text: textAlt, style });
+        await completeNotice(msg, notice, t('gpt.voiceBelow', { engine }));
         await msg.reply(new MessageMedia('audio/ogg; codecs=opus', voice.toString('base64'), 'voz.ogg'), null, { sendAudioAsVoice: true });
-        await replyConsumption(msg);
+        if (!local) await replyConsumption(msg);
     } catch (err) {
-        await completeNotice(msg, notice, (await modelError(err, VOICE_MODEL, cmd)) || errorOpenAi(err, cmd));
+        printError(`${cmd}:`, err.message);
+        await completeNotice(msg, notice, local ? t('tts.localFailed', { error: err.message }) : (await modelError(err, VOICE_MODEL, cmd)) || errorOpenAi(err, cmd));
     }
 }
 

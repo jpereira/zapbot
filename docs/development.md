@@ -102,7 +102,7 @@ src/
   email.js              SMTP and email alerts
   polls.js           poll votes (vote_update) and the /poll -r scoreboard
   heartbeat.js          proof of life for the Docker HEALTHCHECK
-  api.js                the optional local HTTP API (/health, /status, /notes, /send) and the experimental MCP server (api.enabled, mcp.enabled)
+  api.js                the optional local HTTP API (/health, /status, /notes, /send) and the experimental MCP server (zapbot.api.enabled, zapbot.mcp.enabled)
   usageLimit.js          the usage limit per person (/bot +limit, /usage): reservation, refund and the window per period
   usageCollector.js         collects what a command replies (AsyncLocalStorage), so only the successful calls count
   contactPhotos.js, vcard.js   /contacts: the photos (cache/contacts) and the vCard 3.0

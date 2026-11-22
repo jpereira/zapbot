@@ -36,7 +36,7 @@ function itemPhone(v) {
     return digits;
 }
 
-// An api.sendTo destination: all, a group id (…@g.us) or a phone with country code
+// A zapbot.api.sendTo destination: all, a group id (…@g.us) or a phone with country code
 function apiDestination(v) {
     const s = v.trim().toLowerCase();
     if (s === 'all') return s;
@@ -72,96 +72,7 @@ function validateUrlFeed(v) {
     return v;
 }
 
-/*
- * Renamed settings: at boot, the value saved under the old name moves to the
- * new one (see migrateSettingsRenamed). In alphabetical order of the old name.
- */
-const SETTINGS_RENAMED = {
-    'alerta.intervalMin': 'alert.intervalMin',
-    'alerta.max': 'alert.max',
-    'defi.alerta.intervalMin': 'defi.alert.intervalMin',
-    'edit.alert': 'show.alert.edited',
-    'enquete.retentionDays': 'poll.retentionDays',
-    'gif.giphy.api.key': 'giphy.api.key',
-    'news.brasil': 'news.brazil',
-    'openai.admin.key': 'gpt.admin.key',
-    'openai.api.key': 'gpt.api.key',
-    'openai.api.model': 'gpt.api.model',
-    'openai.credit.since': 'gpt.credit.since',
-    'openai.credit.total': 'gpt.credit.total',
-    'openai.gif.frameMs': 'gpt.gif.frameMs',
-    'openai.gif.frames': 'gpt.gif.frames',
-    'openai.image.gifModel': 'gpt.image.gifModel',
-    'openai.image.model': 'gpt.image.model',
-    'openai.pricing': 'gpt.pricing',
-    'openai.pricing.auto': 'gpt.pricing.auto',
-    'openai.pricing.updated': 'gpt.pricing.updated',
-    'openai.status': 'gpt.status',
-    'openai.timeout.ms': 'gpt.timeout.ms',
-    'openai.transcribe.model': 'gpt.transcribe.model',
-    'openai.tts.instructions': 'gpt.tts.instructions',
-    'openai.tts.model': 'gpt.tts.model',
-    'openai.tts.voice': 'gpt.tts.voice',
-    'resumo.maxMsgs': 'tldr.maxMsgs',
-    'revoke.status': 'show.alert.status',
-    'show.alert.edit': 'show.alert.edited',
-    'show.revoke.status': 'show.alert.status',
-    'stats.enabled': 'stats.enable',
-    'tempo.city': 'weather.city',
-    'tempo.maxDays': 'weather.maxDays',
-    'traduzir.lang': 'translate.lang'
-};
-
-// Renamed commands: a commands.disabled saved with the old name applies to the new one
-const COMMANDS_RENAMED = {
-    '/agendar': '/cron',
-    '/lemb': '/cron'
-};
-
 const SETTINGS_SCHEMA = {
-    'agenda.max': {
-        default: 50,
-        type: 'number', min: 1, max: 500,
-        desc: 'Máximo de itens do /cron, somando lembretes e mensagens.'
-    },
-    'alert.intervalMin': {
-        default: 5,
-        type: 'number', min: 1, max: 60,
-        desc: 'Intervalo (minutos) entre as verificações dos alertas do /stocks e do /crypto.'
-    },
-    'alert.max': {
-        default: 20,
-        type: 'number', min: 1, max: 100,
-        desc: 'Máximo de alertas de preço (somando /stocks e /crypto).'
-    },
-    'api.enabled': {
-        default: false,
-        type: 'boolean',
-        desc: 'Liga a API HTTP local (src/api.js): /health, /status, /notes e /send, com a api.key. Desligada por padrão; muda só ao reiniciar o bot.'
-    },
-    'api.host': {
-        default: '127.0.0.1',
-        type: 'string',
-        desc: 'Endereço em que a API escuta. O padrão (127.0.0.1) só atende a própria máquina; fora dele, ponha um proxy com HTTPS na frente. Muda só ao reiniciar o bot.'
-    },
-    'api.key': {
-        default: '',
-        type: 'string',
-        allowEmpty: true,
-        secret: true,
-        desc: 'A chave da API HTTP (cabeçalho Authorization: Bearer <chave> ou X-API-Key). Vazia: a API não inicia. Use uma chave longa e aleatória.'
-    },
-    'api.port': {
-        default: 3100,
-        type: 'number', min: 1024, max: 65535,
-        desc: 'Porta da API HTTP. Muda só ao reiniciar o bot.'
-    },
-    'api.sendTo': {
-        default: [],
-        type: 'list',
-        desc: 'Para onde o POST /send e o send_message do MCP podem mandar além do seu próprio chat: telefones com DDI, ids de grupo (…@g.us) ou all (qualquer destino: use só se confiar em quem tem a chave).',
-        item: apiDestination
-    },
     'ascii.defaultChar': {
         default: '#',
         type: 'string',
@@ -213,6 +124,16 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         allowEmpty: true,
         desc: 'Texto do aviso de bot.denied.enabled. $cmd é o comando digitado e $admin, o dono do bot (nome e telefone). Vazio: o texto padrão do idioma do bot (zapbot.lang).'
+    },
+    'bot.flood.intervalCommand': {
+        default: 2,
+        type: 'number', min: 1, max: 3600,
+        desc: 'Proteção contra flood: a janela, em segundos, em que se conta o bot.flood.maxCommandRepeated, e quanto tempo o bot ignora quem passou do limite.'
+    },
+    'bot.flood.maxCommandRepeated': {
+        default: 3,
+        type: 'number', min: 0, max: 100,
+        desc: 'Proteção contra flood: quantas vezes quem não é admin pode repetir o mesmo comando em bot.flood.intervalCommand segundos; passou, o bot avisa uma vez e ignora a pessoa até o intervalo acabar. 0 desliga.'
     },
     'bot.login': {
         default: '',
@@ -334,10 +255,8 @@ const SETTINGS_SCHEMA = {
         desc: 'Comandos desativados em tempo de execução (somem do /help).',
         item: (v) => {
             const typed = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
-            // Names of earlier versions (stored in the database) that became another command
-            const nameAlt = COMMANDS_RENAMED[typed] ?? typed;
-            const command = botConfig.commands.find(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt));
-            if (!command) throw new Error(t('adm.settings.unknownCommand', { name: nameAlt }));
+            const command = botConfig.commands.find(c => c.cmd === typed || c.aliases?.includes(typed));
+            if (!command) throw new Error(t('adm.settings.unknownCommand', { name: typed }));
             if (command.cmd === '/set') throw new Error(t('adm.settings.setNotDisabled'));
             return command.cmd;
         }
@@ -361,6 +280,21 @@ const SETTINGS_SCHEMA = {
         default: 300,
         type: 'number', min: 0, max: 5000,
         desc: 'Pausa, em milissegundos, entre uma foto e outra no /contacts, para não consultar o WhatsApp em rajada.'
+    },
+    'cron.max': {
+        default: 50,
+        type: 'number', min: 1, max: 500,
+        desc: 'Máximo de itens do /cron, somando lembretes e mensagens.'
+    },
+    'crypto.alert.intervalMin': {
+        default: 5,
+        type: 'number', min: 1, max: 60,
+        desc: 'Intervalo (minutos) entre as verificações dos alertas do /crypto.'
+    },
+    'crypto.alert.max': {
+        default: 20,
+        type: 'number', min: 1, max: 100,
+        desc: 'Máximo de alertas de preço do /crypto.'
     },
     'crypto.brl': {
         default: true,
@@ -511,21 +445,6 @@ const SETTINGS_SCHEMA = {
         validate: validateUrlFeed,
         desc: 'RPC da Solana usado pelo /defi (o público limita as consultas; um RPC próprio costuma ter a chave na URL).'
     },
-    'email.alerts': {
-        default: true,
-        type: 'boolean',
-        desc: 'Avisa por e-mail (SMTP do QR Code) crash, queda, reconexão e outros eventos do bot.'
-    },
-    'flood.intervalCommand': {
-        default: 2,
-        type: 'number', min: 1, max: 3600,
-        desc: 'Proteção contra flood: a janela, em segundos, em que se conta o flood.maxCommandRepeated, e quanto tempo o bot ignora quem passou do limite.'
-    },
-    'flood.maxCommandRepeated': {
-        default: 3,
-        type: 'number', min: 0, max: 100,
-        desc: 'Proteção contra flood: quantas vezes quem não é admin pode repetir o mesmo comando em flood.intervalCommand segundos; passou, o bot avisa uma vez e ignora a pessoa até o intervalo acabar. 0 desliga.'
-    },
     'forward.delayMs': {
         default: 1000,
         type: 'number', min: 0, max: 10000,
@@ -571,17 +490,17 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 100,
         desc: 'Tamanho máximo (MB) do arquivo convertido pelo ffmpeg no /get e no /sticker.'
     },
-    'gif.tag': {
-        default: 'fail',
-        type: 'string',
-        desc: 'Tag padrão do /giphy quando nenhuma é informada.'
-    },
     'giphy.api.key': {
         default: '',
         type: 'string',
         allowEmpty: true,
         secret: true,
         desc: 'Chave do GIPHY (/giphy), usada quando GIPHY_API_KEY não está no config/.env.'
+    },
+    'giphy.tag': {
+        default: 'fail',
+        type: 'string',
+        desc: 'Tag padrão do /giphy quando nenhuma é informada.'
     },
     'gpt.admin.key': {
         default: '',
@@ -688,11 +607,6 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         options: OPENAI_VOICES,
         desc: 'A voz do /gpt -voice: alloy, ash, ballad, coral, echo, fable, nova, onyx, sage, shimmer ou verse.'
-    },
-    'mcp.enabled': {
-        default: false,
-        type: 'boolean',
-        desc: 'EXPERIMENTAL. Liga o servidor MCP da API (POST /mcp), para um cliente de IA enviar mensagens (para o api.sendTo) e ler as notas do /notes. Exige api.enabled e api.key.'
     },
     'me.maxRepeat': {
         default: 500,
@@ -842,6 +756,16 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         desc: 'Nome do pacote das figurinhas (/sticker e /get -st).'
     },
+    'stocks.alert.intervalMin': {
+        default: 5,
+        type: 'number', min: 1, max: 60,
+        desc: 'Intervalo (minutos) entre as verificações dos alertas do /stocks.'
+    },
+    'stocks.alert.max': {
+        default: 20,
+        type: 'number', min: 1, max: 100,
+        desc: 'Máximo de alertas de preço do /stocks.'
+    },
     'stocks.symbols': {
         default: ['USD', 'EUR', 'USDT', 'MSTR'],
         type: 'list',
@@ -852,30 +776,54 @@ const SETTINGS_SCHEMA = {
             return ticker;
         }
     },
+    'stt.engine': {
+        default: 'local',
+        type: 'string',
+        options: ['local', 'gpt'],
+        normalize: (v) => v.toLowerCase(),
+        desc: 'Motor do /stt e do /get -stt: local (faster-whisper, sem chave) ou gpt (ChatGPT, API da OpenAI). -gpt e -local escolhem na chamada.'
+    },
+    'stt.language': {
+        default: 'auto',
+        type: 'string',
+        desc: 'Idioma da fala no /get -stt (pt, en, es...). auto: o whisper detecta.'
+    },
+    'stt.maxMinutes': {
+        default: 20,
+        type: 'number', min: 1, max: 180,
+        desc: 'Duração máxima (minutos) do áudio que o /get -stt transcreve. A transcrição usa a CPU do servidor.'
+    },
+    'stt.model': {
+        default: 'small',
+        type: 'string',
+        desc: 'Modelo do faster-whisper no /get -stt: tiny, base, small, medium ou large-v3-turbo (maior = melhor e mais lento). O small vem na imagem; outro é baixado na primeira vez.'
+    },
     'tldr.maxMsgs': {
         default: 500,
         type: 'number', min: 10, max: 2000,
         desc: 'Máximo de mensagens enviadas à OpenAI por /tldr.'
     },
-    'transcribe.language': {
-        default: 'auto',
-        type: 'string',
-        desc: 'Idioma da fala no /get -transcribe (pt, en, es...). auto: o whisper detecta.'
-    },
-    'transcribe.maxMinutes': {
-        default: 20,
-        type: 'number', min: 1, max: 180,
-        desc: 'Duração máxima (minutos) do áudio que o /get -transcribe transcreve. A transcrição usa a CPU do servidor.'
-    },
-    'transcribe.model': {
-        default: 'small',
-        type: 'string',
-        desc: 'Modelo do faster-whisper no /get -transcribe: tiny, base, small, medium ou large-v3-turbo (maior = melhor e mais lento). O small vem na imagem; outro é baixado na primeira vez.'
-    },
     'translate.lang': {
         default: 'pt',
         type: 'string',
         desc: 'Idioma de destino padrão do /translate (código: pt, en, es...).'
+    },
+    'tts.engine': {
+        default: 'local',
+        type: 'string',
+        options: ['local', 'gpt'],
+        normalize: (v) => v.toLowerCase(),
+        desc: 'Motor do /tts: local (voz Piper, sem chave) ou gpt (ChatGPT, API de voz da OpenAI). -gpt e -local escolhem na chamada.'
+    },
+    'tts.voice.en': {
+        default: 'en_US-lessac-medium',
+        type: 'string',
+        desc: 'Voz local (Piper) do /tts para texto em inglês: en_US-lessac-medium, en_US-amy-medium, en_GB-alan-medium... A que não está na imagem é baixada na primeira vez.'
+    },
+    'tts.voice.pt': {
+        default: 'pt_BR-faber-medium',
+        type: 'string',
+        desc: 'Voz local (Piper) do /tts para texto em português: pt_BR-faber-medium, pt_BR-edresson-low, pt_PT-tugão-medium... A que não está na imagem é baixada na primeira vez.'
     },
     'usage.footer': {
         default: true,
@@ -942,12 +890,50 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         desc: 'O User-Agent das consultas às fontes extras do /weather. A MET Norway pede que ele identifique o cliente e dê um contato (ex.: "meubot/1.0 contato@exemplo.com").'
     },
+    'zapbot.api.enabled': {
+        default: false,
+        type: 'boolean',
+        desc: 'Liga a API HTTP local (src/api.js): /health, /status, /notes e /send, com a zapbot.api.key. Desligada por padrão; muda só ao reiniciar o bot.'
+    },
+    'zapbot.api.host': {
+        default: '127.0.0.1',
+        type: 'string',
+        desc: 'Endereço em que a API escuta. O padrão (127.0.0.1) só atende a própria máquina; fora dele, ponha um proxy com HTTPS na frente. Muda só ao reiniciar o bot.'
+    },
+    'zapbot.api.key': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        secret: true,
+        desc: 'A chave da API HTTP (cabeçalho Authorization: Bearer <chave> ou X-API-Key). Vazia: a API não inicia. Use uma chave longa e aleatória.'
+    },
+    'zapbot.api.port': {
+        default: 3100,
+        type: 'number', min: 1024, max: 65535,
+        desc: 'Porta da API HTTP. Muda só ao reiniciar o bot.'
+    },
+    'zapbot.api.sendTo': {
+        default: [],
+        type: 'list',
+        desc: 'Para onde o POST /send e o send_message do MCP podem mandar além do seu próprio chat: telefones com DDI, ids de grupo (…@g.us) ou all (qualquer destino: use só se confiar em quem tem a chave).',
+        item: apiDestination
+    },
+    'zapbot.email.alerts': {
+        default: true,
+        type: 'boolean',
+        desc: 'Avisa por e-mail (SMTP do QR Code) crash, queda, reconexão e outros eventos do bot.'
+    },
     'zapbot.lang': {
         default: 'en_US',
         type: 'string',
         options: ['en_US', 'pt_BR'],
         normalize: (v) => ({ en: 'en_US', en_us: 'en_US', pt: 'pt_BR', pt_br: 'pt_BR' })[v.toLowerCase().replace('-', '_')] ?? v,
         desc: 'Idioma do bot (ajuda, respostas, avisos, datas e números): en_US (padrão) ou pt_BR. Ex.: /set zapbot.lang pt_BR.'
+    },
+    'zapbot.mcp.enabled': {
+        default: false,
+        type: 'boolean',
+        desc: 'EXPERIMENTAL. Liga o servidor MCP da API (POST /mcp), para um cliente de IA enviar mensagens (para o zapbot.api.sendTo) e ler as notas do /notes. Exige zapbot.api.enabled e zapbot.api.key.'
     }
 };
 
@@ -1027,54 +1013,7 @@ function listWithoutOsInvalid(key, valueSaved) {
     return [...new Set(valid)];
 }
 
-/*
- * A renamed setting's value goes to the new name and the old one leaves the database.
- * If the new one already exists with a value of yours (different from the default), it stays: the
- * old only fills the new one still at the default (the case of whoever updated
- * to the version that renamed it, creating the new one with the default, without migrating).
- */
-async function migrateSettingsRenamed() {
-    for (const [oldAlt2, freshAlt] of Object.entries(SETTINGS_RENAMED)) {
-        const oldAlt = await dbGet('SELECT value FROM settings WHERE key = ?', [oldAlt2]);
-        if (!oldAlt) continue;
-
-        const current = await dbGet('SELECT value FROM settings WHERE key = ?', [freshAlt]);
-        if (!current || current.value === JSON.stringify(SETTINGS_SCHEMA[freshAlt].default)) {
-            await dbRun(`INSERT INTO settings (key, value) VALUES (?, ?)
-                         ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP`, [freshAlt, oldAlt.value]);
-            printInfo(`Setting '${oldAlt2}' renamed to '${freshAlt}': the saved value was kept`);
-        } else {
-            printInfo(`Setting '${oldAlt2}' renamed to '${freshAlt}': '${freshAlt}' already had a value, the old one was discarded`);
-        }
-
-        await dbRun('DELETE FROM settings WHERE key = ?', [oldAlt2]);
-    }
-}
-
-/*
- * bot.adminMode (until 2.0.2) became bot.users: admin mode off (everyone
- * used the commands) is bot.users = true; on, the default (only the owner and the
- * admins). An existing bot.users stays as it is.
- */
-async function migrateModeAdmin() {
-    const mode = await dbGet("SELECT value FROM settings WHERE key = 'bot.adminMode'");
-    if (!mode) return;
-
-    const users = await dbGet("SELECT value FROM settings WHERE key = 'bot.users'");
-    if (!users && JSON.parse(mode.value) === false) {
-        await dbRun("INSERT INTO settings (key, value) VALUES ('bot.users', ?)", [JSON.stringify(['all'])]);
-        printInfo("Setting 'bot.adminMode' (off) became 'bot.users' = true: everyone uses the common commands");
-    } else {
-        printInfo("Setting 'bot.adminMode' removed: who uses the common commands is now 'bot.users'");
-    }
-
-    await dbRun("DELETE FROM settings WHERE key = 'bot.adminMode'");
-}
-
 async function loadSettings() {
-    await migrateSettingsRenamed();
-    await migrateModeAdmin();
-
     for (const [key, schema] of Object.entries(SETTINGS_SCHEMA)) {
         await dbRun('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', [key, JSON.stringify(schema.default)]);
     }

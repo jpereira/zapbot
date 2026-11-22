@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Checks that the bot came up after a deploy: the container is running, loaded the commands
-# ("Loaded N callers") and, if there is time, connected to WhatsApp ("inicializado!").
+# ("Loaded N callers") and, if there is time, connected to WhatsApp ("ready!").
 #
 # Usage: scripts/smoke.sh "<docker --context X>" <service> [seconds]
 # failure (1): the container stopped, or the commands did not load in time
@@ -29,7 +29,7 @@ while :; do
     # shellcheck disable=SC2086
     log=$($DOCKER logs --tail 400 "$SERVICE" 2>&1)
     echo "$log" | grep -Eq 'Loaded [0-9]+ callers' && carregou=1
-    echo "$log" | grep -Eq 'inicializado' && conectou=1
+    echo "$log" | grep -Eq 'ZapBot .* ready!' && conectou=1
 
     [ "$conectou" = 1 ] && break
     [ $(($(date +%s) - inicio)) -ge "$PRAZO" ] && break

@@ -47,7 +47,7 @@ missing or different, **it's a scam**: scanning someone else's QR connects *your
 
 When WhatsApp goes down, the alert in your private chat doesn't arrive. That's why the important
 events also go by email, through the same SMTP as the QR Code (`QRCODE_EMAIL_SMTP_*`, independent of
-`QRCODE_EMAIL_ENABLE`). Enabled by default; turn it off with `/set email.alerts off`. Without
+`QRCODE_EMAIL_ENABLE`). Enabled by default; turn it off with `/set zapbot.email.alerts off`. Without
 `QRCODE_EMAIL_SMTP_HOST`, `_USER` and `_TO` filled in, nothing is sent.
 
 | Subject | When |

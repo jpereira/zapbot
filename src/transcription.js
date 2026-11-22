@@ -1,5 +1,5 @@
 /*
- * Local transcription (faster-whisper, on the CPU): /get -transcribe. The Python script lives in
+ * Local transcription (faster-whisper, on the CPU): /get -stt. The Python script lives in
  * scripts/transcribe.py and the models in WHISPER_DIR (the default comes in the Docker image).
  */
 
@@ -12,14 +12,14 @@ const TRANSCRIPTION_TIMEOUT_MS = 15 * 60 * 1000;
 
 // The script arguments (the model and the language come from the settings)
 const transcriptionArgs = (fileAlt) => [
-    SCRIPT_TRANSCRIPTION, fileAlt, getSetting('transcribe.model'), WHISPER_DIR, getSetting('transcribe.language')
+    SCRIPT_TRANSCRIPTION, fileAlt, getSetting('stt.model'), WHISPER_DIR, getSetting('stt.language')
 ];
 
 // The full command, for -verbose
 const transcriptionCommand = (fileAlt) => [BIN_PYTHON, ...transcriptionArgs(fileAlt)].join(' ');
 
 /**
- * Transcribes an audio file with the model from the transcribe.model setting.
+ * Transcribes an audio file with the model from the stt.model setting.
  * @param {string} file
  * @returns {Promise<{ text: string, language: string, duration: number }>}
  */

@@ -18,8 +18,10 @@ pelo ffmpeg. Se a mídia tiver um link na legenda, vale a mídia.
 | `-pc` | | O mesmo que `-pos center` |
 | `-pt` | | O mesmo que `-pos top` |
 | `-audio`, `-a` | | Extrai só o áudio (`.mp3`) |
-| `-transcribe`, `-t` | | Atalho do [`/transcribe`](transcribe.md): responde com o **texto da fala** em vez do arquivo. Veja [Transcrever a fala](#transcrever-a-fala--transcribe) |
-| `-summary`, `-sum` | | Com `-t`: também resume a fala com o ChatGPT. Veja [Transcrever a fala](#transcrever-a-fala--transcribe) |
+| `-stt`, `-t` | | Atalho do [`/stt`](stt.md): responde com o **texto da fala** em vez do arquivo. Veja [Transcrever a fala](#transcrever-a-fala--stt) |
+| `-gpt`, `-g` | | Com `-t`: transcreve pelo ChatGPT (API da OpenAI, gasta a sua conta) em vez do faster-whisper local. Sem `-gpt` nem `-local`, vale o setting [`stt.engine`](../settings.md) |
+| `-local`, `-l` | | Com `-t`: transcreve com o faster-whisper local (sem chave, usa a CPU do servidor), mesmo com o `stt.engine` em `gpt` |
+| `-summary`, `-sum` | | Com `-t`: também resume a fala com o ChatGPT. Veja [Transcrever a fala](#transcrever-a-fala--stt) |
 | `-startSec`, `-ss` | `<tempo>` | Começa neste ponto do vídeo original (padrão 0), em segundos (`22`, `1.5`) ou em `min:seg` (`09:33`, ou `h:min:seg`). Com `-` na frente, conta do **final** do vídeo (`-10`, `-01:44`) |
 | `-endSec`, `-es` | `<tempo>` | Termina neste ponto do vídeo original, no mesmo formato do `-ss` (`-es -5` termina 5 s antes do fim); deve ser maior que o início. Vale também sem `-ss` e para figurinhas |
 | `-verbose`, `-v` | | Mostra os parâmetros usados no yt-dlp/ffmpeg |
@@ -78,7 +80,7 @@ O texto do post, todo aqui...
   for maior, o resto vem na mensagem seguinte.
 - Uma foto que não baixa fica de fora e o aviso final diz quantas. Se nenhuma baixar, a resposta é
   `Esse link não tem vídeo nem áudio para baixar (é um post só de fotos?)`.
-- Com `-a`, `-st`, `-t` ou no [`/transcribe`](transcribe.md) as fotos não são enviadas (não há áudio para
+- Com `-a`, `-st`, `-t` ou no [`/stt`](stt.md) as fotos não são enviadas (não há áudio para
   tirar): a resposta é esse aviso.
 - As fotos são baixadas com a mesma proteção anti-SSRF do resto do `/get`. Um carrossel que mistura fotos e
   vídeos ainda não é tratado.
@@ -99,9 +101,9 @@ nem pelo `/sticker`. Um `-a` ou um `-st` do mesmo link só roda o ffmpeg.
   sobrou em cache vale como temporário comum (apagado depois de 2 horas).
 - O `/cache -all` apaga o cache dos downloads junto com os outros temporários.
 
-#### Transcrever a fala (`-transcribe`)
+#### Transcrever a fala (`-stt`)
 
-O `-transcribe` (`-t`) é um atalho do [`/transcribe`](transcribe.md): pega o texto do que é falado no vídeo e responde com ele, em vez de mandar
+O `-stt` (`-t`) é um atalho do [`/stt`](stt.md): pega o texto do que é falado no vídeo e responde com ele, em vez de mandar
 um arquivo. Roda **dentro do servidor**, com o [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
 (open source, na CPU): sem OpenAI, sem custo por minuto, e o áudio não sai do homelab.
 
@@ -122,12 +124,12 @@ um arquivo. Roda **dentro do servidor**, com o [faster-whisper](https://github.c
 - **Respondendo** um vídeo ou áudio do WhatsApp (nota de voz também), transcreve ele, sem baixar nada.
 - `-ss` e `-es` escolhem um trecho (mesmo formato de sempre, `-ss -60` é o último minuto).
 - O idioma é detectado pelo whisper. Se errar num trecho curto, fixe com
-  `/set transcribe.language pt`.
-- O modelo é o `transcribe.model` (padrão `small`, que já vem na imagem do Docker). O `medium` ou
+  `/set stt.language pt`.
+- O modelo é o `stt.model` (padrão `small`, que já vem na imagem do Docker). O `medium` ou
   o `large-v3-turbo` são melhores e mais lentos; são baixados na primeira vez que forem usados.
-- No máximo `transcribe.maxMinutes` (padrão 20) de áudio; acima disso o bot pede um trecho com
+- No máximo `stt.maxMinutes` (padrão 20) de áudio; acima disso o bot pede um trecho com
   `-ss` e `-es`. Usa a CPU do servidor e conta no limite de 2 `/get` ao mesmo tempo.
-- O `-sum` (com `-t`) resume também, como no [`/transcribe`](transcribe.md).
+- O `-sum` (com `-t`) resume também, como no [`/stt`](stt.md).
 - O `-v` manda também os comandos que rodaram (yt-dlp, ffmpeg, faster-whisper) e quanto a
   transcrição levou, antes do texto.
 - Não mistura com `-a`, `-st` nem `-pos`. O Instagram pode pedir login: vale o mesmo `cookies.txt`

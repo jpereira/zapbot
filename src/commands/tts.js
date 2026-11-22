@@ -1,20 +1,35 @@
 /*
- * /tts command: the text as voice (voice note), through OpenAI's voice API, like /gpt -voice.
- *   /tts <text>          → speech o text
+ * /tts command: the text as voice (voice note), with the local Piper voice or, with -gpt, through
+ * OpenAI's voice API (like /gpt -voice).
+ *   /tts <text>           → speaks the text
  * /tts, replying     → speaks the replied message (audio is transcribed first); what was
- * typed becomes the speech style ("speak like a robot")
+ * typed becomes the speech style ("speak like a robot", only with -gpt)
  */
 
 const { talkText } = require('./gpt');
+const { pickEngine } = require('../engines');
 const { WITHOUT_KEY, keyOpenAi, measureConsumption } = require('../openaiChat');
 const { withoutOption } = require('./openaiCommon');
 
 async function cmdTts({ msg, args, opts, quotedMsg }) {
+    let engine;
+    try {
+        engine = pickEngine(opts, 'tts.engine');
+    } catch (e) {
+        await msg.reply(e.message);
+        return;
+    }
+    const text = withoutOption(args, 'status|s|gpt|g|local|l');
+
+    if (engine === 'local') {
+        await talkText(msg, text, quotedMsg, '/tts', { local: true });
+        return;
+    }
     if (!keyOpenAi()) {
         await msg.reply(WITHOUT_KEY('/tts'));
         return;
     }
-    await measureConsumption(opts?.given.has('status'), () => talkText(msg, withoutOption(args, 'status|s'), quotedMsg, '/tts'));
+    await measureConsumption(opts?.given.has('status'), () => talkText(msg, text, quotedMsg, '/tts'));
 }
 
 module.exports = { cmdTts };

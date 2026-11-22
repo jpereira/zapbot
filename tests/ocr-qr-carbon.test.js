@@ -66,17 +66,31 @@ describe('/ocr', () => {
     });
 });
 
+describe('/tts local: o idioma do texto escolhe a voz', () => {
+    const { detectSpeechLanguage } = bot.src('ttsLocal');
+
+    test('português, inglês e empate (vale o idioma do bot)', () => {
+        assert.equal(detectSpeechLanguage('Bom dia, tudo bem com você?'), 'pt');
+        assert.equal(detectSpeechLanguage('Good morning, how are you?'), 'en');
+        assert.equal(detectSpeechLanguage('ok'), bot.getSetting('zapbot.lang') === 'pt_BR' ? 'pt' : 'en');
+    });
+});
+
 describe('/tts', () => {
+    test('-gpt e -local juntos: recusa', async () => {
+        assert.match((await bot.replyAlt('/tts -gpt -local oi'))[0], /Use só um: -gpt \(-g\) ou -local \(-l\)\./);
+    });
+
     beforeEach(() => bot.setSetting('gpt.status', false));
 
     test('sem a chave, sem texto e o texto vira nota de voz (como o /gpt -voice)', async () => {
-        assert.match((await bot.replyAlt('/tts oi'))[0], /⚠️ API key da OpenAI não encontrada: o \/tts está desativado/);
+        assert.match((await bot.replyAlt('/tts -gpt oi'))[0], /⚠️ API key da OpenAI não encontrada: o \/tts está desativado/);
 
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        assert.deepEqual(await bot.replyAlt('/tts'), ['```Usage: /tts [-status|-s] [<texto>]```\n💡 _/tts -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/tts'), ['```Usage: /tts [-gpt|-g] [-local|-l] [-status|-s] [<texto>]```\n💡 _/tts -h para ajuda_']);
 
         network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
-        const r = (await bot.execute('/tts Bom dia!')).at(-1);
+        const r = (await bot.execute('/tts -gpt Bom dia!')).at(-1);
         assert.ok(r.content instanceof MessageMedia);
         assert.equal(r.content.mimetype, 'audio/ogg; codecs=opus');
         assert.equal(r.options.sendAudioAsVoice, true);
@@ -88,7 +102,7 @@ describe('/tts', () => {
         network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
         const quoted = bot.createMessage({ text: 'Olá, mundo', de: OTHERAlt.jid });
 
-        await bot.execute('/tts fale devagar', { quoted });
+        await bot.execute('/tts -gpt fale devagar', { quoted });
         const { body } = network.calls.at(-1).cfg;
         assert.equal(body.input, 'Olá, mundo');
         assert.equal(body.instructions, 'fale devagar');

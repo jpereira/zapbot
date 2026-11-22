@@ -168,7 +168,7 @@
       "values": [
         "[off|on|<N>[/<segundos>]]"
       ],
-      "desc": "A proteção contra flood: quantas vezes quem não é admin pode repetir o mesmo comando num intervalo (settings flood.maxCommandRepeated e flood.intervalCommand). Sem valor, mostra; off desliga; on volta aos padrões (3 vezes em 2 segundos); N muda o máximo e N/S também o intervalo em segundos.",
+      "desc": "A proteção contra flood: quantas vezes quem não é admin pode repetir o mesmo comando num intervalo (settings bot.flood.maxCommandRepeated e bot.flood.intervalCommand). Sem valor, mostra; off desliga; on volta aos padrões (3 vezes em 2 segundos); N muda o máximo e N/S também o intervalo em segundos.",
       "ex": [
         "/bot -flood",
         "/bot -f 5/10",

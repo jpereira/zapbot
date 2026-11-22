@@ -29,7 +29,7 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 
 - 🎙️ **Transcreva qualquer vídeo ou áudio.** Mande um link (Instagram, YouTube, X, TikTok...) ou responda um vídeo ou
   uma nota de voz e receba o **texto da fala**, ou `-sum` para um **resumo** em cima. Roda no seu próprio servidor
-  (faster-whisper), então sem conta da OpenAI e o áudio nunca sai de casa. [`/transcribe`](commands/transcribe.md) · [`/get -t`](commands/get.md)
+  (faster-whisper), então sem conta da OpenAI e o áudio nunca sai de casa. [`/stt`](commands/stt.md) · [`/get -t`](commands/get.md)
 - 📈 **Cotações num comando só.** O `/stocks` traz o dólar, o euro e o USDT (ele substitui o `/rates`) e qualquer ação,
   ETF ou índice (`MSTR`, `NVDA`, `PETR4.SA`, `^GSPC`...), com alertas como `/stocks MSTR -alert < 90`. O `/crypto`
   agora mostra também o preço **em reais** (🇧🇷, direto da Binance) e o ouro como `XAUT`. [`/stocks`](commands/stocks.md) · [`/crypto`](commands/crypto.md)
@@ -66,9 +66,9 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 
 ```text
 /draw @me @this desenhe nós dois como piratas
-/transcribe https://www.instagram.com/reel/XXXXXXXX/
-/transcribe -sum https://youtu.be/XXXXXXXXXXX
-/transcribe -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX
+/stt https://www.instagram.com/reel/XXXXXXXX/
+/stt -sum https://youtu.be/XXXXXXXXXXX
+/stt -ss 30 -es 90 https://youtu.be/XXXXXXXXXXX
 /stocks MSTR NVDA
 /crypto XAUT
 /calc 100/2*6
@@ -92,7 +92,7 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 | 🤖 | **Conversar com o ChatGPT** | Responde perguntas, lê fotos e PDFs, transcreve notas de voz, resume conversas, desenha imagens e GIFs, transforma texto em voz e lê o texto de figuras | [`/gpt`](commands/gpt.md) · [`/tldr`](commands/tldr.md) · [`/draw`](commands/draw.md) · [`/tts`](commands/tts.md) · [`/ocr`](commands/ocr.md) |
 | 📱 | **QR Codes** | Gera um QR Code de qualquer texto e lê um quando você responde a foto dele | [`/qr`](commands/qr.md) |
 | 🎞️ | **Mídia e figurinhas** | Baixa vídeos e áudios de redes sociais, cria figurinhas (de imagens, vídeos ou texto), memes, GIFs, imagens de código e arte ASCII | [`/get`](commands/get.md) · [`/sticker`](commands/sticker.md) · [`/meme`](commands/meme.md) · [`/giphy`](commands/giphy.md) · [`/carbon`](commands/carbon.md) · [`/ascii`](commands/ascii.md) |
-| 🎙️ | **Transcrição de fala** | Transforma a fala de qualquer link, vídeo, áudio ou nota de voz em texto, no seu próprio servidor (sem API, sem custo por minuto); `-ss` e `-es` escolhem um trecho | [`/transcribe`](commands/transcribe.md) · [`/get -t`](commands/get.md#transcrever-a-fala--transcribe) |
+| 🎙️ | **Transcrição de fala** | Transforma a fala de qualquer link, vídeo, áudio ou nota de voz em texto, no seu próprio servidor (sem API, sem custo por minuto); `-ss` e `-es` escolhem um trecho | [`/stt`](commands/stt.md) · [`/get -t`](commands/get.md#transcrever-a-fala--stt) |
 | 🔔 | **Vigiar e avisar** | Vigia mensagens por texto ou regex, avisa de cotações de moedas e cripto, de posições DeFi fora da faixa e de contatos que ficaram online, no seu privado, num grupo ou por e-mail | [`/watch`](commands/watch.md) · [`/stocks`](commands/stocks.md) · [`/crypto`](commands/crypto.md) · [`/defi`](commands/defi.md) · [`/monitor`](commands/monitor.md) |
 | 📅 | **Agendar e automatizar** | Mensagens avulsas e recorrentes, lembretes, atalhos seus, vários comandos numa mensagem só, anotações com `#tags` e alertas, listas de destinatários | [`/cron`](commands/cron.md) · [`/alias`](commands/alias.md) · [`/batch`](commands/batch.md) · [`/notes`](commands/notes.md) · [`/forward`](commands/forward.md) |
 | 👥 | **Gerir grupos** | Marca todo mundo, promove e rebaixa, links de convite, enquetes, boas-vindas e despedidas, silencia e bloqueia | [`/everybody`](commands/everybody.md) · [`/promote`](commands/promote.md) · [`/invite`](commands/invite.md) · [`/poll`](commands/poll.md) · [`/welcome`](commands/welcome.md) · [`/mute`](commands/mute.md) · [`/warn`](commands/warn.md) · [`/antilink`](commands/antilink.md) |
@@ -257,12 +257,12 @@ Não conte com isso.
 **A fala de um vídeo, em texto (sem API, roda no seu servidor):**
 
 ```text
-/transcribe https://www.instagram.com/reel/XXXXXXXX/
+/stt https://www.instagram.com/reel/XXXXXXXX/
 ⏳ Transcrevendo a fala, pode levar um tempo.
 📝 Transcrição · 🗣️ pt · 1:23
 
 oi gente, hoje eu vou mostrar como fazer um pão de queijo bem fofinho em casa...
-(reply numa nota de voz)  /transcribe
+(reply numa nota de voz)  /stt
 ```
 
 **Seus contatos, com fotos, num arquivo só:**
@@ -396,7 +396,7 @@ Por onde começar:
   texto; ficam 90 dias (setting `stats.retentionDays`). As respostas do bot, o seu privado e os
   status não entram. Desligue com `/set stats.enable off`.
 - **Alertas de preço**: `/stocks -alert USD > 5.30` e `/crypto -alert BTC < 90000` guardam a
-  regra na tabela `price_alerts`; a cada 5 minutos (setting `alert.intervalMin`) o bot consulta os
+  regra na tabela `price_alerts`; a cada 5 minutos (setting `stocks.alert.intervalMin`) o bot consulta os
   preços e avisa **no seu privado** (ou, com um ou vários `-to`, em contatos, grupos, números ou por
   e-mail) quando a regra é cumprida; com o `-msg`, um texto seu vai no início do aviso. Veja
   [Alertas de preço](commands/stocks.md#alertas-de-preço).
@@ -463,4 +463,4 @@ Por onde começar:
   do código que está rodando; veja o [`/version`](commands/version.md)).
 - **Alertas por e-mail**: crash, queda, reconexão, falha de autenticação e outros eventos também vão
   por e-mail, pelo mesmo SMTP do QR Code (veja [Alertas por e-mail](emails.md#alertas-por-e-mail)).
-  Ligado por padrão (setting `email.alerts`).
+  Ligado por padrão (setting `zapbot.email.alerts`).

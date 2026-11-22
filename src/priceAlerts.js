@@ -34,11 +34,13 @@ const { formatData, plural } = require('./util/format');
  * -alert BTC > 90000 -msg Time to sell!  → the text goes at the start of the notice; the
  * -msg goes to the end (the text just cannot have a loose " -to ")
  * Each alert fires ONCE and is removed. The check runs every
- * 'alert.intervalMin' minutes. Only the owner creates and removes.
+ * '<stocks|crypto>.alert.intervalMin' minutes. Only the owner creates and removes.
  */
+// The settings of each type are '<config>.alert.max' and '<config>.alert.intervalMin'
 const ALERT_TYPES = {
     crypto: {
         cmd: '/crypto',
+        config: 'crypto',
         supported: (sym) => Boolean(CRYPTO_SUPPORTED[sym]),
         icon: (sym) => CRYPTO_SUPPORTED[sym],
         pair: (sym) => `${sym}/USDT`,
@@ -56,6 +58,7 @@ const ALERT_TYPES = {
     // asset currency (brl on B3 tickers, ".SA"; dollars on the others)
     acao: {
         cmd: '/stocks',
+        config: 'stocks',
         supported: (sym) => Boolean(QUOTE_SUPPORTED[sym] || normalizeTicker(sym)),
         icon: (sym) => QUOTE_SUPPORTED[sym]?.icon ?? '🏢',
         pair: (sym) => (QUOTE_SUPPORTED[sym] ? `${sym}/BRL` : sym),
@@ -66,6 +69,8 @@ const ALERT_TYPES = {
         )
     }
 };
+
+const alertSetting = (type, name) => getSetting(`${type.config}.alert.${name}`);
 
 const OPERATORS = {
     '>': { test: (price, target) => price > target, get text() { return t('alerts.above'); }, icon: '📈' },
@@ -199,7 +204,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
         await msg.reply(t('alerts.list', {
             cmd: type.cmd,
             items: linesAlt.join('\n'),
-            every: plural(getSetting('alert.intervalMin'), t('alerts.minute'), t('alerts.minutes'))
+            every: plural(alertSetting(type, 'intervalMin'), t('alerts.minute'), t('alerts.minutes'))
         }));
         return;
     }
@@ -224,11 +229,11 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
         if (!destinations) return;
     }
 
-    const max = getSetting('alert.max');
-    const total = (await dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n;
+    const max = alertSetting(type, 'max');
+    const total = (await dbGet('SELECT COUNT(*) AS n FROM price_alerts WHERE kind = ?', [kind])).n;
 
     if (total >= max) {
-        await msg.reply(t('alerts.limit', { max }));
+        await msg.reply(t('alerts.limit', { max, setting: `${type.config}.alert.max` }));
         return;
     }
 
@@ -264,30 +269,33 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
             messageLine({ message: messageAlt }),
         price: type.fmt(price, rule.sym),
         where: destinations.length ? t('alerts.whereIn', { dest: describeDestinations(destinations) }) : t('alerts.wherePrivate'),
-        every: plural(getSetting('alert.intervalMin'), t('alerts.minute'), t('alerts.minutes'))
+        every: plural(alertSetting(type, 'intervalMin'), t('alerts.minute'), t('alerts.minutes'))
     }));
 }
 
 /*
- * Periodic check: one tick per minute, which only queries the prices
- * when 'alert.intervalMin' has passed since the last time. One query per
+ * Periodic check: one tick per minute, which only queries the prices of a type
+ * when its '<stocks|crypto>.alert.intervalMin' has passed since the last time. One query per
  * currency, even with several alerts on it.
  */
-let lastCheckAlerts = 0;
+const lastCheckAlerts = {};
 let checkingAlerts = false;
 
 async function priceCheckAlerts({ force = false } = {}) {
     if (checkingAlerts || !stateAlt.ready) return;
-    if (!force && Date.now() - lastCheckAlerts < getSetting('alert.intervalMin') * 60 * 1000) return;
+    const now = Date.now();
+    const due = Object.entries(ALERT_TYPES).filter(([kind, type]) =>
+        force || now - (lastCheckAlerts[kind] ?? 0) >= alertSetting(type, 'intervalMin') * 60 * 1000);
+    if (!due.length) return;
 
     checkingAlerts = true;
-    lastCheckAlerts = Date.now();
+    for (const [kind] of due) lastCheckAlerts[kind] = now;
 
     try {
         await dbReady;
         const alerts = await dbAll('SELECT * FROM price_alerts ORDER BY id');
 
-        for (const [kind, type] of Object.entries(ALERT_TYPES)) {
+        for (const [kind, type] of due) {
             const typeAlt = alerts.filter(a => a.kind === kind);
             if (!typeAlt.length) continue;
 

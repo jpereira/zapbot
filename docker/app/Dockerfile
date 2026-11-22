@@ -56,13 +56,20 @@ RUN /venv/bin/pip install --no-cache-dir yt-dlp
 # dependencies
 RUN /venv/bin/python -m pip install -U yt-dlp
 
-# faster-whisper (local transcription, CPU), used by "/get -transcribe". The av stays below 17:
+# faster-whisper (local transcription, CPU), used by "/get -stt". The av stays below 17:
 # 19 does not open audio with the current faster-whisper (error "metadata_errors"). The default model
-# (transcribe.model) goes in the image: the first transcription does not wait for a download. Another model
+# (stt.model) goes in the image: the first transcription does not wait for a download. Another model
 # is downloaded to /opt/whisper the first time it is used.
 ENV WHISPER_MODELS_DIR=/opt/whisper
 RUN /venv/bin/pip install --no-cache-dir faster-whisper "av<17" \
  && /venv/bin/python -c "from faster_whisper import WhisperModel; WhisperModel('small', device='cpu', compute_type='int8', download_root='/opt/whisper')"
+
+# Piper (local text to speech, CPU), used by "/tts". The default voices (tts.voice.pt and tts.voice.en) are downloaded to /opt/piper:
+# the first speech does not wait for a download. Another voice is downloaded the first time it is used.
+ENV PIPER_VOICES_DIR=/opt/piper
+RUN mkdir -p /opt/piper \
+ && /venv/bin/pip install --no-cache-dir piper-tts \
+ && /venv/bin/python -c "from pathlib import Path; from piper.download_voices import download_voice; [download_voice(v, Path('/opt/piper')) for v in ('pt_BR-faber-medium', 'en_US-lessac-medium')]"
 
 # Misc
 RUN echo "alias ls='ls --color=auto'" >> /etc/profile.d/aliases.sh && \

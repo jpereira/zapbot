@@ -504,34 +504,12 @@ describe('settings', () => {
         assert.ok(bot.errorsInLog().some(l => l.includes("Setting 'show.max' invalid")));
     });
 
-    test('lista no banco com item que deixou de existir: fica com os outros; comando renomeado vira o novo', async () => {
-        // A 1.8.0 bot with a command that was removed (/decodeqr, today /qr) and /agendar (today /cron) disabled
-        await bot.dbRun("UPDATE settings SET value = ? WHERE key = 'commands.disabled'", [JSON.stringify(['/walissu', '/decodeqr', '/agendar'])]);
+    test('lista no banco com item que deixou de existir: fica com os outros', async () => {
+        // A command that no longer exists (/decodeqr) disabled
+        await bot.dbRun("UPDATE settings SET value = ? WHERE key = 'commands.disabled'", [JSON.stringify(['/walissu', '/decodeqr'])]);
         await loadSettings();
-        assert.deepEqual(getSetting('commands.disabled'), ['/walissu', '/cron']);
+        assert.deepEqual(getSetting('commands.disabled'), ['/walissu']);
         assert.ok(bot.errorsInLog().some(l => l.includes("Setting 'commands.disabled' with an invalid item")));
-    });
-
-    test('settings renomeados: o valor antigo vai para o novo (se ele está no padrão) e o antigo sai', async () => {
-        // A 1.8.0/2.0.0 bot: the old names with your values; the new ones, created with the default
-        const save = (key, value) => bot.dbRun(
-            'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', [key, JSON.stringify(value)]);
-        await save('resumo.maxMsgs', 50);
-        await save('edit.alert', false);
-        await save('show.revoke.status', false);
-        await save('stats.enabled', true);
-        await save('stats.enable', false);     // already changed to the new name (the default is on): the new one stays
-        await save('show.max', 20);
-
-        await loadSettings();
-        assert.equal(getSetting('tldr.maxMsgs'), 50);
-        assert.equal(getSetting('show.alert.edited'), false);
-        assert.equal(getSetting('show.alert.status'), false);
-        assert.equal(getSetting('stats.enable'), false);
-
-        const old = await bot.dbAll("SELECT key FROM settings WHERE key IN ('resumo.maxMsgs', 'edit.alert', 'show.revoke.status', 'stats.enabled')");
-        assert.deepEqual(old, []);
-        assert.ok(bot.logs.some(l => l.includes("Setting 'resumo.maxMsgs' renamed to 'tldr.maxMsgs': the saved value was kept")));
     });
 
     test('envOuSetting: .env vence; .env inválido cai no setting', async () => {

@@ -71,7 +71,7 @@ async function checkSmtp() {
 }
 
 /*
- * Email alerts (setting 'email.alerts', default on)
+ * Email alerts (setting 'zapbot.email.alerts', default on)
  * Crash, disconnection, reconnection, authentication failure, lost session,
  * shutdown... go by email through the same SMTP as the QR Code (QRCODE_EMAIL_SMTP_*),
  * for when WhatsApp itself is not working. The same event does not
@@ -97,7 +97,7 @@ const escapeHtml = (t) => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;
 async function alertPerEmail(event, details = '', { force = false } = {}) {
     try {
         // Before the database loads, getSetting returns the default (on)
-        if (!getSetting('email.alerts') || !smtpConfigured()) return;
+        if (!getSetting('zapbot.email.alerts') || !smtpConfigured()) return;
 
         const nowAlt = Date.now();
         if (!force && nowAlt - (lastAlertEmail.get(event) ?? 0) < ALERT_EMAIL_INTERVAL_MS) {

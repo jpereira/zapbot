@@ -1480,7 +1480,7 @@ describe('/giphy', () => {
         assert.match((await bot.replyAlt('/giphy'))[0], /⚠️ Chave do GIPHY não configurada/);
     });
 
-    test('tag padrão (gif.tag) ou informada; envia como GIF', async () => {
+    test('tag padrão (giphy.tag) ou informada; envia como GIF', async () => {
         await bot.setSetting('giphy.api.key', 'giphy');
         network.responder('get', 'api.giphy.com', { data: { images: { original: { mp4: 'https://media.giphy.com/x.mp4' } } } });
         network.responder('get', 'https://media.giphy.com/', Buffer.from('mp4'));

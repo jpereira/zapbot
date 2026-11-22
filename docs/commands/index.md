@@ -145,7 +145,7 @@ typed in a group only applies in that group; with `/set bot.users true`, everyon
 `-cmd` limits each user's commands. See [Users](bot.md#users). To find out your level (or, as
 owner or admin, someone else's), use [`/whois`](whois.md). Anyone who isn't an admin has
 [flood protection](bot.md#flood-protection): the same command, at most 3 times in 2 seconds by
-default (`flood.maxCommandRepeated` and `flood.intervalCommand`).
+default (`bot.flood.maxCommandRepeated` and `bot.flood.intervalCommand`).
 
 ### Delegating an admin command
 
@@ -195,9 +195,8 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/giphy`](giphy.md), [`/help`](help.md), [`/joke`](joke.md), [`/kernel`](kernel.md),
 [`/me`](me.md), [`/meme`](meme.md), [`/news`](news.md), [`/noffa`](noffa.md), [`/ping`](ping.md),
 [`/pixelart`](pixelart.md), [`/qr`](qr.md), [`/sticker`](sticker.md), [`/stocks`](stocks.md),
-[`/transcribe`](transcribe.md), [`/translate`](translate.md), [`/uptime`](uptime.md),
-[`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md),
-[`/whois`](whois.md)
+[`/stt`](stt.md), [`/translate`](translate.md), [`/uptime`](uptime.md), [`/usage`](usage.md),
+[`/version`](version.md), [`/walissu`](walissu.md), [`/weather`](weather.md), [`/whois`](whois.md)
 
 **admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (20):
 
@@ -269,7 +268,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/debug`](debug.md) | | `admin` | Debug logs with levels, filtering, and copying to chats |
 | [`/defi`](defi.md) | | `admin` | Liquidity positions on Orca and Project X: balance, range, price, and fees to collect, read on-chain; `-alert` warns when it leaves and returns to the range and when fees go over a value. `liquidswap`: LP positions on Aptos. `morpho` and `aave`: position, loans, and risk on Morpho and Aave V3 |
 | [`/demote`](demote.md) | | `admin` · delegable | Removes someone's group admin |
-| [`/draw`](draw.md) | | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with GPT Image (OpenAI); on a photo, edits or animates it |
+| [`/draw`](draw.md) | | `admin` · delegable | Draws an image or an animated GIF (`-gif`) with ChatGPT (GPT Image); on a photo, edits or animates it |
 | [`/everybody`](everybody.md) | | `admin` · delegable | Mentions everyone in the group |
 | [`/forward`](forward.md) | | `admin` | Forwards the replied message to people, groups and emails (`-to`), only if every recipient is found |
 | [`/games`](games.md) | | `user` | Group games: magic 8 ball, truth, dare and trivia |
@@ -306,10 +305,10 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/status`](status.md) | | `admin` | Posts on your WhatsApp Status (text, photo or video); `/cron -status` schedules it |
 | [`/sticker`](sticker.md) | | `user` | Sticker from an image, video, or link (the `/get -st`), replying or as the caption of the media; with `-txt`, an animated text sticker |
 | [`/stocks`](stocks.md) | `/stock`, `/rates` | `user` | Quotes of the dollar, euro, pound and USDT against the real, and of stocks, ETFs and indexes (Yahoo Finance): USD, EUR, MSTR, PETR4.SA, `^GSPC`; `-alert` for price alerts |
+| [`/stt`](stt.md) | | `user` | Text of the speech of a link, video or audio (`/get -t` is a shortcut), replying or as the caption; `-ss` and `-es` pick a part |
 | [`/tldr`](tldr.md) | | `admin` · delegable | Summarizes the chat's conversation with ChatGPT (`30m`, `2h`, `1d`, `1h30m` or `300` messages; replying to a message, from it on) |
-| [`/transcribe`](transcribe.md) | | `user` | Text of the speech of a link, video or audio (`/get -t` is a shortcut), replying or as the caption; `-ss` and `-es` pick a part |
 | [`/translate`](translate.md) | | `user` | Translates the text or the replied message with Google Translate, no key; `-to en` changes the language |
-| [`/tts`](tts.md) | | `admin` · delegable | The text as a robot voice note (OpenAI) |
+| [`/tts`](tts.md) | | `admin` · delegable | The text as a voice note, with a local voice (Piper) or ChatGPT (`-gpt`) |
 | [`/unblock`](unblock.md) | | `admin` | Unblocks a person: by name, by number, by the `/block` list number, or by replying to a message |
 | [`/unmute`](unmute.md) | | `admin` | Undoes the `/mute` silence: by name, by list number, by replying to a notice, or all (`-all`) |
 | [`/uptime`](uptime.md) | | `user` | Run time and connection time |

@@ -5,13 +5,13 @@
  * GET  /status      → version, connection and what is on
  * GET  /notes       → the /notes notes (?limit=N)
  *   POST /send        → { "to": "5521999999999" | "<id>@g.us", "text": "..." }
- * POST /mcp         → MCP JSON-RPC (only with mcp.enabled): the send_message tools,
+ * POST /mcp         → MCP JSON-RPC (only with zapbot.mcp.enabled): the send_message tools,
  *                       list_notes, get_note e get_status
  *
  * Security (the API speaks through the owner's account):
- * - only turns on with api.enabled AND api.key (the key comes in the "Authorization: Bearer <key>" header
+ * - only turns on with zapbot.api.enabled AND zapbot.api.key (the key comes in the "Authorization: Bearer <key>" header
  * or "X-API-Key", compared in constant time); the default listens only on 127.0.0.1;
- * - /send only delivers to your own chat and to the one in api.sendTo ("all" allows any);
+ * - /send only delivers to your own chat and to the one in zapbot.api.sendTo ("all" allows any);
  * - at most 10 sends per minute (the excess is what takes accounts down) and a body of up to 64 KB.
  */
 
@@ -41,7 +41,7 @@ const hash = (s) => crypto.createHash('sha256').update(String(s)).digest();
 
 // The right key? (constant time; with no key configured, nobody gets in)
 function authenticated(req) {
-    const keyAlt = getSetting('api.key');
+    const keyAlt = getSetting('zapbot.api.key');
     if (!keyAlt) return false;
     const auth = String(req.headers.authorization ?? '');
     const sent = auth.startsWith('Bearer ') ? auth.slice(7).trim() : String(req.headers['x-api-key'] ?? '');
@@ -57,7 +57,7 @@ const sendingsLimit = (nowAlt = Date.now()) => {
 
 /**
  * The WhatsApp id of a typed destination: the phone (checked with WhatsApp), a group id or
- * the @c.us itself. Outside api.sendTo (and your chat), it refuses.
+ * the @c.us itself. Outside zapbot.api.sendTo (and your chat), it refuses.
  * @returns {Promise<string>}
  */
 async function resolverDestination(to) {
@@ -74,10 +74,10 @@ async function resolverDestination(to) {
     }
 
     const my = client.info?.wid?._serialized;
-    const releasedAlt = getSetting('api.sendTo');
+    const releasedAlt = getSetting('zapbot.api.sendTo');
     const digits = id.endsWith('@c.us') ? id.split('@')[0] : null;
     if (id !== my && !releasedAlt.includes('all') && !releasedAlt.includes(id) && !(digits && releasedAlt.includes(digits))) {
-        throw new ErrorApi(403, 'destination not allowed: add it to api.sendTo');
+        throw new ErrorApi(403, 'destination not allowed: add it to zapbot.api.sendTo');
     }
     return id;
 }
@@ -114,7 +114,7 @@ const statusAlt = () => ({
     name: 'zapbot',
     version: packageJson.version,
     connected: Boolean(stateAlt.ready),
-    mcp: Boolean(getSetting('mcp.enabled'))
+    mcp: Boolean(getSetting('zapbot.mcp.enabled'))
 });
 
 /*
@@ -126,7 +126,7 @@ const EXP = '[EXPERIMENTAL] ';
 const TOOLS = [
     {
         name: 'send_message',
-        description: EXP + 'Sends a WhatsApp text message as the bot owner. Only to the owner\'s own chat and to the destinations in the api.sendTo setting; at most 10 per minute.',
+        description: EXP + 'Sends a WhatsApp text message as the bot owner. Only to the owner\'s own chat and to the destinations in the zapbot.api.sendTo setting; at most 10 per minute.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -236,7 +236,7 @@ async function handle(req, res) {
     if (rota === 'GET /status') replyAlt(res, 200, statusAlt());
     else if (rota === 'GET /notes') replyAlt(res, 200, await listNotes(url.searchParams.get('limit')));
     else if (rota === 'POST /send') replyAlt(res, 200, await send(await readBody(req)));
-    else if (rota === 'POST /mcp' && getSetting('mcp.enabled')) {
+    else if (rota === 'POST /mcp' && getSetting('zapbot.mcp.enabled')) {
         const reply = await handleMcp(await readBody(req));
         replyAlt(res, reply ? 200 : 202, reply);
     } else throw new ErrorApi(404, 'not found');
@@ -253,24 +253,24 @@ function createServer() {
 
 let server = null;
 
-// Called in app.js: turns on if api.enabled and api.key are in the setting
+// Called in app.js: turns on if zapbot.api.enabled and zapbot.api.key are in the setting
 async function startApi() {
     await dbReady;   // the settings come from the database
-    if (!getSetting('api.enabled')) return null;
-    if (!getSetting('api.key')) {
-        printError('API: api.enabled is on, but api.key is missing: not starting');
+    if (!getSetting('zapbot.api.enabled')) return null;
+    if (!getSetting('zapbot.api.key')) {
+        printError('API: zapbot.api.enabled is on, but zapbot.api.key is missing: not starting');
         return null;
     }
 
-    const host = getSetting('api.host');
-    const port = getSetting('api.port');
+    const host = getSetting('zapbot.api.host');
+    const port = getSetting('zapbot.api.port');
     server = createServer();
     server.on('error', err => printError('API:', err.message));
     server.listen(port, host, () => {
         printInfo(`API: listening on http://${host}:${port}` +
-            (getSetting('mcp.enabled') ? ' (EXPERIMENTAL MCP on at /mcp)' : ''));
+            (getSetting('zapbot.mcp.enabled') ? ' (EXPERIMENTAL MCP on at /mcp)' : ''));
         if (host !== '127.0.0.1' && host !== 'localhost') {
-            printInfo('API: listening outside localhost: put an HTTPS proxy in front and keep the api.key strong');
+            printInfo('API: listening outside localhost: put an HTTPS proxy in front and keep the zapbot.api.key strong');
         }
     });
     return server;

@@ -297,7 +297,7 @@ describe('/set', () => {
         const [r] = await bot.replyAlt('/set');
         const keys = [...r.matchAll(/^([a-z][\w.]+)\s{2}/gm)].map(m => m[1]);
         assert.deepEqual(keys, [...keys].sort());
-        assert.ok(keys.includes('show.max') && keys.includes('alert.max'));
+        assert.ok(keys.includes('show.max') && keys.includes('stocks.alert.max'));
     });
 
     test('<chave> mostra valor, padrão, tipo e limites', async () => {
@@ -360,7 +360,7 @@ describe('/set', () => {
 
     test('<trecho> ou /regex/ que não é uma chave: lista as que casam; nada casa: erro', async () => {
         const [r] = await bot.replyAlt('/set alert');
-        assert.match(r, /^⚙️ \*SETTINGS\* com "alert" \(8\)\n\n```\nalert\.intervalMin       5\n\nalert\.max               20\n\ndefi\.alert\.intervalMin  10\n\nemail\.alerts            on\n\nshow\.alert\.deleted      on\n\nshow\.alert\.edited       on\n\nshow\.alert\.reaction     on\n\nshow\.alert\.status       on\n```\n💡 _\/set <chave> para detalhes_$/);
+        assert.match(r, /^⚙️ \*SETTINGS\* com "alert" \(10\)\n\n```\ncrypto\.alert\.intervalMin  5\n\ncrypto\.alert\.max          20\n\ndefi\.alert\.intervalMin    10\n\nshow\.alert\.deleted        on\n\nshow\.alert\.edited         on\n\nshow\.alert\.reaction       on\n\nshow\.alert\.status         on\n\nstocks\.alert\.intervalMin  5\n\nstocks\.alert\.max          20\n\nzapbot\.email\.alerts       on\n```\n💡 _\/set <chave> para detalhes_$/);
 
         const keys = (textAlt) => [...textAlt.matchAll(/^([a-z][\w.]+)\s{2}/gm)].map(m => m[1]);
         assert.deepEqual(keys((await bot.replyAlt('/set GPT.'))[0]), ['gpt.admin.key', 'gpt.api.key', 'gpt.api.model', 'gpt.credit.since', 'gpt.credit.total', 'gpt.gif.frameMs', 'gpt.gif.frames', 'gpt.image.gifModel', 'gpt.image.model', 'gpt.pricing', 'gpt.pricing.auto', 'gpt.pricing.updated', 'gpt.status', 'gpt.timeout.ms', 'gpt.transcribe.model', 'gpt.tts.instructions', 'gpt.tts.model', 'gpt.tts.voice']);
@@ -371,7 +371,7 @@ describe('/set', () => {
         assert.deepEqual(await bot.replyAlt('/set /[/'), ['❌ Regex inválida: /[/']);
 
         // An exact key still shows the details; with a value, the snippet does not count
-        assert.match((await bot.replyAlt('/set alert.max'))[0], /^⚙️ \*alert\.max\*\n/);
+        assert.match((await bot.replyAlt('/set stocks.alert.max'))[0], /^⚙️ \*stocks\.alert\.max\*\n/);
         assert.match((await bot.replyAlt('/set alert 5'))[0], /❌ Setting desconhecido: alert/);
     });
 

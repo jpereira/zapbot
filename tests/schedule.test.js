@@ -242,9 +242,9 @@ describe('/cron -reminder: o modo lembrete', () => {
         await errorAlt('/cron -reminder +1h -repeat anual x', /❌ Use -repeat \(-r\) diario, semanal ou mensal/);
         await errorAlt('/cron -reminder +1h -to L200 x', /❌ O lembrete não tem -to/);
 
-        await bot.setSetting('agenda.max', 1);
+        await bot.setSetting('cron.max', 1);
         await bot.replyAlt('/cron +1h oi');
-        await errorAlt('/cron -reminder +1h x', /❌ Limite de 1 lembretes e mensagens agendadas \(setting agenda\.max\)/);
+        await errorAlt('/cron -reminder +1h x', /❌ Limite de 1 lembretes e mensagens agendadas \(setting cron\.max\)/);
     });
 
     test('só o dono', async () => {
@@ -380,7 +380,7 @@ describe('/cron', () => {
         assert.equal((await items()).length, 1, 'repetido: continua um item');
 
         // Counts 1 against the limit, with any number of -to
-        await bot.setSetting('agenda.max', 2);
+        await bot.setSetting('cron.max', 2);
         assert.match((await bot.replyAlt('/cron +2h -to L200 -to /Fulano/ oi'))[0], /^📅 \*Mensagem agendada\*/);
         assert.match((await bot.replyAlt('/cron +3h -to L200 oi'))[0], /❌ Limite de 2 /);
     });

@@ -34,10 +34,22 @@ module.exports = {
         { opts: ['pt'], values: [], desc: 'Same as -pos top.' },
         { opts: ['audio', 'a'], values: [], desc: 'Audio only, as .mp3.' },
         {
-            opts: ['transcribe', 't'],
+            opts: ['stt', 't'],
             values: [],
-            desc: 'Shortcut for /transcribe: replies with the text of the speech instead of the file. From a link, downloads only the lowest-quality audio; replying to a video or audio, uses it. Transcribed locally (faster-whisper). Works with -ss and -es.',
+            desc: 'Shortcut for /stt: replies with the text of the speech instead of the file. From a link, downloads only the lowest-quality audio; replying to a video or audio, uses it. Transcribed locally (faster-whisper). Works with -ss and -es.',
             ex: ['/get -t https://www.instagram.com/reel/...', '/get -t -ss 30 -es 90 <url>']
+        },
+        {
+            opts: ['gpt', 'g'],
+            values: [],
+            desc: 'With -t: transcribes with ChatGPT (OpenAI API, spends your account) instead of the local faster-whisper. Without -gpt or -local, the stt.engine setting decides.',
+            ex: ['/get -t -gpt https://www.instagram.com/reel/...']
+        },
+        {
+            opts: ['local', 'l'],
+            values: [],
+            desc: 'With -t: transcribes with the local faster-whisper (no key, runs on the server CPU), even when stt.engine is gpt.',
+            ex: ['/get -t -local https://www.instagram.com/reel/...']
         },
         {
             opts: ['summary', 'sum'],
