@@ -2,7 +2,7 @@
  * /tts: The text as a voice note
  */
 
-const { ADMIN } = require('../../roles').ROLES;
+const { USER } = require('../../roles').ROLES;
 const { OPENAI_VOICES } = require('../../openai');
 const { PIPER_REGIONS, piperVoicesByName } = require('../../ttsVoices');
 
@@ -69,6 +69,8 @@ module.exports = {
         }
     ],
     expandCommands: true,   // the {/command}s of the text run and their reply is spoken
-    isDelegable: true,
-    role: ADMIN // Spends the OpenAI key: delegable, like /gpt
+    // The local voice is free; with ChatGPT (-gpt, or tts.engine gpt) it spends the OpenAI key: only the admins, or a user
+    // with a limit (/bot +cmd /tts +limit N), and only the ChatGPT calls count toward it
+    usageCounts: (opts) => require('../../engines').countsOnlyGpt('tts.engine')(opts),
+    role: USER
 };

@@ -35,6 +35,8 @@ module.exports = {
     'engine.verb.stt': 'Transcribed',
     'engine.verb.tldr': 'Summarized',
     'engine.verb.tts': 'Generated',
+    'ocr.gptNeedsLimit': "❌ /ocr with ChatGPT spends the API and needs a limit for you (the owner sets it: /bot +cmd /ocr +limit N). Use the local one: /ocr -local.",
+    'tts.gptNeedsLimit': "❌ /tts with ChatGPT spends the API and needs a limit for you (the owner sets it: /bot +cmd /tts +limit N). Use the local voice: /tts -local <text>.",
     'tts.badOption': '❌ {name}: "{value}" is not valid. Use a number from {min} to {max}.',
     'tts.badVoice': '❌ -voice: "{value}" is not a ChatGPT voice. Use: {voices}.',
     'tts.badVoiceLocal': '❌ -voice: "{value}" is not a local (Piper) voice. See the voices with /tts -h.',

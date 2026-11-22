@@ -43,4 +43,21 @@ function withEngineTip(text, cmd, engine, { sep = '\n\n', quiet = false, command
     return `${text}${sep}${t('engine.tip', { verb: t(`engine.verb.${cmd}`), engine })}`;
 }
 
-module.exports = { CHATGPT, engineProcessing, pickEngine, withEngineTip };
+/*
+ * ChatGPT spends the OpenAI key. The commands with an engine (/tts, /ocr) are the user's, with the free local one; with
+ * ChatGPT only the admins, or a user with a limit for the command (/bot +cmd /ocr +limit N), and only those calls
+ * count toward the limit.
+ */
+const gptAllowed = ({ engine, admin, cmd, senderNumber, chatId, isGroup }) =>
+    engine !== 'gpt' || Boolean(admin) || Boolean(require('./usageLimit').limitApplicable({ number: senderNumber, chatId, isGroup }, cmd));
+
+// The `usageCounts` of the definition: the call spends the limit only when the engine is ChatGPT
+const countsOnlyGpt = (setting) => (opts) => {
+    try {
+        return pickEngine(opts, setting) === 'gpt';
+    } catch {
+        return false; // -gpt with -local: the command itself refuses
+    }
+};
+
+module.exports = { CHATGPT, countsOnlyGpt, engineProcessing, gptAllowed, pickEngine, withEngineTip };

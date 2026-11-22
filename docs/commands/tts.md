@@ -1,4 +1,4 @@
-# `/tts` · admin
+# `/tts` · user
 
 Role `admin`: only you and the extra admins. The owner can grant it to a person or group with
 `/bot +u +cmd /tts` ([Delegating](index.md#delegating-an-admin-command)).
@@ -40,6 +40,17 @@ the `gpt.tts.*` settings). The voice, the speed, the pitch and the volume come f
 
 - Replying to an **audio**, it is transcribed first and the transcription is spoken.
 
+## Who can use it
+
+`/tts` is a **user** command: whoever is in `+u` uses the local voice (Piper), which is free. With ChatGPT (`-gpt`, or
+`tts.engine` set to `gpt`) it spends the OpenAI key, so a user needs a [usage limit](bot.md#usage-limits-per-user-limit)
+for it; without one the bot refuses and suggests the local voice. Only the ChatGPT calls count toward the limit.
+Admins and the owner use ChatGPT without a limit.
+
+```text
+/bot +cmd /tts +limit 20/day /Sofia Izabel/    → Sofia uses ChatGPT up to 20 times a day (the local one is free)
+```
+
 ## Commands in the text
 
 The `{/command args}` of the text run before the speech, as in [`/me`](me.md) and
@@ -55,6 +66,9 @@ as it is. A `\{` keeps the brace literal. The options inside the braces are of t
 /tts Good morning! Today in Recife: {weather Recife}
 /alias /price /tts Bitcoin: {/crypto BTC}         → /price speaks the quote
 ```
+
+The query commands also have a shortcut: `-tts` (`/crypto -tts BTC`, `/stocks -tts USD`, `/weather -tts`,
+`/joke -tts`, `/uptime -tts`, `/version -tts`) is the same as `/tts -q {/crypto -q BTC}`, with the default voice and only the voice note (no footer).
 
 ## Trying the voices
 

@@ -1,4 +1,4 @@
-# `/tts` · admin
+# `/tts` · user
 
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
 `/bot +u +cmd /tts` ([Delegando](index.md#delegando-um-comando-admin)).
@@ -38,6 +38,17 @@ Transforma texto numa **nota de voz** de robô pelo ChatGPT (a API de voz da Ope
 
 - Respondendo um **áudio**, ele é transcrito antes e a transcrição é falada.
 
+## Quem pode usar
+
+O `/tts` é um comando de **usuário**: quem está em `+u` usa a voz local (Piper), que é grátis. Com o ChatGPT (`-gpt`, ou
+o setting `tts.engine` em `gpt`) gasta a chave da OpenAI, então o usuário precisa de um
+[limite de uso](bot.md#limite-de-uso-por-usuário-limit) para isso; sem ele o bot recusa e sugere a voz local. Só as
+chamadas do ChatGPT contam no limite. Admins e o dono usam o ChatGPT sem limite.
+
+```text
+/bot +cmd /tts +limit 20/dia /Sofia Izabel/    → a Sofia usa o ChatGPT até 20 vezes por dia (a local é grátis)
+```
+
 ## Comandos no texto
 
 Os `{/comando args}` do texto rodam antes da fala, como no [`/me`](me.md) e no
@@ -53,6 +64,9 @@ como está. Um `\{` deixa a chave literal. As opções dentro das chaves são do
 /tts Bom dia! Hoje no Recife: {weather Recife}
 /alias /preco /tts Bitcoin: {/crypto BTC}         → o /preco fala a cotação
 ```
+
+Os comandos de consulta também têm um atalho: `-tts` (`/crypto -tts BTC`, `/stocks -tts USD`, `/weather -tts`,
+`/joke -tts`, `/uptime -tts`, `/version -tts`) é o mesmo que `/tts -q {/crypto -q BTC}`, com a voz padrão e só o áudio (sem rodapé).
 
 ## Testando as vozes
 

@@ -561,3 +561,74 @@ describe('log dos comandos aninhados ({/comando} no texto)', () => {
         assert.ok(bot.logs.slice(before).some(l => /executed '\/tts A versão é/.test(l)), 'a linha do "executed" vem antes');
     });
 });
+
+describe('-tts: fala a resposta do comando (é o /tts {/comando -q ...})', () => {
+    const { processes } = bot;
+    const { ttsRewrite } = bot.src('ttsOption');
+    const { findCommand } = bot.src('commands/base');
+
+    test('ttsRewrite: põe o -q só em quem tem; sem -tts ou sem tts:true é null; -tts no meio e -q repetido', () => {
+        assert.equal(ttsRewrite(findCommand('/crypto'), 'BTC ETH -tts'), '/tts -q {/crypto -q BTC ETH}');
+        assert.equal(ttsRewrite(findCommand('/crypto'), '-tts -q BTC'), '/tts -q {/crypto -q BTC}');
+        assert.equal(ttsRewrite(findCommand('/weather'), '-tts Niteroi'), '/tts -q {/weather -q Niteroi}');
+        assert.equal(ttsRewrite(findCommand('/version'), '-tts'), '/tts -q {/version}');
+        assert.equal(ttsRewrite(findCommand('/crypto'), 'BTC'), null);
+        assert.equal(ttsRewrite(findCommand('/crypto'), 'BTC -ttsx'), null);
+        assert.equal(ttsRewrite(findCommand('/ping'), '-tts'), null);
+    });
+
+    test('/version -tts: fala o banner, sem texto; o log mostra o que foi digitado e o EXPAND', async () => {
+        processes.spoken = null;
+        const before = bot.logs.length;
+        await bot.execute('/version -tts');
+        assert.match(processes.spoken, /^ZapBot /);
+        const logs = bot.logs.slice(before);
+        assert.ok(logs.some(l => /executed '\/version -tts'/.test(l)));
+        assert.ok(logs.some(l => /EXPAND '\/version -tts' > \/version /.test(l)));
+    });
+
+    test('dentro de {/comando} o -tts é recusado (só vale digitado)', async () => {
+        const [r] = await bot.replyAlt('/tts oi {/version -tts}');
+        assert.match(r, /❌/);
+    });
+});
+
+describe('/tts para usuário: a voz local é livre; o ChatGPT só com limite', () => {
+    const { OTHERAlt } = bot;
+    const DELE = { de: OTHERAlt.jid, chat: OTHERAlt.jid };
+    const { network } = bot;
+    // the voice note (the replies also have the footer and the usage line)
+    const spoke = (replies) => replies.some(r => r.content instanceof MessageMedia);
+
+    beforeEach(async () => {
+        await bot.setSetting('gpt.status', false);
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        await bot.setSetting('bot.users', [OTHERAlt.user]);
+        network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
+    });
+
+    test('o usuário usa a voz local (nada gasta); com -gpt sem limite é recusado', async () => {
+        assert.equal(spoke(await bot.execute('/tts Bom dia!', DELE)), true);
+        const [r] = await bot.replyAlt('/tts -gpt Bom dia!', DELE);
+        assert.match(r, /^❌ O \/tts com o ChatGPT gasta a API e precisa de um limite para você/);
+        assert.equal(network.calls.filter(c => /audio\/speech/.test(c.url)).length, 0, 'a API não foi chamada');
+
+        // tts.engine gpt: the same without the flag
+        await bot.setSetting('tts.engine', 'gpt');
+        assert.match((await bot.replyAlt('/tts Bom dia!', DELE))[0], /^❌ O \/tts com o ChatGPT/);
+        assert.equal(spoke(await bot.execute('/tts -local Bom dia!', DELE)), true);
+    });
+
+    test('com limite: o ChatGPT funciona e só ele conta; a voz local não gasta o limite', async () => {
+        await bot.replyAlt('/bot +cmd /tts +limit 1 /Fulano/', { chat: bot.OWNER.jid });
+        assert.equal(spoke(await bot.execute('/tts -gpt Bom dia!', DELE)), true);
+        assert.match((await bot.replyAlt('/tts -gpt de novo', DELE))[0], /limite|Limite/);
+        // local: free, even with the limit used up
+        assert.equal(spoke(await bot.execute('/tts -local de novo', DELE)), true);
+    });
+
+    test('o admin usa o ChatGPT sem limite', async () => {
+        await bot.setSetting('bot.admins', [OTHERAlt.user]);
+        assert.equal(spoke(await bot.execute('/tts -gpt Bom dia!', DELE)), true);
+    });
+});

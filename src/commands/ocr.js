@@ -6,7 +6,7 @@
 
 const { completeNotice } = require('../client');
 const { isPhoto, messageImage } = require('./openaiCommon');
-const { CHATGPT, engineProcessing, pickEngine, withEngineTip } = require('../engines');
+const { CHATGPT, engineProcessing, gptAllowed, pickEngine, withEngineTip } = require('../engines');
 const { t } = require('../i18n');
 const { printError } = require('../log');
 const { readLocal } = require('../ocrLocal');
@@ -15,7 +15,7 @@ const { WITHOUT_KEY, keyOpenAi, errorOpenAi, measureConsumption, askOnChat, cons
 // What the model replies when the image has no text (so the bot swaps it for the language's message)
 const WITHOUT_TEXT = 'NO_TEXT';
 
-async function extract({ msg, quotedMsg, opts }) {
+async function extract({ msg, quotedMsg, opts, admin, chatId, isGroup, senderNumber }) {
     let engine;
     try {
         engine = pickEngine(opts, 'ocr.engine');
@@ -24,6 +24,11 @@ async function extract({ msg, quotedMsg, opts }) {
         return;
     }
     const isGpt = engine === 'gpt';
+
+    if (!gptAllowed({ engine, admin, cmd: '/ocr', senderNumber, chatId, isGroup })) {
+        await msg.reply(t('ocr.gptNeedsLimit'));
+        return;
+    }
 
     if (isGpt && !keyOpenAi()) {
         await msg.reply(WITHOUT_KEY('/ocr'));
