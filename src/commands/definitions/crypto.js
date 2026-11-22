@@ -13,6 +13,12 @@ module.exports = {
     help: 'Current price and 24 h change of the enabled cryptocurrencies (Binance) or only the requested ones (e.g. /crypto BTC ETH).',
     cmd_opts: [
         {
+            opts: ['quiet', 'q'],
+            values: [],
+            desc: 'Only the prices, one line per coin (BTC $90,123.45), with no header, no details and no footer.',
+            ex: ['/crypto -q', '/crypto -q BTC ETH']
+        },
+        {
             opts: ['add', 'a'],
             values: ['<TOKEN>'],
             desc: 'Enables a supported coin. Owner (or an admin) only.',

@@ -125,6 +125,12 @@ async function cmdCrypto(ctx) {
         // In brl: one line per currency (the crypto.brl setting turns it off); if Binance fails, the dollar comes out alone
         const brl = getSetting('crypto.brl') ? await pricesInBrl(Object.fromEntries(coins.map((c) => [c.symbol, c.price]))) : {};
 
+        // -quiet: only the prices, one line per coin ("BTC $90,123.45"), with no header, no details and no footer
+        if (opts.opt.quiet) {
+            await msg.reply(coins.map(c => `${c.symbol} $${fmtPrice(c.price)}`).join('\n'));
+            return;
+        }
+
         let text = t('crypto.title') + '\n```\n';
 
         for (const c of coins) {

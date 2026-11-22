@@ -5,6 +5,18 @@
   "cmd_opts": [
     {
       "opts": [
+        "quiet",
+        "q"
+      ],
+      "values": [],
+      "desc": "Só os preços, uma linha por moeda (BTC $90,123.45), sem cabeçalho, sem detalhes e sem rodapé.",
+      "ex": [
+        "/crypto -q",
+        "/crypto -q BTC ETH"
+      ]
+    },
+    {
+      "opts": [
         "add",
         "a"
       ],

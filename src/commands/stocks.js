@@ -144,6 +144,17 @@ async function cmdStocks(ctx) {
         return;
     }
 
+    // -quiet: only the prices, one line per symbol ("USD R$ 5,4321", "MSTR $245.10"), with no header, no details and no footer
+    if (opts.opt.quiet) {
+        const lines = requests.map((sym, i) => {
+            const r = results[i];
+            if (r.status === 'rejected') return `${sym} -`;
+            return r.value.type === 'moeda' ? `${sym} ${fmtReal(r.value.current)}` : `${r.value.ticker} ${fmtPrice(r.value.current, r.value.currency)}`;
+        });
+        await msg.reply(lines.join('\n'));
+        return;
+    }
+
     const sourcesAlt = new Set();
     let textAlt = t('stocks.title') + '\n';
     requests.forEach((sym, i) => {

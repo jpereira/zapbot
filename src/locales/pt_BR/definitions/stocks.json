@@ -13,6 +13,18 @@
   "cmd_opts": [
     {
       "opts": [
+        "quiet",
+        "q"
+      ],
+      "values": [],
+      "desc": "Só os preços, uma linha por símbolo (USD R$ 5,4321, MSTR US$ 245,10), sem cabeçalho, sem detalhes e sem rodapé. Um símbolo que falha aparece com -.",
+      "ex": [
+        "/stocks -q",
+        "/stocks -q USD MSTR"
+      ]
+    },
+    {
+      "opts": [
         "add",
         "a"
       ],

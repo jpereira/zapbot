@@ -71,6 +71,7 @@
 /alias -q /gptvoz /gpt -voice
 /alias -q /tovoz /gpt -voice
 /alias -q /tuga /tts -q -l -v tugão $@
+/alias -q /tuga.btc -desc "Speaks the text and then the Bitcoin price" /tts -q -sp 75 -l -v tugão $@ {/crypto -q BTC}
 /alias -q /vf /batch -q
   /tts -q -l -v tugão $@
   /tts -q -l -v cadu $@

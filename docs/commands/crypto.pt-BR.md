@@ -7,6 +7,7 @@ das pedidas. Por padrão: BTC, ETH, SOL e HYPE.
 |---|---|---|
 | *(nenhuma)* | `[TOKEN...]` | Cotação das ativadas, ou só das moedas informadas (ativadas ou não), na ordem pedida. Uma que não é suportada: avisa e lista as suportadas |
 | `-list`, `-l` | | Lista as moedas suportadas; as ativadas vêm marcadas com `*` |
+| `-quiet`, `-q` | | Só os preços, uma linha por moeda, sem cabeçalho, sem detalhes e sem rodapé. Bom para um texto (`{/crypto -q}`) ou para o [`/tts`](tts.md#comandos-no-texto) |
 | `-add`, `-a` | `<TOKEN>` | Ativa uma moeda suportada (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-del`, `-d` | `<TOKEN>` | Desativa uma moeda (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-alert` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `BTC < 90000`), cria um (só o dono do bot ou um [admin](bot.md#admins-extras)). A moeda também pode vir antes: `/crypto BTC -alert < 90000`. Veja [Alertas de preço](stocks.md#alertas-de-preço) |
@@ -21,6 +22,15 @@ SHIB, XLM, NEAR, UNI e **XAUT** (Tether Gold: um token que acompanha o preço do
 As moedas ativadas ficam na tabela `settings`, chave `crypto.coins`, e sobrevivem a reinícios.
 
 ![Demonstração do /crypto](../assets/demo/07-crypto.gif)
+
+Só os preços (`-q`):
+
+```text
+/crypto -q
+BTC $90,123.45
+ETH $3,100.20
+SOL $145.10
+```
 
 ## Atalho para as moedas que você confere
 
