@@ -318,10 +318,10 @@ const SETTINGS_SCHEMA = {
         item: itemPhone
     },
     'call.message': {
-        default: 'Oi! Não atendo ligações aqui. Manda uma mensagem ou um áudio que eu respondo assim que der. 🙏',
+        default: '',
         type: 'string',
         allowEmpty: true,
-        desc: 'Mensagem enviada a quem teve a ligação recusada (no máximo uma a cada 10 minutos por pessoa). Vazio: recusa em silêncio.'
+        desc: 'Mensagem enviada a quem teve a ligação recusada (no máximo uma a cada 10 minutos por pessoa). Vazio: o texto padrão do idioma do bot (zapbot.lang). off: recusa em silêncio.'
     },
     'call.reject': {
         default: false,

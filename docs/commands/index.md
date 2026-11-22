@@ -208,14 +208,14 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/stats`](stats.md), [`/tldr`](tldr.md), [`/tts`](tts.md), [`/warn`](warn.md),
 [`/welcome`](welcome.md)
 
-**admin** (admins and the owner; never delegable) (22):
+**admin** (admins and the owner; never delegable) (23):
 
 [`/alias`](alias.md), [`/backup`](backup.md), [`/batch`](batch.md), [`/block`](block.md),
-[`/bot`](bot.md), [`/cache`](cache.md), [`/cron`](cron.md), [`/debug`](debug.md),
-[`/defi`](defi.md), [`/forward`](forward.md), [`/invite`](invite.md), [`/join`](join.md),
-[`/leave`](leave.md), [`/monitor`](monitor.md), [`/mute`](mute.md), [`/notes`](notes.md),
-[`/search`](search.md), [`/set`](set.md), [`/status`](status.md), [`/unblock`](unblock.md),
-[`/unmute`](unmute.md), [`/watch`](watch.md)
+[`/bot`](bot.md), [`/cache`](cache.md), [`/call`](call.md), [`/cron`](cron.md),
+[`/debug`](debug.md), [`/defi`](defi.md), [`/forward`](forward.md), [`/invite`](invite.md),
+[`/join`](join.md), [`/leave`](leave.md), [`/monitor`](monitor.md), [`/mute`](mute.md),
+[`/notes`](notes.md), [`/search`](search.md), [`/set`](set.md), [`/status`](status.md),
+[`/unblock`](unblock.md), [`/unmute`](unmute.md), [`/watch`](watch.md)
 
 **owner** (the owner only) (1):
 
@@ -260,6 +260,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/bot`](bot.md) | | `admin` | Bot status (24 h report and the users); turns commands on/off (`-on`/`-off`) and says who uses them: admins (`+a`/`-a`) and users (`+u`/`-u`, in any chat or just in one group, and each one's commands with `+cmd`/`-cmd`); `-reset` goes back to the default; `-status` (`-s`): report for the last 24 h, and `-s 06h` sends it every day; `-info` (`-i`): versions and system; `-test` (`-t`): tests cache, disk, database, WhatsApp, internet, SMTP, IMAP, and programs |
 | [`/cache`](cache.md) | | `admin` | Cache tree with sizes, message counts, and cleanup |
 | [`/calc`](calc.md) | `/math`, `/sum` | `user` | Calculates and sums the numbers of a list: reply to "437 gym / 351 running" and get 788; understands 1.234,56, signs, shows a tape of what it read and `-group` by name |
+| [`/call`](call.md) | | `admin` | Rejects voice and video calls and replies with a message: turn it on/off, set the text and who always rings |
 | [`/carbon`](carbon.md) | | `user` | The code in an editor-window image |
 | [`/contacts`](contacts.md) | | `owner` | Exports your address book as a vCard (`.vcf`) with name, number, about and profile photo, ready for Android and iPhone; photos cached in `cache/contacts`. Only in your own private chat |
 | [`/cron`](cron.md) | | `admin` | At the set time (`30m`, `at 18h`, `friday 9h`...): sends a message (here or with `-to`, to one or several chats) or, with `-reminder`, an ⏰ reminder; can repeat, be edited and paused, and run commands in the text (`{/crypto}`) |

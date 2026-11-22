@@ -428,6 +428,14 @@ async function initializeDb() {
         )
     `);
 
+    // /call -deny: who always has calls rejected (even with call.reject off) and each one's message
+    await dbRun(`
+        CREATE TABLE IF NOT EXISTS call_deny (
+            phone TEXT PRIMARY KEY,
+            message TEXT NOT NULL DEFAULT ''
+        )
+    `);
+
     // /antilink: the mode (off, delete, warn, remove) and the allowed domains (JSON) of each group
     await dbRun(`
         CREATE TABLE IF NOT EXISTS antilink (

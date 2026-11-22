@@ -394,10 +394,10 @@ async function cmdSet({ msg, opts, args, chatId }) {
  * current chat): does not go through the search.
  */
 async function peopleChangeList(msg, key, textAlt, append, optionsAlt = {}) {
-    const { readyItems: itemsReady = false, answer: reply, show: showAlt } = optionsAlt;
+    const { readyItems: itemsReady = false, answer: reply, show: showAlt, see = '/bot' } = optionsAlt;
     const raw = itemsReady ? textAlt : await peopleItems(msg, key, textAlt);
     if (raw === null) return;
-    await changeList(msg, { key, raw, append, see: '/bot', answer: reply, show: showAlt });
+    await changeList(msg, { key, raw, append, see, answer: reply, show: showAlt });
 }
 
 module.exports = {
