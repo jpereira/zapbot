@@ -23,7 +23,7 @@ good `-desc`.
 | `-public`, `-pub` | | Takes the lock off a private alias (`/alias -public /end.froes`) |
 | `-desc`, `-d` | `<text>` | Optional description in quotes, before the command or the text; without a command, updates only the description of an existing alias |
 | `-list`, `-l` | | Lists the aliases; same as `/alias` without arguments. With only a name (`/alias /demo`), it shows what that alias does (description and command); if the name isn't an alias, it lists the ones with that text in the name (`/alias dol` finds `/dollar`, `/dollar2` and `/my.dol`; up to 10), or an error if none matches |
-| `-examples`, `-ex` | `[<file>]` | Without a name, lists the example files (`examples/*.zb`: aliases ready to use). With a name, loads that file; an alias that already exists stays as it is, unless `-yes` (`-y`): then the file's definition replaces it (to apply a newer version of an example) |
+| `-examples`, `-ex` | `[<file>]` | Without a name, lists the example files (`examples/*.zb`: aliases ready to use). With a name, **only shows** the aliases the file would create (the same block as the `/alias` list, with the 🔇/🔒 marks and which ones already exist) and loads nothing; to load it, confirm with `-yes` (`-y`): `/alias -yes -examples my-shortcuts`, which also replaces the ones that already exist (to apply a newer version of an example) |
 | `-move`, `-m` | `<current name> <new name>` | Renames an alias, keeping command, description and quiet; the new name can't exist |
 | `-rm` | `<name...\|all>` | Removes one or more aliases (separated by space or comma), with or without `/`; `all` removes all of them |
 
@@ -229,10 +229,20 @@ keeps its `\`.
 
 The bot ships with `.zb` files in the `examples/` folder: the commands you would type here, saved in a
 file. Each file is loaded **once**, on the first boot after it appears (the `alias.examples` setting
-keeps which ones were loaded, so an alias you removed doesn't come back). To load one by hand, or to see
-which exist: `/alias -examples` and `/alias -examples tts-voices`. An alias that already exists is never
-overwritten by the first-boot load; by hand, `/alias -examples tts-voices -yes` replaces the existing ones with the file's
-(use it when a newer version of an example comes).
+keeps which ones were loaded, so an alias you removed doesn't come back). By hand it takes **two steps**, so that nothing is
+created without you seeing it:
+
+```text
+/alias -examples                     → lists the files (✅ loaded · ⬜ not loaded)
+/alias -examples tts-voices          → only SHOWS the aliases the file would create (nothing is loaded)
+/alias -yes -examples tts-voices     → confirms: loads them
+```
+
+The preview is the same block as the `/alias` list (the name with 🔇 and 🔒, the `-desc` and the command), says how many are new and
+which already exist (`♻️ It already exists: loading replaces it`), and ends with the command to confirm. Every block is checked
+as it would be to load, so an invalid one shows up there as an error. The `-yes` loads the file and **replaces** the aliases that
+already exist with the file's (use it when a newer version of an example comes); the first-boot load never overwrites an
+alias that exists.
 
 ```text
 # a comment: a line that starts with #
@@ -266,11 +276,11 @@ The `.zb` files that come with the bot are in the [`examples/`](https://github.c
 | [`secret-notes.zb`](https://github.com/jpereira/zapbot/blob/main/examples/secret-notes.zb) | `/stash.add`, `/stash.view` and `/stash.lock`: a protected (encrypted) `#stash` tag in one word each, with the privacy scenarios in the `-desc` (see [protected tags](notes.md#protected-tags--lock)) | by hand only: `/alias -examples secret-notes` |
 | [`my-shortcuts.zb`](https://github.com/jpereira/zapbot/blob/main/examples/my-shortcuts.zb) | The author's shortcuts, below (the addresses and the contacts were replaced by examples) | by hand only: `/alias -examples my-shortcuts` |
 
-A file with `# @manual` in its first lines isn't loaded on the boot, only with `/alias -examples <name>`.
+A file with `# @manual` in its first lines isn't loaded on the boot, only by hand: `/alias -examples <name>` shows it and `/alias -yes -examples <name>` loads it.
 
 ### The author's shortcuts (`my-shortcuts.zb`)
 
-Most use `-q` (no "🔗 Alias" header). Take the whole file with `/alias -examples my-shortcuts` or copy just the lines you like.
+Most use `-q` (no "🔗 Alias" header). See the whole file with `/alias -examples my-shortcuts` and load it with `/alias -yes -examples my-shortcuts`, or copy just the lines you like.
 
 **Quotes (crypto, stocks, DeFi)**
 

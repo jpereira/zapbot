@@ -6,7 +6,7 @@ shows are in Portuguese; the ones here are in English).
 
 | Key | Type | Default | Description |
 |---|---|---|---|
-| `alias.examples` | list | *(empty)* | The `examples/*.zb` files the bot already loaded (once each, on the first boot after they appear: an alias you removed doesn't come back). Remove a name to load it again, or use `/alias -examples <name>` |
+| `alias.examples` | list | *(empty)* | The `examples/*.zb` files the bot already loaded (once each, on the first boot after they appear: an alias you removed doesn't come back). Remove a name to load it again, or use `/alias -examples <name>` (it shows what the file creates) and `/alias -yes -examples <name>` (it loads) |
 | `ascii.defaultChar` | 1 character | `#` | Character used for the strokes of [`/ascii`](commands/ascii.md) letters when `-char` is not given |
 | `backup.enabled` | on/off | `on` | [Automatic backup](commands/backup.md#automatic-backup) of the database, once a day |
 | `backup.hour` | 0–23 | `3` | Hour (Brasília time) of the automatic backup |

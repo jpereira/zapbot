@@ -76,7 +76,7 @@ const SETTINGS_SCHEMA = {
     'alias.examples': {
         default: [],
         type: 'list',
-        desc: 'Arquivos de examples/*.zb que o bot já carregou (um por boot novo, uma vez só: alias que você apagou não volta). Apague o nome para carregar de novo, ou use /alias -examples <nome>.',
+        desc: 'Arquivos de examples/*.zb que o bot já carregou (um por boot novo, uma vez só: alias que você apagou não volta). Apague o nome para carregar de novo, ou use /alias -examples <nome> (mostra o que o arquivo cria) e /alias -yes -examples <nome> (carrega).',
         item: (v) => v.toLowerCase()
     },
     'ascii.defaultChar': {

@@ -6,7 +6,7 @@ em português).
 
 | Chave | Tipo | Padrão | Descrição |
 |---|---|---|---|
-| `alias.examples` | lista | *(vazio)* | Os arquivos `examples/*.zb` que o bot já carregou (uma vez cada, no primeiro boot depois que aparecem: um alias que você apagou não volta). Apague um nome para carregar de novo, ou use `/alias -examples <nome>` |
+| `alias.examples` | lista | *(vazio)* | Os arquivos `examples/*.zb` que o bot já carregou (uma vez cada, no primeiro boot depois que aparecem: um alias que você apagou não volta). Apague um nome para carregar de novo, ou use `/alias -examples <nome>` (mostra o que o arquivo cria) e `/alias -yes -examples <nome>` (carrega) |
 | `ascii.defaultChar` | 1 caractere | `#` | Caractere do traço das letras do [`/ascii`](commands/ascii.md) quando `-char` não é informado |
 | `backup.enabled` | on/off | `on` | [Backup automático](commands/backup.md#backup-automático) do banco, uma vez por dia |
 | `backup.hour` | 0–23 | `3` | Hora (de Brasília) do backup automático |

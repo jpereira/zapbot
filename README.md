@@ -192,7 +192,7 @@ Help, usage and errors never count, you and the admins have no limit, and the hi
 
 The bot shows the command that was called before the result. Shortcuts follow the permissions of the commands
 they call, and `/help alias` lists yours.
-Ready-made ones (quotes, banners, translations, voices) are in the [`.zb` files on GitHub](https://github.com/jpereira/zapbot/tree/main/examples), which `/alias -examples` loads.
+Ready-made ones (quotes, banners, translations, voices) are in the [`.zb` files on GitHub](https://github.com/jpereira/zapbot/tree/main/examples), which `/alias -examples` shows and `/alias -yes -examples` loads.
 
 **Games for the group, just by replying:**
 

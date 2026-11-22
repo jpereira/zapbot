@@ -289,7 +289,7 @@ um instante; a pergunta é mais segura).
 
 Para uma tag que você usa toda hora (a `#stash` abaixo), três [aliases](alias.md) deixam cada uso em uma palavra. Eles
 estão em [`examples/secret-notes.zb`](https://github.com/jpereira/zapbot/blob/main/examples/secret-notes.zb) (carregue
-com `/alias -examples secret-notes`), ou crie à mão. Eles são **privados** (`-p`, veja [Aliases privados](alias.md#aliases-privados)): só você os vê e os executa.
+com `/alias -yes -examples secret-notes`; sem o `-yes` ele só os mostra), ou crie à mão. Eles são **privados** (`-p`, veja [Aliases privados](alias.md#aliases-privados)): só você os vê e os executa.
 O `-desc` de cada um o explica no `/alias`:
 
 ```text

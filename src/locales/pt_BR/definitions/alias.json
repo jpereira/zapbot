@@ -71,11 +71,11 @@
       "values": [
         "[<arquivo>]"
       ],
-      "desc": "Sem nome, lista os arquivos de exemplos (examples/*.zb: aliases prontos para usar, carregados uma vez no primeiro boot depois que aparecem). Com um nome, carrega aquele arquivo; um alias que já existe fica como está, a menos que use -yes (-y): aí a definição do arquivo troca a dele (para aplicar uma versão mais nova de um exemplo).",
+      "desc": "Sem nome, lista os arquivos de exemplos (examples/*.zb: aliases prontos, carregados uma vez no primeiro boot depois que aparecem). Com um nome, só MOSTRA os aliases que o arquivo criaria (o mesmo bloco da lista do /alias, com as marcas e quais já existem): nada é carregado. Para carregar, confirme com -yes (/alias -yes -examples <nome>), que substitui os que já existem.",
       "ex": [
         "/alias -examples",
         "/alias -examples tts-voices",
-        "/alias -examples tts-voices -yes"
+        "/alias -yes -examples tts-voices"
       ]
     },
     {
