@@ -3,7 +3,7 @@
  */
 
 const { BACKUP_DIR } = require('../../constants');
-const { ADMIN } = require('../../roles').ROLES;
+const { OWNER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/backup',
@@ -57,5 +57,5 @@ module.exports = {
             ]
         }
     ],
-    role: ADMIN // touches the whole database
+    role: OWNER // the whole database: whoever gets the file (-send, -get) finds out everything, so only the owner
 };

@@ -1,4 +1,4 @@
-# `/backup` · admin
+# `/backup` · owner
 
 Database backup (`cache/zapbot.db`): one automatic per day, and from WhatsApp you can create, list,
 compare, restore, receive the file or delete. With no option, it shows the current database and the
