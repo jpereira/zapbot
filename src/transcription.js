@@ -24,7 +24,7 @@ const transcriptionCommand = (fileAlt) => [BIN_PYTHON, ...transcriptionArgs(file
  * @returns {Promise<{ text: string, language: string, duration: number }>}
  */
 async function transcribeFile(fileAlt) {
-    const outputAlt = await captureOutput(BIN_PYTHON, transcriptionArgs(fileAlt), TRANSCRIPTION_TIMEOUT_MS);
+    const outputAlt = await captureOutput(BIN_PYTHON, transcriptionArgs(fileAlt), TRANSCRIPTION_TIMEOUT_MS, { log: true });
 
     // faster-whisper may write warnings before: the JSON is the last line
     const json = JSON.parse(outputAlt.split('\n').at(-1));
