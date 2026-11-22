@@ -18,6 +18,9 @@ para o dono e os admins.
 /whois
 Quem é? (1)
 • 🗣️ +u · 👤 Rafael Silva · +15559998888
+ → Apenas: /joke, /noffa
+ ✅ Pode usar (5): /help, /joke, /noffa, /usage, /whois
+ ⏱️ /joke  0/5 por dia · renova sex 20/11 00:00
 
 Permissões
 👑 +a: admin, usa tudo
@@ -25,6 +28,9 @@ Permissões
 
 Digite /help para saber quais comandos estão disponíveis.
 ```
+
+A linha **✅ Pode usar** é a lista dos comandos que você pode rodar neste chat, já com a regra do `+cmd` aplicada (a
+regra aparece acima dela e os limites de uso abaixo). Os admins e o dono veem "Pode usar todos os comandos".
 
 ```text
 /whois                          → você
