@@ -120,6 +120,7 @@ module.exports = {
     'mensagens.ambiguo': '🤔 Comando \'{caller}\' ambíguo. Possíveis comandos: {list}',
     'mensagens.desconhecido': '⚠️ Comando \'{body}\' desconhecido, tente: /help',
     'mensagens.voceEDono': '👑 Você é o dono, já manda em tudo.',
+    'mensagens.negadoPadrao': '🚫 Sem permissão para executar $cmd, fale com $admin',
     'mensagens.semPermissaoPrivado': '🚫 Sem permissão para comandos no privado. Permitido apenas em: {groups}.',
     'mensagens.tentouExecutar': '⚠️ {name} tentou executar {cmd} dentro de {chat}, mas sem permissão',
     'mensagens.vez': '{n} vez',

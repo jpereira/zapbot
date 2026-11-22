@@ -1,6 +1,6 @@
 {
   "summary": "Liga/desliga o bot e diz quem usa os comandos",
-  "usage": "/bot [-on|-off]  ou  /bot +a|-a|+u|-u [+cmd|-cmd <comandos>] [+limit <N[/período]>] [pessoa...]  ou  /bot -status|-info|-test|-reset  ou  /bot -passwd|-login <senha>",
+  "usage": "/bot [-on|-off]  ou  /bot +a|-a|+u|-u [+cmd|-cmd <comandos>] [+limit <N[/período]>] [pessoa...]  ou  /bot -status|-info|-test|-reset  ou  /bot -denied|-d [on|off|reset|<texto>]  ou  /bot -passwd|-login <senha>",
   "help": "Liga/desliga o bot e diz quem usa os comandos: você e os admins usam tudo; os usuários, os comandos comuns. Sem opção, mostra o status (o mesmo do -status). O -info mostra as versões do que ele usa.",
   "cmd_opts": [
     {
@@ -143,6 +143,22 @@
       ],
       "values": [],
       "desc": "Testa o ambiente completo: escrita/leitura no cache, espaço em disco, banco SQLite, conexão com o WhatsApp, DNS e internet, velocidade (baixa 8 MB e sobe 1 MB no speed.cloudflare.com), login no SMTP, login no IMAP (se configurado) e os programas externos (Chromium, yt-dlp, ffmpeg). Cada item sai com ✅ ou ❌ (➖ = não configurado). Sozinho: as outras opções são recusadas."
+    },
+    {
+      "opts": [
+        "denied",
+        "d"
+      ],
+      "values": [
+        "[on|off|reset|<texto>]"
+      ],
+      "desc": "O aviso de quem digita um comando que não pode usar (em vez do silêncio). Sem valor, mostra o aviso; on e off ligam e desligam (setting bot.denied.enabled); reset volta ao texto padrão; qualquer outro texto vira a mensagem (setting bot.denied.message), em que $cmd é o comando digitado e $admin, o dono do bot.",
+      "ex": [
+        "/bot -denied",
+        "/bot -denied on",
+        "/bot -d off",
+        "/bot -denied Você não pode usar o $cmd aqui. Fale com $admin!"
+      ]
     },
     {
       "opts": [

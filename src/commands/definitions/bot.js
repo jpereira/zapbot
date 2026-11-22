@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/bot',
-    usage: '/bot [-on|-off]  or  /bot +a|-a|+u|-u [+cmd|-cmd <commands>] [+limit <N[/period]>] [person...]  or  /bot -status|-info|-test|-reset  or  /bot -passwd|-login <password>',
+    usage: '/bot [-on|-off]  or  /bot +a|-a|+u|-u [+cmd|-cmd <commands>] [+limit <N[/period]>] [person...]  or  /bot -status|-info|-test|-reset  or  /bot -denied|-d [on|off|reset|<text>]  or  /bot -passwd|-login <password>',
     aliases: [],
     summary: 'Turns the bot on/off and sets who uses the commands',
     help: 'Turns the bot on/off and sets who uses the commands: you and the admins use everything; users, the common commands. Without an option, shows the status (same as -status). -info shows the versions of what it uses.',
@@ -95,6 +95,13 @@ module.exports = {
             opts: ['test', 't'],
             values: [],
             desc: 'Tests everything: cache write/read, disk space, SQLite database, WhatsApp connection, DNS and internet, speed (downloads 8 MB and uploads 1 MB at speed.cloudflare.com), SMTP login, IMAP login (if configured), and the external programs (Chromium, yt-dlp, ffmpeg). Each item comes out with ✅ or ❌ (➖ = not configured). Alone: the other options are refused.',
+            cron: false
+        },
+        {
+            opts: ['denied', 'd'],
+            values: ['[on|off|reset|<text>]'],
+            desc: 'The notice for whoever types a command they cannot use (instead of silence). Without a value, shows it; on and off turn it on and off (setting bot.denied.enabled); reset brings back the default text; any other text becomes the message (setting bot.denied.message), where $cmd is the typed command and $admin, the bot owner.',
+            ex: ['/bot -denied', '/bot -denied on', '/bot -d off', '/bot -denied You cannot use $cmd here. Talk to $admin!'],
             cron: false
         },
         {

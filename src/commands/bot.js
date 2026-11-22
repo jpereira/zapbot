@@ -19,6 +19,7 @@ const {
     SETTINGS_SCHEMA, userCommand, getSetting, setSetting, validateSetting
 } = require('../settings');
 const { definePassword } = require('../login');
+const { noticeModel } = require('../noPermission');
 const { testText } = require('../diagnostics');
 const { infoText } = require('../system');
 const {
@@ -724,6 +725,21 @@ async function cleanEmail(msg, { erase: removeAlt }) {
     }
 }
 
+/*
+ * /bot -denied: with nothing, shows the notice; on|off turns it on and off; reset goes back to the default text; any other
+ * text becomes the message ($cmd and $admin are swapped at notice time).
+ */
+async function handleNoticeDenied(valueAlt) {
+    const v = valueAlt.toLowerCase();
+    if (v === 'on' || v === 'off') await setSetting('bot.denied.enabled', v === 'on');
+    else if (v === 'reset') await setSetting('bot.denied.message', '');
+    else if (valueAlt) await setSetting('bot.denied.message', valueAlt);
+    return t('adm.bot.denied', {
+        state: t(getSetting('bot.denied.enabled') ? 'adm.bot.denied.on' : 'adm.bot.denied.off'),
+        text: noticeModel()
+    });
+}
+
 async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
     args = removeOptionMask(args);
     if (SHORTCUT.test(String(args ?? ''))) {
@@ -759,6 +775,12 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
         }
         const password = [opts.opt.passwd, ...opts.argv].filter(Boolean).join(' ').trim();
         await msg.reply(password ? await definePassword(password) : t('adm.bot.passwdUsage'));
+        return;
+    }
+
+    // -denied [on|off|reset|<text>]: the no-permission command notice (settings bot.denied.enabled and .message)
+    if (opts.given.has('denied')) {
+        await msg.reply(await handleNoticeDenied([opts.opt.denied, ...opts.argv].filter(Boolean).join(' ').trim()));
         return;
     }
 

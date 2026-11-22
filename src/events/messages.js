@@ -36,6 +36,7 @@ const { channelResolverName } = require('../contacts');
 const { mentionsForRecord } = require('../mentions');
 const { isChannelAlt, channelId } = require('../util/origin');
 const { withLimit } = require('../usageLimit');
+const { notifyWithoutPermission } = require('../noPermission');
 const { withTyping, optionsError, readOptions, assembleContext, denial, askedMask } = require('../execute');
 const { dataParserCommand } = require('../debugParser');
 
@@ -363,6 +364,8 @@ client.on('message_create', (msg) => withContextDebug({
                 const groups = await Promise.all(permission.onlyInGroups.map(async (id) =>
                     `👥 ${await groupResolverName(id).catch(() => null) || id}`));
                 await msg.reply(t('mensagens.semPermissaoPrivado', { groups: groups.join(', ') }));
+            } else {
+                await notifyWithoutPermission(msg, command.cmd, senderNumber || senderJid);
             }
             return;
         }
@@ -376,6 +379,7 @@ client.on('message_create', (msg) => withContextDebug({
             if (isDebugMode()) {
                 messageToSelf(t('mensagens.tentouExecutar', { name: senderName, cmd: command.cmd, chat: chatName }));
             }
+            await notifyWithoutPermission(msg, command.cmd, senderNumber || senderJid);
             return;
         }
 
