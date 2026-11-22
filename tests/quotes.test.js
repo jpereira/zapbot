@@ -119,7 +119,7 @@ describe('/stocks (moedas e ações; o /rates é o mesmo comando)', () => {
     test('-l lista os habilitados e as moedas suportadas', async () => {
         const [r] = await bot.replyAlt('/stocks -l');
         assert.match(r, /• 🇺🇸 USD — Dólar\n• 🇪🇺 EUR — Euro\n• 🪙 USDT — Tether\n• 🏢 MSTR/);
-        assert.match(r, /Moedas contra o real: USD, EUR, GBP, USDT/);
+        assert.match(r, /💱 \*Moedas contra o real\* \(✅ habilitada\)\n🇺🇸 USD — Dólar ✅[^]*🇬🇧 GBP — Libra\n/);
     });
 
     test('-a e -d: moeda suportada entra direto, ticker só se o Yahoo o conhece', async () => {

@@ -33,7 +33,7 @@ module.exports = {
             cron: false,
             role: ADMIN
         },
-        { opts: ['list', 'l'], values: [], desc: 'Lists the enabled symbols (and the supported currencies).' },
+        { opts: ['list', 'l'], values: [], desc: 'Lists everything it supports: the enabled symbols, the currencies (✅ the enabled ones) and the kinds of ticker, with examples.' },
         OPTION_ALERT_MSG,
         OPTION_ALERT_RM,
         OPTION_ALERT_TO
