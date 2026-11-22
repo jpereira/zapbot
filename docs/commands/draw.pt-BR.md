@@ -29,12 +29,35 @@ Se a **primeira palavra** parece uma opção mas não existe (`/draw -price`), o
 | `-ms` | `<ms>` | Duração de cada quadro do GIF, de 20 a 2000 ms (padrão: `gpt.gif.frameMs`, 200). Vale como `-gif` |
 | `-profile`, `-p` | | Junta a foto de perfil de uma ou mais pessoas às imagens (`-p /Rafael Silva/`, `@menção`, `+número`; sem ninguém: a pessoa do chat). Veja [Com a foto de perfil de alguém](#com-a-foto-de-perfil-de-alguém--profile) |
 | `-model`, `-m` | `[modelo]` | Só dono e admins. Sem modelo, lista o atual e os que a sua chave vê; com modelo, troca (`gpt.image.model`; com `-gif`, `gpt.image.gifModel`) |
+| `-quality`, `-ql` | `<low\|medium\|high\|auto>` | Só dono e admins. Qualidade da imagem (padrão: `gpt.image.quality`, `auto`). Quanto maior, mais cara; não vale para o GIF. Ver [Qualidade e tamanho](#qualidade-e-tamanho) |
+| `-size`, `-sz` | `<auto\|square\|landscape\|portrait\|LxA>` | Só dono e admins. Tamanho da imagem (padrão: `gpt.image.size`, `auto`): `square` é 1024x1024, `landscape` 1536x1024, `portrait` 1024x1536. Quanto maior, mais cara; não vale para o GIF. Ver [Qualidade e tamanho](#qualidade-e-tamanho) |
 | `-status`, `-s` | | Acrescenta no rodapé o consumo da chamada: bytes TX/RX, tokens, custo e saldo (imagem e GIF: numa mensagem à parte). Veja [Status](gpt.md#status--status) |
 | `<pedido>` | | O que desenhar ou animar. Respondendo uma mensagem, o texto dela entra antes; numa foto, o pedido a edita |
 
 Usa a mesma chave do [`/gpt`](gpt.md): `OPENAI_API_KEY` no `config/.env` ou o setting `gpt.api.key`
 (veja [Configurando a chave](gpt.md#configurando-a-chave)). A imagem pode levar mais de um minuto: o
 timeout é o `gpt.timeout.ms`, mas nunca menos de 3 minutos (5 no GIF).
+
+## Qualidade e tamanho
+
+Por padrão (`auto`) o bot não manda nenhum dos dois: a OpenAI escolhe a qualidade e o tamanho, e costuma
+vir com uma imagem pequena e de qualidade média. Para pedir mais, por chamada ou sempre:
+
+```text
+/draw -ql high um gato astronauta em aquarela
+/draw -sz landscape uma montanha ao pôr do sol
+/draw -ql high -sz portrait um cartaz de um robô
+/set gpt.image.quality high
+/set gpt.image.size landscape
+```
+
+- `-quality`: `low`, `medium`, `high` ou `auto`. `-size`: `auto`, `square` (1024x1024), `landscape`
+  (1536x1024), `portrait` (1024x1536) ou um `LxA` que o modelo aceite.
+- **Aumenta o custo**: a imagem é cobrada por tokens, e a qualidade pesa mais (o `high` custa várias vezes o
+  `medium`); um tamanho maior também custa mais. Compare com o `-s`, que mostra o custo da chamada.
+- As duas opções são do **dono e dos admins** (quem recebeu o `/draw` por `+cmd` não consegue aumentar o
+  custo); os settings `gpt.image.quality` e `gpt.image.size` valem para todos, e também para o
+  `/gpt -img`. O GIF tem o seu tamanho fixo (512x512).
 
 ## Editar uma foto
 

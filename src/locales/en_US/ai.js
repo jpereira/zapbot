@@ -180,6 +180,8 @@ module.exports = {
     'draw.animateDefault': 'With subtle, natural movement.',
     'draw.gifDenied': '🔒 Your account/model cannot make animated GIFs: {message}\n' +
         '💡 _Only the gpt-image-2.6-* ones make GIFs, and they require preview access. Change it with /set gpt.image.gifModel <model>_',
+    'draw.badQuality': 'The quality "{value}" does not exist. Use: {list}.',
+    'draw.badSize': 'The size "{value}" does not exist. Use: {list}.',
     'draw.intRange': '{name} must be an integer from {min} to {max}.',
 
     // src/comandos/translate.js

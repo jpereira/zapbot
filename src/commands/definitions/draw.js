@@ -7,7 +7,7 @@ const { optionStatus, OPTION_QUIET_TIP } = require('./_options');
 
 module.exports = {
     cmd: '/draw',
-    usage: '/draw [request]  or  /draw -gif [-frames N] [-ms N] [request]  or  /draw [-gif] -model [model]',
+    usage: '/draw [-quality|-ql <q>] [-size|-sz <size>] [request]  or  /draw -gif [-frames N] [-ms N] [request]  or  /draw [-gif] -model [model]',
     aliases: [],
     summary: 'Draws an image with ChatGPT (GPT Image)',
     help: 'Draws an image with ChatGPT (GPT Image); with -gif, an animated GIF (GPT Image 2.6), and on a photo (caption or reply) edits the photo or animates it. When replying to a message, its text is added to the request. Requires OPENAI_API_KEY in config/.env or the gpt.api.key setting.',
@@ -47,6 +47,20 @@ module.exports = {
             values: ['[model]'],
             desc: 'Changes the image model (gpt.image.model setting) or, with -gif, the GIF one (gpt.image.gifModel). Without a model, lists the current one and the ones your key can see.',
             ex: ['/draw -m', '/draw -m gpt-image-2', '/draw -g -m gpt-image-2.6-flare'],
+            role: ADMIN
+        },
+        {
+            opts: ['quality', 'ql'],
+            values: ['<low|medium|high|auto>'],
+            desc: 'Image quality (default: the gpt.image.quality setting, auto: OpenAI chooses). The higher, the more expensive. Does not apply to the GIF. Owner and admins only.',
+            ex: ['/draw -ql high an astronaut cat in watercolor', '/draw -ql low a quick sketch of a house'],
+            role: ADMIN
+        },
+        {
+            opts: ['size', 'sz'],
+            values: ['<auto|square|landscape|portrait|WxH>'],
+            desc: 'Image size (default: the gpt.image.size setting, auto: OpenAI chooses): square is 1024x1024, landscape 1536x1024, portrait 1024x1536, or a WxH of the model. The bigger, the more expensive. Does not apply to the GIF. Owner and admins only.',
+            ex: ['/draw -sz landscape a mountain at sunset', '/draw -ql high -sz portrait a poster of a robot'],
             role: ADMIN
         },
         optionStatus('/draw -s an astronaut cat in watercolor'),

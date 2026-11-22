@@ -384,6 +384,12 @@ async function synthesizeVoice({ cmd, text: textAlt, style = null, voice = null,
 }
 
 const GIF_SIZE = '512x512';
+
+// "auto" sends nothing: OpenAI chooses the quality and the size (and charges for what it chose)
+const imageExtras = (quality, size) => ({
+    ...(quality && quality !== 'auto' ? { quality } : {}),
+    ...(size && size !== 'auto' ? { size } : {})
+});
 const TIMEOUT_IMAGE_MS = 3 * 60 * 1000;
 const TIMEOUT_GIF_MS = 5 * 60 * 1000;
 
@@ -395,16 +401,18 @@ const TIMEOUT_GIF_MS = 5 * 60 * 1000;
  * @param {string} o.prompt  what to generate or change
  * @param {Buffer} [o.image]  the image to edit, as PNG
  * @param {{ frames: number, frameMs: number }} [o.gif]  asks for the GIF, with the frames and the duration of each
+ * @param {string} [o.quality]  low | medium | high | auto (default: the gpt.image.quality setting); not for the GIF
+ * @param {string} [o.size]     auto, 1024x1024, 1536x1024... (default: the gpt.image.size setting); not for the GIF
  * @returns {Promise<string>}  the image (PNG) or the GIF, in base64
  */
-async function generateImage({ cmd, prompt, image = null, images = [], gif = null }) {
+async function generateImage({ cmd, prompt, image = null, images = [], gif = null, quality = null, size = null }) {
     const inputs = [image, ...images].filter(Boolean); // PNG in a Buffer; more than one: image[] (the photo and the profiles)
     // The GIF has its own model (only the gpt-image-2.6-* ones do it) and the frames come out at 512x512: OpenAI charges the
     // pixels of all of them
     const modelAlt = getSetting(gif ? 'gpt.image.gifModel' : 'gpt.image.model');
     const extras = gif
         ? { size: GIF_SIZE, output_format: 'gif', frame_count: gif.frames, frame_duration_ms: gif.frameMs }
-        : {};
+        : imageExtras(quality ?? getSetting('gpt.image.quality'), size ?? getSetting('gpt.image.size'));
     const config = {
         headers: { Authorization: `Bearer ${keyOpenAi()}` },
         // An image takes much longer than a text reply: at least 3 minutes (the GIF, 5)

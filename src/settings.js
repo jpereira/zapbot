@@ -7,6 +7,7 @@ const { compileFilterDebug } = require('./debugOptions');
 const { botConfig } = require('./botConfig');
 const { ROLES } = require('./roles');
 const { t } = require('./i18n');
+const { parseQuality, parseSize } = require('./imageOptions');
 const { dbAll, dbGet, dbRun } = require('./db');
 const { limitHistoryMonitor } = require('./monitorHistory');
 const { printError, printInfo, printSuccess } = require('./log');
@@ -574,6 +575,18 @@ const SETTINGS_SCHEMA = {
         default: 'gpt-image-2',
         type: 'string',
         desc: 'Modelo que gera e edita a imagem do /draw e do /gpt -img: o id que a sua conta tem (se não existir, o bot lista os que a chave vê). O GIF tem o seu, o gpt.image.gifModel.'
+    },
+    'gpt.image.quality': {
+        default: 'auto',
+        type: 'string',
+        validate: (v) => parseQuality(v),
+        desc: 'Qualidade da imagem do /draw e do /gpt -img: low, medium, high ou auto (a OpenAI escolhe). Quanto maior, mais caro. O -quality muda na chamada (dono e admins).'
+    },
+    'gpt.image.size': {
+        default: 'auto',
+        type: 'string',
+        validate: (v) => parseSize(v),
+        desc: 'Tamanho da imagem do /draw e do /gpt -img: auto (a OpenAI escolhe), square (1024x1024), landscape (1536x1024), portrait (1024x1536) ou LxA. Maior custa mais. O -size muda na chamada (dono e admins).'
     },
     'gpt.pricing': {
         default: [],

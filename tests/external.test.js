@@ -536,6 +536,43 @@ describe('/gpt', () => {
     // The tests' sharp reads the dimensions from "png:WxH" (see sharpFake in tests/helpers/environment.js)
     const PNG_4X2 = Buffer.from('png:4x2').toString('base64');
 
+    test('/draw -quality e -size (e os settings gpt.image.*): auto não manda nada; o resto vai no corpo', async () => {
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'UE5H' }] });
+        const body = () => network.calls.at(-1).cfg.body;
+
+        await bot.execute('/draw um gato');
+        assert.deepEqual(body(), { model: 'gpt-image-2', prompt: 'um gato', n: 1 });
+
+        await bot.execute('/draw -ql high -sz landscape um gato');
+        assert.deepEqual(body(), { model: 'gpt-image-2', prompt: 'um gato', n: 1, quality: 'high', size: '1536x1024' });
+
+        await bot.execute('/draw -sz 1024×1536 um gato');
+        assert.equal(body().size, '1024x1536');
+
+        // the settings apply to everyone (and to /gpt -img); the option wins for one call
+        await bot.setSetting('gpt.image.quality', 'medium');
+        await bot.setSetting('gpt.image.size', 'portrait');
+        await bot.execute('/gpt -img um gato');
+        assert.deepEqual([body().quality, body().size], ['medium', '1024x1536']);
+        await bot.execute('/draw -ql low um gato');
+        assert.deepEqual([body().quality, body().size], ['low', '1024x1536']);
+    });
+
+    test('/draw -quality e -size inválidos não chamam a API; só o dono e os admins usam', async () => {
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'UE5H' }] });
+        const before = network.calls.length;
+        assert.match((await bot.replyAlt('/draw -ql ultra um gato'))[0], /A qualidade "ultra" não existe\. Use: auto, low, medium, high\./);
+        assert.match((await bot.replyAlt('/draw -sz enorme um gato'))[0], /O tamanho "enorme" não existe/);
+        assert.equal(network.calls.length, before);
+
+        await assert.rejects(bot.setSetting('gpt.image.quality', 'ultra'), /não existe/);
+        await assert.rejects(bot.setSetting('gpt.image.size', '12'), /não existe/);
+        assert.equal(bot.getSetting('gpt.image.quality'), 'auto');
+        assert.equal(bot.getSetting('gpt.image.size'), 'auto');
+    });
+
     test('-img: gera uma imagem (v1/images/generations) e, respondendo uma foto, a edita (v1/images/edits)', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         assert.deepEqual(await bot.replyAlt('/gpt -img'), ['Usage: /gpt -img <o que criar> (respondendo uma foto, ela é editada)\n💡 _/gpt -h para ajuda_']);

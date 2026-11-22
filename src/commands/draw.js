@@ -15,6 +15,7 @@ const { commandUsage } = require('./base');
 const { BIN_FFMPEG, TMP_DIR } = require('../constants');
 const { CHATGPT, engineProcessing, withEngineTip } = require('../engines');
 const { t } = require('../i18n');
+const { parseQuality, parseSize } = require('../imageOptions');
 const { unescape } = require('../util/format');
 const { printError } = require('../log');
 const { imagesContext, textReadProfile, readProfileImplicit, resolverProfiles } = require('./profileInAi');
@@ -82,8 +83,10 @@ async function sendGif(msg, b64, captionAlt, cmd) {
  * @param {{ frames?: number, frameMs?: number } | null} [o.gif]  asks for the GIF (whatever is missing comes from the settings)
  * @param {Array<{ name: string, image: object }>} [o.profiles]  the -p profile photos: they go along with the base photo
  * @param {string} o.withoutRequest  the reply when there is nothing to draw
+ * @param {string} [o.quality]  -quality: low | medium | high | auto (without it: the gpt.image.quality setting)
+ * @param {string} [o.size]     -size: auto, square, landscape, portrait or WxH (without it: the gpt.image.size setting)
  */
-async function drawAlt({ msg, cmd, request, quotedMsg = null, gif = null, profiles = [], noRequest: withoutRequest, quiet = false }) {
+async function drawAlt({ msg, cmd, request, quotedMsg = null, gif = null, profiles = [], noRequest: withoutRequest, quiet = false, quality = null, size = null }) {
     const base = await referencePhoto(msg, quotedMsg, cmd);
     if (base?.error) {
         await msg.reply(base.error);
@@ -114,7 +117,7 @@ async function drawAlt({ msg, cmd, request, quotedMsg = null, gif = null, profil
     const notice = await msg.reply(engineProcessing('draw', CHATGPT), null, { linkPreview: false });
     try {
         const b64 = await generateImage({
-            cmd, prompt, gif: animation,
+            cmd, prompt, gif: animation, quality, size,
             images: photo ? await Promise.all(photo.map(image => photoInPng({ image }))) : []
         });
         // Media does not become an edit of the notice: it says the result comes below (and stays), and the media goes out afterward
@@ -164,6 +167,17 @@ async function draw({ msg, args, opts, quotedMsg, chatId, isGroup }) {
         }
     }
 
+    // -quality and -size (owner and admins: the option has the admin role) are checked before spending anything
+    let quality = null;
+    let size = null;
+    try {
+        if (opts?.given.has('quality')) quality = parseQuality(opts.opt.quality);
+        if (opts?.given.has('size')) size = parseSize(opts.opt.size);
+    } catch (e) {
+        await msg.reply(`❌ ${e.message}`);
+        return;
+    }
+
     // Without options, the text goes as typed (with the Enters); with them, only what is left of them
     let request = unescape(opts?.given.size ? opts.argv.join(' ') : args);
 
@@ -179,7 +193,7 @@ async function draw({ msg, args, opts, quotedMsg, chatId, isGroup }) {
         if (!profiles) return;
     }
 
-    await drawAlt({ msg, cmd: '/draw', request, quotedMsg, gif, profiles, noRequest: commandUsage('/draw'), quiet: opts?.opt?.quiet });
+    await drawAlt({ msg, cmd: '/draw', request, quotedMsg, gif, profiles, noRequest: commandUsage('/draw'), quiet: opts?.opt?.quiet, quality, size });
 }
 
 // The -status|-s (or the gpt.status setting) shows the call usage in the footer

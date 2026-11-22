@@ -171,7 +171,7 @@ responde `⛔ Apenas o dono do bot (ou um admin) pode ver outros chats.`
 | Comando | Só o chat atual (fica de fora) | Só o dono e os admins |
 |---|---|---|
 | `/crypto` |  | `-add`, `-del` |
-| `/draw` |  | `-model` |
+| `/draw` |  | `-model`, `-quality`, `-size` |
 | `/gpt` |  | `-model`, `-img`, `-gif`, `-audio`, `-prices`, `-usage` |
 | `/profile` | `[/contato/\|@menção\|+número]...` | `-set` |
 | `/show` | `-list`, `chat` | `-flush`, `-yes` |

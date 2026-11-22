@@ -1,6 +1,6 @@
 {
   "summary": "Desenha uma imagem com o ChatGPT (GPT Image)",
-  "usage": "/draw [pedido]  ou  /draw -gif [-frames N] [-ms N] [pedido]  ou  /draw [-gif] -model [modelo]",
+  "usage": "/draw [-quality|-ql <q>] [-size|-sz <tamanho>] [pedido]  ou  /draw -gif [-frames N] [-ms N] [pedido]  ou  /draw [-gif] -model [modelo]",
   "help": "Desenha uma imagem com o ChatGPT (GPT Image); com -gif, um GIF animado (GPT Image 2.6), e numa foto (legenda ou resposta) edita a foto ou a anima. Respondendo uma mensagem, o texto dela entra no pedido. Precisa de OPENAI_API_KEY no config/.env ou do setting gpt.api.key.",
   "ex": [
     "/draw -p @me @this desenhe nós dois como piratas",
@@ -80,6 +80,34 @@
         "/draw -m",
         "/draw -m gpt-image-2",
         "/draw -g -m gpt-image-2.6-flare"
+      ]
+    },
+    {
+      "opts": [
+        "quality",
+        "ql"
+      ],
+      "values": [
+        "<low|medium|high|auto>"
+      ],
+      "desc": "Qualidade da imagem (padrão: o setting gpt.image.quality, auto: a OpenAI escolhe). Quanto maior, mais cara. Não vale para o GIF. Só dono e admins.",
+      "ex": [
+        "/draw -ql high um gato astronauta em aquarela",
+        "/draw -ql low um rascunho rápido de uma casa"
+      ]
+    },
+    {
+      "opts": [
+        "size",
+        "sz"
+      ],
+      "values": [
+        "<auto|square|landscape|portrait|LxA>"
+      ],
+      "desc": "Tamanho da imagem (padrão: o setting gpt.image.size, auto: a OpenAI escolhe): square é 1024x1024, landscape 1536x1024, portrait 1024x1536, ou um LxA do modelo. Quanto maior, mais cara. Não vale para o GIF. Só dono e admins.",
+      "ex": [
+        "/draw -sz landscape uma montanha ao pôr do sol",
+        "/draw -ql high -sz portrait um cartaz de um robô"
       ]
     },
     {

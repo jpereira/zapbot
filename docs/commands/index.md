@@ -171,7 +171,7 @@ your private chat replies `⛔ Only the bot owner (or an admin) can see other ch
 | Command | Current chat only (left out) | Owner and admins only |
 |---|---|---|
 | `/crypto` |  | `-add`, `-del` |
-| `/draw` |  | `-model` |
+| `/draw` |  | `-model`, `-quality`, `-size` |
 | `/gpt` |  | `-model`, `-img`, `-gif`, `-audio`, `-prices`, `-usage` |
 | `/profile` | `[/contact/\|@mention\|+number]...` | `-set` |
 | `/show` | `-list`, `chat` | `-flush`, `-yes` |
