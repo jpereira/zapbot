@@ -1,0 +1,84 @@
+# ZapBot example: a Brazilian hip-hop / trap with a beat under it, made by /tts alone (local voice + ffmpeg).
+# @manual
+#
+#   /tts.hiphop                        the "Paçoquita" song: one voice note, with a beat at 95 bpm
+#   /tuga.rap                          reply to any text with it: the text is spoken with a deep voice over the
+#                                      same beat (95 bpm)
+#   /tts.hiphop -b 110 -bv 55  the same, with a faster and louder beat (what you type goes in the
+#                                      first line, after the options of the shortcut, so it wins)
+#
+# HOW IT WORKS. A /tts with several lines makes ONE voice note: the first line has only the options (the
+# defaults of all the lines), and each line below it is a speech. A line that has only options (here, one
+# per section of the song) changes the defaults of the lines after it, and a line that starts with options
+# and has text uses them just for itself. A blank line doubles the pause. The lines that start with # are
+# comments: they are not spoken (here they mark the sections of the song).
+#
+#   -l       (-local) the Piper voice, on the server (the lines are free; with -gpt each line would be a paid call)
+#   -pa      (-pause) the silence after each line, in ms (the default is the tts.pause setting, 300)
+#   -b       (-beat) a hip-hop beat made by ffmpeg (kick, snare, hi-hat and bass), in bpm, from 60 to 180; it starts
+#            one bar before the voice and ends one bar after it. -bv (-beatvol) is its volume, in % (35 by default)
+#
+# The beat is the same for the whole audio; what changes in each section is the voice: the pitch (-12 to
+# 12 semitones, -pi), the speed (50 to 200, -sp), the volume (20 to 300, -vol) and the pause. The voice (-v
+# tugão) is Portuguese: change it with /tts -v (it lists them). The lyrics are in Portuguese, on purpose.
+#
+# Create it with /alias -yes -examples tts-hip-hop (without the -yes it only shows what it would create).
+
+/alias /tts.hiphop -desc "A Brazilian hip-hop/trap of the Paçoquita with a 95 bpm beat: one voice note, a different voice for each section (see examples/tts-hip-hop.zb)" /tts -l -v tugão -sp 55 -pi 0 -vol 100 -pa 250 -b 95 -bv 35 $@
+    # [INTRO - deep voice]
+    -pi -3 -sp 50 -pa 450
+    Yeah, yeah, ahn!
+    Direto da quebrada, chegando na fita...
+    Não é ouro, não é prata...
+    É PA-ÇO-QUI-TA!
+
+    # [VERSO 1 - fast flow]
+    -pi 0 -sp 75 -pa 150
+    Cheguei no mercado, já senti o clima,
+    Vi uma Paçoquita, minha autoestima anima!
+    Pequena no tamanho, gigante no sabor,
+    Amendoim na veia, é paixão, é amor!
+
+    Não quero diamante, nem relógio de grife,
+    Só quero Paçoquita pra melhorar meu pique!
+    Abri a embalagem, começou a emoção,
+    Deu uma esfarelada, caiu tudo no chão!
+
+    # [REFRAO - heavy bass]
+    -pi -2 -sp 55 -vol 130 -pa 250
+    PA-PA-PA-PAÇOQUITA!
+    É A BRABA, É A BONITA!
+    PA-PA-PA-PAÇOQUITA!
+    DEU MOLE, A GENTE FRITA!
+
+    -sp 65 -pa 150
+    É doce, é gostosa, é pura tentação,
+    É o poder do amendoim dominando o mundão!
+
+    # [VERSO 2 - trap, fast flow]
+    -pi 1 -sp 85 -vol 100 -pa 120
+    No bolso tem trocado, na mente um milhão,
+    Investimento certo é paçoca na mão!
+    Bitcoin sobe e desce, o mercado oscila,
+    Mas minha Paçoquita sempre me tranquiliza!
+
+    O DJ solta o beat, o grave faz tremer,
+    Abri outra paçoca, não consigo me conter!
+    Pode faltar dinheiro, pode faltar gasolina,
+    Mas não mexe na paçoca que a parada desafina!
+
+    # [REFRAO FINAL - everybody singing]
+    -pi -2 -sp 55 -vol 130 -pa 250
+    PA-PA-PA-PAÇOQUITA!
+    É A BRABA, É A BONITA!
+    PA-PA-PA-PAÇOQUITA!
+    AMENDOIM QUE DOMINA!
+
+    # [OUTRO - the beat slows down]
+    -pi -3 -sp 50 -vol 100 -pa 600
+    Yeah... ahn...
+    Respeita o amendoim, meu parceiro...
+    Paçoquita no comando...
+    O resto é farelo!
+
+/alias /tuga.rap -desc "Reply to a text with it: the text is spoken with the tugão voice (deep and slow) over a 95 bpm hip-hop beat, in one voice note. Options typed after it win (/tuga.rap -b 110 -sp 80)" /tts -l -v tugão -sp 65 -pi -2 -vol 110 -pa 250 -b 95 -bv 35 $@

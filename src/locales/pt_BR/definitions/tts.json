@@ -1,7 +1,7 @@
 {
   "summary": "O texto numa nota de voz, com uma voz local (Piper) ou o ChatGPT (-gpt)",
-  "usage": "/tts [-gpt|-g] [-local|-l] [-voice|-v <nome>] [-speed|-sp <%>] [-pitch|-pi <semitons>] [-volume|-vol <%>] [-quiet|-q] [-status|-s] [<texto>]",
-  "help": "Transforma o texto numa nota de voz: por padrão com uma voz local do Piper (sem chave), em português ou inglês conforme o texto; com -gpt (-g), pelo ChatGPT (API de voz da OpenAI, como o /gpt -voice), que exige a chave da OpenAI. A voz, a velocidade, o tom e o volume vêm das opções (-voice, -speed, -pitch, -volume) ou dos settings tts.*. Até o setting tts.maxChars (32000 caracteres; o ChatGPT fala em partes de 4096 e o áudio é junto). Os {/comando} do texto rodam antes e a resposta é falada (a barra é opcional: {stocks USD}). Respondendo um texto, fala a mensagem (um áudio é transcrito antes), e o que você digitou vira o estilo da fala (\"fale como um robô\"). O -gpt exige OPENAI_API_KEY no config/.env ou o setting gpt.api.key.",
+  "usage": "/tts [-gpt|-g] [-local|-l] [-voice|-v <nome>] [-speed|-sp <%>] [-pitch|-pi <semitons>] [-volume|-vol <%>] [-pause|-pa <ms>] [-beat|-b <bpm>] [-beatvol|-bv <%>] [-quiet|-q] [-status|-s] [<texto>]",
+  "help": "Transforma o texto numa nota de voz: por padrão com uma voz local do Piper (sem chave), em português ou inglês conforme o texto; com -gpt (-g), pelo ChatGPT (API de voz da OpenAI, como o /gpt -voice), que exige a chave da OpenAI. A voz, a velocidade, o tom e o volume vêm das opções (-voice, -speed, -pitch, -volume) ou dos settings tts.*. Até o setting tts.maxChars (32000 caracteres; o ChatGPT fala em partes de 4096 e o áudio é junto). Os {/comando} do texto rodam antes e a resposta é falada (a barra é opcional: {stocks USD}). Respondendo um texto, fala a mensagem (um áudio é transcrito antes), e o que você digitou vira o estilo da fala (\"fale como um robô\"). O -gpt exige OPENAI_API_KEY no config/.env ou o setting gpt.api.key. Com várias linhas (a primeira só com as opções e sem texto, ou linhas que começam com uma opção), cada linha é falada com as suas opções e tudo sai numa nota de voz só, com o -pause entre elas. O -beat coloca uma batida de hip-hop por baixo da voz.",
   "ex": [
     "/tts Bom dia!",
     "/tts fale devagar"
@@ -90,6 +90,45 @@
       "desc": "O volume da voz, em % de 20 a 300 (100 normal, 200 o dobro). O padrão é o setting tts.volume.",
       "ex": [
         "/tts -volume 150 Bom dia!"
+      ]
+    },
+    {
+      "opts": [
+        "pause",
+        "pa"
+      ],
+      "values": [
+        "<ms>"
+      ],
+      "desc": "Com várias linhas: o silêncio depois da linha, em ms de 0 a 3000 (o padrão é o setting tts.pause, 300). Uma linha em branco dobra. Na primeira linha, vale para todas.",
+      "ex": [
+        "/tts -local -pause 500 (e as linhas para falar embaixo)"
+      ]
+    },
+    {
+      "opts": [
+        "beat",
+        "b"
+      ],
+      "values": [
+        "<bpm>"
+      ],
+      "desc": "Uma batida de hip-hop (bumbo, caixa, chimbal e baixo, feita pelo ffmpeg) por baixo da voz, de 60 a 180 bpm (90 é um clássico). Começa um compasso antes da voz e termina um depois.",
+      "ex": [
+        "/tts -local -beat 90 Yeah, check it out!"
+      ]
+    },
+    {
+      "opts": [
+        "beatvol",
+        "bv"
+      ],
+      "values": [
+        "<percentual>"
+      ],
+      "desc": "O volume do -beat, em % de 5 a 100 (o padrão é 35).",
+      "ex": [
+        "/tts -beat 90 -beatvol 50 Yeah!"
       ]
     },
     {

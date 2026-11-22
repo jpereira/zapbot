@@ -42,6 +42,8 @@ module.exports = {
     'tts.badVoiceLocal': '❌ -voice: "{value}" is not a local (Piper) voice. See the voices with /tts -h.',
     'tts.voicesLocal': '🎙️ */tts voices* (local, Piper)\n\n*Portuguese (Brazil)*\n{pt_BR}\n\n*Portuguese (Portugal)*\n{pt_PT}\n\n*English (US)*\n{en_US}\n\n*English (UK)*\n{en_GB}\n\n✅ = the default (tts.voice.pt / tts.voice.en)\n💡 _/tts -v <name> <text>: amy, amy-medium or en_US-amy-medium all work · /tts -g -v lists the ChatGPT ones_',
     'tts.voicesGpt': '🎙️ */tts voices* (ChatGPT)\n\n{voices}\n\n✅ = the default (gpt.tts.voice)\n💡 _/tts -g -v <name> <text> · /tts -v lists the Piper ones_',
+    'tts.tooManySegments': '❌ {n} lines to speak: the limit is {max} per /tts.',
+    'tts.segmentsLocalOnly': '❌ Several lines (one speech per line) only work with the local voice: remove -gpt.',
     'tts.localFailed': '❌ The local voice failed: {error}',
     'gpt.voiceBelow': '🔊 Audio generated below.',
     'openai.processing': '⏳ Processing {cmd}, please wait.',

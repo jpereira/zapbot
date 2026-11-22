@@ -117,7 +117,7 @@ describe('/tts', () => {
         assert.match((await bot.replyAlt('/tts -gpt oi'))[0], /⚠️ API key da OpenAI não encontrada: o \/tts está desativado/);
 
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        assert.deepEqual(await bot.replyAlt('/tts'), ['```Usage: /tts [-gpt|-g] [-local|-l] [-voice|-v <nome>] [-speed|-sp <%>] [-pitch|-pi <semitons>] [-volume|-vol <%>] [-quiet|-q] [-status|-s] [<texto>]```\n💡 _/tts -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/tts'), ['```Usage: /tts [-gpt|-g] [-local|-l] [-voice|-v <nome>] [-speed|-sp <%>] [-pitch|-pi <semitons>] [-volume|-vol <%>] [-pause|-pa <ms>] [-beat|-b <bpm>] [-beatvol|-bv <%>] [-quiet|-q] [-status|-s] [<texto>]```\n💡 _/tts -h para ajuda_']);
 
         network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
         const r = (await bot.execute('/tts -gpt Bom dia!')).at(-1);

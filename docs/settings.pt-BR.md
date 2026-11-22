@@ -140,6 +140,7 @@ em português).
 | `tts.engine` | `local`, `gpt` | `local` | Motor do [`/tts`](commands/tts.md): `local` (voz Piper, sem chave) ou `gpt` (ChatGPT, API de voz da OpenAI). `-gpt` e `-local` escolhem na chamada |
 | `tts.footer` | on/off | `on` | Acrescenta a dica "💡 Gerado por <motor>" no aviso "áudio gerado abaixo" do /tts e do /gpt -voice. O -quiet (-q) esconde na chamada. |
 | `tts.maxChars` | 100–100000 | `32000` | Máximo de caracteres do texto do [`/tts`](commands/tts.md) e do `/gpt -voice`. A voz local (Piper) fala tudo; o ChatGPT recebe em partes de 4096 (o limite da API) e o áudio é junto (quanto maior o texto, mais custa) |
+| `tts.pause` | 0–3000 | `300` | O silêncio (ms) entre as linhas de um `/tts` com várias linhas ([um áudio só](commands/tts.md#várias-linhas-e-uma-batida)). Uma linha em branco dobra. O `-pause` muda na chamada |
 | `tts.pitch` | -12–12 | `0` | Tom da voz do [`/tts`](commands/tts.md) e do `/gpt -voice`, em semitons (`0` normal, `3` mais agudo, `-3` mais grave). O `-pitch` (`-pi`) muda na chamada |
 | `tts.speed` | 50–200 | `50` | Velocidade da voz local (Piper) do [`/tts`](commands/tts.md), em % (`100` é a velocidade original do motor, `150` mais rápido; o padrão `50` fala mais devagar, que fica melhor de ouvir). Com `-gpt` vale o `gpt.tts.speed`. O `-speed` (`-sp`) muda na chamada |
 | `tts.voice.en` | texto | `en_US-lessac-medium` | Voz local (Piper) do [`/tts`](commands/tts.md) para texto em inglês: `en_US-lessac-medium`, `en_US-amy-medium`, `en_GB-alan-medium`... A que não está na imagem é baixada na primeira vez |

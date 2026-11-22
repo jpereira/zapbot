@@ -8,7 +8,7 @@ Transforma texto numa **nota de voz** de robô pelo ChatGPT (a API de voz da Ope
 `gpt.api.key`). O modelo, a voz e o estilo vêm dos settings `gpt.tts.*`.
 
 ```text
-/tts [-gpt|-g] [-local|-l] [-voice|-v <nome>] [-speed|-sp <%>] [-pitch|-pi <semitons>] [-volume|-vol <%>] [-quiet|-q] [-status|-s] [<texto>]
+/tts [-gpt|-g] [-local|-l] [-voice|-v <nome>] [-speed|-sp <%>] [-pitch|-pi <semitons>] [-volume|-vol <%>] [-pause|-pa <ms>] [-beat|-b <bpm>] [-beatvol|-bv <%>] [-quiet|-q] [-status|-s] [<texto>]
 ```
 
 | Opção | Valor | Descrição |
@@ -21,6 +21,9 @@ Transforma texto numa **nota de voz** de robô pelo ChatGPT (a API de voz da Ope
 | `-speed`, `-sp` | `<percentual>` | A velocidade da voz, em % de 50 a 200 (`100` normal, `150` mais rápido, `75` mais devagar). O padrão é o setting `tts.speed` (`50`) na voz local e o `gpt.tts.speed` (`100`) com `-gpt` |
 | `-pitch`, `-pi` | `<semitons>` | O tom da voz, em semitons de -12 a 12 (`0` normal, `3` mais agudo, `-3` mais grave). O padrão é o setting `tts.pitch` |
 | `-volume`, `-vol` | `<percentual>` | O volume da voz, em % de 20 a 300 (`100` normal, `200` o dobro). O padrão é o setting `tts.volume` |
+| `-pause`, `-pa` | `<ms>` | Com várias linhas: o silêncio depois da linha, em ms de 0 a 3000 (padrão: `tts.pause`, 300). Uma linha em branco dobra. Na primeira linha, vale para todas |
+| `-beat`, `-b` | `<bpm>` | Uma batida de hip-hop por baixo da voz, de 60 a 180 bpm (`90` é um clássico). Ver [Várias linhas e uma batida](#várias-linhas-e-uma-batida) |
+| `-beatvol`, `-bv` | `<percentual>` | O volume do `-beat`, em % de 5 a 100 (padrão: `35`) |
 | `-status`, `-s` | | Acrescenta o consumo da chamada numa mensagem à parte: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo. Para deixar sempre ligado: `/set gpt.status true` |
 
 ```text
@@ -37,6 +40,105 @@ Transforma texto numa **nota de voz** de robô pelo ChatGPT (a API de voz da Ope
 ```
 
 - Respondendo um **áudio**, ele é transcrito antes e a transcrição é falada.
+
+## Várias linhas e uma batida
+
+Um `/tts` com várias linhas faz **uma** nota de voz (e não uma por linha). A **primeira linha tem só as
+opções**: elas são o padrão de todas as linhas. Cada linha de baixo é uma fala, e pode começar com as suas
+próprias opções, que só valem para ela:
+
+```text
+/tts -local -voice tugão -speed 50 -pause 300 -beat 90
+Yeah... Yeah... Chegou a Paçoquita!
+-pitch 2 Direto da quebrada!
+-speed 80 É a braba! É a bonita!
+
+Respeita o amendoim!
+```
+
+- Uma linha **só com opções** (`-speed 80`) muda o padrão das próximas linhas. Uma **linha em branco** dobra
+  a pausa (separa as estrofes).
+- É um texto com linhas quando a primeira linha não tem texto ou alguma linha começa com uma opção. Um texto
+  comum de várias linhas continua sendo uma fala só.
+- Só com a voz local (o `-gpt` seria uma chamada paga por linha). Até 60 linhas; o `tts.maxChars` conta a
+  soma. Os `{/comando}`s funcionam em cada linha.
+- A pausa entre as linhas é o `-pause` (ms; padrão: o setting `tts.pause`).
+- **`-beat <bpm>`** coloca uma batida de hip-hop (bumbo, caixa, chimbal e baixo, **feita pelo ffmpeg**: sem
+  arquivo de áudio) por baixo da voz. Ela começa um compasso antes da voz e termina um depois; o `-beatvol` é
+  o volume dela. Também vale num `/tts` de uma linha.
+- Um pronto: [`examples/tts-hip-hop.zb`](https://github.com/jpereira/zapbot/blob/main/examples/tts-hip-hop.zb)
+  (`/alias -yes -examples tts-hip-hop` cria o `/tts.hiphop`). Outro:
+  [`examples/tts-lourival.zb`](https://github.com/jpereira/zapbot/blob/main/examples/tts-lourival.zb) (`/tts.lourival`,
+  um rap do Lourival).
+
+## Exemplo: um hip-hop
+
+A música inteira do [`examples/tts-hip-hop.zb`](https://github.com/jpereira/zapbot/blob/main/examples/tts-hip-hop.zb),
+numa mensagem só: uma batida de 95 bpm por baixo de uma voz que muda em cada parte (as linhas só com opções
+mudam o tom, a velocidade, o volume e a pausa das linhas seguintes):
+
+```text
+/tts -l -v tugão -sp 55 -pi 0 -vol 100 -pa 250 -b 95 -bv 35
+-pi -3 -sp 50 -pa 450
+Yeah, yeah, ahn!
+Direto da quebrada, chegando na fita...
+Não é ouro, não é prata...
+É PA-ÇO-QUI-TA!
+
+-pi 0 -sp 75 -pa 150
+Cheguei no mercado, já senti o clima,
+Vi uma Paçoquita, minha autoestima anima!
+Pequena no tamanho, gigante no sabor,
+Amendoim na veia, é paixão, é amor!
+
+Não quero diamante, nem relógio de grife,
+Só quero Paçoquita pra melhorar meu pique!
+Abri a embalagem, começou a emoção,
+Deu uma esfarelada, caiu tudo no chão!
+
+-pi -2 -sp 55 -vol 130 -pa 250
+PA-PA-PA-PAÇOQUITA!
+É A BRABA, É A BONITA!
+PA-PA-PA-PAÇOQUITA!
+DEU MOLE, A GENTE FRITA!
+
+-sp 65 -pa 150
+É doce, é gostosa, é pura tentação,
+É o poder do amendoim dominando o mundão!
+
+-pi 1 -sp 85 -vol 100 -pa 120
+No bolso tem trocado, na mente um milhão,
+Investimento certo é paçoca na mão!
+Bitcoin sobe e desce, o mercado oscila,
+Mas minha Paçoquita sempre me tranquiliza!
+
+O DJ solta o beat, o grave faz tremer,
+Abri outra paçoca, não consigo me conter!
+Pode faltar dinheiro, pode faltar gasolina,
+Mas não mexe na paçoca que a parada desafina!
+
+-pi -2 -sp 55 -vol 130 -pa 250
+PA-PA-PA-PAÇOQUITA!
+É A BRABA, É A BONITA!
+PA-PA-PA-PAÇOQUITA!
+AMENDOIM QUE DOMINA!
+
+-pi -3 -sp 50 -vol 100 -pa 600
+Yeah... ahn...
+Respeita o amendoim, meu parceiro...
+Paçoquita no comando...
+O resto é farelo!
+```
+
+- A primeira linha é o padrão: voz local (`tugão`), a batida e o volume dela. As partes são as linhas só com
+  opções (voz grave na intro, flow acelerado nos versos, grave pesado no refrão e a velocidade caindo no
+  outro). A letra é em português de propósito.
+- A batida é a mesma no áudio todo: só a voz muda por parte.
+- Para falar **qualquer texto** sobre a batida, o mesmo arquivo tem o `/tuga.rap`: responda um texto com ele (a
+  voz é grave e lenta, e o que você digita depois dele vale mais: `/tuga.rap -b 110 -sp 80`).
+- Para virar um atalho (`/tts.hiphop`, com as linhas como estão), carregue o exemplo:
+  `/alias -yes -examples tts-hip-hop`. O que você digita depois do atalho vai na primeira linha, então
+  `/tts.hiphop -b 110 -bv 55` muda a batida.
 
 ## Quem pode usar
 

@@ -30,7 +30,9 @@ function readOptions(command, args) {
     const free = command.freeArguments && !ASKED_HELP.test(args);
     // A command that runs the {/command}s of its text (/tts): what is inside the braces is not its options
     const marks = command.expandCommands ? maskMarks(args) : null;
-    const opts = GetOptFromCommand(free ? '' : (marks ? marks.masked : args), command);
+    // The /tts with several lines reads its options from the first line only (the next ones are segments)
+    const source = marks ? marks.masked : args;
+    const opts = GetOptFromCommand(free ? '' : (command.firstLineOptions ? String(source).split('\n')[0] : source), command);
     if (marks?.marks.length) {
         opts.argv = opts.argv.map(marks.restore);
         for (const [k, v] of Object.entries(opts.opt)) if (typeof v === 'string') opts.opt[k] = marks.restore(v);

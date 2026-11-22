@@ -21,6 +21,7 @@ const { CHATGPT, engineProcessing, withEngineTip } = require('../engines');
 const { adjustVoice, joinVoices, readVoiceOptions, splitSpeech } = require('../ttsVoice');
 const { printError } = require('../log');
 const { speakLocal } = require('../ttsLocal');
+const { mixBeat } = require('../ttsMix');
 const { language, t } = require('../i18n');
 const { unescape } = require('../util/format');
 const {
@@ -186,7 +187,7 @@ async function speakParts(textAlt, synthesize) {
     return buffers;
 }
 
-async function talkText(msg, args, quotedMsg, cmd = '/gpt', { local = false, quiet = false, voice = null } = {}) {
+async function talkText(msg, args, quotedMsg, cmd = '/gpt', { local = false, quiet = false, voice = null, beat = null } = {}) {
     const typed = unescape(args.replace(/(^|\s)-(?:voice|v)(?=\s|$)/, '').trim());
     let textAlt = typed;
     let style = null;
@@ -220,10 +221,11 @@ async function talkText(msg, args, quotedMsg, cmd = '/gpt', { local = false, qui
     const notice = quiet ? null : await msg.reply(engineProcessing('tts', engine), null, { linkPreview: false });
     try {
         const settings = voice ?? readVoiceOptions(null, local ? 'local' : 'gpt');
-        const spoken = local
+        let spoken = local
             ? await speakLocal(textAlt, settings)
             : await adjustVoice(await joinVoices(await speakParts(textAlt, (part) =>
                 synthesizeVoice({ cmd, text: part, style, voice: settings.voice, speed: settings.speed }))), settings);
+        if (beat) spoken = await mixBeat(spoken, beat); // /tts -beat: the beat under the voice
         if (!quiet) await completeNotice(msg, notice, withEngineTip(t('gpt.voiceBelow'), 'tts', engine, { sep: '\n', command: cmd.slice(1) }));
         await msg.reply(new MessageMedia('audio/ogg; codecs=opus', spoken.toString('base64'), 'voz.ogg'), null, { sendAudioAsVoice: true });
         if (!local) await replyConsumption(msg);

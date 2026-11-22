@@ -13,10 +13,10 @@ const { OPTION_QUIET_TIP } = require('./_options');
 
 module.exports = {
     cmd: '/tts',
-    usage: '/tts [-gpt|-g] [-local|-l] [-voice|-v <name>] [-speed|-sp <%>] [-pitch|-pi <semitones>] [-volume|-vol <%>] [-quiet|-q] [-status|-s] [<text>]',
+    usage: '/tts [-gpt|-g] [-local|-l] [-voice|-v <name>] [-speed|-sp <%>] [-pitch|-pi <semitones>] [-volume|-vol <%>] [-pause|-pa <ms>] [-beat|-b <bpm>] [-beatvol|-bv <%>] [-quiet|-q] [-status|-s] [<text>]',
     aliases: [],
     summary: 'The text as a voice note, with a local voice (Piper) or ChatGPT (-gpt)',
-    help: 'Turns the text into a voice note: by default with a local Piper voice (no key), in Portuguese or English according to the text; with -gpt (-g), with ChatGPT (OpenAI speech API, like /gpt -voice), which needs the OpenAI key. The voice, speed, pitch and volume come from the options (-voice, -speed, -pitch, -volume) or from the tts.* settings. Up to the tts.maxChars setting (32000 characters; ChatGPT speaks in parts of 4096 and the audio is joined). The {/command}s of the text run first and their reply is spoken (the slash is optional: {stocks USD}). Replying to a text, it speaks the message (an audio is transcribed first), and what you typed becomes the speaking style ("speak like a robot"). -gpt requires OPENAI_API_KEY in config/.env or the gpt.api.key setting.',
+    help: 'Turns the text into a voice note: by default with a local Piper voice (no key), in Portuguese or English according to the text; with -gpt (-g), with ChatGPT (OpenAI speech API, like /gpt -voice), which needs the OpenAI key. The voice, speed, pitch and volume come from the options (-voice, -speed, -pitch, -volume) or from the tts.* settings. Up to the tts.maxChars setting (32000 characters; ChatGPT speaks in parts of 4096 and the audio is joined). The {/command}s of the text run first and their reply is spoken (the slash is optional: {stocks USD}). Replying to a text, it speaks the message (an audio is transcribed first), and what you typed becomes the speaking style ("speak like a robot"). -gpt requires OPENAI_API_KEY in config/.env or the gpt.api.key setting. With several lines (the first one with the options and no text, or lines that start with an option), each line is spoken with its own options and everything goes out as one voice note, with -pause between them. -beat puts a hip-hop beat under the voice.',
     ex: ['/tts Good morning!', '/tts speak slowly'],
     cmd_opts: [
         OPTION_QUIET_TIP,
@@ -57,6 +57,25 @@ module.exports = {
             ex: ['/tts -volume 150 Good morning!']
         },
         {
+            opts: ['pause', 'pa'],
+            values: ['<ms>'],
+            desc: 'With several lines: the silence after the line, in ms from 0 to 3000 (the default is the tts.pause setting, 300). A blank line doubles it. On the first line, it is the default of all of them.',
+            ex: ['/tts -local -pause 500 (and the lines to speak below it)'],
+            cron: false
+        },
+        {
+            opts: ['beat', 'b'],
+            values: ['<bpm>'],
+            desc: 'A hip-hop beat (kick, snare, hi-hat and bass, made by ffmpeg) under the voice, from 60 to 180 bpm (90 is a classic). It starts a bar before the voice and ends a bar after.',
+            ex: ['/tts -local -beat 90 Yeah, check it out!']
+        },
+        {
+            opts: ['beatvol', 'bv'],
+            values: ['<percent>'],
+            desc: 'The volume of the -beat, in % from 5 to 100 (the default is 35).',
+            ex: ['/tts -beat 90 -beatvol 50 Yeah!']
+        },
+        {
             opts: ['status', 's'],
             values: [],
             desc: 'Adds the call usage to the reply footer: bytes sent (TX) and received (RX), tokens spent, estimated cost, and balance. To keep it always on: /set gpt.status true.',
@@ -68,6 +87,7 @@ module.exports = {
             desc: 'What to speak. Typed text wins: replying to a message with text typed, the reply is ignored; with no text, the replied message (or audio) is spoken.'
         }
     ],
+    firstLineOptions: true, // with several lines (one speech each), only the first line has the options of the command
     expandCommands: true,   // the {/command}s of the text run and their reply is spoken
     // The local voice is free; with ChatGPT (-gpt, or tts.engine gpt) it spends the OpenAI key: only the admins, or a user
     // with a limit (/bot +cmd /tts +limit N), and only the ChatGPT calls count toward it

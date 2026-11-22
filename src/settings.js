@@ -918,6 +918,11 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 100, max: 100000,
         desc: 'Máximo de caracteres do texto do /tts e do /gpt -voice. A voz local (Piper) fala tudo de uma vez; a do ChatGPT recebe em partes de 4096 (o limite da API) e junta o áudio (custa mais quanto maior o texto).'
     },
+    'tts.pause': {
+        default: 300,
+        type: 'number', min: 0, max: 3000,
+        desc: 'O silêncio, em ms, entre as linhas do /tts com várias linhas (cada linha é um trecho e o áudio sai junto). Uma linha em branco dobra a pausa. O -pause (-pa) muda na chamada.'
+    },
     'tts.pitch': {
         default: 0,
         type: 'number', min: -12, max: 12,

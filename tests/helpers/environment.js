@@ -324,7 +324,8 @@ const processes = {
     speech: 'olá mundo, isto é um teste', // the text that faster-whisper (python) returns
     errorOutput: null, // what yt-dlp writes in the log before failing
     ocr: 'texto da imagem', // the text that tesseract returns
-    post: null // the JSON that yt-dlp -J returns (a photo post)
+    post: null, // the JSON that yt-dlp -J returns (a photo post)
+    spokenAll: [] // every text the local voice was asked to speak (processes.spoken is the last one)
 };
 
 function spawnFake(bin, args, optionsAlt) {
@@ -361,7 +362,10 @@ function spawnFake(bin, args, optionsAlt) {
         // stt.py: the JSON on the last line of the output
         if (nameAlt === 'python') {
             // tts.py: the text it was asked to speak (the file goes away after the call)
-            if (/tts\.py$/.test(args[0]) && args.includes('--input')) processes.spoken = fs.readFileSync(args[args.indexOf('--input') + 1], 'utf8');
+            if (/tts\.py$/.test(args[0]) && args.includes('--input')) {
+                processes.spoken = fs.readFileSync(args[args.indexOf('--input') + 1], 'utf8');
+                processes.spokenAll.push(processes.spoken);
+            }
             child.stdout.emit('data', `${JSON.stringify({ language: 'pt', duration: 5, text: processes.speech })}\n`);
             child.emit('close', 0, null);
             return;

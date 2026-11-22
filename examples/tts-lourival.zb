@@ -1,0 +1,79 @@
+# ZapBot example: a rap about Lourival (hacker, lifts weights, hooked on durateston, lives in Ancapistan, anarchist,
+# wants bitcoin all over the world), with a hip-hop beat under it, made by /tts alone (local voice + ffmpeg).
+# @manual
+#
+#   /tts.lourival                      the whole song: one voice note, with a beat at 98 bpm
+#   /tts.lourival -b 110 -bv 55        the same, with a faster and louder beat (what you type goes in the
+#                                      first line, after the options of the shortcut, so it wins)
+#   /tts.lourival -v tugao             another voice (/tts -v lists them)
+#
+# It works like examples/tts-hip-hop.zb (see there how it is made): a /tts with several lines is ONE voice note,
+# the first line has only the options, a line with only options changes the next ones, and the lines that start
+# with # are comments (here they mark the sections). The lyrics are in Portuguese, on purpose.
+#
+# Create it with /alias -yes -examples tts-lourival (without the -yes it only shows what it would create).
+
+/alias /tts.lourival -desc "A rap about Lourival (hacker, iron, durateston, Ancapistan, anarchist, bitcoin for everyone) with a 98 bpm beat: one voice note, a different voice for each section (see examples/tts-lourival.zb)" /tts -l -v tugão -sp 55 -pi 0 -vol 100 -pa 250 -b 98 -bv 35 $@
+    # [INTRO - deep voice]
+    -pi -3 -sp 50 -pa 450
+    Yeah, yeah, ahn!
+    Direto do Ancapistão, sem Estado, sem imposto...
+    Abre o terminal, que o bagulho é composto...
+    É o LOURIVAL!
+
+    # [VERSO 1 - hacker, fast flow]
+    -pi 0 -sp 75 -pa 150
+    Teclado na mão, root no servidor,
+    Zero-day no café da manhã, que sabor!
+    Seis da matina, linha de comando,
+    O Lourival não pede licença, vai logo codando!
+
+    Firewall treme quando ele chega,
+    Terminal preto, a tela verde pega!
+    Criptografia é a muralha, a chave é só dele,
+    No mundo do código, ele é o próprio rebelde!
+
+    # [REFRAO - heavy bass]
+    -pi -2 -sp 55 -vol 130 -pa 250
+    LOU-LOU-LOU-LOURIVAL!
+    HACKER, FERRO E LIBERDADE TOTAL!
+    LOU-LOU-LOU-LOURIVAL!
+    BITCOIN PRO MUNDO, SEM BANCO CENTRAL!
+
+    # [VERSO 2 - iron and durateston, trap]
+    -pi 1 -sp 85 -vol 100 -pa 120
+    Na academia, anilha que não acaba,
+    Agacha tão pesado que o chão até desaba!
+    Durateston na veia, o vício é a meta,
+    Ombro de planeta, bíceps de cometa!
+
+    Supino, terra, agachamento sem parar,
+    Frango no balde, arroz pra variar!
+    Barra de ferro dobra só de ele olhar,
+    Levanta o mundo inteiro e ainda quer mais anilha pra pegar!
+
+    # [VERSO 3 - Ancapistan, anarchist]
+    -pi 0 -sp 75 -pa 150
+    Mora no Ancapistão, não tem governo nem fronteira,
+    Bandeira preta e a propriedade é a trincheira!
+    Anarquista de coração, empreendedor de verdade,
+    Imposto é roubo, e ele cobra em liberdade!
+
+    Not your keys, not your coins, ele grita na esteira,
+    Cada bitcoin que sobe é mais um treino na barreira!
+    Satoshi lá de cima só abençoa o cara,
+    Descentraliza o shape, descentraliza a parada!
+
+    # [REFRAO FINAL - everybody singing]
+    -pi -2 -sp 55 -vol 130 -pa 250
+    LOU-LOU-LOU-LOURIVAL!
+    HACKER, FERRO E LIBERDADE TOTAL!
+    LOU-LOU-LOU-LOURIVAL!
+    BITCOIN NO MUNDO INTEIRO, ESSE É O SEU IDEAL!
+
+    # [OUTRO - the beat slows down]
+    -pi -3 -sp 50 -vol 100 -pa 600
+    Yeah... ahn...
+    Descentralize o mundo, meu parceiro...
+    Lourival no comando...
+    O resto é moeda fiat!
