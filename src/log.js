@@ -8,6 +8,7 @@ const { contextDebug, canFilterDebug } = require('./debugContext');
 const { configureDebug, dataDebug, cleanTextDebug } = require('./debugData');
 const { compileFilterDebug } = require('./debugOptions');
 const { t } = require('./i18n');
+const { maskLockPassword } = require('./util/lockPassword');
 
 let filterText;
 let filter;
@@ -25,6 +26,7 @@ function highlightMatches(line, regex, color) {
 }
 
 function emitLog(line, color) {
+    line = maskLockPassword(line); // a /notes -lock <password> never gets to the logs
     const cfg = configureDebug();
     const context = contextDebug();
     const detail = cfg.enabled && cfg.level >= 1 && context.chatId
