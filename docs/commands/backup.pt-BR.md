@@ -112,7 +112,8 @@ A cópia é feita com o `VACUUM INTO` do SQLite (consistente, sem parar o
 bot) e compactada com gzip.
 
 As imagens do `/notes` (`cache/notes`) entram num arquivo à parte, só quando existe alguma, e voltam
-junto no `-r`. O `-send` e o backup automático enviam só o banco (as imagens podem passar do limite
+junto no `-r`. As notas de uma [tag protegida](notes.md#tags-protegidas--lock) entram no backup **cifradas** (banco e
+arquivos), então um backup vazado não as abre; os backups feitos **antes** de proteger a tag guardam o texto em claro. O `-send` e o backup automático enviam só o banco (as imagens podem passar do limite
 de anexo).
 
 **As outras mídias (`cache/media`) não entram**: depois de uma restauração, uma apagada com mídia

@@ -36,6 +36,12 @@ A few points deserve special attention in a report:
   refused (anti-SSRF).
 - **API keys** (OpenAI, GIPHY, Google Translate) and the SMTP password: they must never show up in the
   chat or in the logs.
+- **Protected notes** (`/notes -lock`): the text and the files of a protected tag are encrypted (AES-256-GCM, key
+  from scrypt) and the password is never stored. It counts as a vulnerability any way to read them **without the
+  password** or **outside your own private chat**: in a group or someone's chat, sent with `-to`, in an alert, in
+  the logs, in the history (`messages`) or in a backup; the password showing up anywhere the bot writes; or a tag
+  staying unlocked after the time (`notes.lockMinutes`), a restart or `-now`. What it does not promise is in
+  [Privacy scenarios](https://jpereira.github.io/zapbot/commands/notes/#privacy-scenarios).
 - **Stored messages**: the database (`cache/zapbot.db`), the media in `cache/media` and the backups in
   `cache/backups` hold conversations of third parties. `/backup -send` to another chat asks for
   confirmation (`-yes`) for that reason.

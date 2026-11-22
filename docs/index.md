@@ -26,6 +26,10 @@ messages stay on your server. You type commands in any chat and it answers (`/he
 
 Yep, we've been busy. The best of the latest batch:
 
+- 🔐 **Private notes, for real.** `/notes -lock #stash` protects a tag with a password: the text and the files are
+  **encrypted** (AES-256-GCM), it only unlocks and opens in **your own private chat**, locks again by itself and never goes
+  out with `-to`. The password is never stored, logged or kept in the history, and an alias like `/stash.view` makes it one
+  word. [`/notes`](commands/notes.md#protected-tags--lock)
 - 🎙️ **Transcribe any video or audio.** Send a link (Instagram, YouTube, X, TikTok...) or reply to a video or a voice
   note and get the **text of the speech**, or `-sum` for a **summary** on top. It runs on your own server
   (faster-whisper), so no OpenAI bill and the audio never leaves home. [`/stt`](commands/stt.md) · [`/get -t`](commands/get.md)
@@ -101,7 +105,8 @@ Yep, we've been busy. The best of the latest batch:
 | 📣 | **Your profile and Status** | Posts on your WhatsApp Status (and schedules it), shows anyone's About text and changes yours, exports your contacts with photos | [`/status`](commands/status.md) · [`/profile`](commands/profile.md) · [`/contacts`](commands/contacts.md) |
 | 🔌 | **API and MCP (experimental)** | A local HTTP API (off by default) to send messages and read your notes from scripts, and an experimental MCP server for AI clients | [API and MCP](api.md) |
 | ⭐ | **Pro: limits per person** | Share `/gpt` and other commands with friends and groups, with a limit of successful calls per person, per day, week or month, and `/usage` to see what is left | [`/usage`](commands/usage.md) |
-| 🛡️ | **Yours, and safe** | Owner, admin and user roles per command, flood protection, anti-SSRF in downloads, backups, QR Code login by e-mail, and English or Brazilian Portuguese | [`/bot`](commands/bot.md) · [`/backup`](commands/backup.md) · [`/set`](commands/set.md) |
+| 🔐 | **Private notes** | Notes with `#tags`, and **protected tags**: text and files encrypted with a password, opened only in your own private chat, locked again by themselves and never sent to others | [`/notes`](commands/notes.md#protected-tags--lock) · [`/notes -lock`](commands/notes.md#password-in-the-command) |
+| 🛡️ | **Yours, and safe** | Owner, admin and user roles per command, flood protection, anti-SSRF in downloads, backups, **encrypted notes**, QR Code login by e-mail, and English or Brazilian Portuguese | [`/bot`](commands/bot.md) · [`/backup`](commands/backup.md) · [`/set`](commands/set.md) |
 
 All the commands, with their options and examples, are in [Commands](commands/index.md).
 
@@ -406,7 +411,9 @@ Where to start:
 - **Notes**: [`/notes`](commands/notes.md) stores texts (and media: image, document, audio, video) in the
   `notes` table, each with an ID and, if you want, a `#tag` (tag descriptions live in
   `note_tags`). `-alert` alerts about a note at a date/time (once; the note stays), in your
-  private chat or at the `-to` destinations, with one check per minute.
+  private chat or at the `-to` destinations, with one check per minute. A tag can be **protected**
+  (`-lock`, see [Protected tags](commands/notes.md#protected-tags--lock)): the text and the files are encrypted with a password
+  that is never stored (`note_locks` keeps only a salt and a verifier), and they only open in your own private chat.
 - **DeFi**: [`/defi`](commands/defi.md) reads on-chain the registered liquidity positions on Orca,
   Project X and Liquidswap (by wallet) (table `defi_positions`) and, with `-alert`, checks every 10
   minutes (setting `defi.alert.intervalMin`) and alerts (in your private chat or at the `-to`

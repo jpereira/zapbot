@@ -289,7 +289,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/mute`](mute.md) | | `admin` | Silences the notices for deleted, edited, status, and reactions (and those from `/watch`) of a person, a group, or a community; replying to a notice, from where it came |
 | [`/news`](news.md) | | `user` | Headlines from RSS feeds: `-hack`, `-g1`, `-gazeta`, `-brazil` |
 | [`/noffa`](noffa.md) | | `user` | Joke: decorates the text with rainbows |
-| [`/notes`](notes.md) | | `admin` | Notes with ID and `#tag` (`-a`, `-l`, `-s`, `-r`): view with the media (`-v`), edit (`-u`), rename a tag (`-m`), describe a tag (`-d`), export to PDF (`-e`), and `-alert` that notifies at a date/time |
+| [`/notes`](notes.md) | | `admin` | Notes with ID and `#tag` (`-a`, `-l`, `-s`, `-r`): view with the media (`-v`), edit (`-u`), rename a tag (`-m`), describe a tag (`-d`), export to PDF (`-e`), `-alert` that notifies at a date/time, and `-lock` that protects a tag with a password (encrypted, only in your private chat) |
 | [`/ocr`](ocr.md) | | `user` | The text in a photo, read locally (Tesseract) or by ChatGPT (`-gpt`) |
 | [`/ping`](ping.md) | | `user` | Checks whether the bot is alive |
 | [`/pixelart`](pixelart.md) | | `user` | Random ANSI/ASCII art (16colo.rs) |

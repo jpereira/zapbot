@@ -27,6 +27,10 @@ mensalidade, e as suas mensagens ficam no seu servidor. Você digita comandos em
 
 Pois é, a gente andou ocupado. O melhor da última leva:
 
+- 🔐 **Notas privadas de verdade.** O `/notes -lock #stash` protege uma tag com senha: o texto e os arquivos ficam
+  **cifrados** (AES-256-GCM), ela só libera e abre no **seu próprio privado**, trava sozinha de novo e nunca sai com
+  `-to`. A senha nunca é guardada, registrada em log nem mantida no histórico, e um alias como `/stash.view` deixa tudo em
+  uma palavra. [`/notes`](commands/notes.md#tags-protegidas--lock)
 - 🎙️ **Transcreva qualquer vídeo ou áudio.** Mande um link (Instagram, YouTube, X, TikTok...) ou responda um vídeo ou
   uma nota de voz e receba o **texto da fala**, ou `-sum` para um **resumo** em cima. Roda no seu próprio servidor
   (faster-whisper), então sem conta da OpenAI e o áudio nunca sai de casa. [`/stt`](commands/stt.md) · [`/get -t`](commands/get.md)
@@ -102,7 +106,8 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 | 📣 | **Seu perfil e Status** | Posta no seu Status do WhatsApp (e agenda), mostra o recado de qualquer pessoa e troca o seu, exporta seus contatos com fotos | [`/status`](commands/status.md) · [`/profile`](commands/profile.md) · [`/contacts`](commands/contacts.md) |
 | 🔌 | **API e MCP (experimental)** | Uma API HTTP local (desligada por padrão) para mandar mensagens e ler as suas notas por scripts, e um servidor MCP experimental para clientes de IA | [API e MCP](api.md) |
 | ⭐ | **Pro: limites por pessoa** | Divida o `/gpt` e outros comandos com amigos e grupos, com um limite de chamadas bem-sucedidas por pessoa, por dia, semana ou mês, e o `/usage` para ver o que resta | [`/usage`](commands/usage.md) |
-| 🛡️ | **Seu, e seguro** | Papéis de dono, admin e usuário por comando, proteção contra flood, anti-SSRF nos downloads, backups, login do QR Code por e-mail, em inglês ou português do Brasil | [`/bot`](commands/bot.md) · [`/backup`](commands/backup.md) · [`/set`](commands/set.md) |
+| 🔐 | **Notas privadas** | Anotações com `#tags` e **tags protegidas**: texto e arquivos cifrados com senha, abertos só no seu próprio privado, travados de novo sozinhos e nunca enviados a outros | [`/notes`](commands/notes.md#tags-protegidas--lock) · [`/notes -lock`](commands/notes.md#senha-no-comando) |
+| 🛡️ | **Seu, e seguro** | Papéis de dono, admin e usuário por comando, proteção contra flood, anti-SSRF nos downloads, backups, **notas cifradas**, login do QR Code por e-mail, em inglês ou português do Brasil | [`/bot`](commands/bot.md) · [`/backup`](commands/backup.md) · [`/set`](commands/set.md) |
 
 Todos os comandos, com as opções e os exemplos, estão em [Comandos](commands/index.md).
 
@@ -404,7 +409,9 @@ Por onde começar:
 - **Anotações**: o [`/notes`](commands/notes.md) guarda textos (e mídias: imagem, documento, áudio, vídeo) na
   tabela `notes`, cada um com um ID e, se quiser, uma `#tag` (a descrição das tags fica em
   `note_tags`). O `-alert` avisa de uma anotação numa data/hora (uma vez; a anotação continua), no
-  seu privado ou nos destinos do `-to`, com uma verificação por minuto.
+  seu privado ou nos destinos do `-to`, com uma verificação por minuto. Uma tag pode ser **protegida**
+  (`-lock`, veja [Tags protegidas](commands/notes.md#tags-protegidas--lock)): o texto e os arquivos são cifrados com uma senha
+  que nunca é guardada (a `note_locks` guarda só um sal e um verificador), e só abrem no seu próprio privado.
 - **DeFi**: o [`/defi`](commands/defi.md) lê on-chain as posições de liquidez da Orca, do Project X e da
   Liquidswap (pela carteira) cadastradas (tabela `defi_positions`) e, com o `-alert`, confere a cada 10
   minutos (setting `defi.alert.intervalMin`) e avisa (no seu privado ou nos destinos do `-to`)
