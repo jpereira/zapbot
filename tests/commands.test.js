@@ -268,7 +268,7 @@ describe('/bot', () => {
             assert.match(r, /• whatsapp-web\.js: [\d.]+ \(commit [0-9a-f]{7}\)\n/);
             assert.match(r, /• WhatsApp Web: _não encontrado_\n/);   // the simulated client has no getWWebVersion
             assert.match(r, /• SQLite: \d+\.\d+\.\d+\n/);
-            assert.match(r, /🧰 \*Programas\*\n• Chromium: .+\n• yt-dlp: .+\n• ffmpeg: .+\n• faster-whisper: .+\n/);
+            assert.match(r, /🧰 \*Programas\*\n• Chromium: .+\n• yt-dlp: .+\n• ffmpeg: .+\n• ffprobe: .+\n• Python: .+\n• faster-whisper: .+\n• Piper: .+\n• Tesseract: .+\n• pdftotext: .+\n/);
             assert.match(r, /🖥️ \*Sistema\*\n• .+\n• Host: .+\n• CPU: \d+× .+ · carga [\d.]+ · [\d.]+ · [\d.]+\n• Memória: .+ de .+ em uso · o bot usa .+\n• No ar: sistema há .+ · bot há .+ \(PID \d+\)$/);
         }
         assert.match((await bot.replyAlt('/bot -i -on'))[0], /❌ O -info não combina com as outras opções/);
@@ -404,6 +404,18 @@ describe('/set', () => {
     test('só o dono usa', async () => {
         assert.deepEqual(await bot.replyAlt('/set show.max 1', { de: OTHERAlt.jid }), []);
         assert.equal(bot.getSetting('show.max'), 20);
+    });
+});
+
+describe('/bot -info: a versão do Piper (tts.py)', () => {
+    test('vem do "tts.py --version": a versão do Piper, as vozes padrão e a versão do script', () => {
+        const { describePiper } = bot.src('system');
+        const voices = { pt: 'pt_BR-faber-medium', en: 'en_US-lessac-medium' };
+        assert.equal(describePiper('{"wrapper": "2.0.0", "piper": "1.8.0"}', voices),
+            '1.8.0 (vozes pt_BR-faber-medium, en_US-lessac-medium) · tts.py 2.0.0');
+        assert.equal(describePiper(null, voices), null);
+        assert.equal(describePiper('lixo', voices), null);
+        assert.equal(describePiper('{"wrapper": "2.0.0"}', voices), null);
     });
 });
 
