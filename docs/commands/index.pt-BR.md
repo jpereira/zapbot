@@ -198,13 +198,14 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/uptime`](uptime.md), [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md),
 [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (18):
+**admin, delegáveis** (admins e o dono; o dono libera a um usuário com `+cmd`) (19):
 
 [`/antibadword`](antibadword.md), [`/antilink`](antilink.md), [`/antitag`](antitag.md),
 [`/demote`](demote.md), [`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md),
 [`/gpt`](gpt.md), [`/group`](group.md), [`/members`](members.md), [`/poll`](poll.md),
-[`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
-[`/tldr`](tldr.md), [`/warn`](warn.md), [`/welcome`](welcome.md)
+[`/profile`](profile.md), [`/promote`](promote.md), [`/screenshot`](screenshot.md),
+[`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md), [`/warn`](warn.md),
+[`/welcome`](welcome.md)
 
 **admin** (admins e o dono; nunca delegáveis) (20):
 
@@ -296,6 +297,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/profile`](profile.md) | | `admin` · delegável | A foto de perfil de um contato, com o nome da sua agenda e o telefone |
 | [`/promote`](promote.md) | | `admin` · delegável | Torna alguém admin do grupo |
 | [`/qr`](qr.md) | | `user` | Gera o QR Code de um texto (`-decode` lê um) |
+| [`/screenshot`](screenshot.md) | `/ss` | `admin` · delegável | Uma captura de tela de uma página da web |
 | [`/search`](search.md) | | `admin` | Busca no histórico do WhatsApp Web, não só no cache: neste chat ou, no seu privado, em todos (`-N` para mais); `-mask` ofusca telefones |
 | [`/set`](set.md) | | `admin` | Lista e altera as configurações (settings); `-a`/`-rm` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
 | [`/show`](show.md) | | `admin` · delegável | No privado, lista o cache; reexibe apagadas, edições (`-e`), status (`-s`) e reações removidas ou trocadas (`-r`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |

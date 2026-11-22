@@ -250,6 +250,19 @@ module.exports = {
     'carbon.badTheme': '❌ Unknown theme "{theme}". Available: {themes}.',
     'carbon.failed': '❌ I could not draw the image: {error}',
 
+    // /screenshot
+    'screenshot.processing': '⏳ Opening {url}, please wait.',
+    'screenshot.imageBelow': '🖼️ Screenshot below.',
+    'screenshot.pdfBelow': '📄 PDF below.',
+    'screenshot.failed': '❌ I could not take the screenshot: {error}',
+    'screenshot.timeout': 'the page took too long',
+    'screenshot.noLink': '❌ I found no link in the replied message.',
+    'screenshot.invalidUrl': '❌ "{url}" is not a valid http(s) address.',
+    'screenshot.forbiddenUrl': '❌ I do not open this address (private network or unknown host): {url}',
+    'screenshot.busy': '⏳ I am already taking another screenshot, try again in a moment.',
+    'screenshot.noBrowser': '❌ The browser is not ready yet, try again in a moment.',
+    'screenshot.waitRange': '❌ -wait takes a number of seconds from 0 to {max}.',
+
     'ai.profileNeedsReply': '❌ {cmd} @reply needs a reply: answer a message from the person.',
     'ai.profileNeedsPerson': '❌ In a group, {cmd} -p needs someone: -p /Name/, -p @mention or reply to a message from the person.',
     'ai.profileTooMany': '❌ Up to {max} profile photos at a time.',

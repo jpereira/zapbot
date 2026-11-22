@@ -52,6 +52,7 @@ const { cmdNoffa } = require('./noffa');
 const { cmdPing } = require('./ping');
 const { cmdPixelArt } = require('./pixelart');
 const { cmdProfile } = require('./profile');
+const { cmdScreenshot } = require('./screenshot');
 const { cmdSearch } = require('./search');
 const { cmdSet } = require('./set');
 const { cmdShow } = require('./show');
@@ -125,6 +126,7 @@ const HANDLERS = {
     '/profile': cmdProfile,
     '/promote': cmdPromote,
     '/qr': cmdQr,
+    '/screenshot': cmdScreenshot,
     '/search': cmdSearch,
     '/set': cmdSet,
     '/show': cmdShow,

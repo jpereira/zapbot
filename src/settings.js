@@ -750,6 +750,17 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 365,
         desc: 'Dias que as enquetes e os votos ficam guardados para o /poll -r.'
     },
+    'screenshot.timeout': {
+        default: 30,
+        type: 'number', min: 5, max: 120,
+        desc: 'Segundos que o /screenshot espera a página carregar antes de tirar a captura (a página que nunca "acalma" sai com o que já carregou).'
+    },
+    'screenshot.userAgent': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        desc: 'O User-Agent do /screenshot. Vazio: o mesmo do Chromium do bot (sem o "Headless", que muitos sites recusam).'
+    },
     'show.alert.deleted': {
         default: true,
         type: 'boolean',

@@ -109,6 +109,8 @@ shows are in Portuguese; the ones here are in English).
 | `pixelart.maxParts` | 1–10 | `3` | Max parts of [`/pixelart`](commands/pixelart.md) when the art is taller than 4096 px |
 | `pixelart.packs` | list | `chuck-norris-lvl` | 16colo.rs packs picked at random by [`/pixelart`](commands/pixelart.md) with no arguments |
 | `poll.retentionDays` | 1–365 | `90` | Days polls and votes are kept for [`/poll -r`](commands/poll.md#result) |
+| `screenshot.timeout` | 5–120 | `30` | Seconds [`/screenshot`](commands/screenshot.md) waits for the page to load (a page that never settles is shot with what it has) |
+| `screenshot.userAgent` | text | *(empty)* | The User-Agent of `/screenshot`. Empty: the Chromium's own, without the "Headless" that many sites refuse |
 | `show.alert.deleted` | on/off | `on` | Alerts you in your private chat when someone deletes a message; `off` only stores it for `/show` |
 | `show.alert.edited` | on/off | `on` | Alerts you in your private chat when someone edits a message; `off` only stores it for `/show -e` |
 | `show.alert.reaction` | on/off | `on` | Alerts you in your private chat when someone removes or changes a reaction; `off` only stores it for `/show -r` |

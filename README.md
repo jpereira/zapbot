@@ -499,6 +499,7 @@ and make the bot your own:
 | [`/profile`](https://jpereira.github.io/zapbot/commands/profile/) | | `admin` · delegable | A contact's profile picture, with the name from your address book and the phone number |
 | [`/promote`](https://jpereira.github.io/zapbot/commands/promote/) | | `admin` · delegable | Makes someone a group admin |
 | [`/qr`](https://jpereira.github.io/zapbot/commands/qr/) | | `user` | Makes the QR Code of a text (`-decode` reads one) |
+| [`/screenshot`](https://jpereira.github.io/zapbot/commands/screenshot/) | `/ss` | `admin` · delegable | A picture of a web page |
 | [`/search`](https://jpereira.github.io/zapbot/commands/search/) | | `admin` | Searches the WhatsApp Web history, not just the cache: in this chat or, in your private chat, in all of them (`-N` for more); `-mask` hides phone numbers |
 | [`/set`](https://jpereira.github.io/zapbot/commands/set/) | | `admin` | Lists and changes the settings; `-a`/`-rm` add and remove list items (e.g. `bot.admins` and `bot.users`) |
 | [`/show`](https://jpereira.github.io/zapbot/commands/show/) | | `admin` · delegable | In private, lists the cache; redisplays deleted messages, edits (`-e`), statuses (`-s`) and removed or changed reactions (`-r`); `-q` searches (text or regex) and `-mask` hides phone numbers |

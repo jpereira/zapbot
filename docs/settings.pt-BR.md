@@ -109,6 +109,8 @@ em português).
 | `pixelart.maxParts` | 1–10 | `3` | Máximo de partes do [`/pixelart`](commands/pixelart.md) quando a arte é mais alta que 4096 px |
 | `pixelart.packs` | lista | `chuck-norris-lvl` | Packs do 16colo.rs sorteados pelo [`/pixelart`](commands/pixelart.md) sem argumentos |
 | `poll.retentionDays` | 1–365 | `90` | Dias que as enquetes e os votos ficam guardados para o [`/poll -r`](commands/poll.md#resultado) |
+| `screenshot.timeout` | 5–120 | `30` | Segundos que o [`/screenshot`](commands/screenshot.md) espera a página carregar (a página que nunca "acalma" sai com o que já carregou) |
+| `screenshot.userAgent` | texto | *(vazio)* | O User-Agent do `/screenshot`. Vazio: o do próprio Chromium, sem o "Headless" que muitos sites recusam |
 | `show.alert.deleted` | on/off | `on` | Avisa no seu privado quando alguém apaga uma mensagem; `off` só guarda para o `/show` |
 | `show.alert.edited` | on/off | `on` | Avisa no seu privado quando alguém edita uma mensagem; `off` só guarda para o `/show -e` |
 | `show.alert.reaction` | on/off | `on` | Avisa no seu privado quando alguém remove ou troca uma reação; `off` só guarda para o `/show -r` |

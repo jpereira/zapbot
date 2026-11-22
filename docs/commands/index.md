@@ -199,13 +199,14 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/uptime`](uptime.md), [`/usage`](usage.md), [`/version`](version.md), [`/walissu`](walissu.md),
 [`/weather`](weather.md), [`/whois`](whois.md)
 
-**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (18):
+**admin, delegable** (admins and the owner; the owner releases them to a user with `+cmd`) (19):
 
 [`/antibadword`](antibadword.md), [`/antilink`](antilink.md), [`/antitag`](antitag.md),
 [`/demote`](demote.md), [`/draw`](draw.md), [`/everybody`](everybody.md), [`/goodbye`](goodbye.md),
 [`/gpt`](gpt.md), [`/group`](group.md), [`/members`](members.md), [`/poll`](poll.md),
-[`/profile`](profile.md), [`/promote`](promote.md), [`/show`](show.md), [`/stats`](stats.md),
-[`/tldr`](tldr.md), [`/warn`](warn.md), [`/welcome`](welcome.md)
+[`/profile`](profile.md), [`/promote`](promote.md), [`/screenshot`](screenshot.md),
+[`/show`](show.md), [`/stats`](stats.md), [`/tldr`](tldr.md), [`/warn`](warn.md),
+[`/welcome`](welcome.md)
 
 **admin** (admins and the owner; never delegable) (20):
 
@@ -297,6 +298,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/profile`](profile.md) | | `admin` · delegable | A contact's profile picture, with the name from your contacts and the phone number |
 | [`/promote`](promote.md) | | `admin` · delegable | Makes someone a group admin |
 | [`/qr`](qr.md) | | `user` | Makes the QR Code of a text (`-decode` reads one) |
+| [`/screenshot`](screenshot.md) | `/ss` | `admin` · delegable | A picture of a web page |
 | [`/search`](search.md) | | `admin` | Searches the WhatsApp Web history, not just the cache: in this chat or, in your private chat, in all of them (`-N` for more); `-mask` obfuscates phone numbers |
 | [`/set`](set.md) | | `admin` | Lists and changes the settings; `-a`/`-rm` add and remove items in lists (e.g., `bot.admins` and `bot.users`) |
 | [`/show`](show.md) | | `admin` · delegable | In your private chat, lists the cache; redisplays deleted messages, edits (`-e`), status (`-s`), and removed or changed reactions (`-r`); `-q` searches (text or regex) and `-mask` obfuscates phone numbers |

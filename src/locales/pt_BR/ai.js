@@ -250,6 +250,19 @@ module.exports = {
     'carbon.badTheme': '❌ Tema "{theme}" desconhecido. Disponíveis: {themes}.',
     'carbon.failed': '❌ Não consegui desenhar a imagem: {error}',
 
+    // /screenshot
+    'screenshot.processing': '⏳ Abrindo {url}, aguarde.',
+    'screenshot.imageBelow': '🖼️ Captura abaixo.',
+    'screenshot.pdfBelow': '📄 PDF abaixo.',
+    'screenshot.failed': '❌ Não consegui tirar a captura: {error}',
+    'screenshot.timeout': 'a página demorou demais',
+    'screenshot.noLink': '❌ Não achei um link na mensagem respondida.',
+    'screenshot.invalidUrl': '❌ "{url}" não é um endereço http(s) válido.',
+    'screenshot.forbiddenUrl': '❌ Não abro este endereço (rede privada ou host desconhecido): {url}',
+    'screenshot.busy': '⏳ Já estou tirando outra captura, tente de novo em instantes.',
+    'screenshot.noBrowser': '❌ O navegador ainda não está pronto, tente de novo em instantes.',
+    'screenshot.waitRange': '❌ -wait recebe um número de segundos de 0 a {max}.',
+
     'ai.profileNeedsReply': '❌ O {cmd} @reply precisa de uma resposta: responda a uma mensagem da pessoa.',
     'ai.profileNeedsPerson': '❌ No grupo, o {cmd} -p precisa de alguém: -p /Nome/, -p @menção ou responda a uma mensagem da pessoa.',
     'ai.profileTooMany': '❌ No máximo {max} fotos de perfil por vez.',

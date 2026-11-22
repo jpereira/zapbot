@@ -497,6 +497,7 @@ e deixe o bot do seu jeito:
 | [`/profile`](https://jpereira.github.io/zapbot/pt-BR/commands/profile/) | | `admin` · delegável | A foto de perfil de um contato, com o nome da sua agenda e o telefone |
 | [`/promote`](https://jpereira.github.io/zapbot/pt-BR/commands/promote/) | | `admin` · delegável | Torna alguém admin do grupo |
 | [`/qr`](https://jpereira.github.io/zapbot/pt-BR/commands/qr/) | | `user` | Gera o QR Code de um texto (`-decode` lê um) |
+| [`/screenshot`](https://jpereira.github.io/zapbot/pt-BR/commands/screenshot/) | `/ss` | `admin` · delegável | Uma captura de tela de uma página da web |
 | [`/search`](https://jpereira.github.io/zapbot/pt-BR/commands/search/) | | `admin` | Busca no histórico do WhatsApp Web, não só no cache: neste chat ou, no seu privado, em todos (`-N` para mais); `-mask` ofusca telefones |
 | [`/set`](https://jpereira.github.io/zapbot/pt-BR/commands/set/) | | `admin` | Lista e altera as configurações (settings); `-a`/`-rm` acrescentam e tiram itens das listas (ex.: o `bot.admins` e o `bot.users`) |
 | [`/show`](https://jpereira.github.io/zapbot/pt-BR/commands/show/) | | `admin` · delegável | No privado, lista o cache; reexibe apagadas, edições (`-e`), status (`-s`) e reações removidas ou trocadas (`-r`); `-q` busca (texto ou regex) e `-mask` ofusca telefones |

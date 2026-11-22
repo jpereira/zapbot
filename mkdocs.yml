@@ -156,6 +156,7 @@ nav:
       - /profile: commands/profile.md
       - /promote: commands/promote.md
       - /qr: commands/qr.md
+      - /screenshot: commands/screenshot.md
       - /search: commands/search.md
       - /set: commands/set.md
       - /show: commands/show.md
