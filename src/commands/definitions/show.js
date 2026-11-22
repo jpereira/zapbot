@@ -36,7 +36,14 @@ module.exports = {
         {
             opts: ['flush', 'f'],
             values: [],
-            desc: 'Removes the deleted ones of this chat from the cache. With -e/-s/-r/chat, whatever was requested (in your private chat, without chat: all of them).',
+            desc: 'Removes the deleted ones of this chat from the cache. With -e/-s/-r/chat, whatever was requested (in your private chat, without chat: all of them). With -yes, everything.',
+            role: ADMIN
+        },
+        {
+            opts: ['yes', 'y'],
+            values: [],
+            desc: 'With -flush: removes EVERYTHING in the scope, not just the deleted ones: deleted, edited, status and reactions, and the media files of the deleted ones and of the status ones. In your private chat without a chat: of all chats; in another chat or with a chat: only that one. Only valid with -flush.',
+            ex: ['/show -f -yes', '/show -f -y /^Maria/'],
             role: ADMIN
         },
         {

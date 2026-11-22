@@ -36,6 +36,7 @@ lista de apagados.
 | `-list`, `-l` | `[chat]` | Lista todos os chats com conteúdo no cache (em qualquer chat), numerado para o `/show <nº>`, marcando com `← este chat` o chat atual. Com chat (nº, nome, `@menção` ou `/regex/`), só os que casam. Veja [Listar](#listar) |
 | `-query`, `-q` | `<texto\|/regex/flags>` | Busca as que têm o texto (sem diferenciar maiúsculas nem acentos) ou que casam com a regex: neste chat, no chat pedido ou, no seu privado, em todos. Sem `-N`: as 5 mais recentes. Veja [Buscar](#buscar) |
 | `-flush`, `-f` | | Remove do cache as apagadas deste chat ou, com `-e`, `-s`, `-r` ou chat, o que foi pedido (no seu privado, sem chat: de todos os chats) |
+| `-yes`, `-y` | | Com `-flush`: apaga **tudo** do escopo, não só as apagadas: apagadas, editadas, status e reações, e os arquivos de mídia das apagadas e dos status. No seu privado, sem chat: de todos os chats; em outro chat ou com um chat (`/show -f -y /Maria/`): só dele. Só vale com `-flush` |
 | `-mask`, `-m` | | Ofusca telefones nos textos e nas legendas desta execução. Ex.: `+55219****44` |
 
 Com `/show -mask`, os telefones exibidos mantêm os cinco primeiros e os dois últimos dígitos. A

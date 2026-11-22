@@ -511,6 +511,78 @@ describe('/show -f (flush)', () => {
     });
 });
 
+describe('/show -f -yes e /show -f <chat>: apagam tudo', () => {
+    const png = { mimetype: 'image/png', data: 'AA==' };
+    const counts = async () => (await bot.dbAll(`SELECT 'apagadas' AS t, COUNT(*) AS n FROM messages WHERE revoked = 1 AND chat_id <> 'status@broadcast'
+        UNION ALL SELECT 'status', COUNT(*) FROM messages WHERE revoked = 1 AND chat_id = 'status@broadcast'
+        UNION ALL SELECT 'editadas', COUNT(*) FROM message_edits UNION ALL SELECT 'reacoes', COUNT(*) FROM reaction_changes`))
+        .map(r => `${r.t}:${r.n}`).join(' ');
+
+    // Fulano (private chat, group Família and status) and another person's (WORK)
+    async function populate() {
+        const withMedia = await messageDeleted('foto', { chat: OTHERAlt.jid, media: png });
+        await messageDeleted('no grupo', {});
+        await messageDeleted('meu status', { chat: 'status@broadcast', media: png });
+        await messageEdited('antes', 'depois', { chat: OTHERAlt.jid });
+        await messageDeleted('trabalho', { chat: WORK, de: OWNER.jid === OTHERAlt.jid ? OTHERAlt.jid : '5521922222222@c.us' });
+        await messageEdited('x', 'y', { chat: WORK });
+        let k = 0;
+        for (const chat of [OTHERAlt.jid, WORK]) {
+            await bot.dbRun(`INSERT INTO reaction_changes (message_id, chat_id, chat_name, is_group, sender_name, sender_jid, new_reaction, body, changed_at)
+                             VALUES (?, ?, ?, 0, 'Fulano', ?, '👍', 'texto', ?)`, [`m${Date.now()}${k++}`, chat, chat === WORK ? 'Trabalho' : 'Fulano', OTHERAlt.jid, Date.now() + k]);
+        }
+        return withMedia.msg;
+    }
+
+    test('/show -f -yes (no seu privado): apaga as quatro coisas de todos os chats, com os arquivos de mídia', async () => {
+        const msg = await populate();
+        const { media_path } = await bot.dbGet('SELECT media_path FROM messages WHERE id = ?', [msg.id.id]);
+        assert.ok(fs.existsSync(media_path));
+        assert.notEqual(await counts(), 'apagadas:0 status:0 editadas:0 reacoes:0');
+
+        const [r] = await bot.replyAlt('/show -f -yes', { chat: PRIVATE_OWNER });
+        assert.match(r, /Flush geral do cache/);
+        assert.match(r, /Apagadas: \*\d+ mensage/);
+        assert.match(r, /Editadas: \*2 mensagens\*/);
+        assert.match(r, /Reações: \*2 /);
+        assert.equal(await counts(), 'apagadas:0 status:0 editadas:0 reacoes:0');
+        assert.ok(!fs.existsSync(media_path), 'o arquivo de mídia saiu do disco');
+        // the short -y does the same
+        await populate();
+        await bot.replyAlt('/show -f -y', { chat: PRIVATE_OWNER });
+        assert.equal(await counts(), 'apagadas:0 status:0 editadas:0 reacoes:0');
+    });
+
+    test('sem o -yes: só as apagadas (como antes); o -yes sozinho é erro', async () => {
+        await populate();
+        await bot.replyAlt('/show -f', { chat: PRIVATE_OWNER });
+        assert.match(await counts(), /^apagadas:0 status:\d+ editadas:[1-9]/);
+        assert.match((await bot.replyAlt('/show -yes', { chat: PRIVATE_OWNER }))[0], /O -yes só vale com o -flush/);
+    });
+
+    test('/show -f /Trabalho/ (um chat): tudo dele — apagadas, editadas, status, reações e mídias —; o resto fica', async () => {
+        const { msg } = await messageDeleted('foto do trabalho', { chat: WORK, media: png });
+        await messageEdited('x', 'y', { chat: WORK });
+        await messageDeleted('em casa');
+        await messageEdited('a', 'b');
+        let k = 0;
+        for (const [chat, name] of [[WORK, 'Trabalho'], ['120363000000000001@g.us', 'Família']]) {
+            await bot.dbRun(`INSERT INTO reaction_changes (message_id, chat_id, chat_name, is_group, sender_name, sender_jid, new_reaction, body, changed_at)
+                             VALUES (?, ?, ?, 1, 'Fulano', ?, '👍', 'texto', ?)`, [`r${k}`, chat, name, OTHERAlt.jid, Date.now() + k++]);
+        }
+        const { media_path } = await bot.dbGet('SELECT media_path FROM messages WHERE id = ?', [msg.id.id]);
+        assert.ok(fs.existsSync(media_path));
+
+        const [r] = await bot.replyAlt('/show -f trabalho');
+        assert.match(r, /Flush do cache de:\* Trabalho\n\n🗑️ Apagadas: \*1 mensagem\*\n✏️ Editadas: \*1 mensagem\*\n📸 Status: \*0 status\*\n😶 Reações: \*1 /);
+        assert.ok(!fs.existsSync(media_path));
+        for (const [table, where] of [['messages', 'revoked = 1 AND chat_id = ?'], ['message_edits', 'chat_id = ?'], ['reaction_changes', 'chat_id = ?']]) {
+            assert.equal((await bot.dbGet(`SELECT COUNT(*) AS n FROM ${table} WHERE ${where}`, [WORK])).n, 0, table);
+        }
+        assert.equal(await counts(), 'apagadas:1 status:0 editadas:1 reacoes:1', 'o chat Família continua inteiro');
+    });
+});
+
 describe('/show -e (editadas)', () => {
     test('sem editadas neste chat', async () => {
         assert.deepEqual(await bot.replyAlt('/show -e'), ['✏️ Nenhuma mensagem editada registrada neste chat.']);

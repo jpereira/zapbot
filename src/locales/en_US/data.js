@@ -111,6 +111,7 @@ module.exports = {
     'show.flushMedia': '📎 Media deleted from disk: *{count}*{size}\n',
     'show.flushPerChat': '\n*Per chat* ({count}):\n',
     'show.flushMore': '_+{count} chat(s)_\n',
+    'show.yesNeedsFlush': '❌ -yes only works with -flush.\n💡 _{cmd} -f -yes removes everything from the cache_',
     'show.flushHint': '\n💡 _To clear the ones from all chats, use {cmd} -f in your private chat._',
     'show.deletedStatusTitle': '📸 *DELETED STATUS* ({i}/{total})',
     'show.deletedTitle': '❌ *DELETED MESSAGE* ({i}/{total})',

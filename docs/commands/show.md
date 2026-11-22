@@ -36,6 +36,7 @@ enter the deleted list.
 | `-list`, `-l` | `[chat]` | Lists all chats with content in the cache (in any chat), numbered for `/show <no.>`, marking the current chat with `← this chat`. With a chat (number, name, `@mention` or `/regex/`), only the ones that match. See [List](#list) |
 | `-query`, `-q` | `<text\|/regex/flags>` | Searches for the ones that have the text (ignoring case and accents) or that match the regex: in this chat, in the requested chat or, in your private chat, in all of them. Without `-N`: the 5 most recent. See [Search](#search) |
 | `-flush`, `-f` | | Removes from the cache the deleted ones of this chat or, with `-e`, `-s`, `-r` or chat, whatever was requested (in your private chat, with no chat: from all chats) |
+| `-yes`, `-y` | | With `-flush`: removes **everything** in the scope, not just the deleted ones: deleted, edited, status and reactions, and the media files of the deleted ones and of the status ones. In your private chat, with no chat: from all chats; in another chat or with a chat (`/show -f -y /Maria/`): only that one. Only valid with `-flush` |
 | `-mask`, `-m` | | Obfuscates phone numbers in the texts and captions of this run. E.g.: `+55219****44` |
 
 With `/show -mask`, the phone numbers displayed keep the first five and the last two digits. The mask

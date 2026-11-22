@@ -38,6 +38,7 @@ const { compileSearch } = require('../watch/rules');
  * /show -list        → the chats with something in the cache
  * /show -l trab      → only the chats that match (no., name, @mention or /regex/)
  * /show -flush       → removes the deleted ones of this chat (in your private chat: of all chats)
+ * /show -flush -yes  → removes everything of the scope: deleted, edited, status and reactions (with their media files)
  * /show -q pix       → the ones that have "pix" (case and accent insensitive;
  * or /regex/flags: -q /pix|boleto/i);
  * in this chat, in the requested chat or, in your private chat, in all.
@@ -342,7 +343,7 @@ async function listCache({ msg, chatId, filter }) {
 }
 
 /*
- * /show -flush: removes the requested types from the cache (media leaves the disk too):
+ * /show -flush: removes the requested types from the cache (media leaves the disk too; with -yes, all the types):
  * - with a chat (/show -f Trabalho) → only its own;
  * - in any chat            → only those of THIS chat;
  * - in your own private chat       → those of ALL chats.
@@ -494,6 +495,12 @@ async function cmdShow({ msg, opts, chatId, admin }) {
     const cmd = ['/show', ...requests.map(type => TYPES[type].flag)].join(' ');
 
     // -q <text|/regex/flags>: searches the requested types; does not combine with -f and -l
+    // -yes only widens the -flush
+    if (opts.opt.yes && !opts.opt.flush) {
+        await msg.reply(tr('show.yesNeedsFlush', { cmd }));
+        return;
+    }
+
     const search = opts.given.has('query') ? String(opts.opt.query ?? '').trim() : null;
     if (search !== null && (!search || opts.opt.flush || opts.opt.list)) {
         await msg.reply(search
@@ -534,7 +541,9 @@ async function cmdShow({ msg, opts, chatId, admin }) {
     const allAlt2 = inMyPrivate && !opts.opt.flush && (search !== null || requests.includes('status'));
 
     // Without -d/-e/-s/-r: with a chat (or in all), everything together; otherwise, only the deleted ones
-    const types = requests.length ? requests : target || allAlt2 ? Object.keys(TYPES) : ['apagadas'];
+    // -flush -yes (-y): everything of the scope (deleted, edited, status and reactions, with the media files)
+    const types = opts.opt.yes && opts.opt.flush ? Object.keys(TYPES)
+        : requests.length ? requests : target || allAlt2 ? Object.keys(TYPES) : ['apagadas'];
 
     if (opts.opt.flush) {
         await cacheClean({ msg, types, target, ids, general: inMyPrivate, cmd });
