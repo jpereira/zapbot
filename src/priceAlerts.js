@@ -102,10 +102,10 @@ const listAlerts = (kind) =>
 const alertDestinations = (a) => destinationsSaved(a.recipients, lineDestination(a));
 
 /*
- * "-msg <text>": from -msg to the end, with spaces and whatever else comes (the -to already
+ * "-msg|-m <text>": from -msg to the end, with spaces and whatever else comes (the -to already
  * went out first, so it can come after -msg).
  */
-const MESSAGE = /(^|\s)-msg(?=\s|$)([\s\S]*)$/;
+const MESSAGE = /(^|\s)-(?:msg|m)(?=\s|$)([\s\S]*)$/;
 
 function extractMessage(textAlt) {
     const m = textAlt.match(MESSAGE);

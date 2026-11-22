@@ -14,7 +14,7 @@ indexes** (MSTR, NVDA, PETR4.SA, the S&P 500...). It shows the enabled symbols (
 | `-add`, `-a` | `<SYMBOL>` | Enables a currency (`USD`, `EUR`, `GBP`, `USDT`) or a ticker that exists on Yahoo Finance (bot owner or an [admin](bot.md#extra-admins) only) |
 | `-del`, `-d` | `<SYMBOL>` | Disables a symbol (bot owner or an [admin](bot.md#extra-admins) only) |
 | `-alert` | `[rule]` | Without a rule, lists the alerts; with a rule (e.g. `USD > 5.30` or `MSTR < 90`), creates one (bot owner or an [admin](bot.md#extra-admins) only). The symbol can also come first: `/stocks MSTR -alert < 90`. See [Price alerts](#price-alerts) |
-| `-msg` | `<text>` | Together with `-alert`: the text goes at the start of the notice. Runs to the end of the command. See [Message in the notice](#message-in-the-notice) |
+| `-msg`, `-m` | `<text>` | Together with `-alert`: the text goes at the start of the notice. Runs to the end of the command. See [Message in the notice](#message-in-the-notice) |
 | `-rm` | `<no...\|all>` | Together with `-alert`: removes the alerts with those numbers (`-rm 2`, `-rm 1 2 3` or `-rm 1,2,3`), or all of them (`all`). If any number doesn't exist, none is removed |
 | `-to` | `<destination>` | Together with `-alert`: notifies a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/L200 Group/`), a number (`+5521999999999`) or by email (`email`) instead of your private chat. Repeat for several: a single alert that notifies all of them. See [Notify another chat or by email](#notify-another-chat-or-by-email) |
 

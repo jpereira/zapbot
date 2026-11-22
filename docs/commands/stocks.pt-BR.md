@@ -14,7 +14,7 @@ pedidos. Para **cripto**, use o [`/crypto`](crypto.md) (BTC, ETH,
 | `-add`, `-a` | `<SÍMBOLO>` | Habilita uma moeda (`USD`, `EUR`, `GBP`, `USDT`) ou um ticker que exista no Yahoo Finance (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-del`, `-d` | `<SÍMBOLO>` | Desabilita um símbolo (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-alert` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `USD > 5.30` ou `MSTR < 90`), cria um (só o dono do bot ou um [admin](bot.md#admins-extras)). O símbolo também pode vir antes: `/stocks MSTR -alert < 90`. Veja [Alertas de preço](#alertas-de-preço) |
-| `-msg` | `<texto>` | Junto do `-alert`: o texto vai no começo do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](#mensagem-no-aviso) |
+| `-msg`, `-m` | `<texto>` | Junto do `-alert`: o texto vai no começo do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](#mensagem-no-aviso) |
 | `-rm` | `<nº...\|all>` | Junto do `-alert`: remove os alertas com esses números (`-rm 2`, `-rm 1 2 3` ou `-rm 1,2,3`), ou todos (`all`). Se algum número não existir, nenhum é removido |
 | `-to` | `<destino>` | Junto do `-alert`: avisa um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só que avisa todos. Veja [Avisar em outro chat ou por e-mail](#avisar-em-outro-chat-ou-por-e-mail) |
 

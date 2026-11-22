@@ -60,7 +60,8 @@
     },
     {
       "opts": [
-        "msg"
+        "msg",
+        "m"
       ],
       "values": [
         "<texto>"

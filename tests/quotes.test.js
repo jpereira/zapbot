@@ -318,6 +318,15 @@ describe('alertas de preço (-alert)', () => {
         assert.match(list, /1\. ₿ BTC\/USDT acima de \*\$97,000\.00\*.*\n2\. ₿ BTC\/USDT acima de \*\$99,000\.00\*/);
     });
 
+    test('-m é o atalho do -msg (no /crypto e no /stocks)', async () => {
+        await bot.replyAlt('/crypto BTC -alert > 96000 -to /Fulano/ -m Hora de vender!');
+        await bot.replyAlt('/stocks USD -alert > 6 -m Dólar subiu! -to /Fulano/');
+        assert.deepEqual(await bot.dbAll('SELECT symbol, message FROM price_alerts ORDER BY id'), [
+            { symbol: 'BTC', message: 'Hora de vender!' },
+            { symbol: 'USD', message: 'Dólar subiu!' }
+        ]);
+    });
+
     test('a moeda antes do -alert; -msg vai no início do aviso', async () => {
         const [created] = await bot.replyAlt('/crypto BTC -alert > 96000 -to /Fulano/ -msg Isso é uma mensagem: hora de vender!');
         assert.match(created, /^🔔 \*Alerta criado\*\n₿ BTC\/USDT acima de \*\$96,000\.00\*\n   💬 Isso é uma mensagem: hora de vender!\n💰 Agora/);

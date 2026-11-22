@@ -4,7 +4,7 @@
  */
 
 const OPTION_ALERT_MSG = {
-    opts: ['msg'],
+    opts: ['msg', 'm'],
     values: ['<text>'],
     desc: 'The text goes at the start of the notice (with -alert). It runs to the end of the command (may have spaces).',
     ex: ['-msg Time to sell!'],
