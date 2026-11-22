@@ -6,6 +6,7 @@ mostra também a previsão dos próximos dias.
 
 | Argumento | Descrição |
 |---|---|
+| `-quiet`, `-q` | Só uma frase natural, sem emoji nem markdown (veja [Modo quieto](#modo-quieto)) |
 | `[N]` ou `[Nd]` | Previsão de N dias, contando hoje (`16` ou `16d`). De 1 até o setting `weather.maxDays` (padrão 16, máximo da Open-Meteo). Só vale como primeiro argumento |
 | `[cidade]` | Cidade a consultar, opcionalmente com estado ou país após uma vírgula. Sem ela usa o setting `weather.city` |
 
@@ -17,6 +18,7 @@ mostra também a previsão dos próximos dias.
 /weather 7d Niteroi              → agora + previsão de hoje e dos próximos 6 dias
 /weather 16d Niteroi             → hoje e os próximos 15 dias
 /weather 3                       → cidade padrão, hoje e os próximos 2 dias
+/weather -q Niteroi              → só a frase, para ler ou falar
 /weather -h                      → ajuda do comando
 ```
 
@@ -49,6 +51,24 @@ Com dias (`/weather 3d Niteroi`), depois do tempo de agora:
 
 A última linha (a partir de 2 dias) traz a faixa do período e quantos dias têm 50% ou mais de chance
 de chuva.
+
+## Modo quieto
+
+O `-q` troca a resposta inteira por **uma frase natural**, sem emoji, markdown, outras fontes nem rodapé.
+Foi feito para um texto, como `{/weather -q}` no [`/tts`](tts.md#comandos-no-texto), e os dias de previsão
+são ignorados. Só fala o que importa:
+
+- sempre: a cidade, a condição, a temperatura, a máxima e a mínima;
+- a sensação só quando difere da temperatura em 2° ou mais;
+- a chuva só a partir de 30% de chance (e o volume, quando é de 1 mm ou mais);
+- o vento só com rajadas de 40 km/h ou mais, e o UV só a partir de 8.
+
+```text
+/weather -q Niterói
+Em Niterói, parcialmente nublado, 28 graus, com sensação de 34. Máxima de 32 e mínima de 23. Chance de chuva de 100%, cerca de 12 milímetros. Vento com rajadas de 45 km/h. UV muito alto.
+
+/tts Bom dia! {/weather -q}
+```
 
 Acima do máximo o bot recusa e diz o limite. Para limitar as consultas, use `/set weather.maxDays 7`;
 `/set -reset weather.maxDays` define o limite de 16 dias. Um limite salvo continua valendo após

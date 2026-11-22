@@ -1681,3 +1681,56 @@ describe('/kernel', () => {
         assert.deepEqual(await bot.replyAlt('/kernel', { expectedError: true }), ['❌ Não consegui consultar o kernel.org agora.']);
     });
 });
+
+describe('/weather -q|-quiet: uma frase natural', () => {
+    const local = { name: 'Niterói', admin1: 'Rio de Janeiro', country: 'Brasil', latitude: -22.9, longitude: -43.1 };
+    beforeEach(async () => { await bot.setSetting('weather.sources', []); });
+
+    const answer = (current, daily) => {
+        network.responder('get', 'geocoding-api.open-meteo.com', { results: [local] });
+        network.responder('get', 'api.open-meteo.com/v1/forecast', { current, daily });
+    };
+
+    test('completo: sensação, máxima/mínima, chuva com mm, rajadas e UV alto; sem emoji, sem fontes, sem rodapé', async () => {
+        answer(
+            { temperature_2m: 27.6, apparent_temperature: 33.5, weather_code: 2, wind_speed_10m: 9, wind_gusts_10m: 45, is_day: 1, relative_humidity_2m: 84, time: '2026-10-01T15:15' },
+            { temperature_2m_max: [32.2], temperature_2m_min: [23.4], precipitation_probability_max: [100], precipitation_sum: [12.4], uv_index_max: [9] }
+        );
+        const [r] = await bot.replyAlt('/weather -q Niteroi');
+        assert.equal(r, 'Em Niterói, parcialmente nublado, 28 graus, com sensação de 34. Máxima de 32 e mínima de 23. ' +
+            'Chance de chuva de 100%, cerca de 12 milímetros. Vento com rajadas de 45 km/h. UV muito alto.');
+        assert.doesNotMatch(r, /\*|_|🌡|💧|☔|fonte|atualizado/);
+    });
+
+    test('o que não importa some: sensação parecida, chuva < 30%, vento fraco, UV baixo; sem cidade usa weather.city', async () => {
+        answer(
+            { temperature_2m: 21, apparent_temperature: 22, weather_code: 0, wind_gusts_10m: 20, is_day: 1 },
+            { temperature_2m_max: [24], temperature_2m_min: [19], precipitation_probability_max: [29], precipitation_sum: [0], uv_index_max: [7] }
+        );
+        const [r] = await bot.replyAlt('/weather -q');
+        assert.equal(r, 'Em Niterói, céu limpo, 21 graus. Máxima de 24 e mínima de 19.');
+    });
+
+    test('chuva sem volume relevante, 1 grau no singular e -q depois da cidade', async () => {
+        answer(
+            { temperature_2m: 1, apparent_temperature: 1, weather_code: 61, is_day: 1 },
+            { temperature_2m_max: [3], temperature_2m_min: [0], precipitation_probability_max: [60], precipitation_sum: [0.4] }
+        );
+        const [r] = await bot.replyAlt('/weather Niteroi -q');
+        assert.equal(r, 'Em Niterói, chuva fraca, 1 grau. Máxima de 3 e mínima de 0. Chance de chuva de 60%.');
+    });
+
+    test('dentro do /tts: {/weather -q Niteroi} vira a frase falada', async () => {
+        answer(
+            { temperature_2m: 25, apparent_temperature: 25, weather_code: 0, is_day: 1 },
+            { temperature_2m_max: [28], temperature_2m_min: [22], precipitation_probability_max: [0] }
+        );
+        await bot.execute('/tts Hoje: {/weather -q Niteroi}');
+        assert.equal(bot.processes.spoken, 'Hoje: Em Niterói, céu limpo, 25 graus. Máxima de 28 e mínima de 22.');
+        // no city, com e no bar: usa o weather.city
+        await bot.execute('/tts {/weather -q}');
+        assert.equal(bot.processes.spoken, 'Em Niterói, céu limpo, 25 graus. Máxima de 28 e mínima de 22.');
+        await bot.execute('/tts {weather -q}');
+        assert.equal(bot.processes.spoken, 'Em Niterói, céu limpo, 25 graus. Máxima de 28 e mínima de 22.');
+    });
+});
