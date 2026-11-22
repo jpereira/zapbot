@@ -210,6 +210,21 @@ Depois disso, `/btc`, `/xaut`, `/mstr`, `/dolar`... respondem direto com a cota�
 /cot PETR4.SA          → /stocks PETR4.SA
 ```
 
+## Um comando longo, em várias linhas
+
+Um `/alias` com um `-desc` longo fica mais fácil de digitar em duas linhas. Em **qualquer mensagem de comando** (ela
+precisa começar com `/`), um `\` no fim da linha junta ela com a próxima, com um espaço só (o recuo da linha seguinte some),
+como nos [arquivos `.zb`](#arquivos-de-exemplos-zb):
+
+```text
+/alias -q -p /stash.view -desc "Libera a tag protegida #stash e mostra as notas" \
+    /notes -v -lock $1 #stash
+```
+
+é o mesmo que `/alias -q -p /stash.view -desc "..." /notes -v -lock $1 #stash`. Um `\n` que você digita (uma barra invertida e um
+`n` no meio da linha) continua sendo a quebra de linha de um [alias de texto](#texto-com-comandos), e um texto que não
+começa com `/` mantém o `\`.
+
 ## Arquivos de exemplos (`.zb`)
 
 O bot traz arquivos `.zb` na pasta `examples/`: os comandos que você digitaria aqui, guardados num

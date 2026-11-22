@@ -93,3 +93,30 @@ describe('/alias -p', () => {
         assert.equal((await bot.dbGet('SELECT owner_only FROM command_aliases WHERE name = ?', ['/do.publico'])).owner_only, 0);
     });
 });
+
+describe('uma mensagem com o comando em várias linhas (\\ no fim da linha)', () => {
+    const { joinContinuedLines } = bot.src('util/format');
+
+    test('joinContinuedLines: só em mensagem que começa com /; some o recuo da linha seguinte', () => {
+        assert.equal(joinContinuedLines('/alias -q /x -desc "a b" \\\n    /notes -v #x'), '/alias -q /x -desc "a b" /notes -v #x');
+        assert.equal(joinContinuedLines('/a \\\n  b \\\n  c'), '/a b c');
+        assert.equal(joinContinuedLines('/a \\\r\n b'), '/a b');
+        assert.equal(joinContinuedLines('texto \\\n normal'), 'texto \\\n normal');
+        assert.equal(joinContinuedLines('/a \\n b'), '/a \\n b', 'o \\n digitado (texto) não é quebra de linha');
+        assert.equal(joinContinuedLines('/batch\n/ping\n/uptime'), '/batch\n/ping\n/uptime');
+    });
+
+    test('/alias digitado em duas linhas (o -desc longo, o \\ e o comando embaixo) é registrado, com -q -p', async () => {
+        const text = '/alias -q -p /stash.view -desc "Unlocks the protected tag #stash and shows its notes: asks the password in your private chat ' +
+            '(or /stash.view password, less safe: it travels in a normal command, the bot deletes it and hides it from logs and history). ' +
+            'Never opens in a group or with -to; locks again after notes.lockMinutes without use" \\\n    /notes -v -lock $1 #stash';
+        const [reply] = await bot.replyAlt(text, OWNER_CHAT);
+        assert.match(reply, /^🔗 Alias salvo: \/stash\.view → \/notes -v -lock \$1 #stash\n📝 Unlocks the protected tag #stash/);
+        assert.match(reply, /\n🔇 quiet\n🔒 private$/);
+        const row = await bot.dbGet('SELECT command, description, quiet, owner_only FROM command_aliases WHERE name = ?', ['/stash.view']);
+        assert.equal(row.command, '/notes -v -lock $1 #stash');
+        assert.match(row.description, /^Unlocks the protected tag #stash.*without use$/);
+        assert.deepEqual([row.quiet, row.owner_only], [1, 1]);
+
+    });
+});

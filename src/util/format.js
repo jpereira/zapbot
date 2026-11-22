@@ -38,7 +38,20 @@ const summarizeText = (textAlt, max = 100) => {
  */
 const unescape = (textAlt) => String(textAlt ?? '').replace(/(^|\s)\\(?=-)/g, '$1');
 
+/*
+ * A command typed over several lines: a "\" at the end of a line joins it with the next one (the indentation of the
+ * next goes away), as in the .zb files. Only for a message that starts with "/" (a command): in any other text a "\"
+ * at the end of a line stays as it is.
+ *   /alias -q /x -desc "text" \
+ *       /notes -v #x            →  /alias -q /x -desc "text" /notes -v #x
+ */
+const joinContinuedLines = (text) => {
+    const s = String(text ?? '');
+    return s.startsWith('/') ? s.replace(/[ \t]*\\[ \t]*\r?\n[ \t]*/g, ' ') : s;
+};
+
 module.exports = {
+    joinContinuedLines,
     unescape,
     wait,
     fmtInA,
