@@ -66,10 +66,17 @@ module.exports = {
             cron: false
         },
         {
+            opts: ['list-commands', 'lc'],
+            values: [],
+            desc: 'The commands by level: what a user uses, what only an admin uses (and the ones you can delegate with +cmd) and what is only yours. With a person (/bot -lc /Fulano/): everything they can use and their limits.',
+            ex: ['/bot -lc', '/bot -lc /Fulano/'],
+            cron: false
+        },
+        {
             opts: ['reset', 'r'],
             values: ['[force]'],
-            desc: 'Removes all users (and their limits), from any chat and group: only you and the extra admins remain. The admins, the on/off state, and the daily -status delivery do not change. With force, everything goes back to default: also removes the extra admins and turns the bot on. Both ask first: reply sim within 10 s (with -yes or -y, it does not ask and runs right away). Accepts -mask; the other options are refused. Owner only.',
-            ex: ['/bot -r', '/bot -r force', '/bot -r -y', '/bot -r force -yes'],
+            desc: 'Removes all users (and their limits), from any chat and group: only you and the extra admins remain. The admins, the on/off state, and the daily -status delivery do not change. With force, everything goes back to default: also removes the extra admins and turns the bot on. Both ask first: reply sim within 10 s (with -yes or -y, it does not ask and runs right away). Accepts -mask; the other options are refused. Owner only. With +u and a person (/bot -r +u /Fulano/) it resets only that person: back to the common commands, with no rule (+cmd), no limit (+limit) and nothing left only in a group.',
+            ex: ['/bot -r', '/bot -r force', '/bot -r -y', '/bot -r force -yes', '/bot -r +u /Fulano/'],
             cron: false
         },
         {

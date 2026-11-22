@@ -28,7 +28,8 @@ usuários e o envio diário), as versões do que ele usa
 | `+cmd`, `-cmd` | `<comandos>`: os comandos de um usuário. Com o `+u`, define (`+cmd`: só esses; `-cmd`: todos, menos esses); sozinho, `+cmd` libera e `-cmd` tira. Veja [Comandos de cada usuário](#comandos-de-cada-usuário) |
 | `+limit`, `-limit` | `<N[/período]>` (com o `+cmd`) ou `<comandos>`: o limite de uso de um usuário por comando (`+cmd /gpt +limit 5/dia`); `-limit /gpt` ou `all` tira. Veja [Limite de uso por usuário](#limite-de-uso-por-usuário-limit) |
 | `-list-users`, `-lu` | `[all]`: os usuários deste chat; com `all`, todos, em qualquer chat (num grupo, o telefone de quem é de fora sai escondido). Aceita `-mask`. Veja [Lista de usuários](#lista-de-usuários) |
-| `-reset`, `-r` | `[force]`: tira todos os usuários e os limites deles (os admins extras e o liga/desliga ficam). Com `force`, volta tudo ao padrão: também tira os admins extras e liga o bot. Os dois perguntam antes (com `-yes` ou `-y`, rodam de uma vez). Aceita `-mask`; as outras opções são recusadas. Só o dono. Veja [Voltar ao padrão](#voltar-ao-padrão) |
+| `-list-commands`, `-lc` | Os comandos por nível: usuário, admin delegável (com `+cmd`), admin e dono; com uma pessoa (`-lc /Fulano/`), tudo o que ela pode usar e os limites dela. Veja [Comandos por nível](#comandos-por-nível) |
+| `-reset`, `-r` | `[force]`: tira todos os usuários e os limites deles (os admins extras e o liga/desliga ficam). Com `force`, volta tudo ao padrão: também tira os admins extras e liga o bot. Os dois perguntam antes (com `-yes` ou `-y`, rodam de uma vez). Com `+u` e uma pessoa (`-r +u /Fulano/`), zera só ela: os comandos comuns, sem regra, sem limite e sem nada só em um grupo (sem pergunta). Aceita `-mask`; as outras opções são recusadas. Só o dono. Veja [Voltar ao padrão](#voltar-ao-padrão) |
 | `-yes`, `-y` | Com o `-reset`: confirma na hora, sem a pergunta (roda de uma vez). Com o `-flush-email`: apaga as mensagens (sem ele, só conta). Só vale com os dois |
 | `-status`, `-s` | O status agora e o envio diário dele (`[<hora>\|off]`). Aceita `-to` e `-mask`; as outras opções são recusadas. Veja [Status do bot](#status-do-bot) |
 | `-to` | `<destino>`: junto com `-status`, para onde vai o relatório (pessoa, grupo ou e-mail; repita para vários). Veja [Status do bot](#status-do-bot) |
@@ -48,6 +49,26 @@ ativada para os envios diários. As permissões e os destinos usam os números c
 O `-on`/ `-off` combina com o `-list-users [all]` (`/bot -on -list-users` liga e mostra os
 usuários); `-on` com `-off` no mesmo comando é recusado. Os `+a`/ `-a`/ `+u`/ `-u` vão um de cada
 vez; junto deles, o `+cmd`/ `-cmd` (só com usuários) e o `-list-users all` (a resposta com todos).
+
+## Comandos por nível
+
+`/bot -lc` lista quais comandos cada nível usa: os de **usuário** (os comuns, para quem está em `+u`), os de **admin,
+delegáveis** (só admin, a menos que você dê um a um usuário com `+cmd`), os de **admin** (não delegáveis) e os de
+**dono**. Os admins (`+a`) usam tudo, menos o que é só do dono.
+
+```text
+/bot -lc /Sofia Izabel/
+👤 Sofia Izabel · +5521944444444
+🗣️ +u · Apenas: /tts, /joke
+✅ Pode usar (2): /joke, /tts
+⏱️ Limites: /tts 3/dia
+
+/bot -lc
+🗣️ Usuário (29): os comuns, para quem está em +u
+/ascii, /bills, /calc, ...
+🔓 Admin, delegáveis (20): só admins, ou um usuário com +cmd
+/gpt, /tts, ...
+```
 
 ## Lista de usuários
 
@@ -258,6 +279,8 @@ mostra só os dele). Para limitar quantas vezes um usuário chama um deles, veja
 /bot -cmd /meme /Grupo Familia/ /Fulano da Silva/   → vários de uma vez
 /bot -cmd /meme                                     → do chat atual (o grupo, ou a pessoa do privado)
 /bot +cmd all /Sofia Izabel/                        → a Sofia volta a usar todos os comuns
+/bot +u +cmd all /Sofia Izabel/                     → o mesmo, na pessoa toda (veja abaixo)
+/bot -r +u /Sofia Izabel/                          → zera ela: só os comuns, sem regra, sem limite, nada só em grupo
 /bot +u +cmd /gpt                                   → digitado num grupo: todos ali usam só o /gpt
 /bot -off                      → desliga todos os comandos (menos o /bot)
 /bot -on                       → liga de novo
@@ -268,6 +291,15 @@ mostra só os dele). Para limitar quantas vezes um usuário chama um deles, veja
 
 - O `+cmd` em quem ainda não é usuário já adiciona a pessoa (ou o grupo), só com esses comandos. Em quem
   usa todos, não muda nada; em quem tem "Todos, menos", libera esses de novo.
+- **Onde você digita importa.** No **seu privado** a resposta é a lista de usuários, para você. Em **qualquer outro
+  chat** (o privado da pessoa, ou um grupo) a resposta é um aviso para quem está lá, sem lista e sem telefone:
+  `✅ Você agora é usuário do bot, com estes comandos: /joke, /noffa.`, os limites (`⏱️ Limites: ...`) e
+  `Digite /whois para ver o que você pode usar, ou /help para a lista de comandos.` Num grupo, diz isso do grupo ou da
+  pessoa ("✅ Fulano agora é usuário do bot neste grupo."). O `-u` vira `🗑️ Fulano não é mais usuário do bot.`, e mudar a
+  regra ou os limites, `🔄 Seus comandos no bot mudaram.` Com regra longa (mais de 10 comandos) só manda digitar
+  `/whois`. Com `-lu` ou `-mask` no comando, você recebe a lista mesmo assim.
+- O `+cmd all` em uma pessoa, digitado no privado, zera tudo: todos os comuns **em todo lugar**, então o que ela tinha
+  só em um grupo (a entrada, a regra e os limites) some junto. Digitado em um grupo, só mexe naquele grupo.
 - O `-cmd` em quem usa todos deixa "Todos, menos" esses. Tirar o último comando de uma lista é
   recusado: para tirar a pessoa, `/bot -u`; para liberar todos, `/bot +cmd all`.
 - Os comandos vão pelo nome (com ou sem a `/`), separados por vírgula.

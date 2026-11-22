@@ -2,7 +2,8 @@
  * Comando /bot.
  */
 
-const { findCommand, getCommandSyntax } = require('./base');
+const { activeCommands, findCommand, getCommandSyntax } = require('./base');
+const { ROLES: LEVEL } = require('../roles');
 const { isOOwner, peopleItems } = require('./set');
 const { client, completeNotice } = require('../client');
 const { chatCurrentIds, contactName, resolveLidToPhone, groupResolverName } = require('../contacts');
@@ -13,7 +14,7 @@ const { waitConfirmation, authorAlt } = require('../choices');
 const { GetOptFromCommand } = require('../options');
 const { boxes } = require('../imap');
 const { printInfo } = require('../log');
-const { isDelegable, describeRule, recordRule, ruleOf } = require('../permissions');
+const { isDelegable, describeRule, permissionHere, recordRule, ruleOf } = require('../permissions');
 const { commandLimitable, describeLimit, recordLimitAlt, readLimit, limitsAlt } = require('../usageLimit');
 const {
     SETTINGS_SCHEMA, userCommand, getSetting, setSetting, validateSetting
@@ -236,6 +237,7 @@ async function report(chat) {
 // +a/-a (bot.admins), +u/-u (bot.users) and +cmd/-cmd (each user's commands), in any
 // order
 const SHORTCUT = /(^|\s)[+-](a|u|cmd|limit)(?=\s|$)/;
+const OPTION_RESET = /(^|\s)-(?:reset|r)(?=\s|$)/;
 const OPTION_LIMIT = /(^|\s)([+-])limit(?:\s+([^\s+-]\S*))?(?=\s|$)/;
 const OPERATION = /(^|\s)([+-])([au])(?=\s|$)/;
 const OPTION_CMD = /(^|\s)([+-])cmd(?:\s+((?:[^\s+,-][^\s,]*,\s*)*[^\s+,-][^\s,]*))?(?=\s|$)/;
@@ -257,7 +259,9 @@ function readShortcut(textAlt) {
     const limit = remove(OPTION_LIMIT);
     const cmd = remove(OPTION_CMD);
     const op = remove(OPERATION);
+    const reset = Boolean(remove(OPTION_RESET));
     return {
+        reset,
         limit: limit ? { sign: limit[2], text: limit[3] ?? '' } : null,
         op: op ? { sign: op[2], letter: op[3] } : null,
         cmd: cmd ? { sign: cmd[2], text: cmd[3] ?? '' } : null,
@@ -390,6 +394,90 @@ async function changeList(msg, key, items, append, chat) {
 }
 
 /*
+ * -list-commands: the commands by level. The user's are the common ones (the ones +u can use); "delegable" are the admin's
+ * that the owner can give to a user with +cmd /name; the admin's and the owner's use the rest.
+ */
+function commandsByLevel() {
+    const all = activeCommands();
+    const names = (filter) => all.filter(filter).map(c => c.cmd).sort();
+    const user = names(c => c.role === LEVEL.USER);
+    const delegable = names(c => c.role === LEVEL.ADMIN && isDelegable(c.cmd));
+    const admin = names(c => c.role === LEVEL.ADMIN && !isDelegable(c.cmd));
+    const owner = names(c => c.role === LEVEL.OWNER);
+    const line = (key, list) => t(key, { n: list.length, list: list.join(', ') });
+    return [line('adm.bot.levelUser', user), line('adm.bot.levelDelegable', delegable),
+        line('adm.bot.levelAdmin', admin), line('adm.bot.levelOwner', owner), t('adm.bot.levelFooter')].join('\n\n');
+}
+
+/*
+ * -list-commands /person/: everything the person can use and their limits: the level (owner, admin or user), what
+ * the +cmd rule leaves them and, for whoever has something only in a group, what they use there.
+ */
+async function commandsOfPerson(msg, whoText, chat) {
+    if (!msg.fromMe) {
+        await msg.reply(t('adm.bot.ownerOnlyUsers'));
+        return;
+    }
+    const items = await textItems(msg, 'bot.users', whoText, chat);
+    if (!items) return;
+
+    const numbers = [...new Set(items.map(i => readItem(i).number))].filter(n => !n.endsWith('@g.us'));
+    if (!numbers.length) {
+        await msg.reply(t('adm.bot.lcPersonOnly'));
+        return;
+    }
+
+    const scope = await chatScope({ ...chat, all: true });
+    const users = getSetting('bot.users');
+    const admins = getSetting('bot.admins');
+    const names = activeCommands().filter(c => c.role !== LEVEL.OWNER).map(c => c.cmd).sort();
+    const limitsText = (item) => [...limitsAlt(item)].map(([c, l]) => `${c} ${describeLimit(l)}`).join(', ');
+    const parts = [];
+
+    for (const number of numbers) {
+        const who = await describeItem(number, scope);
+        if (isOOwner(number)) {
+            parts.push(`${ROLES.owner} ${who}\n${t('adm.bot.lcOwner')}`);
+            continue;
+        }
+
+        const lines = [who];
+        const isAdmin = admins.includes(number);
+        const general = users.includes('all') || users.includes(number);
+        const inGroups = users.filter(u => readItem(u).soEm && readItem(u).number === number);
+
+        if (isAdmin) {
+            lines.push(`${ROLES.admin} +a\n${t('adm.bot.lcCan', { n: names.length, list: names.join(', ') })}`);
+            parts.push(lines.join('\n'));
+            continue;
+        }
+        if (!general && !inGroups.length) {
+            parts.push(`${who}\n${t('adm.bot.lcNobody')}`);
+            continue;
+        }
+
+        if (general) {
+            const allowed = names.filter(c => permissionHere({ number, chatId: null, isGroup: false }).can(c));
+            const rule = ruleOf(number);
+            lines.push(`${ROLES.user} +u${rule ? ` · ${describeRule(rule)}` : ''}`);
+            lines.push(t('adm.bot.lcCan', { n: allowed.length, list: allowed.join(', ') }));
+            const limits = limitsText(number);
+            if (limits) lines.push(t('adm.bot.lcLimits', { list: limits }));
+        }
+        for (const item of inGroups) {
+            const allowed = names.filter(c => permissionHere({ number, chatId: item.slice(item.indexOf(':') + 1), isGroup: true }).can(c));
+            const rule = ruleOf(item);
+            lines.push(`${await describeItem(item, scope)}${rule ? ` · ${describeRule(rule)}` : ''}`);
+            lines.push(t('adm.bot.lcCan', { n: allowed.length, list: allowed.join(', ') }));
+            const limits = limitsText(item);
+            if (limits) lines.push(t('adm.bot.lcLimits', { list: limits }));
+        }
+        parts.push(lines.join('\n'));
+    }
+    await msg.reply(parts.join('\n\n'));
+}
+
+/*
  * +cmd|-cmd: each user's rule. Together with +u, defines the rule:
  * +u +cmd /a,/b = only those; +u -cmd /a = all, except that one. Alone:
  * +cmd: (an admin command only enters "Only") whoever is not a user enters only with these; "Only" gains these; "All,
@@ -410,6 +498,7 @@ async function changeCommands(msg, items, { sign: signalAlt, commands, withV }, 
     const admins = commands.filter(isDelegable);
     const changed = [];
     const newUsers = [];
+    const dropped = new Set();
     const notices = [];
     const targets = [];
 
@@ -450,17 +539,27 @@ async function changeCommands(msg, items, { sign: signalAlt, commands, withV }, 
             else fresh = rule.only ? { only: true, commands: leftOver } : { only: false, commands: union };
         }
 
+        // +cmd all on the person (not on a group or on "phone:group"): back to all the common ones everywhere, so
+        // what they had only in a group (the entry, its rule and its limits) goes too
+        const stray = all && signalAlt === '+' && !readItem(target).soEm && !readItem(target).isGroup
+            ? users.filter(u => readItem(u).soEm && readItem(u).number === numberAlt) : [];
+
         const same = JSON.stringify(fresh) === JSON.stringify(rule);
-        if (isUser && same) {
+        if (isUser && same && !stray.length) {
             notices.push(t('adm.bot.nothingChanged', { who, rule: rule ? ` (${describeRule(rule)})` : '' }));
             continue;
         }
         if (!isUser) newUsers.push(target);
         await recordRule(target, fresh);
+        for (const u of stray) {
+            await recordRule(u, null);
+            for (const c of limitsAlt(u).keys()) await recordLimitAlt(u, c, null);
+            dropped.add(u);
+        }
         changed.push(target);
     }
 
-    if (newUsers.length) await setSetting('bot.users', [...users, ...newUsers]);
+    if (newUsers.length || dropped.size) await setSetting('bot.users', [...users.filter(u => !dropped.has(u)), ...newUsers]);
     // The +limit on the same line: saves now (the users already exist) and the list below already shows the ⏱️
     if (afterRecord) notices.push(...await afterRecord(targets));
     if (!changed.length) {
@@ -539,14 +638,21 @@ async function changeLimits(msg, items, limit, commands, chat) {
     await msg.reply(linesAlt.join('\n'));
 }
 
-async function handleShortcut(msg, textAlt, chatCurrent) {
-    const { op, cmd, limit, all: allAlt2, who } = readShortcut(textAlt);
+async function runShortcut(msg, textAlt, chatCurrent, info = {}) {
+    const { op, cmd, limit, reset, all: allAlt2, who } = readShortcut(textAlt);
+    info.op = op;
     const key = SHORTCUT_LIST[op?.letter ?? 'u'];
     const chat = { ...chatCurrent, all: allAlt2 };
 
     // Owner only: an extra admin promotes nobody (not even themselves)
     if (!msg.fromMe) {
         await msg.reply(t(key === 'bot.admins' ? 'adm.bot.ownerOnlyAdmins' : 'adm.bot.ownerOnlyUsers'));
+        return;
+    }
+
+    // -r|-reset +u <person>: the person back to the common commands only (see resetUser)
+    if (reset && (op?.letter !== 'u' || op.sign !== '+' || cmd || limit)) {
+        await msg.reply(t('adm.bot.resetUserUse'));
         return;
     }
 
@@ -590,6 +696,12 @@ async function handleShortcut(msg, textAlt, chatCurrent) {
         ? await textItems(msg, key, who, chat)
         : await chatItems(msg, key, chat);
     if (!items) return;
+    info.items = items;
+
+    if (reset) {
+        await resetUser(msg, items, chat);
+        return;
+    }
 
     // +cmd and +limit together: a single reply (the list, already with each user's ⏱️)
     const together = limit?.sign === '+' && cmd;
@@ -615,6 +727,94 @@ async function handleShortcut(msg, textAlt, chatCurrent) {
             await msg.reply(`❌ ${e.message}`);
         }
     }
+}
+
+// Your own private chat (with yourself): where the lists of /bot are for you; in any other chat the people there read
+async function isOwnPrivate({ chatId, isGroup }) {
+    return !isGroup && (await chatCurrentIds(chatId)).includes(client.info.wid._serialized);
+}
+
+// What the notice says about the rule (+cmd) and the limits (+limit) of whoever it is about
+function ruleNotice(item) {
+    const rule = ruleOf(item);
+    let text = '';
+    if (rule?.only) text = rule.commands.length <= 10 ? t('adm.bot.noticeOnly', { list: rule.commands.join(', ') }) : '';
+    else if (rule) text = t('adm.bot.noticeAllBut', { list: rule.commands.join(', ') });
+    const limits = [...limitsAlt(item)].map(([c, l]) => `${c} ${describeLimit(l)}`).join(', ');
+    return { text, limites: limits ? `\n${t('adm.bot.noticeLimits', { list: limits })}` : '' };
+}
+
+/*
+ * /bot +u|-u|+cmd|-cmd|+limit typed in another chat (the person's private or a group): instead of the list of users, a
+ * notice for whoever is there: they are now a user and how to see what they can use. In your own private, the list.
+ */
+async function handleShortcut(msg, textAlt, chatCurrent) {
+    // With -lu (-list-users) or -mask you asked for the list: it comes
+    if (!msg.fromMe || contextDebug().maskPhones || /(^|\s)-(?:list-users|lu)(?=\s|$)/.test(textAlt) || await isOwnPrivate(chatCurrent)) {
+        return runShortcut(msg, textAlt, chatCurrent);
+    }
+
+    const snapshot = () => ({ users: getSetting('bot.users'), cmds: getSetting('bot.users.cmds'), limits: getSetting('bot.users.limits') });
+    const before = snapshot();
+    const replies = [];
+    const original = msg.reply.bind(msg);
+    const info = {};
+    msg.reply = async (content) => { replies.push(content); };
+    try {
+        await runShortcut(msg, textAlt, chatCurrent, info);
+    } finally {
+        msg.reply = original;
+    }
+
+    const after = snapshot();
+    const notices = [];
+    if (info.op?.letter !== 'a') {
+        for (const item of info.items ?? []) {
+            const { number } = readItem(item);
+            const has = (users) => users.includes(item) || users.includes(number);
+            const mine = (list) => list.filter(l => l.startsWith(`${number}`) || l.startsWith(item)).join('|');
+            const was = has(before.users);
+            const is = has(after.users);
+            const name = await itemName(number) || `+${number}`;
+            const target = after.users.includes(item) ? item : number;
+            const { text: rule, limites: limits } = ruleNotice(target);
+
+            if (readItem(item).isGroup) {
+                if (!was && is) notices.push(t('adm.bot.noticeGroup', { rule }) + limits);
+                else if (was && !is) notices.push(t('adm.bot.noticeGroupRemoved'));
+            } else if (!was && is) {
+                notices.push(chatCurrent.isGroup
+                    ? `${t('adm.bot.noticeUserGroup', { name, rule })}${limits}\n${t('adm.bot.noticeWhoisGroup')}`
+                    : `${t('adm.bot.noticeUser', { rule })}${limits}\n${t('adm.bot.noticeWhois')}`);
+            } else if (was && !is) {
+                notices.push(t('adm.bot.noticeRemoved', { name }));
+            } else if (was && is && (mine(before.cmds) !== mine(after.cmds) || mine(before.limits) !== mine(after.limits))) {
+                notices.push(chatCurrent.isGroup
+                    ? `${t('adm.bot.noticeUpdatedGroup', { name, rule })}${limits}`
+                    : `${t('adm.bot.noticeUpdated', { rule })}${limits}\n${t('adm.bot.noticeWhois')}`);
+            }
+        }
+    }
+    if (notices.length) await original(notices.join('\n\n'));
+    else for (const r of replies) await original(r);
+}
+
+/*
+ * -r|-reset +u <person>: the person goes back to the default of +u: all the common commands, with no rule (+cmd), no
+ * limit (+limit) and nothing left only in a group. It is +u +cmd all plus the removal of the limits.
+ */
+async function resetUser(msg, items, chat) {
+    const gone = async (targets) => {
+        const notices = [];
+        for (const target of targets) {
+            const limits = [...limitsAlt(target).keys()];
+            if (!limits.length) continue;
+            for (const c of limits) await recordLimitAlt(target, c, null);
+            notices.push(t('adm.bot.resetLimitsGone', { who: await describeItem(target, await chatScope(chat)), list: limits.join(', ') }));
+        }
+        return notices;
+    };
+    await changeCommands(msg, items, { sign: '+', commands: ['all'], withV: true }, chat, gone);
 }
 
 /*
@@ -794,6 +994,13 @@ async function cmdBot({ msg, opts: commandOpts, args, chatId, isGroup }) {
         return;
     }
     const chat = { chatId, isGroup, all: allAlt2 };
+
+    // -list-commands [/person/]: the commands by level or everything one person uses (and their limits)
+    if (opts.given.has('list-commands')) {
+        if (opts.argv.length) await commandsOfPerson(msg, opts.argv.join(' '), chat);
+        else await msg.reply(commandsByLevel());
+        return;
+    }
 
     if (withDestination && !opts.given.has('status')) {
         await msg.reply(t('adm.bot.toIsStatus'));
