@@ -28,6 +28,33 @@ to send at once what you'd otherwise send in several blocks (e.g. multiple notes
 → saves the note and doesn't reply with the summary
 ```
 
+## A shortcut that runs a `/batch`
+
+A [shortcut](alias.md) can hold a whole `/batch`: the lines below the first one go indented, and `$@` puts
+**all** the typed text in each line (`$1` would be only the first word, and the rest would go to the end
+of the last line).
+
+```text
+/alias /vfazol /batch -q
+  /tts -q -l -v amy $@
+  /tts -q -l -v ryan $@
+  /tts -q -l -v lessac $@
+
+/vfazol DO THE L!
+→ three voice notes, one for each voice, all saying "DO THE L!"
+```
+
+Another use: trying a lot of things at once. Each [`/tts`](tts.md) with `-q` sends only the audio, so
+a `/me` before it says which voice is speaking:
+
+```text
+/batch
+/me 🎙️ en_US-amy-medium
+/tts -q -l -v amy DO THE L!
+/me 🎙️ en_US-ryan-medium
+/tts -q -l -v ryan DO THE L!
+```
+
 ## How blocks are split
 
 A line that starts with a command (or alias) opens a block. Whatever comes after it, blank lines

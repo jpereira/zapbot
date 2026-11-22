@@ -399,3 +399,15 @@ test('${N:--l}: o padrão que começa com "-"; o travessão do teclado do celula
     await bot.replyAlt('/alias nopt /forward ${1:—l} #nopt');
     assert.equal((await aliases()).find(a => a.name === '/nopt').command, '/forward ${1:--l} #nopt');
 });
+
+test('$@ e $*: todos os argumentos, em cada lugar, sem sobras (atalho de /batch); ${@:-padrão} sem nada digitado', () => {
+    const { applyParams } = bot.src('aliases');
+    const saved = '/batch -q\n  /tts -q -l -v cadu $@\n  /tts -q -l -v faber $*';
+    assert.deepEqual(applyParams(saved, 'FAZ O L PORRA!'), {
+        command: '/batch -q\n  /tts -q -l -v cadu FAZ O L PORRA!\n  /tts -q -l -v faber FAZ O L PORRA!', leftovers: ''
+    });
+    assert.equal(applyParams('/stocks ${@:-USD}', '').command, '/stocks USD');
+    assert.equal(applyParams('/stocks ${@:-USD}', 'EUR BRL').command, '/stocks EUR BRL');
+    // $1 keeps working as before: the leftovers still go to the end
+    assert.deepEqual(applyParams('/rec -ss $1 -es $2', '10 20 url'), { command: '/rec -ss 10 -es 20', leftovers: 'url' });
+});

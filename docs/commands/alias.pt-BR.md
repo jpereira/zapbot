@@ -107,6 +107,17 @@ a não ser que tenha um valor padrão: `${N:-valor}`.
 /nopt -dry                       → /forward -dry #nopt
 ```
 
+O `$@` (ou `$*`) são **todos** os argumentos digitados, em cada lugar onde aparece, e nada sobra para o fim:
+é o certo para um atalho de [`/batch`](batch.md), onde cada linha precisa do texto inteiro. O `${@:-padrão}` é o
+padrão quando nada é digitado.
+
+```text
+/alias /vfazol /batch -q
+  /tts -q -l -v cadu $@
+  /tts -q -l -v faber $@
+/vfazol FAZ O L!           → as duas vozes falam "FAZ O L!"
+```
+
 O padrão vem depois do `:-`, então um padrão que ele mesmo começa com `-` leva dois hifens: `${1:--l}`. O
 teclado do celular troca `--` por `—` (travessão): o bot entende `${1:—l}` como `${1:--l}` e salva já
 corrigido.
