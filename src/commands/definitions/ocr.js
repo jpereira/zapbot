@@ -6,16 +6,28 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/ocr',
-    usage: '/ocr [-status|-s]',
+    usage: '/ocr [-gpt|-g] [-local|-l] [-status|-s]',
     aliases: [],
-    summary: 'The text in an image (OCR), read by ChatGPT',
-    help: 'Reads the text in a photo with ChatGPT (vision) and replies with it. Replying to the photo, or sending the photo with /ocr as the caption. Requires OPENAI_API_KEY in config/.env or the gpt.api.key setting.',
+    summary: 'The text in an image (OCR), local or by ChatGPT (-gpt)',
+    help: 'Reads the text in a photo and replies with it: by default locally with Tesseract (no key, languages in ocr.language), or with -gpt (-g) by ChatGPT (vision), which needs the OpenAI key. Replying to the photo, or sending the photo with /ocr as the caption. -gpt requires OPENAI_API_KEY in config/.env or the gpt.api.key setting.',
     ex: ['/ocr'],
     cmd_opts: [
         {
+            opts: ['gpt', 'g'],
+            values: [],
+            desc: 'Reads with ChatGPT (OpenAI vision, spends your account) instead of the local Tesseract. Without -gpt or -local, the ocr.engine setting decides.',
+            ex: ['/ocr -gpt']
+        },
+        {
+            opts: ['local', 'l'],
+            values: [],
+            desc: 'Reads with the local Tesseract (no key, runs on the server CPU), even when ocr.engine is gpt.',
+            ex: ['/ocr -local']
+        },
+        {
             opts: ['status', 's'],
             values: [],
-            desc: 'Adds the call usage to the reply footer: bytes sent (TX) and received (RX), tokens spent, estimated cost, and balance. To keep it always on: /set gpt.status true.',
+            desc: 'With -gpt: adds the call usage to the reply footer: bytes sent (TX) and received (RX), tokens spent, estimated cost, and balance. To keep it always on: /set gpt.status true.',
             ex: ['/ocr -s'],
             cron: false
         }

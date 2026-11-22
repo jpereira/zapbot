@@ -13,6 +13,7 @@ const { MessageMedia } = require('whatsapp-web.js');
 const { completeNotice } = require('../client');
 const { commandUsage } = require('./base');
 const { BIN_FFMPEG, TMP_DIR } = require('../constants');
+const { CHATGPT, engineProcessing, withEngineTip } = require('../engines');
 const { t } = require('../i18n');
 const { unescape } = require('../util/format');
 const { printError } = require('../log');
@@ -21,7 +22,7 @@ const { WITHOUT_KEY, keyOpenAi, errorOpenAi, generateImage, measureConsumption }
 const { SETTINGS_SCHEMA, getSetting } = require('../settings');
 const { runCommand } = require('../util/processes');
 const {
-    GIF_MODEL, IMAGE_MODEL, DRAW_USES, IMAGE_USAGE, notifyProcessing, modelError,
+    GIF_MODEL, IMAGE_MODEL, DRAW_USES, IMAGE_USAGE, modelError,
     photoInPng, messageImage, replyConsumption, swapModel
 } = require('./openaiCommon');
 
@@ -110,14 +111,14 @@ async function drawAlt({ msg, cmd, request, quotedMsg = null, gif = null, profil
         : withContext(textAlt);
     const captionAlt = `${animation ? '🎞️' : '🎨'} ${textAlt.length > CAPTION_MAX ? `${textAlt.slice(0, CAPTION_MAX)}…` : textAlt}`.trim();
 
-    const notice = await notifyProcessing(msg, cmd);
+    const notice = await msg.reply(engineProcessing('draw', CHATGPT), null, { linkPreview: false });
     try {
         const b64 = await generateImage({
             cmd, prompt, gif: animation,
             images: photo ? await Promise.all(photo.map(image => photoInPng({ image }))) : []
         });
         // Media does not become an edit of the notice: it says the result comes below (and stays), and the media goes out afterward
-        await completeNotice(msg, notice, t(animation ? 'draw.gifBelow' : 'draw.imageBelow'));
+        await completeNotice(msg, notice, withEngineTip(t(animation ? 'draw.gifBelow' : 'draw.imageBelow'), 'draw', CHATGPT, { sep: '\n' }));
         if (animation) await sendGif(msg, b64, captionAlt, cmd);
         else await msg.reply(new MessageMedia('image/png', b64, 'desenho.png'), null, { caption: captionAlt });
         await replyConsumption(msg);

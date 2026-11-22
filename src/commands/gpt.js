@@ -17,6 +17,7 @@ const {
     modelError, messageImage, replyConsumption, withoutOption, swapModel
 } = require('./openaiCommon');
 const { TMP_DIR } = require('../constants');
+const { CHATGPT, engineProcessing, withEngineTip } = require('../engines');
 const { printError } = require('../log');
 const { speakLocal } = require('../ttsLocal');
 const { language, t } = require('../i18n');
@@ -133,7 +134,7 @@ async function replyOnAudio(msg, { audio, error: errorAlt }, args) {
         return;
     }
 
-    const notice = await notifyProcessing(msg, '/gpt');
+    const notice = await msg.reply(engineProcessing('gpt', CHATGPT), null, { linkPreview: false });
     let transcribing = true;
     try {
         const transcription = await transcribeAudio({ cmd: '/gpt', audio });
@@ -143,14 +144,14 @@ async function replyOnAudio(msg, { audio, error: errorAlt }, args) {
             return;
         }
         if (soTranscribe(args)) {
-            await completeNotice(msg, notice, `${t('gpt.transcription', { text: transcription })}${await consumptionFooter()}`);
+            await completeNotice(msg, notice, `${withEngineTip(t('gpt.transcription', { text: transcription }), 'stt', CHATGPT)}${await consumptionFooter()}`);
             return;
         }
 
         const reply = await askOnChat({
             cmd: '/gpt', system: GPT_INSTRUCTIONS(), text: t('gpt.audioPrompt', { question: args.trim(), transcription })
         });
-        await completeNotice(msg, notice, `🤖 ${reply}${await consumptionFooter()}`);
+        await completeNotice(msg, notice, `${withEngineTip(`🤖 ${reply}`, 'gpt', CHATGPT)}${await consumptionFooter()}`);
     } catch (err) {
         await completeNotice(msg, notice, (transcribing && await modelError(err, AUDIO_MODEL, '/gpt')) || errorOpenAi(err, '/gpt'));
     }
@@ -203,11 +204,11 @@ async function talkText(msg, args, quotedMsg, cmd = '/gpt', { local = false } = 
         return;
     }
 
-    const engine = local ? 'Piper' : 'ChatGPT';
-    const notice = await msg.reply(t('tts.processing', { engine }), null, { linkPreview: false });
+    const engine = local ? 'Piper' : CHATGPT;
+    const notice = await msg.reply(engineProcessing('tts', engine), null, { linkPreview: false });
     try {
         const voice = local ? await speakLocal(textAlt) : await synthesizeVoice({ cmd, text: textAlt, style });
-        await completeNotice(msg, notice, t('gpt.voiceBelow', { engine }));
+        await completeNotice(msg, notice, withEngineTip(t('gpt.voiceBelow'), 'tts', engine, { sep: '\n' }));
         await msg.reply(new MessageMedia('audio/ogg; codecs=opus', voice.toString('base64'), 'voz.ogg'), null, { sendAudioAsVoice: true });
         if (!local) await replyConsumption(msg);
     } catch (err) {
@@ -545,14 +546,14 @@ async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
         return;
     }
 
-    const notice = await notifyProcessing(msg, '/gpt');
+    const notice = await msg.reply(engineProcessing('gpt', CHATGPT), null, { linkPreview: false });
     try {
         const reply = await askOnChat({
             cmd: '/gpt', system: GPT_INSTRUCTIONS(), text: question, images: [photo?.image, ...profiles.map(p => p.image)].filter(Boolean)
         });
 
         // The 🤖 in front also guarantees the reply never starts with "/" (see markSentByBot)
-        await completeNotice(msg, notice, `🤖 ${reply}${await consumptionFooter()}`);
+        await completeNotice(msg, notice, `${withEngineTip(`🤖 ${reply}`, 'gpt', CHATGPT)}${await consumptionFooter()}`);
     } catch (err) {
         await completeNotice(msg, notice, errorOpenAi(err, '/gpt'));
     }

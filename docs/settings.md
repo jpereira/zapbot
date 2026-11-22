@@ -98,6 +98,8 @@ shows are in Portuguese; the ones here are in English).
 | `news.gazeta` | list | `https://www.gazetadopovo.com.br/feed/rss/brasil.xml` | RSS feeds for `/news -gazeta` |
 | `news.hack` | list | The Hacker News, BleepingComputer, Krebs on Security | RSS feeds for `/news -hack` |
 | `news.max` | 1–10 | `5` | Headlines shown by `/news` (`/news <count>` overrides it) |
+| `ocr.engine` | `local`, `gpt` | `local` | Engine of [`/ocr`](commands/ocr.md): `local` (Tesseract, no key) or `gpt` (ChatGPT, OpenAI vision). `-gpt` and `-local` pick it per call |
+| `ocr.language` | text | `por+eng` | Languages of the local [`/ocr`](commands/ocr.md) (Tesseract), joined by `+`: `por+eng`, `por`, `eng`, `spa`... One that is not in the Docker image is not read |
 | `pixelart.maxParts` | 1–10 | `3` | Max parts of [`/pixelart`](commands/pixelart.md) when the art is taller than 4096 px |
 | `pixelart.packs` | list | `chuck-norris-lvl` | 16colo.rs packs picked at random by [`/pixelart`](commands/pixelart.md) with no arguments |
 | `poll.retentionDays` | 1–365 | `90` | Days polls and votes are kept for [`/poll -r`](commands/poll.md#result) |

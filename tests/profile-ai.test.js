@@ -258,7 +258,7 @@ test('imagem pronta: o aviso "Processando" vira "Imagem gerada abaixo" (e fica),
     const sentAlt2 = await bot.execute('/draw um gato astronauta');
     const notice = bot.client.sent.find(e => e.editada);
     assert.ok(notice, 'o aviso foi editado, não apagado');
-    assert.equal(notice.content, '🖼️ Imagem gerada abaixo.');
+    assert.equal(notice.content, '🖼️ Imagem gerada abaixo.\n💡 _Desenhado por ChatGPT_');
     assert.equal(notice.deleted, undefined);
     const posNotice = bot.client.sent.indexOf(notice);
     const posImage = bot.client.sent.findIndex(e => e.content instanceof MessageMedia);

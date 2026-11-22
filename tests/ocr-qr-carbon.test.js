@@ -17,13 +17,43 @@ const photo = (extras = {}) => bot.createMessage({ de: OTHERAlt.jid, type: 'imag
 
 beforeEach(bot.restart);
 
-describe('/ocr', () => {
+describe('/ocr (local, Tesseract)', () => {
+    const { processes } = bot;
+    const tesseract = () => processes.calls.find(c => c.bin.endsWith('tesseract'));
+
+    test('padrão: lê com o Tesseract, sem chave e sem chamar a OpenAI', async () => {
+        processes.ocr = 'NOTA FISCAL\nTotal: 10,00';
+        const r = await bot.replyAlt('/ocr', { quoted: photo() });
+        assert.equal(r.at(-1), '📝 NOTA FISCAL\nTotal: 10,00\n\n💡 _Lido por Tesseract_');
+        assert.equal(network.calls.length, 0);
+        const args = tesseract().args;
+        assert.deepEqual(args.slice(1), ['stdout', '-l', 'por+eng']);
+    });
+
+    test('o idioma vem do ocr.language; sem texto, o aviso', async () => {
+        await bot.setSetting('ocr.language', 'eng');
+        processes.ocr = '';
+        const r = await bot.replyAlt('/ocr -local', { quoted: photo() });
+        assert.equal(r.at(-1), '🔎 Nenhum texto encontrado na imagem.\n\n💡 _Lido por Tesseract_');
+        assert.equal(tesseract().args[3], 'eng');
+    });
+
+    test('ocr.engine gpt usa o ChatGPT; -local volta para o Tesseract; -gpt -local é erro', async () => {
+        await bot.setSetting('ocr.engine', 'gpt');
+        await bot.setSetting('gpt.status', false);
+        assert.match((await bot.replyAlt('/ocr', { quoted: photo() }))[0], /API key da OpenAI não encontrada/);
+        assert.match((await bot.replyAlt('/ocr -local', { quoted: photo() })).at(-1), /Lido por Tesseract/);
+        assert.match((await bot.replyAlt('/ocr -gpt -local', { quoted: photo() }))[0], /❌/);
+    });
+});
+
+describe('/ocr -gpt', () => {
     beforeEach(() => bot.setSetting('gpt.status', false)); // without the usage footer (the default is on)
 
     const chat = (textAlt) => network.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: textAlt } }] });
 
     test('sem a chave da OpenAI', async () => {
-        assert.match((await bot.replyAlt('/ocr', { quoted: photo() }))[0], /⚠️ API key da OpenAI não encontrada: o \/ocr está desativado/);
+        assert.match((await bot.replyAlt('/ocr -gpt', { quoted: photo() }))[0], /⚠️ API key da OpenAI não encontrada: o \/ocr está desativado/);
     });
 
     test('sem foto: o uso', async () => {
@@ -36,8 +66,8 @@ describe('/ocr', () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         chat('NOTA FISCAL\nTotal: 10,00');
 
-        const r = await bot.replyAlt('/ocr', { quoted: photo() });
-        assert.equal(r.at(-1), '📝 NOTA FISCAL\nTotal: 10,00');
+        const r = await bot.replyAlt('/ocr -gpt', { quoted: photo() });
+        assert.equal(r.at(-1), '📝 NOTA FISCAL\nTotal: 10,00\n\n💡 _Lido por ChatGPT_');
 
         const { messages } = network.calls.at(-1).cfg.body;
         assert.match(messages[0].content, /Você é um OCR/);
@@ -47,21 +77,21 @@ describe('/ocr', () => {
     test('a foto com a legenda /ocr também vale; imagem sem texto recebe o aviso', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         chat('NO_TEXT');
-        const msg = bot.createMessage({ text: '/ocr', type: 'image', media: PHOTO });
+        const msg = bot.createMessage({ text: '/ocr -gpt', type: 'image', media: PHOTO });
         const r = await bot.deliver(msg);
-        assert.equal(r.at(-1).text, '🔎 Nenhum texto encontrado na imagem.');
+        assert.equal(r.at(-1).text, '🔎 Nenhum texto encontrado na imagem.\n\n💡 _Lido por ChatGPT_');
     });
 
     test('-s mostra o consumo no rodapé', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         chat('Oi');
-        assert.match((await bot.replyAlt('/ocr -s', { quoted: photo() })).at(-1), /^📝 Oi\n\n_📡 ⬆️ \d+ B TX/);
+        assert.match((await bot.replyAlt('/ocr -gpt -s', { quoted: photo() })).at(-1), /^📝 Oi\n\n💡 _Lido por ChatGPT_\n\n_📡 ⬆️ \d+ B TX/);
     });
 
     test('o erro da OpenAI vira aviso', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/chat/completions', bot.errorHttp(401));
-        const r = await bot.execute('/ocr', { quoted: photo(), expectedError: true });
+        const r = await bot.execute('/ocr -gpt', { quoted: photo(), expectedError: true });
         assert.match(r.at(-1).text, /Invalid|inválida|🔑/);
     });
 });
@@ -256,5 +286,18 @@ describe('/profile -set', () => {
         group.setPicture = async () => { throw new Error('boom'); };
         const [r] = await bot.execute('/profile -set', { quoted: photo(), expectedError: true });
         assert.equal(r.text, '❌ Não consegui trocar a foto: boom');
+    });
+});
+
+describe('motor nos comandos (ampulheta e dica do fim)', () => {
+    const { engineProcessing, withEngineTip } = bot.src('engines');
+
+    test('mesma frase em todos os comandos, com o nome do motor', () => {
+        assert.equal(engineProcessing('ocr', 'Tesseract'), '⏳ Lendo o texto com Tesseract, aguarde.');
+        assert.equal(engineProcessing('tts', 'ChatGPT'), '⏳ Gerando a voz com ChatGPT, aguarde.');
+        assert.equal(engineProcessing('stt', 'faster-whisper'), '⏳ Transcrevendo a fala com faster-whisper, aguarde.');
+        assert.equal(engineProcessing('draw', 'ChatGPT'), '⏳ Desenhando com ChatGPT, aguarde.');
+        assert.equal(withEngineTip('ok', 'tldr', 'ChatGPT'), 'ok\n\n💡 _Resumido por ChatGPT_');
+        assert.equal(withEngineTip('ok', 'ocr', 'Tesseract', { sep: '\n' }), 'ok\n💡 _Lido por Tesseract_');
     });
 });

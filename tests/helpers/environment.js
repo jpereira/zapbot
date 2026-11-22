@@ -323,6 +323,7 @@ const processes = {
     outputSize: 1024,
     speech: 'olá mundo, isto é um teste', // the text that faster-whisper (python) returns
     errorOutput: null, // what yt-dlp writes in the log before failing
+    ocr: 'texto da imagem', // the text that tesseract returns
     post: null // the JSON that yt-dlp -J returns (a photo post)
 };
 
@@ -347,6 +348,13 @@ function spawnFake(bin, args, optionsAlt) {
             // The program output goes to the log file (stdio[1]), as in the real one
             if (processes.errorOutput && typeof optionsAlt?.stdio?.[1] === 'number') fs.writeSync(optionsAlt.stdio[1], processes.errorOutput);
             child.emit('close', 1, null);
+            return;
+        }
+
+        // tesseract: the text on the output
+        if (nameAlt === 'tesseract') {
+            child.stdout.emit('data', `${processes.ocr}\n`);
+            child.emit('close', 0, null);
             return;
         }
 

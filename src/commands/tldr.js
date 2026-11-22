@@ -10,6 +10,7 @@ const { commandUsage } = require('./base');
 const { resolverTarget } = require('./show');
 const { HOUR_MS } = require('../constants');
 const { chatCurrentIds } = require('../contacts');
+const { CHATGPT, engineProcessing, withEngineTip } = require('../engines');
 const { dbAll, dbReady, dbRun } = require('../db');
 const { language, t } = require('../i18n');
 const { WITHOUT_KEY, keyOpenAi, errorOpenAi, measureConsumption, askOnChat, consumptionFooter, transcribeAudio } = require('../openaiChat');
@@ -204,7 +205,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
         : period.ms
             ? t('tldr.scopePeriod', { messages, name: nameAlt, time: byLong(period.ms) })
             : t('tldr.scopeLast', { messages, name: nameAlt });
-    const notice = await msg.reply(t('tldr.processing', { scope }), null, { linkPreview: false });
+    const notice = await msg.reply(engineProcessing('tldr', CHATGPT, { scope }), null, { linkPreview: false });
     try {
         const summary = await askOnChat({
             cmd: '/tldr',
@@ -214,7 +215,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
 
         const textAlt = t('tldr.header', { name: nameAlt, messages, start: hour(first), end: hour(last) }) +
             (notices.length ? `\n_(${notices.join('; ')})_` : '') +
-            `\n\n${summary}${await consumptionFooter()}`;
+            `${withEngineTip(`\n\n${summary}`, 'tldr', CHATGPT, { sep: '\n\n' })}${await consumptionFooter()}`;
 
         if (opts.opt.private) {
             await completeNotice(msg, notice, t('tldr.sentPrivate'));

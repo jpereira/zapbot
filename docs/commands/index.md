@@ -291,7 +291,7 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/news`](news.md) | | `user` | Headlines from RSS feeds: `-hack`, `-g1`, `-gazeta`, `-brazil` |
 | [`/noffa`](noffa.md) | | `user` | Joke: decorates the text with rainbows |
 | [`/notes`](notes.md) | | `admin` | Notes with ID and `#tag` (`-a`, `-l`, `-s`, `-r`): view with the media (`-v`), edit (`-u`), rename a tag (`-m`), describe a tag (`-d`), export to PDF (`-e`), and `-alert` that notifies at a date/time |
-| [`/ocr`](ocr.md) | | `admin` · delegable | The text in a photo, read by ChatGPT (vision) |
+| [`/ocr`](ocr.md) | | `admin` · delegable | The text in a photo, read locally (Tesseract) or by ChatGPT (`-gpt`) |
 | [`/ping`](ping.md) | | `user` | Checks whether the bot is alive |
 | [`/pixelart`](pixelart.md) | | `user` | Random ANSI/ASCII art (16colo.rs) |
 | [`/poll`](poll.md) | | `admin` · delegable | Creates a native WhatsApp poll in the chat; `-r` shows the result |

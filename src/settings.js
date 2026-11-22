@@ -682,6 +682,22 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 10,
         desc: 'Manchetes exibidas pelo /news (o /news <quantidade> sobrepõe).'
     },
+    'ocr.engine': {
+        default: 'local',
+        type: 'string',
+        options: ['local', 'gpt'],
+        normalize: (v) => v.toLowerCase(),
+        desc: 'Motor do /ocr: local (Tesseract, sem chave) ou gpt (ChatGPT, visão da OpenAI). -gpt e -local escolhem na chamada.'
+    },
+    'ocr.language': {
+        default: 'por+eng',
+        type: 'string',
+        validate: (v) => {
+            if (!/^[a-z_]{3,8}(\+[a-z_]{3,8})*$/i.test(v)) throw new Error('Use códigos do Tesseract separados por +, como por+eng.');
+            return v;
+        },
+        desc: 'Idiomas do /ocr local (Tesseract), separados por +: por+eng, por, eng, spa... O que não está na imagem Docker não lê.'
+    },
     'pixelart.maxParts': {
         default: 3,
         type: 'number', min: 1, max: 10,

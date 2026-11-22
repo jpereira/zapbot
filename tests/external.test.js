@@ -333,7 +333,7 @@ describe('/gpt', () => {
         network.responder('post', 'api.openai.com', { choices: [{ message: { content: ' Resposta! ' } }] });
 
         const quoted = bot.createMessage({ text: 'texto citado', de: bot.OTHERAlt.jid });
-        assert.deepEqual(await bot.replyAlt('/gpt resuma', { quoted }), ['🤖 Resposta!']);
+        assert.deepEqual(await bot.replyAlt('/gpt resuma', { quoted }), ['🤖 Resposta!\n\n💡 _Respondido por ChatGPT_']);
 
         const { cfg } = network.calls.at(-1);
         assert.equal(cfg.headers.Authorization, 'Bearer sk-teste');
@@ -348,7 +348,7 @@ describe('/gpt', () => {
 
         const photo = bot.createMessage({ text: 'meu cachorro', de: bot.OTHERAlt.jid, type: 'image',
             media: { mimetype: 'image/jpeg', data: 'QUJD' } });
-        assert.deepEqual(await bot.replyAlt('/gpt qual a raça desse cachorro?', { quoted: photo }), ['🤖 É um labrador.']);
+        assert.deepEqual(await bot.replyAlt('/gpt qual a raça desse cachorro?', { quoted: photo }), ['🤖 É um labrador.\n\n💡 _Respondido por ChatGPT_']);
 
         const { body } = network.calls.at(-1).cfg;
         assert.deepEqual(body.messages[1].content, [
@@ -397,8 +397,8 @@ describe('/gpt', () => {
         assert.equal(network.calls.length, 0);
 
         // Only the 1st word: in the middle of the text, "-price" is a question; "-1" and "- item" too
-        assert.equal((await bot.replyAlt('/gpt o que faz o -price?'))[0], '🤖 Oi.');
-        assert.equal((await bot.replyAlt('/gpt -1 é negativo?'))[0], '🤖 Oi.');
+        assert.equal((await bot.replyAlt('/gpt o que faz o -price?'))[0], '🤖 Oi.\n\n💡 _Respondido por ChatGPT_');
+        assert.equal((await bot.replyAlt('/gpt -1 é negativo?'))[0], '🤖 Oi.\n\n💡 _Respondido por ChatGPT_');
     });
 
     test('-status|-s (ou o setting gpt.status): rodapé com os bytes TX/RX e os tokens gastos', async () => {
@@ -409,7 +409,7 @@ describe('/gpt', () => {
         });
 
         const [without] = await bot.replyAlt('/gpt oi');
-        assert.equal(without, '🤖 Oi.');
+        assert.equal(without, '🤖 Oi.\n\n💡 _Respondido por ChatGPT_');
 
         // The prices come empty: cost n/a until /gpt -prices (or the automatic update)
         await bot.setSetting('gpt.status', true);
@@ -423,7 +423,7 @@ describe('/gpt', () => {
         await bot.setSetting('gpt.status', false);
 
         const [withValue] = await bot.replyAlt('/gpt -s oi');
-        assert.match(withValue, /^🤖 Oi\.\n\n_📡 ⬆️ \d+ B TX · ⬇️ \d+ B RX · 🪙 25 tokens \(📥 20 · 📤 5\)_\n_💵 ~\$0\.00000\d_$/);
+        assert.match(withValue, /^🤖 Oi\.\n\n💡 _Respondido por ChatGPT_\n\n_📡 ⬆️ \d+ B TX · ⬇️ \d+ B RX · 🪙 25 tokens \(📥 20 · 📤 5\)_\n_💵 ~\$0\.00000\d_$/);
 
         // Model without a price in gpt.pricing: cost n/a
         await bot.setSetting('gpt.pricing', ['gpt-4.1=2/8']);
@@ -437,8 +437,8 @@ describe('/gpt', () => {
         network.responder('post', 'api.openai.com/v1/chat/completions', { choices: [{ message: { content: 'Um cumprimento.' } }] });
 
         const voice = bot.createMessage({ de: bot.OTHERAlt.jid, type: 'ptt', media: { mimetype: 'audio/ogg; codecs=opus', data: 'QUJD' } });
-        assert.deepEqual(await bot.replyAlt('/gpt agora transcreva isso', { quoted: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?']);
-        assert.deepEqual(await bot.replyAlt('/gpt now transcribe this', { quoted: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?'], 'em inglês também');
+        assert.deepEqual(await bot.replyAlt('/gpt agora transcreva isso', { quoted: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?\n\n💡 _Transcrito por ChatGPT_']);
+        assert.deepEqual(await bot.replyAlt('/gpt now transcribe this', { quoted: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?\n\n💡 _Transcrito por ChatGPT_'], 'em inglês também');
 
         const { cfg } = network.calls.at(-1);
         assert.equal(network.calls.at(-1).url, 'https://api.openai.com/v1/audio/transcriptions');
@@ -449,11 +449,11 @@ describe('/gpt', () => {
 
         // Without a question it also only transcribes; the model comes from the setting
         await bot.setSetting('gpt.transcribe.model', 'gpt-4o-mini-transcribe');
-        assert.deepEqual(await bot.replyAlt('/gpt', { quoted: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?']);
+        assert.deepEqual(await bot.replyAlt('/gpt', { quoted: voice }), ['🤖 *Transcrição:*\nolá, tudo bem?\n\n💡 _Transcrito por ChatGPT_']);
         assert.equal(network.calls.at(-1).cfg.body.get('model'), 'gpt-4o-mini-transcribe');
 
         // Another question: the transcription goes along to the chat
-        assert.deepEqual(await bot.replyAlt('/gpt resuma esse áudio', { quoted: voice }), ['🤖 Um cumprimento.']);
+        assert.deepEqual(await bot.replyAlt('/gpt resuma esse áudio', { quoted: voice }), ['🤖 Um cumprimento.\n\n💡 _Respondido por ChatGPT_']);
         assert.equal(network.calls.at(-1).cfg.body.messages[1].content,
             'resuma esse áudio\n\nTranscrição do áudio:\nolá, tudo bem?');
     });
@@ -695,7 +695,7 @@ describe('/gpt', () => {
             '# 🧺 O que é um conjunto?\n\nUm **conjunto** é uma coleção.\n\n| Símbolo | Significado |\n|---|---|\n| **∈** | Pertence |\n\n---\n\n* **União ∪:** tudo junto' } }] });
 
         assert.deepEqual(await bot.replyAlt('/gpt o que é um conjunto?'), [
-            '🤖 *🧺 O que é um conjunto?*\n\nUm *conjunto* é uma coleção.\n\n```\nSímbolo  Significado\n-------  -----------\n∈        Pertence\n```\n\n- *União ∪:* tudo junto'
+            '🤖 *🧺 O que é um conjunto?*\n\nUm *conjunto* é uma coleção.\n\n```\nSímbolo  Significado\n-------  -----------\n∈        Pertence\n```\n\n- *União ∪:* tudo junto\n\n💡 _Respondido por ChatGPT_'
         ]);
 
         // And the model is instructed to write for WhatsApp
@@ -707,7 +707,7 @@ describe('/gpt', () => {
         process.env.OPENAI_API_KEY = 'sk-env';
         try {
             network.responder('post', 'api.openai.com', { choices: [{ message: { content: '/cache -a' } }] });
-            assert.deepEqual(await bot.replyAlt('/gpt diga um comando'), ['🤖 /cache -a']);
+            assert.deepEqual(await bot.replyAlt('/gpt diga um comando'), ['🤖 /cache -a\n\n💡 _Respondido por ChatGPT_']);
             assert.equal(network.calls.at(-1).cfg.headers.Authorization, 'Bearer sk-env');
         } finally {
             delete process.env.OPENAI_API_KEY;
@@ -1255,12 +1255,12 @@ describe('/tldr', () => {
             return visto;
         };
 
-        assert.equal(await notice('/tldr'), '⏳ Processando o /tldr das últimas 4 mensagens de Família, aguarde.');
-        assert.equal(await notice('/tldr 3'), '⏳ Processando o /tldr das últimas 3 mensagens de Família, aguarde.');
-        assert.equal(await notice('/tldr 2h'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 2 horas, aguarde.');
-        assert.equal(await notice('/tldr 1d'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 1 dia, aguarde.');
-        assert.equal(await notice('/tldr 1h30m'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 1 hora e 30 minutos, aguarde.');
-        assert.equal(await notice('/tldr 30d'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 2 dias e 20 horas, aguarde.');
+        assert.equal(await notice('/tldr'), '⏳ Processando o /tldr das últimas 4 mensagens de Família com ChatGPT, aguarde.');
+        assert.equal(await notice('/tldr 3'), '⏳ Processando o /tldr das últimas 3 mensagens de Família com ChatGPT, aguarde.');
+        assert.equal(await notice('/tldr 2h'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 2 horas com ChatGPT, aguarde.');
+        assert.equal(await notice('/tldr 1d'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 1 dia com ChatGPT, aguarde.');
+        assert.equal(await notice('/tldr 1h30m'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 1 hora e 30 minutos com ChatGPT, aguarde.');
+        assert.equal(await notice('/tldr 30d'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 2 dias e 20 horas com ChatGPT, aguarde.');
     });
 
     test('opção desconhecida na 1ª palavra (/tldr -price): erro com a dica do -h, sem chamar a OpenAI; -2h continua valendo', async () => {
@@ -1279,7 +1279,7 @@ describe('/tldr', () => {
         await bot.deliver(bot.createMessage({ de: bot.OTHERAlt.jid, type: 'image', media: { mimetype: 'image/png', data: 'AA==' } }));
 
         const [r] = await bot.replyAlt('/tldr');
-        assert.match(r, /^🤖 \*Resumo de Família\*\n_3 mensagens · \d\d\/\d\d, \d\d:\d\d a \d\d\/\d\d, \d\d:\d\d_\n\n• Combinaram o almoço de domingo\.$/);
+        assert.match(r, /^🤖 \*Resumo de Família\*\n_3 mensagens · \d\d\/\d\d, \d\d:\d\d a \d\d\/\d\d, \d\d:\d\d_\n\n• Combinaram o almoço de domingo\.\n\n💡 _Resumido por ChatGPT_$/);
 
         const { cfg } = network.calls.at(-1);
         assert.equal(cfg.headers.Authorization, 'Bearer sk-teste');

@@ -290,7 +290,7 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/news`](news.md) | | `user` | Manchetes de feeds RSS: `-hack`, `-g1`, `-gazeta`, `-brazil` |
 | [`/noffa`](noffa.md) | | `user` | Piada: enfeita o texto com arco-íris |
 | [`/notes`](notes.md) | | `admin` | Anotações com ID e `#tag` (`-a`, `-l`, `-s`, `-r`): ver com a mídia (`-v`), editar (`-u`), renomear tag (`-m`), descrever tag (`-d`), exportar em PDF (`-e`) e `-alert` que avisa numa data/hora |
-| [`/ocr`](ocr.md) | | `admin` · delegável | O texto de uma foto, lido pelo ChatGPT (visão) |
+| [`/ocr`](ocr.md) | | `admin` · delegável | O texto de uma foto, lido localmente (Tesseract) ou pelo ChatGPT (`-gpt`) |
 | [`/ping`](ping.md) | | `user` | Verifica se o bot está vivo |
 | [`/pixelart`](pixelart.md) | | `user` | Arte ANSI/ASCII aleatória (16colo.rs) |
 | [`/poll`](poll.md) | | `admin` · delegável | Cria uma enquete nativa do WhatsApp no chat; `-r` mostra o resultado |

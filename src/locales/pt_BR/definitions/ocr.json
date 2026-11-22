@@ -1,18 +1,40 @@
 {
-  "summary": "O texto de uma imagem (OCR), lido pelo ChatGPT",
-  "usage": "/ocr [-status|-s]",
-  "help": "Lê o texto de uma foto pelo ChatGPT (visão) e responde com ele. Respondendo a foto, ou mandando a foto com /ocr na legenda. Exige OPENAI_API_KEY no config/.env ou o setting gpt.api.key.",
+  "summary": "O texto de uma imagem (OCR), local ou pelo ChatGPT (-gpt)",
+  "usage": "/ocr [-gpt|-g] [-local|-l] [-status|-s]",
+  "help": "Lê o texto de uma foto e responde com ele: por padrão localmente com o Tesseract (sem chave, idiomas no ocr.language), ou com -gpt (-g) pelo ChatGPT (visão), que exige a chave da OpenAI. Respondendo a foto, ou mandando a foto com /ocr na legenda. O -gpt exige OPENAI_API_KEY no config/.env ou o setting gpt.api.key.",
   "ex": [
     "/ocr"
   ],
   "cmd_opts": [
     {
       "opts": [
+        "gpt",
+        "g"
+      ],
+      "values": [],
+      "desc": "Lê com o ChatGPT (visão da OpenAI, gasta a sua conta) em vez do Tesseract local. Sem -gpt nem -local, o setting ocr.engine decide.",
+      "ex": [
+        "/ocr -gpt"
+      ]
+    },
+    {
+      "opts": [
+        "local",
+        "l"
+      ],
+      "values": [],
+      "desc": "Lê com o Tesseract local (sem chave, roda na CPU do servidor), mesmo com ocr.engine em gpt.",
+      "ex": [
+        "/ocr -local"
+      ]
+    },
+    {
+      "opts": [
         "status",
         "s"
       ],
       "values": [],
-      "desc": "Acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo. Para deixar sempre ligado: /set gpt.status true.",
+      "desc": "Com -gpt: acrescenta no rodapé da resposta o consumo da chamada: bytes enviados (TX) e recebidos (RX), tokens gastos, custo estimado e saldo. Para deixar sempre ligado: /set gpt.status true.",
       "ex": [
         "/ocr -s"
       ]

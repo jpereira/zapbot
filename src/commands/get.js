@@ -16,7 +16,7 @@ const { getSetting, isDebugMode, stickerMeta } = require('../settings');
 const { t } = require('../i18n');
 const { WITHOUT_KEY, keyOpenAi, errorOpenAi, askOnChat, transcribeAudio } = require('../openaiChat');
 const { downloadPhoto, postPhotos } = require('../postPhotos');
-const { pickEngine } = require('../engines');
+const { CHATGPT, engineProcessing, pickEngine, withEngineTip } = require('../engines');
 const { transcriptionCommand, transcribeFile } = require('../transcription');
 const { humanSize } = require('../util/files');
 const { wait } = require('../util/format');
@@ -496,9 +496,9 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
         // -gpt and -sum use the OpenAI key (/gpt): better to know before spending the CPU
         if ((gpt || opts.opt.summary) && !keyOpenAi()) throw new Error(WITHOUT_KEY('/stt'));
         // Who transcribes (and summarizes), in the wait notice and in the final tip
-        const engineName = (gpt ? 'ChatGPT' : 'faster-whisper') + (opts.opt.summary && !gpt ? ' + ChatGPT' : '');
-        engineTip = t('get.engineTip', { engine: engineName });
-        notice = await msg.reply(t('get.processingTranscribe', { engine: engineName }), null, { linkPreview: false });
+        const engineName = (gpt ? CHATGPT : 'faster-whisper') + (opts.opt.summary && !gpt ? ` + ${CHATGPT}` : '');
+        engineTip = engineName;
+        notice = await msg.reply(engineProcessing('stt', engineName), null, { linkPreview: false });
 
         fs.mkdirSync(TMP_DIR, { recursive: true });
         logCmdFile = path.join(TMP_DIR, `${id}_cmd.log`);
@@ -567,9 +567,9 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
         if (!textAlt) {
             await completeNotice(msg, notice, t('get.transcribeEmpty'), { linkPreview: false });
         } else if (opts.opt.summary) {
-            await completeNotice(msg, notice, (await speechSummary(r, duration, textAlt)) + engineTip, { linkPreview: false });
+            await completeNotice(msg, notice, withEngineTip(await speechSummary(r, duration, textAlt), 'stt', engineTip), { linkPreview: false });
         } else {
-            await completeNotice(msg, notice, t('get.transcribeResult', { lang: r.language, dur: mmss(duration), text: textAlt }) + engineTip, { linkPreview: false });
+            await completeNotice(msg, notice, withEngineTip(t('get.transcribeResult', { lang: r.language, dur: mmss(duration), text: textAlt }), 'stt', engineTip), { linkPreview: false });
         }
     } catch (e) {
         printError(e.message);

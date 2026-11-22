@@ -98,6 +98,8 @@ em português).
 | `news.gazeta` | lista | `https://www.gazetadopovo.com.br/feed/rss/brasil.xml` | Feeds RSS do `/news -gazeta` |
 | `news.hack` | lista | The Hacker News, BleepingComputer, Krebs on Security | Feeds RSS do `/news -hack` |
 | `news.max` | 1–10 | `5` | Manchetes exibidas pelo `/news` (o `/news <quantidade>` sobrepõe) |
+| `ocr.engine` | `local`, `gpt` | `local` | Motor do [`/ocr`](commands/ocr.md): `local` (Tesseract, sem chave) ou `gpt` (ChatGPT, visão da OpenAI). `-gpt` e `-local` escolhem na chamada |
+| `ocr.language` | texto | `por+eng` | Idiomas do [`/ocr`](commands/ocr.md) local (Tesseract), separados por `+`: `por+eng`, `por`, `eng`, `spa`... O que não está na imagem Docker não é lido |
 | `pixelart.maxParts` | 1–10 | `3` | Máximo de partes do [`/pixelart`](commands/pixelart.md) quando a arte é mais alta que 4096 px |
 | `pixelart.packs` | lista | `chuck-norris-lvl` | Packs do 16colo.rs sorteados pelo [`/pixelart`](commands/pixelart.md) sem argumentos |
 | `poll.retentionDays` | 1–365 | `90` | Dias que as enquetes e os votos ficam guardados para o [`/poll -r`](commands/poll.md#resultado) |

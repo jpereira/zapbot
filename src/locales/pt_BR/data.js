@@ -32,8 +32,6 @@ module.exports = {
     'get.sendFailed': "Problemas para enviar com 'MessageMedia.fromFilePath({file})'",
     'get.transcribeAlone': '❌ O -stt responde com texto: não use com -a, -st nem -pos.',
     'get.transcribeNeedsAudio': '❌ Para transcrever, responda um vídeo ou um áudio (ou mande um link).',
-    'get.processingTranscribe': '⏳ Transcrevendo a fala com {engine}, pode levar um tempo.',
-    'get.engineTip': '\n\n💡 _Transcrito por {engine}_',
     'get.transcribeTooLong': 'Áudio longo demais para transcrever ({dur}; máx. {max} min, veja o setting stt.maxMinutes). Use -ss e -es para pegar um trecho',
     'get.transcribeFailed': 'Problemas para transcrever o áudio (faster-whisper)',
     'get.transcribeEmpty': '🔇 Não achei fala no áudio.',
