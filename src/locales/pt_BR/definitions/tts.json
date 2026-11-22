@@ -107,7 +107,7 @@
       "argv": [
         "[<texto>]"
       ],
-      "desc": "O que falar. Respondendo uma mensagem, o estilo da fala."
+      "desc": "O que falar. O texto digitado vale mais: respondendo uma mensagem com texto digitado, a resposta é ignorada; sem texto, fala a mensagem (ou o áudio) respondida."
     }
   ]
 }

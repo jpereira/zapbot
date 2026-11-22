@@ -14,7 +14,7 @@ Transforma texto numa **nota de voz** de robô pelo ChatGPT (a API de voz da Ope
 | Opção | Valor | Descrição |
 |---|---|---|
 | `-quiet`, `-q` | | Não mostra a dica do motor ("💡 ... por ChatGPT, Tesseract, Piper...") no fim da resposta. Para esconder sempre: o setting `tts.footer` em `off` |
-| *(nenhuma)* | `[<texto>]` | O que falar, até `tts.maxChars` caracteres (32000; a voz local fala tudo, o ChatGPT em partes de 4096 que viram um áudio só). Respondendo uma mensagem, o estilo da fala |
+| *(nenhuma)* | `[<texto>]` | O que falar, até `tts.maxChars` caracteres (32000; a voz local fala tudo, o ChatGPT em partes de 4096 que viram um áudio só). O texto digitado vale mais: respondendo uma mensagem com texto digitado, a resposta é ignorada; sem texto, fala a mensagem respondida |
 | `-gpt`, `-g` | | Fala pelo ChatGPT (API de voz da OpenAI, gasta a sua conta) em vez da voz local do Piper. Sem `-gpt` nem `-local`, vale o setting [`tts.engine`](../settings.md) |
 | `-local`, `-l` | | Fala com a voz local do Piper (sem chave, usa a CPU do servidor), mesmo com o `tts.engine` em `gpt` |
 | `-voice`, `-v` | `<nome>` | A voz, pelo nome da pessoa. Local (Piper): português (Brasil): cadu, edresson, faber, jeff; português (Portugal): tugão; inglês (EUA): amy (low/medium), arctic, bryce, danny, hfc_female, hfc_male, hifi_tts_92, joe, john, kathleen (low/medium), kristin, kusal, l2arctic, lessac (low/medium/high), libritts, libritts_r, ljspeech (medium/high), mike, norman, reza_ibrahim, ryan (low/medium/high), sam; inglês (Reino Unido): alan (low/medium), alba, aru, cori (medium/high), jenny_dioco, northern_english_male, semaine, southern_english_female, vctk. Escreva só o nome (`faber`), o nome com a qualidade (`faber-medium`) ou o id completo (`pt_BR-faber-medium`); com várias qualidades, só o nome é a medium. O padrão é o `tts.voice.pt` ou o `tts.voice.en`, pelo idioma do texto; a que não está na imagem é baixada na primeira vez. Com `-gpt`: `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer`, `verse` (o padrão é o `gpt.tts.voice`). O `/tts -v` lista as vozes do Piper e o `/tts -g -v` as do ChatGPT. |
@@ -26,7 +26,7 @@ Transforma texto numa **nota de voz** de robô pelo ChatGPT (a API de voz da Ope
 ```text
 /tts Bom dia!                     → uma nota de voz falando isso
 /tts                              → respondendo um texto: fala a mensagem
-/tts fale devagar                 → respondendo um texto: fala no estilo pedido
+/tts Isso é um teste!             → respondendo um texto: fala o que foi digitado, a resposta é ignorada
 /tts -s olá, tudo bem?         → a nota de voz mais o consumo no rodapé
 /tts -speed 130 -pitch 3 Oi!   → mais rápida e mais aguda
 /tts -voice cadu Oi!           → outra voz local (cadu, cadu-medium ou pt_BR-cadu-medium)

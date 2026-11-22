@@ -127,15 +127,24 @@ describe('/tts', () => {
         assert.equal(network.calls.at(-1).cfg.body.input, 'Bom dia!');
     });
 
-    test('respondendo um texto: fala a mensagem, e o que foi digitado é o estilo', async () => {
+    test('respondendo um texto SEM digitar nada: fala a mensagem respondida', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
         const quoted = bot.createMessage({ text: 'Olá, mundo', de: OTHERAlt.jid });
 
-        await bot.execute('/tts -gpt fale devagar', { quoted });
+        await bot.execute('/tts -gpt', { quoted });
+        assert.equal(network.calls.at(-1).cfg.body.input, 'Olá, mundo');
+    });
+
+    test('respondendo um texto COM texto digitado: fala o digitado e ignora o da resposta', async () => {
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
+        const quoted = bot.createMessage({ text: 'Olá, mundo', de: OTHERAlt.jid });
+
+        await bot.execute('/tts -gpt Isso é um teste!', { quoted });
         const { body } = network.calls.at(-1).cfg;
-        assert.equal(body.input, 'Olá, mundo');
-        assert.equal(body.instructions, 'fale devagar');
+        assert.equal(body.input, 'Isso é um teste!');
+        assert.notEqual(body.instructions, 'Isso é um teste!', 'o digitado não vira estilo');
     });
 
     test('texto grande demais', async () => {

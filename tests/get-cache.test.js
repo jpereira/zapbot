@@ -854,6 +854,14 @@ describe('/stt', () => {
         assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg', 'ffprobe', 'python']);
     });
 
+    test('respondendo outra mensagem: o link digitado vale mais que o link da resposta', async () => {
+        const quoted = bot.createMessage({ text: 'veja https://example.org/outro-video', de: OTHERAlt.jid });
+        await bot.execute(`/stt ${URL}`, { quoted });
+        const asked = processes.calls.find(c => c.bin.endsWith('yt-dlp'));
+        assert.ok(asked.args.includes(URL), 'baixou o link digitado');
+        assert.ok(!asked.args.some(a => String(a).includes('outro-video')), 'e não o da resposta');
+    });
+
     test('-lang|-L, -model|-M, -beam|-b e -vad: vão para o stt.py; o padrão vem dos settings stt.*', async () => {
         const flag = (args, f) => args[args.indexOf(f) + 1];
         await bot.execute(`/stt ${URL}`);

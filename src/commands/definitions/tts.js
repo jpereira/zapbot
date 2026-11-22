@@ -65,7 +65,7 @@ module.exports = {
         },
         {
             argv: ['[<text>]'],
-            desc: 'What to speak. Replying to a message, the style of the speech.'
+            desc: 'What to speak. Typed text wins: replying to a message with text typed, the reply is ignored; with no text, the replied message (or audio) is spoken.'
         }
     ],
     expandCommands: true,   // the {/command}s of the text run and their reply is spoken

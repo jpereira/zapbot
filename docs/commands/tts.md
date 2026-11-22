@@ -16,7 +16,7 @@ the `gpt.tts.*` settings). The voice, the speed, the pitch and the volume come f
 | Option | Value | Description |
 |---|---|---|
 | `-quiet`, `-q` | | Does not show the engine tip ("💡 ... by ChatGPT, Tesseract, Piper...") at the end of the reply. To hide it always: the `tts.footer` setting off |
-| *(none)* | `[<text>]` | What to speak, up to `tts.maxChars` characters (32000; the local voice speaks it all, ChatGPT in parts of 4096 that are joined into one audio). Replying to a message, the style of the speech |
+| *(none)* | `[<text>]` | What to speak, up to `tts.maxChars` characters (32000; the local voice speaks it all, ChatGPT in parts of 4096 that are joined into one audio). Typed text wins: replying to a message with text typed, the reply is ignored; with no text, the replied message is spoken |
 | `-gpt`, `-g` | | Speaks with ChatGPT (OpenAI speech API, spends your account) instead of the local Piper voice. Without `-gpt` or `-local`, the [`tts.engine`](../settings.md) setting decides |
 | `-local`, `-l` | | Speaks with the local Piper voice (no key, uses the server CPU), even with `tts.engine` at `gpt` |
 | `-voice`, `-v` | `<name>` | The voice, by the name of the person. Local (Piper): Portuguese (Brazil): cadu, edresson, faber, jeff; Portuguese (Portugal): tugão; English (US): amy (low/medium), arctic, bryce, danny, hfc_female, hfc_male, hifi_tts_92, joe, john, kathleen (low/medium), kristin, kusal, l2arctic, lessac (low/medium/high), libritts, libritts_r, ljspeech (medium/high), mike, norman, reza_ibrahim, ryan (low/medium/high), sam; English (UK): alan (low/medium), alba, aru, cori (medium/high), jenny_dioco, northern_english_male, semaine, southern_english_female, vctk. Write just the name (`faber`), the name with the quality (`faber-medium`) or the full id (`pt_BR-faber-medium`); with several qualities the name alone is the medium one. The default is `tts.voice.pt` or `tts.voice.en`, by the language of the text; one not in the image is downloaded the first time. With `-gpt`: `alloy`, `ash`, `ballad`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer`, `verse` (the default is `gpt.tts.voice`). `/tts -v` lists the Piper voices and `/tts -g -v` the ChatGPT ones. |
@@ -28,7 +28,7 @@ the `gpt.tts.*` settings). The voice, the speed, the pitch and the volume come f
 ```text
 /tts Good morning!                → a voice note saying it
 /tts                              → replying to a text: speaks the message
-/tts speak slowly                 → replying to a text: speaks it in that style
+/tts This is a test!              → replying to a text: speaks what was typed, the reply is ignored
 /tts -s hello, how are you?   → the voice note plus the usage in the footer
 /tts -speed 130 -pitch 3 Hi!   → faster and higher
 /tts -voice amy Hi!            → another local voice (amy, amy-medium or en_US-amy-medium)

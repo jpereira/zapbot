@@ -191,9 +191,10 @@ async function talkText(msg, args, quotedMsg, cmd = '/gpt', { local = false, qui
     let textAlt = typed;
     let style = null;
 
-    // Replying to a text (or an audio, which is transcribed): what was typed is the speech style
+    // Replying to a text (or an audio, which is transcribed): in /gpt -voice, what was typed is the speech style
     // ("/gpt -voice speak like a metallic robot") and the replied content is what is spoken.
-    const replied = await contentForTalk(quotedMsg, cmd);
+    // In /tts, typed text always wins: the reply is only read when nothing was typed.
+    const replied = cmd === '/tts' && typed ? {} : await contentForTalk(quotedMsg, cmd);
     if (replied.error) {
         await msg.reply(replied.error);
         return;
