@@ -203,7 +203,7 @@ describe('/bot', () => {
         const linesAlt = r.split('\n').filter(l => /^  [+-]/.test(l)).map(l => l.trim().split(/\s{2,}/)[0]);
         assert.deepEqual(linesAlt, ['-on', '-off', '+a, -a [pessoa...]', '+u, -u [pessoa|grupo...]', '+cmd, -cmd <comandos>',
             '+limit, -limit <N[/período]|comandos>', '-list-users, -lu [all]', '-reset, -r [force]', '-status, -s [<hora>|off]', '-to <destino>',
-            '-info, -i', '-test, -t', '-denied, -d [on|off|reset|<texto>]', '-passwd <senha|off>', '-login <senha>', '-flush-email, -fe [true]', '-mask, -m']);
+            '-info, -i', '-test, -t', '-denied, -d [on|off|reset|<texto>]', '-flood, -f [off|on|<N>[/<segundos>]]', '-passwd <senha|off>', '-login <senha>', '-flush-email, -fe [true]', '-mask, -m']);
         assert.match(r, /\n  -on +Liga o bot\n/);
         assert.match(r, /\nDetalhes: https:\/\/jpereira\.github\.io\/zapbot\/pt-BR\/commands\/bot\/```$/);
         assert.doesNotMatch(r, /admin, -admin|Argumentos:/);

@@ -61,8 +61,8 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 - 📣 **Poste no seu Status** (e agende), espie o Recado de qualquer um e mude o seu. [`/status`](docs/commands/status.md) · [`/profile`](docs/commands/profile.md)
 - 📇 **Sua agenda, exportada.** O `/contacts` gera um vCard com nomes, números e fotos de perfil. [`/contacts`](docs/commands/contacts.md)
 - 🔇 **Silencie por um tempo.** `/mute -for 2h` e os avisos voltam sozinhos. [`/mute`](docs/commands/mute.md)
-- 📊 **Uso e limites.** O `/usage -all` mostra quem usa o quê, o `/bot +limit` limita cada pessoa e o `/whois -id` traz
-  os ids escondidos. [`/usage`](docs/commands/usage.md) · [`/whois`](docs/commands/whois.md)
+- 📊 **Uso e limites.** O `/usage -all` mostra quem usa o quê, o `/bot +limit` limita cada pessoa, o `/bot -flood` ajusta o
+  anti-flood e o `/whois -id` traz os ids escondidos. [`/usage`](docs/commands/usage.md) · [`/whois`](docs/commands/whois.md)
 - 🏷️ **Nomes no lugar de números.** Os avisos de mensagens apagadas, editadas e reações mostram `@Luis`, não
   `@265472113143884`. [`/show`](docs/commands/show.md)
 - 🔌 **API e MCP (experimental).** Envie mensagens e leia suas notas de scripts ou de um cliente de IA.
@@ -80,6 +80,7 @@ Pois é, a gente andou ocupado. O melhor da última leva:
 /forward /Família/ #amigos Olha isso!                 (respondendo a mensagem)
 /bot -denied Você não pode usar o $cmd aqui. Fale com $admin!
 /call -on -msg Não atendo ligações aqui, mande mensagem!
+/bot -flood 5/10                                      (no máximo 5 repetições em 10 segundos)
 /games -trivia
 /warn @Fulano postou um link
 /antilink -delete -allow youtube.com

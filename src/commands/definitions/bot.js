@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/bot',
-    usage: '/bot [-on|-off]  or  /bot +a|-a|+u|-u [+cmd|-cmd <commands>] [+limit <N[/period]>] [person...]  or  /bot -status|-info|-test|-reset  or  /bot -denied|-d [on|off|reset|<text>]  or  /bot -passwd|-login <password>',
+    usage: '/bot [-on|-off]  or  /bot +a|-a|+u|-u [+cmd|-cmd <commands>] [+limit <N[/period]>] [person...]  or  /bot -status|-info|-test|-reset  or  /bot -denied|-d [on|off|reset|<text>]  or  /bot -flood|-f [off|on|<N>[/<seconds>]]  or  /bot -passwd|-login <password>',
     aliases: [],
     summary: 'Turns the bot on/off and sets who uses the commands',
     help: 'Turns the bot on/off and sets who uses the commands: you and the admins use everything; users, the common commands. Without an option, shows the status (same as -status). -info shows the versions of what it uses.',
@@ -102,6 +102,13 @@ module.exports = {
             values: ['[on|off|reset|<text>]'],
             desc: 'The notice for whoever types a command they cannot use (instead of silence). Without a value, shows it; on and off turn it on and off (setting bot.denied.enabled); reset brings back the default text; any other text becomes the message (setting bot.denied.message), where $cmd is the typed command and $admin, the bot owner.',
             ex: ['/bot -denied', '/bot -denied on', '/bot -d off', '/bot -denied You cannot use $cmd here. Talk to $admin!'],
+            cron: false
+        },
+        {
+            opts: ['flood', 'f'],
+            values: ['[off|on|<N>[/<seconds>]]'],
+            desc: 'The flood protection: how many times a non-admin can repeat the same command within an interval (settings flood.maxCommandRepeated and flood.intervalCommand). Without a value, shows it; off turns it off; on brings back the defaults (3 times in 2 seconds); N changes the maximum and N/S also the interval in seconds.',
+            ex: ['/bot -flood', '/bot -f 5/10', '/bot -f off'],
             cron: false
         },
         {
