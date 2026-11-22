@@ -100,6 +100,11 @@ COPY --chown=node:node . .
 HEALTHCHECK --interval=30s --timeout=10s --start-period=2m --retries=3 \
     CMD ["node", "/app/docker/app/healthcheck.js"]
 
+# The web interface (zapbot.web.*, off by default): inside the container it listens on every interface, and the
+# docker-compose.yml decides who reaches it from outside (127.0.0.1:3200 by default)
+ENV ZAPBOT_WEB_HOST=0.0.0.0
+EXPOSE 3200
+
 # Runs the boot script
 ENTRYPOINT ["/bin/sh", "-x", "/app/docker/app/entrypoint.sh"]
 CMD ["npm", "start"]

@@ -10,14 +10,24 @@ services:
       dockerfile: docker/app/Dockerfile
 
     hostname: DOCKER:zapbot
+    # config/.env (the bot's variables, ZAPBOT_WEB_ENABLED among them) and, if it exists, docker/.env (the one of
+    # this file: ZAPBOT_WEB_URL, ZAPBOT_WEB_PORT...); the second wins. They must NOT be repeated in "environment" below:
+    # an "environment" entry with an empty value would override the one that comes from config/.env.
     env_file:
       - ../config/.env
+      - path: .env
+        required: false
 
     environment:
       # Egress firewall (entrypoint + docker/app/egress-firewall.sh): blocks
       # the access to the internal network and closes yt-dlp's SSRF (/get). Needs the
       # cap_add NET_ADMIN below. Change to 0 to turn off.
       - ZAPBOT_EGRESS_FIREWALL=1
+
+    # The web interface (zapbot.web.enabled + zapbot.web.password): port 3200. By default only the host itself
+    # reaches it (127.0.0.1); to open it to the network, ZAPBOT_WEB_BIND=0.0.0.0 (and prefer an HTTPS proxy in front).
+    ports:
+      - "${ZAPBOT_WEB_BIND:-127.0.0.1}:${ZAPBOT_WEB_PORT:-3200}:${ZAPBOT_WEB_PORT:-3200}"
 
     # NET_ADMIN: only so the egress firewall can apply the iptables rules.
     cap_add:
