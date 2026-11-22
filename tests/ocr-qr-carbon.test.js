@@ -370,7 +370,7 @@ describe('/tts: voz, velocidade, tom e volume', () => {
 
     test('filtros do ffmpeg: tom em semitons e volume em %; o normal não filtra', () => {
         assert.equal(voiceFilters({ pitch: 0, volume: 100 }), null);
-        assert.equal(voiceFilters({ pitch: 12, volume: 100 }), 'asetrate=48000*2.000000,aresample=48000,atempo=0.500000');
+        assert.equal(voiceFilters({ pitch: 12, volume: 100 }), 'aresample=48000,asetrate=48000*2.000000,aresample=48000,atempo=0.500000');
         assert.equal(voiceFilters({ pitch: 0, volume: 150 }), 'volume=1.50');
     });
 
@@ -389,7 +389,7 @@ describe('/tts: voz, velocidade, tom e volume', () => {
         assert.equal(flag(py, '--voice'), 'en_US-amy-medium');
         assert.equal(flag(py, '--speed'), '1.5');
         const ff = call('ffmpeg').at(-1).args;
-        assert.match(ff[ff.indexOf('-af') + 1], /^asetrate=48000\*1\.189207,aresample=48000,atempo=0\.840896,volume=2\.00$/);
+        assert.match(ff[ff.indexOf('-af') + 1], /^aresample=48000,asetrate=48000\*1\.189207,aresample=48000,atempo=0\.840896,volume=2\.00$/);
     });
 
     test('settings tts.speed|pitch|volume são o padrão; a opção da chamada vence', async () => {

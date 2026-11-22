@@ -77,9 +77,11 @@ function listVoices(engine) {
 function voiceFilters({ pitch = 0, volume = 100 }) {
     const filters = [];
     if (pitch) {
-        // Raises the pitch by speeding the sample rate up, then brings the time back
+        // Raises the pitch by speeding the sample rate up, then brings the time back. The first aresample is
+        // needed: asetrate assumes 48000 Hz, and the Piper WAV is 22050 Hz (without it, any pitch made the
+        // voice 2.2 times faster)
         const ratio = 2 ** (pitch / 12);
-        filters.push(`asetrate=48000*${ratio.toFixed(6)}`, 'aresample=48000', `atempo=${(1 / ratio).toFixed(6)}`);
+        filters.push('aresample=48000', `asetrate=48000*${ratio.toFixed(6)}`, 'aresample=48000', `atempo=${(1 / ratio).toFixed(6)}`);
     }
     if (volume !== 100) filters.push(`volume=${(volume / 100).toFixed(2)}`);
     return filters.length ? filters.join(',') : null;
