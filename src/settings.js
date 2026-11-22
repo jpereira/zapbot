@@ -1033,7 +1033,12 @@ const SETTINGS_SCHEMA = {
         type: 'string',
         allowEmpty: true,
         secret: true,
-        desc: 'A chave da API HTTP (cabeçalho Authorization: Bearer <chave> ou X-API-Key). Vazia: a API não inicia. Use uma chave longa e aleatória.'
+        validate: (v) => {
+            const min = 20;
+            if (v && v.length < min) throw new Error(t('adm.settings.badApiKey', { min }));
+            return v;
+        },
+        desc: 'A chave da API HTTP (cabeçalho Authorization: Bearer <chave> ou X-API-Key), com pelo menos 20 caracteres. Vazia: a API não inicia. Use uma chave longa e aleatória.'
     },
     'zapbot.api.port': {
         default: 3100,

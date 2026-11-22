@@ -345,6 +345,7 @@ module.exports = {
     'adm.settings.integer': 'precisa ser um número inteiro',
     'adm.settings.range': 'precisa estar entre {min} e {max}',
     'adm.settings.length': 'precisa ter de 1 a {max} caracteres',
+    'adm.settings.badApiKey': 'a chave da API precisa de pelo menos {min} caracteres (uma curta é força-bruta rápido)',
     'adm.settings.unsupported': 'não suportado: {s} (aceitos: {list})',
     'adm.settings.badType': 'tipo inválido no schema: {type}',
     'adm.settings.monitorMax': 'há {n} contatos cadastrados: remova contatos pelo /monitor -rm antes de reduzir o limite',

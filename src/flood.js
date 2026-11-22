@@ -7,7 +7,8 @@
 
 const { getSetting } = require('./settings');
 
-const uses = new Map();         // who → Map(command → recent instants)
+const MAX_TRACKED = 4096;
+const uses = new Map();         // who → { commands, last }
 const blockedAlt = new Map();   // who → until when the bot ignores them
 
 /**
@@ -27,8 +28,19 @@ function checkFlood(who, commandAlt, nowAlt = Date.now()) {
     if (until && nowAlt < until) return { allowed: false };
     blockedAlt.delete(who);
 
-    const whoAlt = uses.get(who) ?? new Map();
-    uses.set(who, whoAlt);
+    if (!uses.has(who) && uses.size + blockedAlt.size >= MAX_TRACKED) {
+        for (const [id, entry] of uses) {
+            if (nowAlt - entry.last >= window) uses.delete(id);
+        }
+        for (const [id, expiry] of blockedAlt) {
+            if (expiry <= nowAlt) blockedAlt.delete(id);
+        }
+        if (uses.size + blockedAlt.size >= MAX_TRACKED) return { allowed: false };
+    }
+    const entry = uses.get(who) ?? { commands: new Map(), last: nowAlt };
+    entry.last = nowAlt;
+    uses.set(who, entry);
+    const whoAlt = entry.commands;
     const recent = (whoAlt.get(commandAlt) ?? []).filter(t => nowAlt - t < window);
 
     if (recent.length >= max) {

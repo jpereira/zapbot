@@ -5,11 +5,12 @@
  * (WhatsApp and email). Get it wrong too often and the number is blocked for a while.
  */
 
-const crypto = require('crypto');
 const { messageToSelf } = require('./client');
 const { dbRun } = require('./db');
+const { checkPassword, createHash } = require('./util/password');
 const { alertPerEmail } = require('./email');
 const { printInfo } = require('./log');
+const { attemptFor } = require('./util/attempts');
 const { getSetting, setSetting } = require('./settings');
 const { t } = require('./i18n');
 
@@ -19,21 +20,6 @@ const PASSWORD_MIN = 8;
 
 // number → { errors, until }
 const attempts = new Map();
-
-const hash = (password, salt) => crypto.scryptSync(password, salt, 32);
-
-function createHash(password) {
-    const salt = crypto.randomBytes(8);
-    return `scrypt$${salt.toString('hex')}$${hash(password, salt).toString('hex')}`;
-}
-
-function checkPassword(password, saved) {
-    const [alg, salt, expected] = String(saved ?? '').split('$');
-    if (alg !== 'scrypt' || !salt || !expected) return false;
-    const a = hash(password, Buffer.from(salt, 'hex'));
-    const b = Buffer.from(expected, 'hex');
-    return a.length === b.length && crypto.timingSafeEqual(a, b);
-}
 
 // What comes after "-login": the password (the rest of the line, may have spaces)
 function loginPassword(args) {
@@ -67,10 +53,19 @@ async function tryLogin({ number: numberAlt, name: nameAlt, password, isGroup })
     if (!numberAlt) return t('login.semNumero');
     if (!password) return t('login.uso');
 
-    const tent = attempts.get(numberAlt) ?? { errors: 0, until: 0 };
+    const tent = attemptFor(attempts, numberAlt, BLOCK_MS);
+    if (!tent || tent.active) return t('login.muitasTentativas', { min: 1 });
     if (tent.until > Date.now()) return t('login.muitasTentativas', { min: Math.ceil((tent.until - Date.now()) / 60000) });
 
-    if (!checkPassword(password, saved)) {
+    tent.active = true;
+    let valid;
+    try {
+        valid = await checkPassword(password, saved);
+    } finally {
+        tent.active = false;
+    }
+    if (valid === null) return t('login.muitasTentativas', { min: 1 });
+    if (!valid) {
         tent.errors += 1;
         if (tent.errors >= MAX_ERRORS) {
             tent.errors = 0;
@@ -78,7 +73,6 @@ async function tryLogin({ number: numberAlt, name: nameAlt, password, isGroup })
             await notifyOwner(t('login.bloqueadoTitulo'),
                 t('login.bloqueadoCorpo', { name: nameAlt, number: numberAlt, errors: MAX_ERRORS, min: BLOCK_MS / 60000 }));
         }
-        attempts.set(numberAlt, tent);
         printInfo(`/bot -login: wrong password from ${nameAlt} (+${numberAlt})`);
         return t('login.senhaIncorreta');
     }

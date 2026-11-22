@@ -35,12 +35,13 @@ ports:
 `zapbot.api.host` is `127.0.0.1` by default; inside a container, set it to `0.0.0.0` (the published port
 above is what keeps it closed to the network).
 
-Without `zapbot.api.key` the API does not start (the log says so).
+Without `zapbot.api.key` the API does not start (the log says so), and it needs at least 20 characters: a short
+one is brute-forced too fast.
 
 ## Endpoints
 
 Every call (except `/health`) sends the key in the `Authorization: Bearer <key>` header (or in
-`X-API-Key`).
+`X-API-Key`). 5 wrong keys from the same address block it for 15 minutes, the same as the web interface's login.
 
 | Method | Path | What it does |
 |---|---|---|

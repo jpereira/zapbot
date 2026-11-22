@@ -11,6 +11,7 @@
  * Security (the API speaks through the owner's account):
  * - only turns on with zapbot.api.enabled AND zapbot.api.key (the key comes in the "Authorization: Bearer <key>" header
  * or "X-API-Key", compared in constant time); the default listens only on 127.0.0.1;
+ * - 5 wrong keys from the same address block it for 15 minutes, the same as the web login;
  * - /send only delivers to your own chat and to the one in zapbot.api.sendTo ("all" allows any);
  * - at most 10 sends per minute (the excess is what takes accounts down) and a body of up to 64 KB.
  */
@@ -24,10 +25,13 @@ const { dbAll, dbGet, dbReady } = require('./db');
 const { state: stateAlt } = require('./state');
 const { printError, printInfo } = require('./log');
 const { getSetting } = require('./settings');
+const { attemptFor } = require('./util/attempts');
 
 const MAX_BODY = 64 * 1024;
 const MAX_TEXT = 4000;
 const SENDINGS_PER_MIN = 10;
+const MAX_KEY_ERRORS = 5;
+const KEY_BLOCK_MS = 15 * 60 * 1000;
 const MCP_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 
 class ErrorApi extends Error {
@@ -39,8 +43,13 @@ class ErrorApi extends Error {
 
 const hash = (s) => crypto.createHash('sha256').update(String(s)).digest();
 
+// address → { errors, until } (wrong API keys, like the web login's own attempts)
+const keyAttempts = new Map();
+
+const clientAddress = (req) => req.socket.remoteAddress ?? '?';
+
 // The right key? (constant time; with no key configured, nobody gets in)
-function authenticated(req) {
+function keyMatches(req) {
     const keyAlt = getSetting('zapbot.api.key');
     if (!keyAlt) return false;
     const auth = String(req.headers.authorization ?? '');
@@ -48,11 +57,38 @@ function authenticated(req) {
     return crypto.timingSafeEqual(hash(sent), hash(keyAlt));
 }
 
+/**
+ * The key check, with the same brute-force protection as the web login: 5 wrong keys from an address block it for
+ * 15 minutes (without this, a short or leaked zapbot.api.key could be brute-forced at full speed, silently: a wrong
+ * key used to cost nothing, was never logged and never counted anywhere). With no key configured there is nothing
+ * to guess, so that case is not tracked at all (it never blocks, and nobody gets in anyway).
+ */
+function authenticated(req) {
+    if (!getSetting('zapbot.api.key')) return false;
+    const address = clientAddress(req);
+    const entry = attemptFor(keyAttempts, address, KEY_BLOCK_MS);
+    if (!entry || entry.until > Date.now()) return false;
+    if (keyMatches(req)) {
+        keyAttempts.delete(address);
+        return true;
+    }
+    entry.errors += 1;
+    if (entry.errors >= MAX_KEY_ERRORS) {
+        entry.errors = 0;
+        entry.until = Date.now() + KEY_BLOCK_MS;
+        printError(`API: ${MAX_KEY_ERRORS} wrong keys from ${address}: blocked for ${KEY_BLOCK_MS / 60000} minutes`);
+    } else {
+        printError(`API: wrong key from ${address}`);
+    }
+    return false;
+}
+
 // Sliding window of the last minute's sends
 let sendings = [];
+let pendingSends = 0;
 const sendingsLimit = (nowAlt = Date.now()) => {
     sendings = sendings.filter(t => nowAlt - t < 60_000);
-    return sendings.length >= SENDINGS_PER_MIN;
+    return sendings.length + pendingSends >= SENDINGS_PER_MIN;
 };
 
 /**
@@ -89,8 +125,14 @@ async function send({ to, text }) {
     if (!stateAlt.ready) throw new ErrorApi(503, 'WhatsApp not connected');
     if (sendingsLimit()) throw new ErrorApi(429, `at most ${SENDINGS_PER_MIN} messages per minute`);
 
-    const id = await resolverDestination(to);
-    sendings.push(Date.now());
+    pendingSends++;
+    let id;
+    try {
+        id = await resolverDestination(to);
+        sendings.push(Date.now());
+    } finally {
+        pendingSends--;
+    }
     await client.sendMessage(id, textAlt);
     printInfo(`API: message sent to ${id} (${textAlt.length} characters)`);
     return { ok: true, to: id };
@@ -279,11 +321,15 @@ async function startApi() {
 // Resets the minute's send count (the tests)
 const restartSendings = () => { sendings = []; };
 
+// Forgets every tracked wrong key (the tests)
+const resetApiAttempts = () => { keyAttempts.clear(); };
+
 module.exports = {
     ErrorApi,
     TOOLS,
     createServer,
     startApi,
     restartSendings,
+    resetApiAttempts,
     handleMcp
 };

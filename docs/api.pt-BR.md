@@ -35,12 +35,13 @@ ports:
 O `zapbot.api.host` é `127.0.0.1` por padrão; dentro de um container, ponha `0.0.0.0` (a porta publicada
 acima é o que a mantém fechada para a rede).
 
-Sem a `zapbot.api.key` a API não inicia (o log avisa).
+Sem a `zapbot.api.key` a API não inicia (o log avisa), e ela precisa de pelo menos 20 caracteres: uma curta é
+força-bruta rápido demais.
 
 ## Endpoints
 
 Toda chamada (menos o `/health`) manda a chave no cabeçalho `Authorization: Bearer <chave>` (ou em
-`X-API-Key`).
+`X-API-Key`). 5 chaves erradas do mesmo endereço bloqueiam por 15 minutos, igual ao login da interface web.
 
 | Método | Caminho | O que faz |
 |---|---|---|

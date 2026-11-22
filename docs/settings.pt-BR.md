@@ -160,7 +160,7 @@ em português).
 | `weather.userAgent` | texto | `weather-bot/1.0` | O User-Agent das consultas às fontes extras. A MET Norway pede que ele identifique o cliente e dê um contato |
 | `zapbot.api.enabled` | on/off | `off` | Liga a API HTTP local ([API e MCP](api.md)): `/health`, `/status`, `/notes` e `/send`, com a `zapbot.api.key`. Vale ao reiniciar o bot |
 | `zapbot.api.host` | texto | `127.0.0.1` | Endereço em que a API escuta. O padrão só atende a própria máquina; fora dele, ponha um proxy com HTTPS na frente. Vale ao reiniciar |
-| `zapbot.api.key` | texto (pode ser vazio) | *(vazio)* | A chave da API (cabeçalho `Authorization: Bearer <chave>` ou `X-API-Key`). Vazia: a API não inicia. Exibida mascarada; use uma chave longa e aleatória |
+| `zapbot.api.key` | texto (pode ser vazio) | *(vazio)* | A chave da API (cabeçalho `Authorization: Bearer <chave>` ou `X-API-Key`), com pelo menos 20 caracteres. Vazia: a API não inicia. Exibida mascarada; use uma chave longa e aleatória |
 | `zapbot.api.port` | 1024–65535 | `3100` | Porta da API HTTP. Vale ao reiniciar |
 | `zapbot.api.sendTo` | lista | *(vazia)* | Para onde o `POST /send` e o `send_message` do MCP podem mandar além do seu próprio chat: telefones com DDI, ids de grupo (`…@g.us`) ou `all` (qualquer destino: só se você confia em quem tem a chave) |
 | `zapbot.email.alerts` | on/off | `on` | Alertas por e-mail (crash, queda, reconexão...) pelo SMTP do QR Code. Veja [Alertas por e-mail](emails.md#alertas-por-e-mail) |

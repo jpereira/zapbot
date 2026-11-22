@@ -6,7 +6,7 @@ const bot = require('./helpers/bot');
 const { test, before, after, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { createServer, TOOLS, restartSendings } = bot.src('api');
+const { createServer, TOOLS, restartSendings, resetApiAttempts } = bot.src('api');
 const { OTHERAlt } = bot;
 const KEY = 'chave-de-teste-bem-longa-0123456789';
 
@@ -24,6 +24,7 @@ after(() => new Promise(r => server.close(r)));
 beforeEach(async () => {
     await bot.restart();
     restartSendings();
+    resetApiAttempts();
     await bot.setSetting('zapbot.api.key', KEY);
     await bot.setSetting('zapbot.mcp.enabled', true);
     bot.client.getNumberId = async (n) => ({ _serialized: n + '@c.us' });
@@ -47,6 +48,22 @@ test('/health: sem chave; o resto exige a chave (Bearer ou X-API-Key), e sem zap
     await bot.setSetting('zapbot.api.key', '');
     assert.equal((await get('/status', { authorization: 'Bearer ' })).status, 401);
     assert.equal((await get('/status', {})).status, 401);
+});
+
+test('/status: 5 chaves erradas bloqueiam o endereço por 15 minutos (como no login da web); sem chave configurada, não conta', async () => {
+    assert.equal((await get('/status', {})).status, 401);
+    assert.equal((await get('/status', {})).status, 401);
+    assert.equal((await get('/status', {})).status, 401);
+    assert.equal((await get('/status', {})).status, 401);
+    assert.equal((await get('/status', {})).status, 401, 'a 5ª errada bloqueia a partir de agora');
+
+    assert.equal((await get('/status')).status, 401, 'mesmo com a chave certa, o endereço está bloqueado');
+
+    await bot.setSetting('zapbot.api.key', '');
+    assert.equal((await get('/status', {})).status, 401, 'sem chave configurada, não há o que adivinhar: não conta para o bloqueio');
+    await bot.setSetting('zapbot.api.key', KEY);
+    resetApiAttempts();
+    assert.equal((await get('/status')).status, 200, 'e o bloqueio anterior não sobrevive a um reset (memória, não é persistido)');
 });
 
 test('/status e rota desconhecida', async () => {
@@ -98,6 +115,25 @@ test('/send: "all" libera qualquer destino; número fora do WhatsApp dá 404; de
     bot.state.ready = false;
     assert.equal((await post('/send', { to: bot.OWNER.user, text: 'x' })).status, 503);
     bot.state.ready = true;
+});
+
+test('/send: encaminha pontuação e marcação como texto literal', async () => {
+    const text = "O'Connor: 20%_off; <rascunho>";
+    const reply = await post('/send', { to: bot.OWNER.user, text });
+    assert.equal(reply.status, 200);
+    assert.equal(bot.client.sent.at(-1).content, text);
+});
+
+test('/send: reserva o limite enquanto resolve números em paralelo', async () => {
+    const resolveNumber = bot.client.getNumberId;
+    bot.client.getNumberId = async number => {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        return resolveNumber(number);
+    };
+    const results = await Promise.all(Array.from({ length: 12 }, (_, i) =>
+        post('/send', { to: bot.OWNER.user, text: 'mensagem ' + i })));
+    assert.equal(results.filter(r => r.status === 200).length, 10);
+    assert.equal(results.filter(r => r.status === 429).length, 2);
 });
 
 test('/send: no máximo 10 por minuto', async () => {
