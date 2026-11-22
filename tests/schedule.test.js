@@ -508,8 +508,8 @@ describe('/cron: comandos no texto ({/comando})', () => {
         assert.equal(line.content, 'Piada: ⚠️ /joke não roda no /cron fim');
     });
 
-    test('{/bot -flush-email true} só o dono agenda; as outras opções do /bot são recusadas', async () => {
-        assert.match((await bot.replyAlt('/cron +1h -to L200 Hora de limpar {/bot -fe true}'))[0],
+    test('{/bot -flush-email -yes} só o dono agenda; as outras opções do /bot são recusadas', async () => {
+        assert.match((await bot.replyAlt('/cron +1h -to L200 Hora de limpar {/bot -fe -yes}'))[0],
             /^📅 \*Mensagem agendada\*/);
         assert.match((await bot.replyAlt('/cron +1h -to L200 x {/bot -off}', { expectedError: true }))[0],
             /o -off do \/bot não roda dentro do \/cron/);
