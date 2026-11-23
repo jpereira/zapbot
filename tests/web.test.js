@@ -311,6 +311,33 @@ describe('chats and messages', () => {
         assert.deepEqual((await (await get('/api/chats?q=9999', cookie)).json()).chats.map(c => c.id), [CHAT]);
     });
 
+    test('renamed groups use the newest saved name and prefer the live subject', async () => {
+        const group = '120363000000000098@g.us';
+        await insert('G2', group, { chatName: 'Zzz nome antigo', group: true, body: 'texto da escalada', at: 2001 });
+        await insert('G3', group, { chatName: 'Escaladas Clássicas', group: true, body: 'novo', at: 2002 });
+        await insert('G4', group, { chatName: ' ', group: true, body: 'sem nome', at: 2003 });
+
+        const chats = async () => (await (await get('/api/chats?q=escaladas', cookie)).json()).chats;
+        assert.equal((await chats())[0].name, 'Escaladas Clássicas');
+        const chat = async () => (await get('/api/chat?chat=' + encodeURIComponent(group), cookie)).json();
+        assert.equal((await chat()).name, 'Escaladas Clássicas');
+        const search = await (await get('/api/search?q=escalada', cookie)).json();
+        assert.equal(search.results[0].chatName, 'Escaladas Clássicas');
+
+        const original = bot.client.getChatById;
+        const page = bot.client.pupPage;
+        bot.client.pupPage = {};
+        bot.client.getChatById = async id => id === group
+            ? { name: 'Nome antigo no modelo', groupMetadata: { subject: 'Escaladas ao vivo' } }
+            : original.call(bot.client, id);
+        try {
+            assert.equal((await chat()).name, 'Escaladas ao vivo');
+        } finally {
+            bot.client.pupPage = page;
+            bot.client.getChatById = original;
+        }
+    });
+
     test('a chat with only the number as the stored name shows +number', async () => {
         await insert('N1', '5521977770003@c.us', { chatName: '5521977770003', body: 'x', at: 3000 });
         const { chats } = await (await get('/api/chats', cookie)).json();

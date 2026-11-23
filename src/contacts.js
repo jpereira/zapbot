@@ -91,11 +91,11 @@ async function resolveLidToPhone(lidJid) {
 const GROUP_NAME_TTL_MS = 10 * 60 * 1000;
 const groupNameCache = new Map();
 
-async function groupResolverName(chatId) {
+async function groupResolverName(chatId, { maxAge = GROUP_NAME_TTL_MS } = {}) {
     if (!chatId?.endsWith('@g.us')) return null;
 
     const cache = groupNameCache.get(chatId);
-    if (cache && Date.now() - cache.at < GROUP_NAME_TTL_MS) return cache.name;
+    if (cache && Date.now() - cache.at < maxAge) return cache.name;
 
     const chat = await client.getChatById(chatId).catch((err) => {
         if (isDebugMode()) printDebug(`[GROUP] getChatById failed for ${chatId}: ${err?.message || err}`);
@@ -105,8 +105,8 @@ async function groupResolverName(chatId) {
     // getChatById builds the group's full model and breaks for some groups (@lid);
     // in that case we read the subject straight from the WhatsApp Web collections.
     const name =
-        chat?.name ||
         chat?.groupMetadata?.subject ||
+        chat?.name ||
         (await groupInStoreName(chatId)) ||
         null;
 

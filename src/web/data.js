@@ -9,7 +9,7 @@ const path = require('path');
 const { client } = require('../client');
 const { CONTACTS_DIR, MEDIA_DIR } = require('../constants');
 const { contactPhoto } = require('../contactPhotos');
-const { privateResolverName, resolveLidToPhone, resolverMentions } = require('../contacts');
+const { groupResolverName, privateResolverName, resolveLidToPhone, resolverMentions } = require('../contacts');
 const { dbAll, dbGet } = require('../db');
 const { getSetting } = require('../settings');
 const { isJpegPreview, visibleBody } = require('../util/messageBody');
@@ -18,6 +18,7 @@ const { findMatch } = require('../watch/rules');
 const STATUS = 'status@broadcast';
 const MAX_PAGE = 500;
 const NAME_TIMEOUT_MS = 2500;
+const GROUP_NAME_TTL_MS = 30_000;
 
 // The media the browser may show on the page itself; the rest is always a download
 const INLINE_TYPES = {
@@ -77,7 +78,15 @@ async function chatName(chat) {
     const id = chat.chat_id;
     if (id === STATUS) return 'Status';
     const stored = String(chat.chat_name ?? '').trim();
-    if (chat.is_group || id.endsWith('@g.us')) return stored || id.split('@')[0];
+    if (chat.is_group || id.endsWith('@g.us')) {
+        const live = client.pupPage && await withTimeout(
+            groupResolverName(id, { maxAge: GROUP_NAME_TTL_MS }).catch(() => null), NAME_TIMEOUT_MS);
+        if (live) return live;
+        const last = await dbGet(`SELECT chat_name FROM messages
+            WHERE chat_id = ? AND TRIM(chat_name) <> ''
+            ORDER BY timestamp DESC, id DESC LIMIT 1`, [id]);
+        return last?.chat_name.trim() || stored || id.split('@')[0];
+    }
 
     const cached = names.get(id);
     let live = cached && Date.now() - cached.at < NAME_TTL_MS ? cached.name : null;
@@ -272,8 +281,12 @@ async function searchMessages(q, limit = 60) {
         WHERE (body LIKE ? ESCAPE '\\' OR transcription LIKE ? ESCAPE '\\') AND type <> '${E2E}' ORDER BY timestamp DESC LIMIT ?`, [like, like, Math.min(200, Number(limit) || 60)]);
     const matches = rows.filter(r => !isJpegPreview(r.body)
         || String(r.transcription ?? '').toLowerCase().includes(text.toLowerCase()));
+    const labels = new Map();
+    for (const row of matches) {
+        if (!labels.has(row.chat_id)) labels.set(row.chat_id, chatName(row));
+    }
     return Promise.all(matches.map(async r => ({
-        id: r.id, chat: r.chat_id, chatName: await chatName(r), at: r.timestamp, fromMe: Boolean(r.from_me), sender: r.sender_name || null,
+        id: r.id, chat: r.chat_id, chatName: await labels.get(r.chat_id), at: r.timestamp, fromMe: Boolean(r.from_me), sender: r.sender_name || null,
         deleted: Boolean(r.revoked), body: visibleBody(r.body).slice(0, 200)
     })));
 }
