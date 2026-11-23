@@ -9,7 +9,8 @@
 const { MessageMedia } = require('whatsapp-web.js');
 
 const { commandUsage } = require('./base');
-const { completeNotice } = require('../client');
+const { phoneBotJid } = require('../botPhone');
+const { client, completeNotice } = require('../client');
 const { describeAlarms, fromGoogleJson, gptInstructions, parseLocal, toGoogleJson, toGoogleLink, toIcs } = require('../calendar');
 const { CHATGPT, engineProcessing, gptAllowed, pickEngine, withEngineTip } = require('../engines');
 const { t } = require('../i18n');
@@ -36,7 +37,30 @@ function describe(event) {
     ].filter(Boolean).join('\n');
 }
 
-async function build({ msg, args, opts, quotedMsg, admin, chatId, isGroup, senderNumber }) {
+async function outputFor({ msg, opts, quotedMsg, senderContact }) {
+    if (!quotedMsg || opts.opt.dest || !getSetting('calendar.outputToPrivate')) return msg;
+
+    const privateId = msg.fromMe
+        ? phoneBotJid()
+        : msg.author ?? senderContact?.id?._serialized ?? msg.from;
+    if (!/^[0-9]+@(?:c\.us|lid)$/.test(privateId ?? '')) {
+        printError('/calendar: could not resolve private output');
+        return null;
+    }
+    try {
+        await msg.delete(true);
+    } catch (err) {
+        printError('/calendar: could not delete the command:', err.message);
+    }
+    return {
+        reply: (content, _, options) => client.sendMessage(privateId, content, options)
+    };
+}
+
+async function build(ctx) {
+    const { args, opts, quotedMsg, admin, chatId, isGroup, senderNumber } = ctx;
+    const msg = await outputFor(ctx);
+    if (!msg) return;
     let engine;
     try {
         engine = pickEngine(opts, 'calendar.engine');
@@ -55,7 +79,7 @@ async function build({ msg, args, opts, quotedMsg, admin, chatId, isGroup, sende
     }
 
     // What was typed wins; without it, the replied message
-    const typed = String(args ?? '').replace(/(^|\s)-(?:quiet|q|gpt|g|local|l|json|j|status|s)(?=\s|$)/g, ' ').trim();
+    const typed = String(args ?? '').replace(/(^|\s)-(?:quiet|q|gpt|g|local|l|json|j|status|s|dest|d)(?=\s|$)/g, ' ').trim();
     const text = (typed || String(quotedMsg?.body ?? '')).trim();
     if (!text) {
         await msg.reply(commandUsage('/calendar'));

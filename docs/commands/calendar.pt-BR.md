@@ -5,8 +5,12 @@ convite) num **evento de agenda**: um arquivo `.ics` que abre no Google Agenda, 
 Outlook, um **link que o adiciona ao Google Agenda** (o formulário já preenchido) e, se você pedir, o evento como
 a **API do Google Calendar** quer. Mande o texto depois do comando ou **responda** a mensagem que o tem.
 
+Ao responder a um convite, os avisos, os erros e o arquivo vão para o privado de quem chamou.
+O bot tenta apagar a mensagem com o comando. Use `-d` ou `-dest` para manter a mensagem e receber
+o resultado na conversa atual. Sem reply, o resultado vai para a conversa em que você digitou.
+
 ```text
-/calendar [-quiet|-q] [-gpt|-g] [-local|-l] [-status|-s] [<texto>]
+/calendar [-quiet|-q] [-gpt|-g] [-local|-l] [-status|-s] [-dest|-d] [<texto>]
 ```
 
 | Opção | Valor | Descrição |
@@ -14,6 +18,7 @@ a **API do Google Calendar** quer. Mande o texto depois do comando ou **responda
 | `-quiet`, `-q` | | Só o arquivo `.ics`: sem aviso, sem resumo, sem link e sem rodapé |
 | `-gpt`, `-g` | | O ChatGPT lê o texto e responde o evento no **JSON do Google Calendar** (gasta a sua conta da OpenAI). Sem `-gpt` nem `-local`, vale o setting `calendar.engine` |
 | `-local`, `-l` | | Lê localmente (sem chave, pelos rótulos e pelo formato das datas e horas), mesmo com o `calendar.engine` em `gpt` |
+| `-dest`, `-d` | | Envia os avisos e o evento nesta conversa |
 | `-status`, `-s` | | Com `-gpt`: acrescenta o consumo da chamada no rodapé (TX/RX, tokens, custo e saldo) |
 | *(nenhuma)* | `[<texto>]` | O texto com o compromisso. O digitado vale mais; sem ele, a mensagem respondida |
 
@@ -134,6 +139,7 @@ local é para todos. O fuso é o `calendar.timezone` (`America/Sao_Paulo` por pa
 | Setting | Padrão | O que faz |
 |---|---|---|
 | `calendar.engine` | `local` | `local` ou `gpt`; `-local` e `-gpt` escolhem na chamada |
+| `calendar.outputToPrivate` | `on` | Envia o resultado dos replies no privado de quem chamou |
 | `calendar.timezone` | `America/Sao_Paulo` | Fuso das datas e horas do texto (nome IANA) |
 | `calendar.duration` | `60` | Minutos do evento quando o texto não diz |
 | `calendar.addEmoji` | `on` | O título começa com um emoji do tipo do evento (`off` desliga) |

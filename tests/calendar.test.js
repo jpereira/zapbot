@@ -236,6 +236,34 @@ describe('/calendar', () => {
         assert.match(file.options.caption, /➕ Adicionar ao Google Agenda: https:\/\/calendar\.google\.com\/calendar\/render\?action=TEMPLATE[^\n]*\n\n💡 _Processado por leitor local_$/);
     });
 
+    test('reply output is private for the caller and only the command is deleted', async () => {
+        const quoted = bot.createMessage({ text: CLINIC, de: bot.OWNER.jid });
+        const cmd = bot.createMessage({ text: '/cal', de: OTHERAlt.jid, quoted });
+        const result = await bot.deliver(cmd);
+        assert.equal(result.length, 2);
+        for (const item of result) {
+            assert.equal(item.chatId, OTHERAlt.jid);
+            assert.equal(item.options.quotedMessageId, undefined);
+        }
+        assert.equal(cmd.deletedFor, 'todos');
+        assert.equal(quoted.deletedFor, undefined);
+    });
+
+    test('reply errors are private, and -d or turning the setting off keeps output in the chat', async () => {
+        const quoted = bot.createMessage({ text: 'sem data' });
+        const error = await bot.execute('/cal', { quoted });
+        assert.equal(error.at(-1).chatId, bot.OWNER.jid);
+        assert.match(error.at(-1).text, /Não achei uma data/);
+        quoted.body = CLINIC;
+        const direct = bot.createMessage({ text: '/cal -d', quoted });
+        assert.equal(media(await bot.deliver(direct)).chatId, bot.GROUP);
+        assert.equal(direct.deletedFor, undefined);
+        await bot.setSetting('calendar.outputToPrivate', false);
+        const bySetting = bot.createMessage({ text: '/cal', quoted });
+        assert.equal(media(await bot.deliver(bySetting)).chatId, bot.GROUP);
+        assert.equal(bySetting.deletedFor, undefined);
+    });
+
     test('typed text wins over the reply; /cal is the same; -q sends only the file; -json adds the Google JSON', async () => {
         const quoted = bot.createMessage({ text: HOSPITAL, de: OTHERAlt.jid });
         const typed = media(await bot.execute('/cal Dentista 03/12/2026 às 14h', { quoted }));

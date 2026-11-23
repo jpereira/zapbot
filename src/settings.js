@@ -267,6 +267,11 @@ const SETTINGS_SCHEMA = {
         type: 'boolean',
         desc: 'O /calendar manda o link "➕ Adicionar ao Google Agenda". O -quiet (-q) já esconde na chamada; este setting desliga sempre. O .ics continua indo (abre no Apple Calendar e no Outlook).'
     },
+    'calendar.outputToPrivate': {
+        default: true,
+        type: 'boolean',
+        desc: 'Ao responder uma mensagem com /calendar, envia os avisos e o evento no privado de quem chamou.'
+    },
     'calendar.timezone': {
         default: 'America/Sao_Paulo',
         type: 'string',

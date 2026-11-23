@@ -33,6 +33,7 @@ shows are in Portuguese; the ones here are in English).
 | `calendar.engine` | text | `local` | Engine of `/calendar`: `local` (labels and shape of the dates, no key) or `gpt` (ChatGPT answers with the Google Calendar JSON). `-gpt` and `-local` choose per call |
 | `calendar.footer` | on/off | `on` | Ends the `/calendar` reply with the `💡 Processed by <engine>` tip. `-quiet` hides it per call |
 | `calendar.googleLink` | on/off | `on` | `/calendar` sends the "➕ Add to Google Calendar" link. `-quiet` already hides it per call; this setting turns it off always. The `.ics` still goes (opens in Apple Calendar and Outlook) |
+| `calendar.outputToPrivate` | on/off | `on` | Sends notices and the event privately when `/calendar` replies to a message. Use `-d` to send to the current chat |
 | `calendar.timezone` | text | `America/Sao_Paulo` | Time zone in which `/calendar` reads the dates and times of the text (IANA name) |
 | `call.allow` | list | *(empty)* | Numbers (with country code) whose calls are never rejected, even with `call.reject` on. `bot.admins` always get through too. Same as `/call -allow`. |
 | `call.message` | text (can be empty) | `""` | Message sent to whoever had the call rejected (at most one every 10 minutes per person). Empty: the default text of the bot's language (`zapbot.lang`). `off`: rejects in silence. Same as `/call -msg`: see [`/call`](commands/call.md) |

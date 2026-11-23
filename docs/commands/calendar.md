@@ -5,8 +5,12 @@ Turns a text with an **appointment** (a clinic's "appointment confirmed" message
 it to Google Calendar** (the form already filled) and, on request, the event as the **Google Calendar API** wants
 it. Send the text after the command or **reply** to the message with it.
 
+When replying to an invitation, notices, errors and the file go to your private chat.
+The bot attempts to delete the command message. Use `-d` or `-dest` to keep it and receive the result
+in the current chat. When you type an event without replying to a message, output stays in that chat.
+
 ```text
-/calendar [-quiet|-q] [-gpt|-g] [-local|-l] [-status|-s] [<text>]
+/calendar [-quiet|-q] [-gpt|-g] [-local|-l] [-status|-s] [-dest|-d] [<text>]
 ```
 
 | Option | Value | Description |
@@ -14,6 +18,7 @@ it. Send the text after the command or **reply** to the message with it.
 | `-quiet`, `-q` | | Only the `.ics` file: no notice, no summary, no link and no footer |
 | `-gpt`, `-g` | | ChatGPT reads the text and answers with the event in the **Google Calendar JSON** (spends your OpenAI account). Without `-gpt` or `-local`, the `calendar.engine` setting |
 | `-local`, `-l` | | Reads locally (no key, by the labels and the shape of the dates and times), even when `calendar.engine` is `gpt` |
+| `-dest`, `-d` | | Sends notices and the event to the current chat |
 | `-status`, `-s` | | With `-gpt`: adds the call usage to the footer (TX/RX, tokens, cost and balance) |
 | *(none)* | `[<text>]` | The text with the appointment. Typed text wins; without it, the replied message |
 
@@ -132,6 +137,7 @@ the local reader is for everyone. The time zone is `calendar.timezone` (`America
 | Setting | Default | What it does |
 |---|---|---|
 | `calendar.engine` | `local` | `local` or `gpt`; `-local` and `-gpt` choose per call |
+| `calendar.outputToPrivate` | `on` | Sends output from replies to the caller’s private chat |
 | `calendar.timezone` | `America/Sao_Paulo` | Time zone of the dates and times in the text (IANA name) |
 | `calendar.duration` | `60` | Minutes of the event when the text does not say |
 | `calendar.addEmoji` | `on` | The title starts with an emoji of the kind of event (`off` to turn it off) |

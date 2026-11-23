@@ -33,6 +33,7 @@ em português).
 | `calendar.engine` | texto | `local` | Motor do `/calendar`: `local` (rótulos e formato das datas, sem chave) ou `gpt` (o ChatGPT responde com o JSON do Google Calendar). `-gpt` e `-local` escolhem na chamada |
 | `calendar.footer` | on/off | `on` | Termina a resposta do `/calendar` com a dica `💡 Processado por <motor>`. O `-quiet` esconde na chamada |
 | `calendar.googleLink` | on/off | `on` | O `/calendar` manda o link "➕ Adicionar ao Google Agenda". O `-quiet` já esconde na chamada; este setting desliga sempre. O `.ics` continua indo (abre no Calendário da Apple e no Outlook) |
+| `calendar.outputToPrivate` | on/off | `on` | Envia os avisos e o evento no privado ao responder uma mensagem com `/calendar`. Use `-d` para enviar na conversa atual |
 | `calendar.timezone` | texto | `America/Sao_Paulo` | Fuso em que o `/calendar` lê as datas e horas do texto (nome IANA) |
 | `call.allow` | lista | *(vazia)* | Números (com DDI) cujas ligações nunca são recusadas, mesmo com `call.reject` ligado. O `bot.admins` também passa sempre. O mesmo que `/call -allow`. |
 | `call.message` | texto (pode ser vazio) | `""` | Mensagem enviada a quem teve a ligação recusada (no máximo uma a cada 10 minutos por pessoa). Vazio: o texto padrão do idioma do bot (`zapbot.lang`). `off`: recusa em silêncio. O mesmo que `/call -msg`: veja o [`/call`](commands/call.md) |
