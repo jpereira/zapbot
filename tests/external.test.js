@@ -339,6 +339,24 @@ describe('/news', () => {
 });
 
 describe('/gpt', () => {
+    test('resolve @mentions to contact names in the prompt sent to OpenAI', async () => {
+        await bot.setSetting('gpt.api.key', 'sk-teste');
+        const jid = '5521999990001@c.us';
+        bot.client.contacts.set(jid, { id: { _serialized: jid }, name: 'Fabricio Vieira' });
+        network.responder('post', 'api.openai.com/v1/chat/completions', {
+            choices: [{ message: { content: 'Explicação.' } }],
+            usage: { prompt_tokens: 1, completion_tokens: 1 }
+        });
+
+        await bot.execute('/gpt Explique para @5521999990001 a diferença entre juros compostos e valor nominal', {
+            mentions: [jid]
+        });
+
+        const request = network.calls.find(call => call.url.includes('/v1/chat/completions'));
+        assert.match(request.cfg.body.messages.at(-1).content, /@Fabricio Vieira/);
+        bot.client.contacts.delete(jid);
+    });
+
     // The status footer is on by default: the tests compare the exact reply, without it
     beforeEach(() => bot.setSetting('gpt.status', false));
 

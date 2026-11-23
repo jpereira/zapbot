@@ -30,6 +30,7 @@ const {
 } = require('../openaiChat');
 const { getSetting } = require('../settings');
 const { captureOutput } = require('../util/processes');
+const { resolverMentions } = require('../contacts');
 
 /*
  * /gpt: asks ChatGPT (the call and the errors live in openaiChat.js).
@@ -467,6 +468,7 @@ async function showPrices(msg) {
 async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
     // -status and -quiet are read by the options: they do not go in the question
     if (opts?.given.has('status') || opts?.given.has('quiet')) args = withoutOption(args, 'status|s|quiet|q');
+    args = await resolverMentions(args, msg.mentionedIds ?? []);
     if (opts?.given.has('usage')) {
         await showUsage(msg, opts.opt.usage);
         return;
