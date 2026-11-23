@@ -306,15 +306,15 @@ function messageNodeUnsafe(message) {
             el('div', { class: 'notice' }, message.notice.kind === 'security' ? T.securityChanged(message.notice.who) : T.systemNotice(message.notice.text), ` · ${fmtTime(message.at)}`));
     }
     const isSticker = message.type === 'sticker';
-    const isStatus = state.info?.id === 'status@broadcast';
+    const isStatus = state.chat === 'status@broadcast';
     const author = isStatus ? (message.fromMe ? T.you : message.sender || T.unknownStatusAuthor) : null;
     const text = message.body ?? '';
     const watched = message.watch?.length ? message.watch : null;
     const mark = watched?.find(h => h.start != null);
     const bubble = el('div', { class: `bubble${watched ? ' watched' : ''}` },
-        isStatus ? el('div', { class: 'status-meta' },
-            el('span', { class: 'sender' }, author),
-            el('time', { class: 'meta', datetime: new Date(message.at).toISOString() }, fmtFull(message.at)))
+        isStatus ? el('header', { class: 'status-meta' },
+            el('strong', { class: 'status-author' }, author),
+            el('time', { datetime: new Date(message.at).toISOString() }, fmtFull(message.at)))
             : state.info?.isGroup && !message.fromMe && message.sender
                 ? el('div', { class: 'sender' }, message.sender) : null,
         message.quoted ? el('div', { class: 'quote' }, message.quoted.missing
@@ -338,7 +338,12 @@ function messageNodeUnsafe(message) {
             bubble, el('div', { class: 'label' }, labels), message.edits.map(diffBlock))
         : bubble;
     const selected = state.selected.has(message.id);
-    const node = el('div', { class: `msg ${message.fromMe ? 'out' : 'in'}${isSticker ? ' sticker' : ''}${state.selecting ? ' selectable' : ''}${selected ? ' selected' : ''}`, 'data-at': message.at, 'data-id': message.id },
+    const presentation = isStatus ? 'status-post' : (message.fromMe ? 'out' : 'in');
+    const classes = ['msg', presentation, isSticker && 'sticker',
+        state.selecting && 'selectable', selected && 'selected'].filter(Boolean).join(' ');
+    const node = el(isStatus ? 'article' : 'div', {
+        class: classes, 'data-at': message.at, 'data-id': message.id
+    },
         inner, message.reactions.length ? el('div', { class: 'reactions' }, message.reactions.join(' ')) : null,
         message.reactionChanges.length ? el('div', { class: 'rchanges' }, message.reactionChanges.map(c => el('div', {}, `${c.by ? `${c.by}: ` : ''}${c.old || '·'} → ${c.new || T.removedReaction} · ${fmtFull(c.at)}`))) : null);
     if (state.selecting) {
@@ -364,7 +369,7 @@ async function loadChats() {
 function renderChats() {
     const list = document.getElementById('chats');
     if (!list) return;
-    list.replaceChildren(...state.chats.map(chat => el('button', { class: `chat${state.chat === chat.id ? ' active' : ''}`, onclick: () => openChat(chat.id) },
+    list.replaceChildren(...state.chats.map(chat => el('button', { class: `chat${chat.id === 'status@broadcast' ? ' status-chat' : ''}${state.chat === chat.id ? ' active' : ''}`, onclick: () => openChat(chat.id) },
         avatar(chat),
         el('div', { class: 'info' },
             el('div', { class: 'row' }, el('span', { class: 'name' }, chat.name), el('span', { class: 'when' }, chat.lastAt ? fmtDate(chat.lastAt) : '')),

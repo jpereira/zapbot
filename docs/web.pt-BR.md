@@ -135,8 +135,9 @@ quantas mensagens foram apagadas. O nome é o da sua agenda; sem ele, o nome do 
 
 ![A lista de conversas, com as caixas de busca](assets/web/pt-BR/history-chats.png)
 
-Em **Status**, cada item mostra acima da mídia quem publicou, a data e a hora. O histórico usa
-os dados disponíveis no cache. O bot registra a hora de publicação dos novos status quando
+A conversa **Status** fica fixada no topo da lista, com uma cor própria.
+Em **Status**, cada publicação aparece em um cartão com autor, data e hora no cabeçalho. A mídia
+e a legenda ficam abaixo. O histórico usa os dados disponíveis no cache. O bot registra a hora de publicação dos novos status quando
 o WhatsApp fornece essa informação.
 
 ### As mensagens

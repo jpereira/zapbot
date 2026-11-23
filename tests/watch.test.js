@@ -79,6 +79,11 @@ describe('detecção', () => {
         const { messages } = await bot.src('web/data').listMessages({ chat: 'status@broadcast' });
         assert.equal(messages[0].sender, 'Defesa Civil');
         assert.equal(messages[0].at, 1_790_000_000_000);
+        await bot.deliver(bot.createMessage({ text: 'Mensagem de hoje', de: OTHERAlt.jid }));
+        const chats = await bot.src('web/data').listChats();
+        assert.equal(chats[0].id, 'status@broadcast');
+        assert.ok(chats[1].lastAt > chats[0].lastAt);
+        assert.equal((await bot.src('web/data').listChats('status'))[0].id, 'status@broadcast');
         const hit = await bot.dbGet('SELECT * FROM watch_hits WHERE message_id = ?', [msg.id.id]);
         assert.equal(hit.sender_name, 'Defesa Civil');
         assert.equal(hit.sender_number, '5521999999988');

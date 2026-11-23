@@ -100,7 +100,7 @@ async function listChats(search = '') {
                SUM(revoked) AS deleted, MIN(timestamp) AS first_ts, MAX(timestamp) AS last_ts
           FROM messages WHERE ${REAL}
          GROUP BY chat_id
-         ORDER BY last_ts DESC`);
+         ORDER BY (chat_id = ?) DESC, last_ts DESC`, [STATUS]);
     const chats = [];
     for (let i = 0; i < rows.length; i += 8) {
         chats.push(...await Promise.all(rows.slice(i, i + 8).map(async (row) => ({ ...row, name: await chatName(row) }))));

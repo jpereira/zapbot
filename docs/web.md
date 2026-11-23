@@ -134,8 +134,9 @@ text in **all** the chats, and a click on a result opens that chat with the same
 
 ![The chat list, with the search boxes](assets/web/history-chats.png)
 
-In **Status**, each item shows its author, date and time above the media. The history uses
-the data available in the cache. For new statuses, the bot records the publication time
+The **Status** chat stays pinned at the top of the list with a distinct color.
+In **Status**, each post has a card with its author, date and time in the header. The media and
+caption appear below. The history uses the data available in the cache. For new statuses, the bot records the publication time
 when WhatsApp supplies it.
 
 ### The messages
