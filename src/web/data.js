@@ -12,6 +12,7 @@ const { contactPhoto } = require('../contactPhotos');
 const { privateResolverName, resolveLidToPhone, resolverMentions } = require('../contacts');
 const { dbAll, dbGet } = require('../db');
 const { getSetting } = require('../settings');
+const { isJpegPreview, visibleBody } = require('../util/messageBody');
 const { findMatch } = require('../watch/rules');
 
 const STATUS = 'status@broadcast';
@@ -110,7 +111,7 @@ async function listChats(search = '') {
 
     for (const chat of found.slice(0, 300)) {
         const last = await dbGet('SELECT body, type, has_media, revoked, from_me FROM messages WHERE chat_id = ? AND ' + REAL + ' ORDER BY timestamp DESC LIMIT 1', [chat.chat_id]);
-        chat.last = last ? { body: last.type === E2E ? '🔒' : SYSTEM_NOTICES.has(last.type) ? 'ℹ️' : String(last.body ?? '').slice(0, 120), type: last.type, media: Boolean(last.has_media), deleted: Boolean(last.revoked), fromMe: Boolean(last.from_me) } : null;
+        chat.last = last ? { body: last.type === E2E ? '🔒' : SYSTEM_NOTICES.has(last.type) ? 'ℹ️' : visibleBody(last.body).slice(0, 120), type: last.type, media: Boolean(last.has_media), deleted: Boolean(last.revoked), fromMe: Boolean(last.from_me) } : null;
     }
     return found.slice(0, 300).map(c => ({
         id: c.chat_id, name: c.name, isGroup: Boolean(c.is_group), total: c.total, deleted: c.deleted ?? 0,
@@ -201,7 +202,7 @@ async function listMessages({ chat, from = null, to = null, order = 'asc', curso
     const messages = [];
     for (const row of page) {
         const media = row.has_media ? await mediaFile(row) : null;
-        const body = row.type === E2E || SYSTEM_NOTICES.has(row.type) ? '' : await withMentions(row.body ?? '', row.mentions);
+        const body = row.type === E2E || SYSTEM_NOTICES.has(row.type) ? '' : await withMentions(visibleBody(row.body), row.mentions);
         messages.push({
             id: row.id,
             at: row.timestamp,
@@ -221,10 +222,10 @@ async function listMessages({ chat, from = null, to = null, order = 'asc', curso
             reactionChanges: (changesOf.get(row.id) ?? []).map(c => ({ by: c.sender_name || null, old: c.old_reaction || '', new: c.new_reaction || '', at: c.changed_at })),
             deleted: Boolean(row.revoked),
             deletedAt: row.revoked_at || null,
-            edits: (editsOf.get(row.id) ?? []).map(e => ({ old: e.old_body ?? '', new: e.new_body ?? '', at: e.edited_at })),
+            edits: (editsOf.get(row.id) ?? []).map(e => ({ old: visibleBody(e.old_body), new: visibleBody(e.new_body), at: e.edited_at })),
             reactions: (reactionsOf.get(row.id) ?? []).map(r => r.reaction),
             location: row.location_lat != null ? { lat: row.location_lat, lng: row.location_lng } : null,
-            media: row.has_media
+            media: (row.has_media || (row.location_lat == null && isJpegPreview(row.body)))
                 ? (media ? { url: `/api/media?id=${encodeURIComponent(row.id)}`, mime: mimeOf(media.file), name: path.basename(media.file), size: media.size } : { missing: true })
                 : null
         });
@@ -238,7 +239,7 @@ function quotedSummary(row) {
     if (!row) return { missing: true };
     return {
         sender: row.from_me ? null : (row.sender_name || (row.sender_number ? `+${row.sender_number}` : null)),
-        fromMe: Boolean(row.from_me), body: String(row.body ?? '').slice(0, 240), type: row.type, deleted: Boolean(row.revoked)
+        fromMe: Boolean(row.from_me), body: visibleBody(row.body).slice(0, 240), type: row.type, deleted: Boolean(row.revoked)
     };
 }
 
@@ -267,11 +268,13 @@ async function searchMessages(q, limit = 60) {
     const text = String(q ?? '').trim();
     if (text.length < 2) return [];
     const like = `%${text.replace(/[\\%_]/g, '\\$&')}%`;
-    const rows = await dbAll(`SELECT id, chat_id, chat_name, is_group, sender_name, body, timestamp, revoked, from_me FROM messages
+    const rows = await dbAll(`SELECT id, chat_id, chat_name, is_group, sender_name, body, transcription, timestamp, revoked, from_me FROM messages
         WHERE (body LIKE ? ESCAPE '\\' OR transcription LIKE ? ESCAPE '\\') AND type <> '${E2E}' ORDER BY timestamp DESC LIMIT ?`, [like, like, Math.min(200, Number(limit) || 60)]);
-    return Promise.all(rows.map(async r => ({
+    const matches = rows.filter(r => !isJpegPreview(r.body)
+        || String(r.transcription ?? '').toLowerCase().includes(text.toLowerCase()));
+    return Promise.all(matches.map(async r => ({
         id: r.id, chat: r.chat_id, chatName: await chatName(r), at: r.timestamp, fromMe: Boolean(r.from_me), sender: r.sender_name || null,
-        deleted: Boolean(r.revoked), body: String(r.body ?? '').slice(0, 200)
+        deleted: Boolean(r.revoked), body: visibleBody(r.body).slice(0, 200)
     })));
 }
 

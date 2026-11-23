@@ -298,6 +298,24 @@ describe('chats and messages', () => {
         assert.equal(byId.A1.sender, 'Fulano (perfil)');
     });
 
+    test('legacy JPEG previews are hidden while regular captions remain visible', async () => {
+        const thumbnail = '/9j/4AAQSkZJRgABAQAAAQABAAD/2Q==';
+        const chat = '5521999990933@c.us';
+        await insert('legacy-preview', chat, { body: thumbnail, at: 3001, type: 'image' });
+        await insert('real-caption', chat, { body: 'Foto da viagem', at: 3000, type: 'image' });
+        await bot.dbRun('UPDATE messages SET quoted_id = ? WHERE id = ?', ['legacy-preview', 'real-caption']);
+        const params = new URLSearchParams({ chat });
+        const { messages } = await (await get('/api/messages?' + params, cookie)).json();
+        assert.equal(messages[0].body, 'Foto da viagem');
+        assert.equal(messages[0].quoted.body, '');
+        assert.equal(messages[1].body, '');
+        assert.deepEqual(messages[1].media, { missing: true });
+        const { chats } = await (await get('/api/chats', cookie)).json();
+        assert.equal(chats.find(item => item.id === chat).last.body, '');
+        const search = new URLSearchParams({ q: thumbnail.slice(0, 18) });
+        assert.deepEqual((await (await get('/api/search?' + search, cookie)).json()).results, []);
+    });
+
     test('a search treats apostrophes, percent and underscores as literal data', async () => {
         const text = "O'Connor: 20%_off";
         await insert('literal', CHAT, { body: text, at: 3000 });

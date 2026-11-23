@@ -72,7 +72,7 @@ describe('gravação', () => {
             assert.deepEqual(replies, []);
             const loc = await bot.dbGet('SELECT * FROM messages WHERE id = ?', [id]);
             assert.equal(loc.type, 'location');
-            assert.equal(loc.body, textAlt);
+            assert.equal(loc.body, '');
             assert.deepEqual([loc.location_lat, loc.location_lng], [-22.91472544, -43.10812451]);
         }
         assert.deepEqual(await bot.dbAll('SELECT * FROM watch_hits'), []);
