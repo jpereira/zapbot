@@ -1,0 +1,14 @@
+{
+  "summary": "Gerencia a interface web e suas sessões",
+  "usage": "/web [OPÇÃO]",
+  "help": "No seu privado, gerencia o acesso web, encerra sessões e configura o login em duas etapas.",
+  "cmd_opts": [
+    { "opts": ["list", "l"], "desc": "Lista as sessões ativas e seus vencimentos." },
+    { "opts": ["destroy", "d"], "values": ["[id]"], "desc": "Encerra uma sessão pelo ID ou todas sem ID." },
+    { "opts": ["enable", "e"], "desc": "Ativa e inicia a interface web." },
+    { "opts": ["disable", "off"], "desc": "Para a interface web e encerra as sessões." },
+    { "opts": ["pass", "p"], "values": ["<senha>"], "desc": "Define a senha da interface web." },
+    { "opts": ["login"], "values": ["<nome>"], "desc": "Define o nome de login da interface web." },
+    { "opts": ["2fa", "totp"], "values": ["<new|qr|código|off>"], "desc": "Cria, exibe, confirma ou desativa o 2FA." }
+  ]
+}

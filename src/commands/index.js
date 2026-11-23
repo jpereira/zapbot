@@ -9,6 +9,7 @@ const { cmdBlock, cmdUnblock } = require('./block');
 const { cmdBills } = require('./bills');
 const { cmdBot } = require('./bot');
 const { cmdCalc } = require('./calc');
+const { cmdWeb } = require('./web');
 const { cmdCalendar } = require('./calendar');
 const { cmdCall } = require('./call');
 const { cmdCarbon } = require('./carbon');
@@ -149,6 +150,7 @@ const HANDLERS = {
     '/warn': cmdWarn,
     '/watch': cmdWatch,
     '/weather': cmdWeather,
+    '/web': cmdWeb,
     '/welcome': cmdWelcome,
     '/whois': cmdWhois
 };

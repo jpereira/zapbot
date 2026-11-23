@@ -54,6 +54,7 @@ const STATIC = {
 
 // token → expiry (ms); address → { errors, until }
 const sessions = new Map();
+let sessionEpoch = 0;
 const attempts = new Map();
 
 function trustsPeer(req) {
@@ -76,13 +77,37 @@ function clientAddress(req) {
 
 const cookies = (req) => Object.fromEntries(String(req.headers.cookie ?? '').split(';').map(c => c.trim().split(/=(.*)/s).slice(0, 2)).filter(([k]) => k));
 
+function forgetSession(token) {
+    sessions.delete(token);
+    webNotes.forget(token);
+}
+
+function activeSessions() {
+    for (const [token, session] of sessions) {
+        if (session.until <= Date.now()) forgetSession(token);
+    }
+    return [...sessions.values()];
+}
+
+function destroySessions(id) {
+    if (!id) sessionEpoch++;
+    activeSessions();
+    let count = 0;
+    for (const [token, session] of sessions) {
+        if (!id || session.id === id) {
+            forgetSession(token);
+            count++;
+        }
+    }
+    return count;
+}
+
 function sessionOf(req) {
     const token = cookies(req)[COOKIE];
-    const until = token ? sessions.get(token) : null;
-    if (!until) return null;
-    if (until < Date.now()) {
-        sessions.delete(token);
-        webNotes.forget(token);
+    const session = sessions.get(token);
+    if (!session) return null;
+    if (session.until <= Date.now()) {
+        forgetSession(token);
         return null;
     }
     return token;
@@ -144,6 +169,7 @@ async function login(req, res) {
         sendJson(res, 429, { error: 'blocked', minutes: Math.ceil((entry.until - Date.now()) / 60000) });
         return;
     }
+    const epoch = sessionEpoch;
     const secret = getSetting('zapbot.web.totp');
     // Password and, when zapbot.web.totp is set, the 6-digit code of the app: a miss in either counts as a wrong password
     // The login name, the password and (when set) the code: all of them have to be right, and the answer never says which one was not
@@ -156,6 +182,7 @@ async function login(req, res) {
     } finally {
         entry.active = false;
     }
+    if (epoch !== sessionEpoch) return sendJson(res, 401, { error: 'retry login' });
     if (passwordOk === null) return sendJson(res, 429, { error: 'busy' });
     const valid = userOk && passwordOk && (!secret || totp.verify(secret, code));
     if (!valid) {
@@ -177,18 +204,9 @@ async function login(req, res) {
     attempts.delete(address);
     const token = crypto.randomBytes(32).toString('hex');
     const hours = getSetting('zapbot.web.sessionHours');
-    for (const [id, expiry] of sessions) {
-        if (expiry <= Date.now()) {
-            sessions.delete(id);
-            webNotes.forget(id);
-        }
-    }
-    if (sessions.size >= 256) {
-        const oldest = sessions.keys().next().value;
-        sessions.delete(oldest);
-        webNotes.forget(oldest);
-    }
-    sessions.set(token, Date.now() + hours * 3600_000);
+    activeSessions();
+    if (sessions.size >= 256) forgetSession(sessions.keys().next().value);
+    sessions.set(token, { id: crypto.randomUUID(), until: Date.now() + hours * 3600_000 });
     printInfo(`Web: login of '${shown(user)}' from ${address}`);
     res.setHeader('Set-Cookie', `${COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${hours * 3600}${isSecure(req) ? '; Secure' : ''}`);
     sendJson(res, 200, { ok: true });
@@ -452,6 +470,7 @@ const isWebRunning = () => listening;
 // Called in app.js: turns on with zapbot.web.enabled and a zapbot.web.password
 async function startWeb() {
     await dbReady;
+    if (server) return server;
     // ZAPBOT_WEB_ENABLED (true/false) has priority over the setting; empty: the setting
     if (!envOuSetting('ZAPBOT_WEB_ENABLED', 'zapbot.web.enabled')) return null;
     if (!getSetting('zapbot.web.login') || !getSetting('zapbot.web.password')) {
@@ -462,8 +481,14 @@ async function startWeb() {
     const host = process.env.ZAPBOT_WEB_HOST || getSetting('zapbot.web.host');
     const port = envOuSetting('ZAPBOT_WEB_PORT', 'zapbot.web.port');
     server = createServer();
-    server.on('error', err => printError('Web:', err.message));
-    server.on('close', () => { listening = false; });
+    const instance = server;
+    const clear = () => {
+        if (server !== instance) return;
+        server = null;
+        listening = false;
+    };
+    instance.on('error', err => { clear(); printError('Web:', err.message); });
+    instance.on('close', clear);
     server.listen(port, host, () => {
         listening = true;
         printInfo(`Web: listening on http://${host}:${port} (open it at ${webUrl()})`);
@@ -475,6 +500,21 @@ async function startWeb() {
 }
 
 // Forgets the sessions and the blocks (the tests)
-const resetWeb = () => { sessions.clear(); attempts.clear(); webNotes.reset(); require('./alert').reset(); };
+const resetWeb = () => { destroySessions(); attempts.clear(); webNotes.reset(); require('./alert').reset(); };
 
-module.exports = { createServer, isWebRunning, resetWeb, startWeb, webUrl };
+async function stopWeb() {
+    destroySessions();
+    const instance = server;
+    if (!instance) return;
+    await new Promise((resolve, reject) => {
+        instance.close(err => {
+            if (err && err.code !== 'ERR_SERVER_NOT_RUNNING') reject(err);
+            else resolve();
+        });
+        instance.closeAllConnections();
+    });
+}
+
+module.exports = {
+    activeSessions, createServer, destroySessions, isWebRunning, resetWeb, startWeb, stopWeb, webUrl
+};

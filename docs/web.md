@@ -12,6 +12,8 @@ All the pictures on this page are made with **invented data** (names, numbers an
 dark theme unless it says otherwise. The interface follows the `zapbot.lang` setting (English or Portuguese) and the
 button at the bottom of the left bar switches it; the Portuguese page of this manual has the same pictures in Portuguese.
 
+Use [`/web`](commands/web.md) in your private chat to manage access, sessions and 2FA.
+
 ## Quick start
 
 ```text

@@ -13,6 +13,8 @@ existem), no tema escuro, salvo quando disser o contrário. A interface segue o 
 português) e o botão embaixo da barra da esquerda troca o idioma; a página em inglês deste manual tem as mesmas imagens
 em inglês.
 
+Use [`/web`](commands/web.md) no seu privado para gerenciar o acesso, as sessões e o 2FA.
+
 ## Início rápido
 
 ```text

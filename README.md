@@ -543,6 +543,7 @@ and make the bot your own:
 | [`/warn`](https://jpereira.github.io/zapbot/commands/warn/) | | `admin` · delegable | Warns someone in the group; at the limit, they are removed |
 | [`/watch`](https://jpereira.github.io/zapbot/commands/watch/) | | `admin` | Text/regex rules, with an optional source in `-in`; lists hits, searches them with `-q` and alerts the `-to` destinations; `-mask` hides phone numbers and `-mask N` turns on 🔒 on rule N |
 | [`/weather`](https://jpereira.github.io/zapbot/commands/weather/) | | `user` | Weather now and the day's max/min (Open-Meteo); `/weather 16d` shows up to 16 days, counting today; without a city it uses `weather.city` |
+| [`/web`](https://jpereira.github.io/zapbot/commands/web/) | | `owner` | Manage the web interface and its sessions |
 | [`/welcome`](https://jpereira.github.io/zapbot/commands/welcome/) | | `admin` · delegable | Message when someone joins the group (per group; `{name}`, `{group}`) |
 | [`/whois`](https://jpereira.github.io/zapbot/commands/whois/) | | `user` | Who you are and what you can do in the bot, in this chat: 🤖 owner, 👑 admin, 🗣️ user or 🚫 no permission; the owner and the admins see the others |
 

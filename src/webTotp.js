@@ -77,12 +77,12 @@ async function sendQr(chatId, secret, caption) {
 }
 
 /** /set zapbot.web.totp new | qr */
-async function totpSetup({ msg, chatId, mode }) {
+async function totpSetup({ msg, chatId, mode, command = '/set zapbot.web.totp' }) {
     if (!(await guard({ msg, chatId }))) return;
     if (mode === 'new') {
         const secret = newSecret();
         pending = { secret, expires: Date.now() + PENDING_MS, errors: 0, sent: null };
-        pending.sent = await sendQr(chatId, secret, t('web.totp.created', { code: grouped(secret), minutes: DELETE_AFTER_MS / 60000, wait: PENDING_MS / 60000 }));
+        pending.sent = await sendQr(chatId, secret, t('web.totp.created', { command, code: grouped(secret), minutes: DELETE_AFTER_MS / 60000, wait: PENDING_MS / 60000 }));
         printInfo('Web: a new 2FA secret is waiting for its code (zapbot.web.totp)');
         return;
     }
@@ -101,6 +101,7 @@ async function totpConfirm({ msg, chatId, code }) {
     if (wait) {
         if (verify(wait.secret, code)) {
             await setSetting('zapbot.web.totp', wait.secret);
+            require('./web/server').destroySessions();
             await deleteMessage(wait.sent);
             pending = null;
             printInfo('Web: the 2FA was confirmed and is on (zapbot.web.totp)');
@@ -125,7 +126,13 @@ async function totpConfirm({ msg, chatId, code }) {
     await say(chatId, t(verify(active, code) ? 'web.totp.right' : 'web.totp.wrongActive'));
 }
 
+async function cancelTotp() {
+    const previous = pending;
+    pending = null;
+    await deleteMessage(previous?.sent);
+}
+
 // Forgets what is waiting (the tests start from zero)
 const reset = () => { pending = null; };
 
-module.exports = { grouped, otpauthUri, reset, totpConfirm, totpSetup, waiting };
+module.exports = { cancelTotp, grouped, otpauthUri, reset, totpConfirm, totpSetup, waiting };

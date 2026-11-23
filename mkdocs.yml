@@ -188,6 +188,7 @@ nav:
       - /warn: commands/warn.md
       - /watch: commands/watch.md
       - /weather: commands/weather.md
+      - /web: commands/web.md
       - /welcome: commands/welcome.md
       - /whois: commands/whois.md
   - Demo: demo.md

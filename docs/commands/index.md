@@ -216,9 +216,10 @@ and a shortcut's name doesn't go in `+cmd`.
 [`/mute`](mute.md), [`/notes`](notes.md), [`/search`](search.md), [`/set`](set.md),
 [`/status`](status.md), [`/unblock`](unblock.md), [`/unmute`](unmute.md), [`/watch`](watch.md)
 
-**owner** (the owner only) (4):
+**owner** (the owner only) (5):
 
-[`/backup`](backup.md), [`/cache`](cache.md), [`/contacts`](contacts.md), [`/debug`](debug.md)
+[`/backup`](backup.md), [`/cache`](cache.md), [`/contacts`](contacts.md), [`/debug`](debug.md),
+[`/web`](web.md)
 <!-- /gerado:roles -->
 
 The **bot's own replies** also go out through your account, but they're never treated as commands,
@@ -320,5 +321,6 @@ target command, and `/alias /usd` shows what a shortcut does.
 | [`/warn`](warn.md) | | `admin` · delegable | Warns someone in the group; at the limit, they are removed |
 | [`/watch`](watch.md) | | `admin` | Text/regex rules, with an optional source in `-in`; lists occurrences, searches them with `-q`, and notifies the `-to` destinations; `-mask` obfuscates phone numbers and `-mask N` turns on 🔒 for rule N |
 | [`/weather`](weather.md) | | `user` | Weather now and the day's max/min (Open-Meteo); `/weather 16d` shows up to 16 days, counting today; without a city it uses `weather.city` |
+| [`/web`](web.md) | | `owner` | Manage the web interface and its sessions |
 | [`/welcome`](welcome.md) | | `admin` · delegable | Message when someone joins the group (per group; `{name}`, `{group}`) |
 | [`/whois`](whois.md) | | `user` | Who you are and what you can do in the bot, in this chat: 🤖 owner, 👑 admin, 🗣️ user, or 🚫 no permission; the owner and admins see others |

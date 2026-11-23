@@ -541,6 +541,7 @@ e deixe o bot do seu jeito:
 | [`/warn`](https://jpereira.github.io/zapbot/pt-BR/commands/warn/) | | `admin` · delegável | Avisa alguém no grupo; no limite, a pessoa é removida |
 | [`/watch`](https://jpereira.github.io/zapbot/pt-BR/commands/watch/) | | `admin` | Regras de texto/regex, com origem opcional em `-in`; lista ocorrências, busca nelas com `-q` e avisa nos destinos de `-to`; `-mask` ofusca telefones e `-mask N` liga o 🔒 na regra N |
 | [`/weather`](https://jpereira.github.io/zapbot/pt-BR/commands/weather/) | | `user` | Tempo agora e máx./mín. do dia (Open-Meteo); `/weather 16d` mostra até 16 dias, contando hoje; sem cidade usa `weather.city` |
+| [`/web`](https://jpereira.github.io/zapbot/pt-BR/commands/web/) | | `owner` | Gerencia a interface web e suas sessões |
 | [`/welcome`](https://jpereira.github.io/zapbot/pt-BR/commands/welcome/) | | `admin` · delegável | Mensagem quando alguém entra no grupo (por grupo; `{name}`, `{group}`) |
 | [`/whois`](https://jpereira.github.io/zapbot/pt-BR/commands/whois/) | | `user` | Quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin, 🗣️ usuário ou 🚫 sem permissão; o dono e os admins veem os outros |
 

@@ -215,9 +215,10 @@ destino: quem pode o `/gpt` usa os atalhos para ele, e o nome de um atalho não 
 [`/mute`](mute.md), [`/notes`](notes.md), [`/search`](search.md), [`/set`](set.md),
 [`/status`](status.md), [`/unblock`](unblock.md), [`/unmute`](unmute.md), [`/watch`](watch.md)
 
-**owner** (só o dono) (4):
+**owner** (só o dono) (5):
 
-[`/backup`](backup.md), [`/cache`](cache.md), [`/contacts`](contacts.md), [`/debug`](debug.md)
+[`/backup`](backup.md), [`/cache`](cache.md), [`/contacts`](contacts.md), [`/debug`](debug.md),
+[`/web`](web.md)
 <!-- /gerado:roles -->
 
 As **respostas do próprio bot** também saem pela sua conta, mas nunca são tratadas como comando,
@@ -319,5 +320,6 @@ e o `/alias /usd` mostra o que um atalho faz.
 | [`/warn`](warn.md) | | `admin` · delegável | Avisa alguém no grupo; no limite, a pessoa é removida |
 | [`/watch`](watch.md) | | `admin` | Regras de texto/regex, com origem opcional em `-in`; lista ocorrências, busca nelas com `-q` e avisa nos destinos de `-to`; `-mask` ofusca telefones e `-mask N` liga o 🔒 na regra N |
 | [`/weather`](weather.md) | | `user` | Tempo agora e máx./mín. do dia (Open-Meteo); `/weather 16d` mostra até 16 dias, contando hoje; sem cidade usa `weather.city` |
+| [`/web`](web.md) | | `owner` | Gerencia a interface web e suas sessões |
 | [`/welcome`](welcome.md) | | `admin` · delegável | Mensagem quando alguém entra no grupo (por grupo; `{name}`, `{group}`) |
 | [`/whois`](whois.md) | | `user` | Quem é e o que pode no bot, neste chat: 🤖 dono, 👑 admin, 🗣️ usuário ou 🚫 sem permissão; o dono e os admins veem os outros |

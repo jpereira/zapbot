@@ -53,6 +53,11 @@ function secretOfSet(command, args) {
     return /^(reset|default|off|on|true|false)$/i.test(m[2]) ? null : m[2];
 }
 
+const hasWebCredential = (args) =>
+    /(?:^|\s)-(?:p|pa|pas|pass|2|2f|2fa|t|to|tot|totp)(?=\s|$)/i.test(args);
+const isWebCredential = (body) =>
+    /^\s*\/web(?=\s|$)/i.test(body ?? '') && hasWebCredential(body);
+
 const SYSTEM_TYPES = new Set([
     'broadcast_notification', 'call_log', 'e2e_notification', 'gp2',
     'notification', 'notification_template', 'protocol'
@@ -60,15 +65,17 @@ const SYSTEM_TYPES = new Set([
 
 client.on('message_create', (msg) => withContextDebug({
     chatId: channelId(msg?.from, msg?.id?.remote, msg?.to) || msg?.id?.remote || msg?.from || msg?.to,
-    command: (msg.body || '').trim().startsWith('/') ? msg.body : null,
+    command: isWebCredential(msg.body) ? '/web ***' : ((msg.body || '').trim().startsWith('/') ? msg.body : null),
     depth: 0,
     maskPhones: false
 }, async () => {
     if (msg.fromMe && logIsCopy(msg.body)) return;
     instrumentObject(msg, 'WhatsApp.Message', 2,
         ['reply', 'downloadMedia', 'getChat', 'getContact', 'getQuotedMessage', 'getMentions']);
-    printDebugLevel(1, 'message_create start', { body: msg.body, type: msg.type });
-    printDebugLevel(3, 'message_create WhatsApp data', msg._data);
+    const sensitiveWeb = isWebCredential(msg.body);
+    const recordedBody = sensitiveWeb ? '/web ***' : msg.body;
+    printDebugLevel(1, 'message_create start', { body: recordedBody, type: msg.type });
+    if (!sensitiveWeb) printDebugLevel(3, 'message_create WhatsApp data', msg._data);
     try {
         const timestamp = Date.now();
         const msgIdPure = msg?.id?.id || `fallback_${timestamp}`;
@@ -271,7 +278,7 @@ client.on('message_create', (msg) => withContextDebug({
             [
                 msgIdPure, senderName, senderJid, senderNumber,
                 chatId, chatName, isGroup,
-                msg.body || '', msgType, timestamp,
+                recordedBody || '', msgType, timestamp,
                 hasMedia, localMediaPath,
                 lat, lng,
                 'desativado', msg.fromMe ? 1 : 0, mentionsForRecord(msg.mentionedIds),
@@ -339,11 +346,17 @@ client.on('message_create', (msg) => withContextDebug({
         // A /notes -lock <password> carries the password: it does not go to the logs, to the echo of an alias or to the
         // messages table (what the log and the history show is the command with ***)
         // The same for the value of a secret setting (/set zapbot.web.password <password>, API keys, the TOTP secret)
-        const secret = command?.cmd === '/notes' ? extractPassword(args)?.password ?? null : secretOfSet(command, args);
-        const logBody = maskSecret(body, secret);
+        const webCredential = command?.cmd === '/web' && hasWebCredential(args);
+        const secret = webCredential ? args
+            : command?.cmd === '/notes' ? extractPassword(args)?.password ?? null : secretOfSet(command, args);
+        const logBody = webCredential ? '/web ***' : maskSecret(body, secret);
         if (secret) await dbRun('UPDATE messages SET body = ? WHERE id = ?', [logBody, msgIdPure]).catch(() => {});
-        // and the message with the value leaves the chat too (when it cannot, the owner deletes it by hand)
-        if (secret && command?.cmd === '/set') await Promise.resolve(msg.delete?.(true)).catch(() => {});
+        if (secret && (webCredential || command?.cmd === '/set')) {
+            await Promise.resolve(msg.delete?.(true)).catch(() => {});
+        }
+        if (webCredential) {
+            msg.reply = (content, _, options) => client.sendMessage(chatId, content, options);
+        }
 
         if (!command) {
             if (msg.fromMe || isDebugMode()) {
@@ -489,7 +502,7 @@ client.on('message_create', (msg) => withContextDebug({
         // Unknown option (in strict commands) and an option the person cannot use (role, otherChats)
         const reject = optionsError(command, opts) ?? denial(command, opts, level);
         if (reject) {
-            await msg.reply(reject);
+            await msg.reply(webCredential ? '/web -h' : reject);
             return;
         }
 

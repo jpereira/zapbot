@@ -109,6 +109,35 @@ describe('password and session', () => {
         assert.match(trusted.headers.get('set-cookie'), /; Secure/);
     });
 
+    test('/web lists and revokes sessions without exposing their cookies', async () => {
+        const first = await login();
+        const second = await login();
+        const opts = { chat: bot.OWNER.jid };
+        const [list] = await bot.replyAlt('/web -l', opts);
+        const ids = list.split('\n').map(line => line.split(' · ')[0]);
+        assert.equal(ids.length, 2);
+        assert.match(ids[0], /^[0-9a-f-]{36}$/);
+        assert.ok(!first.cookie.includes(ids[0]));
+        await bot.replyAlt('/web -d ' + ids[0], opts);
+        assert.equal((await get('/api/chats', first.cookie)).status, 401);
+        assert.equal((await get('/api/chats', second.cookie)).status, 200);
+        await bot.replyAlt('/web -destroy', opts);
+        assert.equal((await get('/api/chats', second.cookie)).status, 401);
+    });
+
+    test('/web -p masks its password and revokes existing sessions', async () => {
+        const { cookie } = await login();
+        const secret = 'a new private password';
+        const command = bot.createMessage({ text: `/web -p "${secret}"`, chat: bot.OWNER.jid });
+        const [reply] = await bot.deliver(command);
+        assert.equal(command.deletedFor, 'todos');
+        assert.equal(reply.options.quotedMessageId, undefined);
+        const [saved] = await bot.dbAll('SELECT body FROM messages');
+        assert.equal(saved.body, '/web ***');
+        assert.equal((await get('/api/chats', cookie)).status, 401);
+        assert.equal((await login(secret)).r.status, 200);
+    });
+
     test('the login only takes JSON; the API is read-only; headers keep the page isolated', async () => {
         const form = await fetch(`${base}/api/login`, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: `password=${PASSWORD}` });
         assert.equal(form.status, 415);
@@ -174,6 +203,21 @@ describe('password and session', () => {
         } finally {
             if (before === undefined) delete process.env.ZAPBOT_WEB_ENABLED; else process.env.ZAPBOT_WEB_ENABLED = before;
             delete process.env.ZAPBOT_WEB_PORT;
+        }
+    });
+
+    test('/web enables and disables the web server without a bot restart', async () => {
+        const web = bot.src('web/server');
+        const self = { chat: bot.OWNER.jid };
+        await bot.setSetting('zapbot.web.port', 38203);
+        try {
+            await bot.replyAlt('/web -e', self);
+            assert.equal(web.isWebRunning(), true);
+            await bot.replyAlt('/web -disable', self);
+            assert.equal(web.isWebRunning(), false);
+            assert.equal(bot.getSetting('zapbot.web.enabled'), false);
+        } finally {
+            await web.stopWeb();
         }
     });
 
@@ -1539,6 +1583,18 @@ describe('2FA by the chat: /set zapbot.web.totp new, the code, qr', () => {
         assert.equal(qr.chatId, bot.OWNER.jid);
         assert.ok(qr.options.caption.includes(secret.match(/.{1,4}/g).join(' ')), 'with the code, in groups of 4');
         assert.match(qr.options.caption, /\/set zapbot\.web\.totp 123456/, 'and the last step: type the code of the app');
+    });
+
+    test('/web completes and disables two-factor setup', async () => {
+        const { cookie } = await login();
+        await bot.replyAlt('/web -2fa new', PRIVATE);
+        assert.match(media()[0].options.caption, /\/web -2fa 123456/);
+        const secret = secretOf();
+        await bot.replyAlt(`/web -totp ${totp.code(secret)}`, PRIVATE);
+        assert.equal(bot.getSetting('zapbot.web.totp'), secret);
+        assert.equal((await get('/api/chats', cookie)).status, 401);
+        await bot.replyAlt('/web -2fa off', PRIVATE);
+        assert.equal(bot.getSetting('zapbot.web.totp'), '');
     });
 
     test('the right code turns it on (and is the only thing that does); the login asks for it from then on', async () => {
