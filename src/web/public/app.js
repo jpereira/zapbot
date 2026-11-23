@@ -153,10 +153,19 @@ function initials(name) {
     return ((words[0]?.[0] ?? '#') + (words[1]?.[0] ?? '')).toUpperCase();
 }
 
-function avatar(chat) {
+function avatar(chat, onClick = () => showContact(chat)) {
     const box = el('div', { class: 'avatar' }, initials(chat.name));
-    const img = el('img', { src: `/api/photo?chat=${encodeURIComponent(chat.id)}`, alt: '', loading: 'lazy' });
+    const img = el('img', { src: `/api/photo?chat=${encodeURIComponent(chat.id)}`, alt: chat.name, loading: 'lazy' });
     img.addEventListener('load', () => box.replaceChildren(img));
+    if (onClick) {
+        box.tabIndex = 0;
+        box.setAttribute('role', 'button');
+        box.setAttribute('aria-label', chat.name);
+        box.addEventListener('click', event => {
+            event.stopPropagation();
+            onClick();
+        });
+    }
     return box;
 }
 
@@ -410,7 +419,7 @@ async function loadChats() {
 function renderChats() {
     const list = document.getElementById('chats');
     if (!list) return;
-    list.replaceChildren(...state.chats.map(chat => el('button', { class: `chat${chat.id === 'status@broadcast' ? ' status-chat' : ''}${state.chat === chat.id ? ' active' : ''}`, onclick: () => openChat(chat.id) },
+        list.replaceChildren(...state.chats.map(chat => el('button', { class: `chat${chat.id === 'status@broadcast' ? ' status-chat' : ''}${state.chat === chat.id ? ' active' : ''}`, onclick: () => openChat(chat.id) },
         avatar(chat),
         el('div', { class: 'info' },
             el('div', { class: 'row' }, el('span', { class: 'name' }, chat.name), el('span', { class: 'when' }, chat.lastAt ? fmtDate(chat.lastAt) : '')),
@@ -461,7 +470,7 @@ async function showContact(info) {
     const dialog = el('dialog', { class: 'modal contact-dialog', 'aria-label': labels.title },
         el('div', { class: 'contact-heading' },
             el('button', { class: 'contact-photo', type: 'button', title: labels.photo ?? info.name,
-                'aria-label': labels.photo ?? info.name, onclick: () => showPhoto(info) }, avatar(info)),
+                'aria-label': labels.photo ?? info.name, onclick: () => showPhoto(info) }, avatar(info, null)),
             el('h3', {}, info.name)),
         details,
         el('div', { class: 'modal-actions' },
@@ -522,10 +531,8 @@ function renderMain() {
         el('div', { class: 'main-head' },
             el('button', { class: 'btn back', onclick: () => { document.querySelector('.app').classList.remove('chat-open'); } }, `← ${T.back}`),
             el('div', { class: 'grow' },
-                /^\d+@(?:c\.us|lid)$/.test(info.id)
-                    ? el('button', { class: 'contact-trigger', title: T.contact.title, onclick: () => showContact(info) },
-                        avatar(info), el('span', { class: 'name' }, info.name))
-                    : el('div', { class: 'contact-heading' }, avatar(info), el('div', { class: 'name' }, info.name)),
+                el('button', { class: 'contact-trigger', title: T.contact.title, onclick: () => showContact(info) },
+                    avatar(info), el('span', { class: 'name' }, info.name)),
                 el('div', { class: 'sub', id: 'showing' }, '')),
             el('button', { class: 'btn', title: T.clearHistory, onclick: clearHistory }, '🧹')),
         el('div', { class: 'toolbar' },

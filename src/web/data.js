@@ -338,10 +338,18 @@ async function contactBadge(id) {
 }
 
 async function contactProfile(id) {
-    if (!/^\d+@(?:c\.us|lid)$/.test(id)) return null;
+    if (id === STATUS) return { id, name: 'Status', kind: 'status' };
+    if (!/^[\w.+-]+@(?:c\.us|lid|g\.us|newsletter)$/.test(id)) return null;
     const stored = await dbGet(`SELECT chat_name, sender_name, sender_number, from_me FROM messages
         WHERE chat_id = ? ORDER BY from_me, timestamp DESC, id DESC LIMIT 1`, [id]);
     if (!stored) return null;
+    if (id.endsWith('@g.us') || id.endsWith('@newsletter')) {
+        const chat = client.pupPage ? await withTimeout(client.getChatById(id).catch(() => null), NAME_TIMEOUT_MS) : null;
+        const name = id.endsWith('@g.us') ? await chatName({ chat_id: id, chat_name: stored.chat_name, is_group: 1 })
+            : (chat?.name || stored.chat_name?.trim() || id.split('@')[0]);
+        return { id, name, kind: id.endsWith('@g.us') ? 'group' : 'channel',
+            description: chat?.groupMetadata?.desc || chat?.description || null };
+    }
     const resolved = id.endsWith('@lid') && client.pupPage
         ? await withTimeout(resolveLidToPhone(id).catch(() => null), NAME_TIMEOUT_MS) : null;
     const phoneId = resolved || (id.endsWith('@c.us') ? id : null);
