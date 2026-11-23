@@ -31,6 +31,16 @@ In `config/.env`, `ZAPBOT_WEB_ENABLED=true` (or `false`) decides over the `zapbo
 `ZAPBOT_WEB_PORT` and `ZAPBOT_WEB_HOST` over the port and the address
 ([the variables](configuration.md#web-interface-optional)).
 
+Compose publishes the port on the **Docker host's loopback**. To connect from a different computer
+while keeping that port private, create an SSH tunnel and open `http://127.0.0.1:3200` in your browser.
+
+```bash
+ssh -N -L 3200:127.0.0.1:3200 user@docker-host
+```
+
+After editing the environment files, apply the configuration with
+`docker compose -f docker/docker-compose.yml up -d zapbot` from the project root.
+
 ## Two-step login (2FA)
 
 With the 2FA on, the login asks for the **6-digit code** of an authenticator app (Google Authenticator, Authy, 1Password...)

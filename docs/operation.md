@@ -8,8 +8,8 @@ Run the Docker commands from the project root:
 | Restart | `docker compose -f docker/docker-compose.yml restart zapbot` |
 | Stop | `docker compose -f docker/docker-compose.yml stop zapbot` |
 | Shell in the container | `docker exec -it zapbot bash -l` |
-| Query the database | `docker exec -it zapbot sqlite3 cache/zapbot.db` |
-| View settings | `docker exec -it zapbot sqlite3 cache/zapbot.db "SELECT * FROM settings"` |
+| Query the database | `docker exec -it zapbot sqlite3 -readonly /app/cache/zapbot.db` |
+| View settings | `docker exec -it zapbot sqlite3 -readonly /app/cache/zapbot.db "SELECT key FROM settings ORDER BY key"` |
 | Clear messages/media | From WhatsApp: `/cache -a` (everything, including backups), `/cache -m` (media only) or `/cache -b` (backups only). See [`/cache`](commands/cache.md) |
 | Bot status (up, cache, deleted...) | From WhatsApp: `/bot -status` (or `/bot -status 06h` to get it every day). See [`/bot -status`](commands/bot.md#bot-status) |
 | Versions (Node.js, Chromium, yt-dlp, ffmpeg...) and system | From WhatsApp: `/bot -info`. See [System information](commands/bot.md#system-information) |
@@ -19,6 +19,16 @@ Run the Docker commands from the project root:
 | **Force a new QR** (deletes the session) | `docker compose -f docker/docker-compose.yml down && docker volume rm zapbot_wwebjs_auth && docker compose -f docker/docker-compose.yml up -d zapbot` |
 
 The container uses `restart: unless-stopped`, so it comes back on its own after a host reboot.
+
+## Database and backups
+
+Use read-only SQLite for diagnostics. Change settings through `/set` or the web dashboard.
+Use `/backup -now` to create a consistent snapshot while the bot is running.
+
+A backup includes the database, metadata and, when present, note files and contact photos.
+Chat media and the WhatsApp session are outside that backup. To preserve them during a migration,
+stop the service and copy the `zapbot_app_cache` and `zapbot_wwebjs_auth` volumes.
+Restrict access to the copies.
 
 ## Container health (heartbeat)
 

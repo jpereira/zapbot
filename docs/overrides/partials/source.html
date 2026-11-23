@@ -1,0 +1,12 @@
+<a href="{{ config.repo_url }}" title="{{ lang.t('source') }}" class="md-source"
+   data-md-component="source">
+  <div class="md-source__icon md-icon">
+    {% include ".icons/" ~ config.theme.icon.repo ~ ".svg" %}
+  </div>
+  <div class="md-source__repository{% if config.extra.release_tag %} zapbot-source--release{% endif %}">
+    {{ config.repo_name }}
+    {% if config.extra.release_tag %}
+      <br><span class="zapbot-source__tag">{{ config.extra.release_tag }}</span>
+    {% endif %}
+  </div>
+</a>

@@ -331,8 +331,8 @@ WhatsApp group, and commands start with `/`.
 - ZapBot is **not affiliated with WhatsApp or Meta**. It uses an unofficial client (`whatsapp-web.js`), so WhatsApp
   may block accounts that automate too aggressively: use it with care (see the notes on the
   [`/monitor`](docs/commands/monitor.md) risk).
-- **Everything stays with you**: the database, the media and the backups live in `cache/`, on your server. The only
-  things that leave it are the requests to the services you turn on (OpenAI, GIPHY, weather, news...).
+- **Local data:** the database, media and backups live in `cache/`. Depending on the feature you use,
+  the bot can send content to WhatsApp, email recipients or services such as OpenAI.
 - The bot answers in **English by default**; `/set zapbot.lang pt_BR` switches its replies to Brazilian
   Portuguese.
 

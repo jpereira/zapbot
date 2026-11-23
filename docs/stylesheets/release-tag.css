@@ -1,0 +1,12 @@
+.zapbot-source__tag {
+  font-size: 0.55rem;
+}
+
+.zapbot-source--release .md-source__facts {
+  display: inline;
+  margin-inline-start: 0.35rem;
+}
+
+.zapbot-source--release .md-source__fact--version {
+  display: none;
+}

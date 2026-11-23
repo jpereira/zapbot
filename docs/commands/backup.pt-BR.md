@@ -111,7 +111,7 @@ ocorrências do `/watch`, alertas de preço, lembretes e mensagens agendadas, en
 A cópia é feita com o `VACUUM INTO` do SQLite (consistente, sem parar o
 bot) e compactada com gzip.
 
-As imagens do `/notes` (`cache/notes`) entram num arquivo à parte, só quando existe alguma, e voltam
+Os arquivos do `/notes` (`cache/notes`) entram num arquivo à parte, só quando existe alguma, e voltam
 junto no `-r`. As notas de uma [tag protegida](notes.md#tags-protegidas--lock) entram no backup **cifradas** (banco e
 arquivos), então um backup vazado não as abre; os backups feitos **antes** de proteger a tag guardam o texto em claro. O `-send` e o backup automático enviam só o banco (as imagens podem passar do limite
 de anexo).
@@ -120,10 +120,11 @@ de anexo).
 que não está mais no disco avisa que o arquivo não está disponível. A sessão do WhatsApp (volume
 `wwebjs_auth`) também não.
 
-Cada backup são dois ou três arquivos em `cache/backups/`, no volume `app_cache`:
+Cada backup tem de dois a quatro arquivos em `cache/backups/`, no volume `app_cache`:
 
 - `zapbot-AAAAMMDD-HHMMSS.db.gz`: o banco compactado;
-- `zapbot-AAAAMMDD-HHMMSS.notes.tar.gz`: as imagens do `/notes` (só se houver alguma);
+- `zapbot-AAAAMMDD-HHMMSS.notes.tar.gz`: os arquivos do `/notes` (quando houver);
+- `zapbot-AAAAMMDD-HHMMSS.contacts.tar.gz`: as fotos de contatos (quando houver);
 - `zapbot-AAAAMMDD-HHMMSS.json`: data, motivo, versão do bot e as entradas de cada tabela.
 
 ## Restaurar

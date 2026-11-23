@@ -20,10 +20,12 @@ can send messages and read your `/notes`.
 The settings, all with [`/set`](commands/set.md) (they take effect after restarting the bot):
 
 ```text
-/set zapbot.api.key 5f8d0c1e2b7a49c3a1d6e4f0b9a8c7d2e1f3a4b5c6d7e8f90123456789abcde
+/set zapbot.api.key <your-random-key>
 /set zapbot.api.port 3100
 /set zapbot.api.enabled on
 ```
+
+Generate your own random key, for example with `openssl rand -hex 32`.
 
 With Docker, publish the port only on the machine itself, in `docker-compose.yml`:
 
@@ -41,7 +43,8 @@ one is brute-forced too fast.
 ## Endpoints
 
 Every call (except `/health`) sends the key in the `Authorization: Bearer <key>` header (or in
-`X-API-Key`). 5 wrong keys from the same address block it for 15 minutes, the same as the web interface's login.
+`X-API-Key`). 5 wrong keys from the same address block it for 15 minutes, the same as the web interface's login. The API counts the
+address of the direct connection, so clients behind one proxy share that limit.
 
 | Method | Path | What it does |
 |---|---|---|

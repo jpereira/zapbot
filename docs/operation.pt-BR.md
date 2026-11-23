@@ -8,8 +8,8 @@ Execute os comandos Docker na raiz do projeto:
 | Reiniciar | `docker compose -f docker/docker-compose.yml restart zapbot` |
 | Parar | `docker compose -f docker/docker-compose.yml stop zapbot` |
 | Shell no container | `docker exec -it zapbot bash -l` |
-| Consultar o banco | `docker exec -it zapbot sqlite3 cache/zapbot.db` |
-| Ver configurações | `docker exec -it zapbot sqlite3 cache/zapbot.db "SELECT * FROM settings"` |
+| Consultar o banco | `docker exec -it zapbot sqlite3 -readonly /app/cache/zapbot.db` |
+| Ver configurações | `docker exec -it zapbot sqlite3 -readonly /app/cache/zapbot.db "SELECT key FROM settings ORDER BY key"` |
 | Limpar mensagens/mídias | Pelo WhatsApp: `/cache -a` (tudo, inclusive os backups), `/cache -m` (só as mídias) ou `/cache -b` (só os backups). Veja [`/cache`](commands/cache.md) |
 | Estado do bot (no ar, cache, apagadas...) | Pelo WhatsApp: `/bot -status` (ou `/bot -status 06h` para receber todo dia). Veja [`/bot -status`](commands/bot.md#status-do-bot) |
 | Versões (Node.js, Chromium, yt-dlp, ffmpeg...) e sistema | Pelo WhatsApp: `/bot -info`. Veja [Informações do sistema](commands/bot.md#informações-do-sistema) |
@@ -19,6 +19,16 @@ Execute os comandos Docker na raiz do projeto:
 | **Forçar novo QR** (apaga a sessão) | `docker compose -f docker/docker-compose.yml down && docker volume rm zapbot_wwebjs_auth && docker compose -f docker/docker-compose.yml up -d zapbot` |
 
 O container usa `restart: unless-stopped`, então volta sozinho após reboot do host.
+
+## Banco e backups
+
+Use o SQLite em modo de leitura para diagnóstico. Para alterar configurações, use `/set` ou o
+painel web. Faça cópias com `/backup -now`, que gera um snapshot consistente com o bot em execução.
+
+O backup inclui o banco, os metadados e, quando presentes, arquivos de notas e fotos de contatos.
+As mídias das conversas e a sessão do WhatsApp ficam fora desse backup. Para preservar também
+esses dados numa migração, pare o serviço e copie os volumes `zapbot_app_cache` e
+`zapbot_wwebjs_auth`. Guarde as cópias com acesso restrito.
 
 ## Saúde do container (heartbeat)
 

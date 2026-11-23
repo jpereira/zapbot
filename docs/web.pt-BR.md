@@ -32,6 +32,16 @@ No `config/.env`, `ZAPBOT_WEB_ENABLED=true` (ou `false`) decide por cima do sett
 `ZAPBOT_WEB_PORT` e `ZAPBOT_WEB_HOST` por cima da porta e do endereço
 ([as variáveis](configuration.md#interface-web-opcional)).
 
+No Compose, a porta é publicada no loopback **do servidor Docker**. Para acessar de outro
+computador sem abrir a porta na rede, crie um túnel SSH e abra `http://127.0.0.1:3200` no navegador.
+
+```bash
+ssh -N -L 3200:127.0.0.1:3200 user@docker-host
+```
+
+Depois de editar os arquivos de ambiente, aplique a configuração com
+`docker compose -f docker/docker-compose.yml up -d zapbot` na raiz do projeto.
+
 ## Login em duas etapas (2FA)
 
 Com o 2FA ligado, o login pede o **código de 6 dígitos** de um app autenticador (Google Authenticator, Authy,

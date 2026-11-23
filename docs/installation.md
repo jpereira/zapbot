@@ -9,6 +9,9 @@
 
 You don't need Node, Chromium, ffmpeg or yt-dlp installed: everything ships inside the image.
 
+Run `docker compose version` before starting. Compose must support
+`env_file.required` for the optional `docker/.env` file.
+
 ## Installation (Docker)
 
 The current stable version is `v1.0.24` (from 2026-11-17); the steps below install that version. The

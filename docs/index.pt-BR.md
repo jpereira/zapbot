@@ -23,6 +23,9 @@ em cima de uma sessão real do WhatsApp Web, como um *aparelho conectado* da sua
 mensalidade, e as suas mensagens ficam no seu servidor. Você digita comandos em qualquer chat e ele responde
 (`/help`, `/show`, `/gpt`, `/qr`...).
 
+[Instalação](installation.md) · [Interface web](web.md) · [Operação e diagnóstico](operation.md)
+· [API e MCP](api.md) · [Comandos](commands/index.md)
+
 ## 🆕 Novidades (as boas)
 
 Pois é, a gente andou ocupado. O melhor da última leva:
@@ -310,8 +313,8 @@ comandos começam com `/`.
 - O ZapBot **não tem vínculo com o WhatsApp nem com a Meta**. Ele usa um cliente não oficial (`whatsapp-web.js`), então o
   WhatsApp pode bloquear contas que automatizam demais: use com cuidado (veja as notas sobre o risco no
   [`/monitor`](commands/monitor.md)).
-- **Tudo fica com você**: o banco, as mídias e os backups ficam em `cache/`, no seu servidor. O que sai dele são só as
-  consultas aos serviços que você ligar (OpenAI, GIPHY, tempo, notícias...).
+- **Dados locais:** o banco, as mídias e os backups ficam em `cache/`. Dependendo da função usada,
+  o bot pode enviar conteúdo ao WhatsApp, a destinatários de e-mail ou a serviços como a OpenAI.
 - O bot responde em **inglês por padrão**; `/set zapbot.lang pt_BR` troca as respostas para português do Brasil.
 
 ## Demonstração

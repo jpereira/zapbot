@@ -12,12 +12,17 @@ edit_uri: edit/main/docs/
 # List of the site's dependencies, not a page
 exclude_docs: |
   requirements.txt
+  overrides/
 
 # The release workflow fills in the published version
 copyright: !ENV [DOCS_COPYRIGHT, "ZapBot (development) · MIT License · Copyright &copy; 2026 Jorge Pereira"]
 
+extra:
+  release_tag: !ENV [DOCS_RELEASE_TAG, ""]
+
 theme:
   name: material
+  custom_dir: docs/overrides
   language: en
   logo: assets/logo.png
   favicon: assets/favicon.png
@@ -68,12 +73,17 @@ plugins:
             Home: Início
             Installation: Instalação
             Configuration: Configuração
+            Settings: Ajustes
+            Web interface: Interface web
             Commands: Comandos
             Demo: Demonstração
             Operation: Operação
             API and MCP: API e MCP
             Development: Desenvolvimento
             Record the demo: Gravar a demonstração
+
+extra_css:
+  - stylesheets/release-tag.css
 
 extra_javascript:
   - javascripts/new-tab-gifs.js

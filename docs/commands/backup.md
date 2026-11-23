@@ -112,7 +112,7 @@ and hits, price alerts, reminders and scheduled messages, polls and statistics.
 The copy is made with SQLite's `VACUUM INTO` (consistent, without stopping the
 bot) and compressed with gzip.
 
-`/notes` images (`cache/notes`) go in a separate file, only when there are any, and come back
+`/notes` files (`cache/notes`) go in a separate file, only when there are any, and come back
 along with `-r`. The notes of a [protected tag](notes.md#protected-tags--lock) go in the backup **encrypted** (database and
 files), so a leaked backup does not open them; the backups made **before** protecting the tag keep the text in the clear. `-send` and the automatic backup send only the database (the images may exceed the
 attachment limit).
@@ -121,10 +121,11 @@ attachment limit).
 that is no longer on disk says the file isn't available. The WhatsApp session (volume
 `wwebjs_auth`) isn't included either.
 
-Each backup is two or three files in `cache/backups/`, in the `app_cache` volume:
+Each backup contains two to four files in `cache/backups/`, in the `app_cache` volume:
 
 - `zapbot-AAAAMMDD-HHMMSS.db.gz`: the compressed database;
-- `zapbot-AAAAMMDD-HHMMSS.notes.tar.gz`: the `/notes` images (only if there are any);
+- `zapbot-AAAAMMDD-HHMMSS.notes.tar.gz`: the `/notes` files (when present);
+- `zapbot-AAAAMMDD-HHMMSS.contacts.tar.gz`: contact photos (when present);
 - `zapbot-AAAAMMDD-HHMMSS.json`: date, reason, bot version and the entries of each table.
 
 ## Restore

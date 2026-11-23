@@ -331,8 +331,8 @@ comandos começam com `/`.
 - O ZapBot **não tem vínculo com o WhatsApp nem com a Meta**. Ele usa um cliente não oficial (`whatsapp-web.js`), então o
   WhatsApp pode bloquear contas que automatizam demais: use com cuidado (veja as notas sobre o risco no
   [`/monitor`](docs/commands/monitor.md)).
-- **Tudo fica com você**: o banco, as mídias e os backups ficam em `cache/`, no seu servidor. O que sai dele são só as
-  consultas aos serviços que você ligar (OpenAI, GIPHY, tempo, notícias...).
+- **Dados locais:** o banco, as mídias e os backups ficam em `cache/`. Dependendo da função usada,
+  o bot pode enviar conteúdo ao WhatsApp, a destinatários de e-mail ou a serviços como a OpenAI.
 - O bot responde em **inglês por padrão**; `/set zapbot.lang pt_BR` troca as respostas para português do Brasil.
 
 ## Demonstração

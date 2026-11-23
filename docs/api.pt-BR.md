@@ -20,10 +20,12 @@ exemplo) enviar mensagens e ler as suas `/notes`.
 Os settings, todos pelo [`/set`](commands/set.md) (valem ao reiniciar o bot):
 
 ```text
-/set zapbot.api.key 5f8d0c1e2b7a49c3a1d6e4f0b9a8c7d2e1f3a4b5c6d7e8f90123456789abcde
+/set zapbot.api.key <sua-chave-aleatória>
 /set zapbot.api.port 3100
 /set zapbot.api.enabled on
 ```
+
+Gere uma chave aleatória própria, por exemplo com `openssl rand -hex 32`.
 
 No Docker, publique a porta só na própria máquina, no `docker-compose.yml`:
 
@@ -42,6 +44,7 @@ força-bruta rápido demais.
 
 Toda chamada (menos o `/health`) manda a chave no cabeçalho `Authorization: Bearer <chave>` (ou em
 `X-API-Key`). 5 chaves erradas do mesmo endereço bloqueiam por 15 minutos, igual ao login da interface web.
+A API conta o endereço da conexão direta, então clientes atrás do mesmo proxy compartilham o limite.
 
 | Método | Caminho | O que faz |
 |---|---|---|
