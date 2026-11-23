@@ -168,6 +168,10 @@ localizações, emojis e reações. As transcrições que o bot fez dos áudios 
 Ao abrir uma conversa, um aviso começa o histórico: `Histórico de Fulano: <primeira mensagem> → <última mensagem>`,
 com quantas mensagens, apagadas e editadas há.
 
+A seção **Histórico de reações**, abaixo da mensagem original, mostra quem trocou ou removeu
+a reação, os emojis e o horário. Com a atualização automática ligada, as reações das mensagens
+visíveis também são atualizadas enquanto você lê mensagens antigas.
+
 ### Lendo o histórico
 
 - **Ordem** (a lista da barra de ferramentas): *mais recente primeiro* (o padrão: a mais recente no alto, as mais antigas

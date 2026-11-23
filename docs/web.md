@@ -167,6 +167,10 @@ locations, emojis and reactions. The transcriptions the bot made of audio show b
 When you open a chat, a notice starts the conversation: `History of Fulano: <first message> → <last message>`, with how
 many messages, deleted and edited there are.
 
+**Reaction history**, below the original message, shows who changed or removed a reaction,
+the emojis and the time. When automatic refresh is enabled, reactions on visible messages
+also update while you are reading older messages.
+
 ### Reading the history
 
 - **Order** (the list in the toolbar): *newest first* (the default: the most recent at the top, the older ones as

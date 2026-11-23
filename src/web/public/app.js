@@ -21,7 +21,8 @@ const TEXTS = {
         cHeat: 'When the chat is busy (weekday x hour)', cTypes: 'What the messages are', cChats: 'Chats with the most messages', cPeople: 'People who talk the most',
         text: 'text', mediaWord: 'media', weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], msgsWord: 'messages', share: 'of the total',
         cannotShow: 'this message could not be shown', phTag: 'travel', phTagDesc: 'places to visit', phNoteTag: 'ideas', envForced: (env) => `Decided by the ${env} variable (config/.env), which has priority over this setting`, noticeOn: 'Off: click to turn it on', noticeOff: 'On: click to turn it off', runOn: 'Running: click to pause', runOff: 'Paused: click to resume', clearHistory: 'Clear the history of this chat', clearBtn: 'Clear', clearTitle: (name) => `Clear the history · ${name}`, clearInfo: (r) => `${r.removed} messages will be deleted (with their media). ${r.kept} stay: the deleted, the edited and the ones with reactions, with what they had before.`, clearNothing: 'Nothing to delete: every message here is a deleted, edited or reacted one.', clearConfirm: 'Type the name of the chat to confirm', clearDone: (r) => `${r.removed} messages deleted; ${r.kept} stay.`, webPanel: 'Web interface', webAt: 'Open at', webAccess: 'Access', webLogin: 'Login and session', webScreen: 'Screen', webAlerts: 'Warnings', notSet: 'not set', needsRestart: 'Takes effect when the bot restarts', restSettings: 'All the other settings', protectedHere: 'Change it with /set in WhatsApp',  meBtn: 'Me (my private chat)', watchedBy: '/watch', openInHistory: 'Open in the history, at this message', presenceSource: 'WhatsApp presence · time not confirmed', newTag: 'New tag', newNote: 'New note', editTagBtn: 'Edit the tag', removeTag: 'Remove the tag', confirmRemoveTag: 'Remove this tag (it has no notes)?', removeTagWithNotes: 'Remove the tag and everything in it', removeTagInfo: (n) => `${n} note${n === 1 ? '' : 's'} (and their media) will be deleted, along with the tag's description and lock, if any.`, historyBtn: 'History', loadingHistory: 'Loading the history…', searchContact: 'Search a contact or group (name or number) or type an email', pickContact: 'Search the contact (name or number)', noMatches: 'No contact found', privateChat: 'Empty: it goes to your private chat', useEmail: (email) => `✉️ Use ${email}`, updatedAt: (time) => `updated at ${time}`, noHistory: 'Nothing recorded yet.', removeReading: 'Remove this reading', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 ${who ? `${who}'s` : 'a participant\'s'} security code changed`, systemNotice: (text) => `ℹ️ ${text ?? 'WhatsApp notice'}`, loadMore: 'Load more', noMore: 'No more messages.', loadingFor: (name) => `Loading ${name}…`, loadingStats: 'Loading the statistics…', loadingHome: 'Loading…', statsOverview: 'Statistics', last30: 'last 30 days', seeAllStats: 'See all the statistics',
-        code: '6-digit code', quotedGone: 'message not in the database', searchAll: 'Search all the messages', searchResults: (n) => `${n} results`, exportChat: 'Export PDF', reacted: 'reaction', removedReaction: 'removed', autoRefresh: 'New messages',
+        code: '6-digit code', quotedGone: 'message not in the database', searchAll: 'Search all the messages', searchResults: (n) => `${n} results`, exportChat: 'Export PDF', reacted: 'reaction', removedReaction: 'removed', reactionHistory: 'Reaction history',
+        reactionChanged: 'Changed reaction', reactionRemoved: 'Removed reaction', autoRefresh: 'New messages',
         home: 'Home', navHistory: 'History', notes: 'Notes', alerts: 'Alerts', aliases: 'Shortcuts', schedule: 'Schedule', stats: 'Stats', settings: 'Settings',
         filter: 'Filter', rows: (n) => `${n} ${n === 1 ? 'row' : 'rows'}`, empty: 'Nothing here.', readOnly: 'Changes here use the same checks as the commands.', periodLabel: 'Period',
         sec: { price: 'Price alerts (/stocks, /crypto)', watch: 'Watch rules (/watch)', monitor: 'Monitored contacts (/monitor)', aliases: 'Shortcuts (/alias)', schedule: 'Scheduled (/cron)', days: 'Messages per day', hours: 'Messages per hour', chats: 'Chats with the most messages', people: 'People who talk the most', settings: 'Settings (/set)' },
@@ -55,7 +56,8 @@ const TEXTS = {
         cHeat: 'Quando o movimento é maior (dia da semana x hora)', cTypes: 'O que são as mensagens', cChats: 'Conversas com mais mensagens', cPeople: 'Quem mais fala',
         text: 'texto', mediaWord: 'mídia', weekdays: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'], msgsWord: 'mensagens', share: 'do total',
         cannotShow: 'não foi possível mostrar esta mensagem', phTag: 'viagens', phTagDesc: 'lugares para conhecer', phNoteTag: 'ideias', envForced: (env) => `Decidido pela variável ${env} (config/.env), que tem prioridade sobre este setting`, noticeOn: 'Desligado: clique para ligar', noticeOff: 'Ligado: clique para desligar', runOn: 'Ativo: clique para pausar', runOff: 'Pausado: clique para retomar', clearHistory: 'Limpar o histórico desta conversa', clearBtn: 'Limpar', clearTitle: (name) => `Limpar o histórico · ${name}`, clearInfo: (r) => `${r.removed} mensagens serão apagadas (com a mídia). ${r.kept} ficam: as apagadas, as editadas e as com reações, com o que tinham antes.`, clearNothing: 'Nada a apagar: toda mensagem daqui é apagada, editada ou tem reação.', clearConfirm: 'Digite o nome da conversa para confirmar', clearDone: (r) => `${r.removed} mensagens apagadas; ${r.kept} ficam.`, webPanel: 'Interface web', webAt: 'Abra em', webAccess: 'Acesso', webLogin: 'Login e sessão', webScreen: 'Tela', webAlerts: 'Avisos', notSet: 'não definido', needsRestart: 'Vale quando o bot reiniciar', restSettings: 'Todos os outros settings', protectedHere: 'Mude com o /set no WhatsApp',  meBtn: 'Eu (meu privado)', watchedBy: '/watch', openInHistory: 'Abrir no histórico, nesta mensagem', presenceSource: 'presença do WhatsApp · horário não confirmado', newTag: 'Nova tag', newNote: 'Nova nota', editTagBtn: 'Editar a tag', removeTag: 'Remover a tag', confirmRemoveTag: 'Remover esta tag (ela não tem notas)?', removeTagWithNotes: 'Remover a tag e tudo dentro dela', removeTagInfo: (n) => `${n} nota${n === 1 ? '' : 's'} (e a mídia delas) serão apagadas, junto com a descrição e o cadeado da tag, se houver.`, historyBtn: 'Histórico', loadingHistory: 'Carregando o histórico…', searchContact: 'Busque um contato ou grupo (nome ou número) ou digite um e-mail', pickContact: 'Busque o contato (nome ou número)', noMatches: 'Nenhum contato encontrado', privateChat: 'Vazio: vai para o seu privado', useEmail: (email) => `✉️ Usar ${email}`, updatedAt: (time) => `atualizado às ${time}`, noHistory: 'Nada registrado ainda.', removeReading: 'Remover esta leitura', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 o código de segurança de ${who ?? 'um participante'} mudou`, systemNotice: (text) => `ℹ️ ${text ?? 'aviso do WhatsApp'}`, loadMore: 'Carregar mais', noMore: 'Não há mais mensagens.', loadingFor: (name) => `Carregando ${name}…`, loadingStats: 'Carregando as estatísticas…', loadingHome: 'Carregando…', statsOverview: 'Estatísticas', last30: 'últimos 30 dias', seeAllStats: 'Ver todas as estatísticas',
-        code: 'Código de 6 dígitos', quotedGone: 'mensagem fora do banco', searchAll: 'Buscar em todas as mensagens', searchResults: (n) => `${n} resultados`, exportChat: 'Exportar PDF', reacted: 'reação', removedReaction: 'removida', autoRefresh: 'Mensagens novas',
+        code: 'Código de 6 dígitos', quotedGone: 'mensagem fora do banco', searchAll: 'Buscar em todas as mensagens', searchResults: (n) => `${n} resultados`, exportChat: 'Exportar PDF', reacted: 'reação', removedReaction: 'removida', reactionHistory: 'Histórico de reações',
+        reactionChanged: 'Alterou a reação', reactionRemoved: 'Removeu a reação', autoRefresh: 'Mensagens novas',
         home: 'Início', navHistory: 'Histórico', notes: 'Notas', alerts: 'Alertas', aliases: 'Atalhos', schedule: 'Agenda', stats: 'Estatísticas', settings: 'Settings',
         filter: 'Filtrar', rows: (n) => `${n} ${n === 1 ? 'linha' : 'linhas'}`, empty: 'Nada aqui.', readOnly: 'As mudanças aqui passam pelas mesmas checagens dos comandos.', periodLabel: 'Período',
         sec: { price: 'Alertas de preço (/stocks, /crypto)', watch: 'Regras do /watch', monitor: 'Contatos monitorados (/monitor)', aliases: 'Atalhos (/alias)', schedule: 'Agendados (/cron)', days: 'Mensagens por dia', hours: 'Mensagens por hora', chats: 'Conversas com mais mensagens', people: 'Quem mais fala', settings: 'Settings (/set)' },
@@ -293,6 +295,25 @@ function mediaNode(message) {
     return el('div', { class: 'media' }, view, el('div', {}, download));
 }
 
+function renderReactions(panel, { reactions = [], reactionChanges = [] }) {
+    const signature = JSON.stringify([reactions, reactionChanges]);
+    if (panel.dataset.signature === signature) return;
+    panel.dataset.signature = signature;
+    const history = reactionChanges.length ? el('div', { class: 'rchanges' },
+        el('strong', {}, T.reactionHistory),
+        ...reactionChanges.map(change => el('div', { class: 'reaction-change' },
+            el('span', {}, [
+                change.by ? `${change.by} · ` : '',
+                change.new ? T.reactionChanged : T.reactionRemoved,
+                ` ${change.old}${change.new ? ` → ${change.new}` : ''}`
+            ]),
+            change.at ? el('time', {}, fmtFull(change.at)) : null))) : null;
+    panel.replaceChildren(...[
+        reactions.length ? el('div', { class: 'reactions' }, reactions.join(' ')) : null,
+        history
+    ].filter(Boolean));
+}
+
 function messageNode(message) {
     try {
         return messageNodeUnsafe(message);
@@ -344,11 +365,11 @@ function messageNodeUnsafe(message) {
     const presentation = isStatus ? 'status-post' : (message.fromMe ? 'out' : 'in');
     const classes = ['msg', presentation, isSticker && 'sticker',
         state.selecting && 'selectable', selected && 'selected'].filter(Boolean).join(' ');
+    const reactions = el('div', { class: 'message-reactions' });
+    renderReactions(reactions, message);
     const node = el(isStatus ? 'article' : 'div', {
         class: classes, 'data-at': message.at, 'data-id': message.id
-    },
-        inner, message.reactions.length ? el('div', { class: 'reactions' }, message.reactions.join(' ')) : null,
-        message.reactionChanges.length ? el('div', { class: 'rchanges' }, message.reactionChanges.map(c => el('div', {}, `${c.by ? `${c.by}: ` : ''}${c.old || '·'} → ${c.new || T.removedReaction} · ${fmtFull(c.at)}`))) : null);
+    }, inner, reactions);
     if (state.selecting) {
         node.addEventListener('click', (event) => {
             if (event.target.closest('a, video, audio')) return;
@@ -1236,31 +1257,62 @@ for (const event of ['pointerdown', 'keydown', 'wheel', 'touchmove']) {
     document.addEventListener(event, reportActivity, { capture: true, passive: true });
 }
 
+async function refreshReactions(box, chat) {
+    const { top, bottom } = box.getBoundingClientRect();
+    const visible = new Map();
+    for (const node of box.querySelectorAll('.msg[data-id]')) {
+        const position = node.getBoundingClientRect();
+        if (position.bottom < top || position.top > bottom) continue;
+        const panel = node.querySelector('.message-reactions');
+        if (panel) visible.set(node.dataset.id, panel);
+        if (visible.size === 200) break;
+    }
+    if (!visible.size) return;
+    const data = await api('/api/reactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat, ids: [...visible.keys()] })
+    }).then(response => response.json()).catch(() => null);
+    if (state.chat !== chat || !box.isConnected) return;
+    for (const message of data?.messages ?? []) {
+        const panel = visible.get(message.id);
+        if (panel?.isConnected) renderReactions(panel, message);
+    }
+}
+
 /* new messages of the open chat (newest at the bottom, scrolled to the end): every zapbot.web.refreshSeconds */
 let refreshTimer = null;
+let refreshingHistory = false;
 function startRefresh() {
     clearInterval(refreshTimer);
     if (!state.refreshSeconds) return;
     refreshTimer = setInterval(async () => {
         const box = document.getElementById('messages');
-        if (state.view !== 'history' || !state.chat || !box || state.mode === 'start' || state.loading || state.q || state.selecting) return;
-        const atEdge = state.mode === 'recent' ? box.scrollHeight - box.scrollTop - box.clientHeight <= 200 : box.scrollTop <= 200;
-        if (!atEdge) return; // reading older ones: do not move the page
-        const all = [...box.querySelectorAll('.msg')];
-        const newest = state.mode === 'recent' ? all.at(-1) : all[0];
-        const since = newest ? Number(newest.dataset.at) : state.info?.lastAt;
-        if (!since) return;
-        const params = new URLSearchParams({ chat: state.chat, order: 'asc', from: since, limit: 100 });
-        if (state.to) return; // a closed period does not grow
-        const data = await api(`/api/messages?${params}`).then(response => response.json()).catch(() => null);
-        const seen = new Set([...box.querySelectorAll('.msg')].map(n => n.dataset.id));
-        const fresh = (data?.messages ?? []).filter(m => !seen.has(m.id));
-        if (!fresh.length) return;
-        if (state.mode === 'recent') {
-            box.append(...withDays(fresh));
-            box.scrollTop = box.scrollHeight;
-        } else {
-            box.querySelector('.notice').after(...withDays(fresh.slice().reverse()));
+        if (state.view !== 'history' || !state.chat || !box || state.loading || refreshingHistory) return;
+        refreshingHistory = true;
+        try {
+            await refreshReactions(box, state.chat);
+            if (!box.isConnected || state.mode === 'start' || state.q || state.selecting) return;
+            const atEdge = state.mode === 'recent' ? box.scrollHeight - box.scrollTop - box.clientHeight <= 200 : box.scrollTop <= 200;
+            if (!atEdge) return; // reading older ones: do not move the page
+            const all = [...box.querySelectorAll('.msg')];
+            const newest = state.mode === 'recent' ? all.at(-1) : all[0];
+            const since = newest ? Number(newest.dataset.at) : state.info?.lastAt;
+            if (!since) return;
+            const params = new URLSearchParams({ chat: state.chat, order: 'asc', from: since, limit: 100 });
+            if (state.to) return; // a closed period does not grow
+            const data = await api(`/api/messages?${params}`).then(response => response.json()).catch(() => null);
+            const seen = new Set([...box.querySelectorAll('.msg')].map(n => n.dataset.id));
+            const fresh = (data?.messages ?? []).filter(m => !seen.has(m.id));
+            if (!fresh.length) return;
+            if (state.mode === 'recent') {
+                box.append(...withDays(fresh));
+                box.scrollTop = box.scrollHeight;
+            } else {
+                box.querySelector('.notice').after(...withDays(fresh.slice().reverse()));
+            }
+        } finally {
+            refreshingHistory = false;
         }
     }, state.refreshSeconds * 1000);
 }

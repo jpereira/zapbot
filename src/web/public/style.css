@@ -281,7 +281,17 @@ tr:last-child td { border-bottom: 0; }
 .quote { border-left: 3px solid var(--accent); background: rgba(0,0,0,.18); border-radius: 4px; padding: 3px 8px; margin-bottom: 4px; font-size: 12.5px; }
 .quote .qwho { color: var(--accent); font-weight: 600; }
 .quote .qtext { color: var(--muted); white-space: pre-wrap; max-height: 3.6em; overflow: hidden; }
-.rchanges { color: var(--muted); font-size: 11px; margin-top: 2px; }
+.message-reactions:empty { display: none; }
+.rchanges {
+    margin-top: 4px;
+    padding: 5px 8px;
+    border-inline-start: 2px solid var(--accent);
+    border-radius: 4px;
+    background: var(--chip);
+    font-size: 12px;
+}
+.reaction-change { display: flex; flex-wrap: wrap; gap: 2px 8px; margin-top: 3px; }
+.reaction-change time { color: var(--muted); }
 .search input + input { margin-top: 6px; }
 
 /* theme and form windows */

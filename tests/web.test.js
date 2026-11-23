@@ -724,6 +724,29 @@ describe('replies, mentions, reaction changes, search, export and the code (TOTP
         assert.deepEqual(messages[0].reactionChanges, [{ by: 'Ciclano', old: '👍', new: '🔥', at: 150 }, { by: 'Ciclano', old: '🔥', new: '', at: 160 }]);
     });
 
+    test('reaction refresh returns changes for existing messages in the selected chat', async () => {
+        await bot.dbRun('INSERT INTO reactions VALUES (?, ?, ?, ?, ?)', ['Q1', bot.OTHERAlt.jid, CHAT, '👍', 150]);
+        const refresh = (chat, session = cookie) => fetch(base + '/api/reactions', {
+            method: 'POST', headers: { cookie: session, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat, ids: ['Q1', 'Q2'] })
+        });
+        const before = await (await refresh(CHAT)).json();
+        const item = (data, id) => data.messages.find(message => message.id === id);
+        assert.deepEqual(item(before, 'Q1').reactions, ['👍']);
+
+        await bot.dbRun('DELETE FROM reactions WHERE message_id = ?', ['Q1']);
+        await bot.dbRun(`INSERT INTO reaction_changes
+            (message_id, chat_id, sender_number, old_reaction, new_reaction, changed_at)
+            VALUES (?, ?, ?, ?, ?, ?)`, ['Q1', CHAT, '5521999990002', '👍', '', 160]);
+        const after = await (await refresh(CHAT)).json();
+        assert.deepEqual(item(after, 'Q1'), {
+            id: 'Q1', reactions: [], reactionChanges: [{ by: '+5521999990002', old: '👍', new: '', at: 160 }]
+        });
+        assert.deepEqual(item(after, 'Q2').reactionChanges, []);
+        assert.deepEqual(await (await refresh(GROUP)).json(), { messages: [] });
+        assert.equal((await refresh(CHAT, '')).status, 401);
+    });
+
     test('the search across every chat (text, 2+ letters), most recent first, % is not a wildcard', async () => {
         await insert('S1', GROUP, { chatName: 'Grupo da Família', group: true, body: 'o boleto venceu', at: 500, sender: 'Ciclano' });
         await insert('S2', CHAT, { body: 'outro BOLETO aqui', at: 600, sender: 'Fulano' });

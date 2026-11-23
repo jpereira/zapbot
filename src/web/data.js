@@ -158,6 +158,33 @@ async function mediaFile(row) {
 
 const mimeOf = (file) => INLINE_TYPES[path.extname(file).toLowerCase()] ?? 'application/octet-stream';
 
+async function reactionDetails(ids) {
+    if (!ids.length) return new Map();
+    const marks = ids.map(() => '?').join(',');
+    const [active, changes] = await Promise.all([
+        dbAll(`SELECT message_id, reaction FROM reactions WHERE message_id IN (${marks})`, ids),
+        dbAll(`SELECT message_id, sender_name, sender_number, old_reaction, new_reaction, changed_at
+            FROM reaction_changes WHERE message_id IN (${marks}) ORDER BY changed_at, id`, ids)
+    ]);
+    const activeById = Map.groupBy(active, row => row.message_id);
+    const changesById = Map.groupBy(changes, row => row.message_id);
+    return new Map(ids.map(id => [id, {
+        reactions: (activeById.get(id) ?? []).map(row => row.reaction),
+        reactionChanges: (changesById.get(id) ?? []).map(row => ({
+            by: row.sender_name || (row.sender_number ? `+${row.sender_number}` : null),
+            old: row.old_reaction || '', new: row.new_reaction || '', at: row.changed_at
+        }))
+    }]));
+}
+
+async function chatReactions(chat, ids) {
+    if (!ids.length) return [];
+    const marks = ids.map(() => '?').join(',');
+    const rows = await dbAll(`SELECT id FROM messages WHERE chat_id = ? AND id IN (${marks})`, [chat, ...ids]);
+    const details = await reactionDetails(rows.map(row => row.id));
+    return Array.from(details, ([id, data]) => ({ id, ...data }));
+}
+
 /**
  * A page of a chat's messages (in the order asked), with the edits, reactions and media.
  * @param {object} o
@@ -197,11 +224,8 @@ async function listMessages({ chat, from = null, to = null, order = 'asc', curso
     const ids = page.map(r => r.id);
     const marks = ids.map(() => '?').join(',');
     const edits = ids.length ? await dbAll(`SELECT message_id, old_body, new_body, edited_at FROM message_edits WHERE message_id IN (${marks}) ORDER BY edited_at`, ids) : [];
-    const reactions = ids.length ? await dbAll(`SELECT message_id, reaction, sender_jid FROM reactions WHERE message_id IN (${marks})`, ids) : [];
-    const changes = ids.length ? await dbAll(`SELECT message_id, sender_name, old_reaction, new_reaction, changed_at FROM reaction_changes WHERE message_id IN (${marks}) ORDER BY changed_at`, ids) : [];
+    const reactions = await reactionDetails(ids);
     const editsOf = Map.groupBy(edits, e => e.message_id);
-    const reactionsOf = Map.groupBy(reactions, r => r.message_id);
-    const changesOf = Map.groupBy(changes, c => c.message_id);
     const hitRows = ids.length ? await dbAll(`SELECT message_id, rule FROM watch_hits WHERE message_id IN (${marks})`, ids) : [];
     const hitsOf = Map.groupBy(hitRows, h => h.message_id);
     const quotedIds = [...new Set(page.map(r => r.quoted_id).filter(Boolean))];
@@ -228,11 +252,10 @@ async function listMessages({ chat, from = null, to = null, order = 'asc', curso
                 : SYSTEM_NOTICES.has(row.type) ? { kind: 'system', text: String(row.body ?? '').slice(0, 200) || null } : null,
             transcription: row.transcription || null,
             quoted: row.quoted_id ? quotedSummary(quotedOf.get(row.quoted_id)) : null,
-            reactionChanges: (changesOf.get(row.id) ?? []).map(c => ({ by: c.sender_name || null, old: c.old_reaction || '', new: c.new_reaction || '', at: c.changed_at })),
+            ...reactions.get(row.id),
             deleted: Boolean(row.revoked),
             deletedAt: row.revoked_at || null,
             edits: (editsOf.get(row.id) ?? []).map(e => ({ old: visibleBody(e.old_body), new: visibleBody(e.new_body), at: e.edited_at })),
-            reactions: (reactionsOf.get(row.id) ?? []).map(r => r.reaction),
             location: row.location_lat != null ? { lat: row.location_lat, lng: row.location_lng } : null,
             media: (row.has_media || (row.location_lat == null && isJpegPreview(row.body)))
                 ? (media ? { url: `/api/media?id=${encodeURIComponent(row.id)}`, mime: mimeOf(media.file), name: path.basename(media.file), size: media.size } : { missing: true })
@@ -314,4 +337,4 @@ async function chatPhoto(chatId) {
     return photo ?? null;
 }
 
-module.exports = { chatInfo, chatName, chatPhoto, listChats, listMessages, messageMedia, REAL, searchMessages, STATUS };
+module.exports = { chatInfo, chatName, chatPhoto, chatReactions, listChats, listMessages, messageMedia, REAL, searchMessages, STATUS };

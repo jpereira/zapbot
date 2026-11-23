@@ -29,7 +29,7 @@ const sha = (text) => crypto.createHash('sha256').update(String(text)).digest();
 const totp = require('../util/totp');
 const { versionWithCommit } = require('../version');
 const { searchPeople } = require('../destinations');
-const { chatInfo, chatPhoto, listChats, listMessages, messageMedia, searchMessages } = require('./data');
+const { chatInfo, chatPhoto, chatReactions, listChats, listMessages, messageMedia, searchMessages } = require('./data');
 const { exportChat } = require('./export');
 const { statsData } = require('./stats');
 const { notifyWeb } = require('./alert');
@@ -337,6 +337,14 @@ async function api(req, res, url) {
             'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(result.name)}`, 'X-Messages': String(result.count), 'X-Truncated': String(result.truncated)
         });
         return res.end(result.pdf);
+    }
+    if (route === '/api/reactions' && req.method === 'POST') {
+        const { chat, ids } = (await readJson(req)) ?? {};
+        if (typeof chat !== 'string' || !Array.isArray(ids) || ids.length > 200
+            || ids.some(id => typeof id !== 'string' || !id || id.length > 128)) {
+            return sendJson(res, 400, { error: 'invalid reaction request' });
+        }
+        return sendJson(res, 200, { messages: await chatReactions(chat, ids) });
     }
     if (req.method !== 'GET') return sendJson(res, 405, { error: 'read-only' });
 
