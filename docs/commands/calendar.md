@@ -38,7 +38,7 @@ Without a confirmation message, describe the event in a sentence:
 /calendar add dentist friday at 3pm, remind me 30 minutes before
 /calendar schedule a meeting tomorrow at 9:30am
 /calendar create event "Djavan concert" on Dec 3 at 8pm
-/calendar birthday party Dec 20 at 7pm, remind me 1 day and 2 hours before
+/calendar birthday party Dec 20 at 7pm, remind me 1 day, 6 hours and 15 minutes before
 /calendar flight to Lisbon on Jan 10 at 6am, remind me 1 week and 3 hours before
 /calendar climbing saturday at 9am
 /calendar doctor appointment Dec 1 at 10:30am
@@ -66,8 +66,8 @@ More ways to say it:
 - **Title**: what is left after the verbs (`create`, `add`, `schedule`...), the date and the time
   (`Mom's birthday`), or the text in quotes. With only the date and the time the title is just `Event`.
 - **Reminders**: `generate reminders` makes four (**1 week, 1 day, 2 hours and 30 minutes before**); `remind me 30
-  minutes before` or `remind me 1 day and 2 hours before` makes exactly those. Without a word about it, the
-  default: **1 day and 2 hours before by notification, and 1 day before by email too**.
+  minutes before` or `remind me 1 day, 6 hours and 15 minutes before` makes exactly those. Without a word about it, the
+  default: **1 day, 6 hours and 15 minutes before by notification**.
 
 ## The emoji of the title
 
@@ -106,7 +106,7 @@ The local reader looks for the **labels** of a confirmation and for the **shape*
 - **Place**: `Unidade:` and `Endereço:` (the lines under the address, which WhatsApp wraps, are joined).
 - **Description**: the professional, the specialty, the `Convênio:` and `Plano:`, the patient (`Nome:`), the
   scheduling method and the notes at the end ("não esquecer documento com foto...").
-- **Reminders**: the default (1 day and 2 hours before by notification, 1 day before by email too); if the
+- **Reminders**: the default (1 day, 6 hours and 15 minutes before by notification); if the
   text says *"chegar 20 minutos antes"*, one more, before the arrival time.
 
 Both kinds of message from the examples work: the one with `Data:`, `Horário:` and `Endereço:` lines, and the one

@@ -38,7 +38,7 @@ Sem uma mensagem de confirmação, descreva o evento numa frase:
 /calendar agendar dentista sexta às 15h, me avise 30 minutos antes
 /calendar marcar reunião amanhã às 9h30
 /calendar criar evento "Show do Djavan" dia 3 de dezembro 20h
-/calendar festa de aniversário dia 20 de dezembro às 19h, avisos 1 dia e 2 horas antes
+/calendar festa de aniversário dia 20 de dezembro às 19h, avisos 1 dia, 6 horas e 15 minutos antes
 /calendar voo para Lisboa dia 10 de janeiro às 6h, avisos 1 semana e 3 horas antes
 /calendar escalada sábado às 9h
 /calendar consulta no Centro Médico dia 1 de dezembro às 10:30
@@ -68,8 +68,8 @@ Mais jeitos de dizer:
   (`Aniversário da Ana`), ou o texto entre aspas, ou o que vem depois de `chamado`. Só com a data e a hora o
   título é apenas `Evento` (ou `Lembrete`, `Reunião`... conforme você escreveu).
 - **Lembretes** (`avisos`): `gere avisos` cria quatro (**1 semana, 1 dia, 2 horas e 30 minutos antes**); `me avise
-  30 minutos antes` ou `avisos 1 dia e 2 horas antes` cria exatamente esses. Sem uma palavra sobre isso, o padrão:
-  **1 dia e 2 horas antes por notificação, e 1 dia antes por e-mail também**.
+  30 minutos antes` ou `avisos 1 dia, 6 horas e 15 minutos antes` cria exatamente esses. Sem uma palavra sobre isso, o padrão:
+  **1 dia, 6 horas e 15 minutos antes por notificação**.
 
 ## O emoji do título
 
@@ -108,7 +108,7 @@ O leitor local procura os **rótulos** de uma confirmação e o **formato** das 
 - **Local**: `Unidade:` e `Endereço:` (as linhas embaixo do endereço, que o WhatsApp quebra, são juntadas).
 - **Descrição**: o profissional, a especialidade, o `Convênio:` e o `Plano:`, o paciente (`Nome:`), o método de
   agendamento e as observações no fim ("não esquecer documento com foto...").
-- **Lembretes**: o padrão (1 dia e 2 horas antes por notificação, 1 dia antes por e-mail também); se o texto
+- **Lembretes**: o padrão (1 dia, 6 horas e 15 minutos antes por notificação); se o texto
   diz *"chegar 20 minutos antes"*, mais um, antes da hora de chegada.
 
 Os dois tipos de mensagem dos exemplos funcionam: a com as linhas `Data:`, `Horário:` e `Endereço:`, e a com

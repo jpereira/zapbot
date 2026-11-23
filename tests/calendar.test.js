@@ -9,7 +9,6 @@ const assert = require('node:assert/strict');
 const { MessageMedia, network, OTHERAlt } = bot;
 const cal = bot.src('calendar');
 const popup = (minutes) => ({ minutes, method: 'popup' });
-const byEmail = (minutes) => ({ minutes, method: 'email' });
 
 const CLINIC = `*AGENDAMENTO REALIZADO!* ✅
 Especialidade: REUMATOLOGIA (ENCAIXE)
@@ -53,7 +52,7 @@ describe('the local reader', () => {
         assert.match(e.description, /Profissional: Paula da Costa Paiva/);
         assert.match(e.description, /Não esquecer documento com foto e chegar 20 minutos antes/);
         assert.ok(!e.description.includes('AGENDAMENTO REALIZADO'));
-        assert.deepEqual(e.alarms, [popup(1440), byEmail(1440), popup(120), popup(35)], '1 day (notification and e-mail), 2 hours and the arrival (20 min + 15)');
+        assert.deepEqual(e.alarms, [popup(1440), popup(360), popup(35), popup(15)], '1 day (notification and e-mail), 2 hours and the arrival (20 min + 15)');
     });
 
     test('the hospital confirmation (labels in bold, unit + address, insurance, patient)', () => {
@@ -63,7 +62,7 @@ describe('the local reader', () => {
         assert.equal(e.location, 'COMPLEXO HOSPITALAR NITEROI, NA RUA MARQUÊS DE OLINDA, S/N, ESQUINA COM A RUA EUSÉBIO DE QUEIROZ, CENTRO - NITERÓI');
         assert.match(e.description, /Convênio\/plano: AMIL- ASS\. MED — 879 AMIL S 450 QP APTO/);
         assert.match(e.description, /Paciente: Jose Jorge Pereira Nazareno/);
-        assert.deepEqual(e.alarms, [popup(1440), byEmail(1440), popup(120)], 'the default: 1 day and 2 hours, the day also by e-mail');
+        assert.deepEqual(e.alarms, [popup(1440), popup(360), popup(15)], 'the default: 1 day, 6 hours and 15 minutes, the day also by e-mail');
     });
 
     test('dates and times by their shape: month names, no year, a range, 10h, no time (all day), another zone and duration', () => {
@@ -95,7 +94,7 @@ describe('an event typed in a sentence', () => {
         const e = sentence('criar evento para dia 21 de maio as 22h, gere avisos');
         assert.equal(e.summary, 'Evento');
         assert.equal(when(e), '2027-05-22T01:00:00.000Z'); // 22h in São Paulo, the next 21/05 (today is 22/11/2026)
-        assert.deepEqual(e.alarms, [popup(10080), popup(1440), popup(120), popup(30)], 'a week, a day, two hours and half an hour before, by notification');
+        assert.deepEqual(e.alarms, [popup(10080), popup(1440), popup(120), popup(30)], 'a week, a day, 6 hours and half an hour before, by notification');
     });
 
     test('the title in the sentence (plain, after "evento", in quotes or "chamado"), without the verbs, the date and the time', () => {
@@ -122,7 +121,7 @@ describe('an event typed in a sentence', () => {
         assert.deepEqual(sentence('marcar reunião sexta às 15h, me avise 30 minutos antes').alarms, [popup(30)]);
         assert.deepEqual(sentence('agendar dentista dia 25 às 10h, avisos 1 dia e 2 horas antes').alarms, [popup(1440), popup(120)]);
         assert.deepEqual(sentence('add dentist tomorrow at 9:30, remind me 1 hour before').alarms, [popup(60)]);
-        assert.deepEqual(sentence('criar lembrete para dia 21 de maio as 22h').alarms, [popup(1440), byEmail(1440), popup(120)], 'the noun "lembrete" asks for nothing: the default');
+        assert.deepEqual(sentence('criar lembrete para dia 21 de maio as 22h').alarms, [popup(1440), popup(360), popup(15)], 'the noun "lembrete" asks for nothing: the default');
         assert.equal(sentence('Consulta dia 25/11/2026 às 10:45h, chegar 20 minutos antes').alarms.some(a => a.minutes === 35), true, 'the arrival still counts');
     });
 
@@ -176,7 +175,7 @@ describe('the formats', () => {
         assert.match(ics, /DTSTART:20261125T134500Z\r\n/);
         assert.match(ics, /DTEND:20261125T144500Z\r\n/);
         assert.match(ics, /SUMMARY:Consulta: Reumatologia \(Encaixe\) — Paula da Costa Paiva\r\n/);
-        assert.equal((ics.match(/BEGIN:VALARM/g) ?? []).length, 3);
+        assert.equal((ics.match(/BEGIN:VALARM/g) ?? []).length, 4);
         assert.match(ics, /TRIGGER:-PT1440M/);
         for (const line of ics.split('\r\n')) assert.ok(Buffer.byteLength(line) <= 75, `line over 75 bytes: ${line}`);
         // unfolded, the commas of the address are escaped
@@ -190,7 +189,7 @@ describe('the formats', () => {
         const json = cal.toGoogleJson(event);
         assert.deepEqual(json.start, { dateTime: '2026-12-01T20:00:00', timeZone: 'America/Sao_Paulo' });
         assert.deepEqual(json.end, { dateTime: '2026-12-01T21:00:00', timeZone: 'America/Sao_Paulo' });
-        assert.deepEqual(json.reminders, { useDefault: false, overrides: [{ method: 'popup', minutes: 1440 }, { method: 'email', minutes: 1440 }, { method: 'popup', minutes: 120 }] });
+        assert.deepEqual(json.reminders, { useDefault: false, overrides: [{ method: 'popup', minutes: 1440 }, { method: 'popup', minutes: 360 }, { method: 'popup', minutes: 15 }] });
         const link = new URL(cal.toGoogleLink(event));
         assert.equal(link.origin + link.pathname, 'https://calendar.google.com/calendar/render');
         assert.deepEqual([link.searchParams.get('action'), link.searchParams.get('dates'), link.searchParams.get('ctz')], ['TEMPLATE', '20261201T230000Z/20261202T000000Z', 'America/Sao_Paulo']);
@@ -232,7 +231,7 @@ describe('/calendar', () => {
         assert.equal(file.options.sendMediaAsDocument, true);
         assert.match(icsOf(file), /SUMMARY:🩺 Consulta: Reumatologia/);
         assert.match(file.options.caption, /^📅 \*🩺 Consulta: Reumatologia \(Encaixe\) — Paula da Costa Paiva\*\n🗓️ .+25\/11\/2026 · 10:45 → 11:45\n📍 CENTRO MÉDICO/);
-        assert.match(file.options.caption, /⏰ Lembretes: 1 dia, 1 dia \(por e-mail\), 2 h, 35 min antes/);
+        assert.match(file.options.caption, /⏰ Lembretes: 1 dia, 6 h, 35 min, 15 min antes/);
         assert.match(file.options.caption, /➕ Adicionar ao Google Agenda: https:\/\/calendar\.google\.com\/calendar\/render\?action=TEMPLATE[^\n]*\n\n💡 _Processado por leitor local_$/);
     });
 

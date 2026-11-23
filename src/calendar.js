@@ -400,10 +400,9 @@ const leftoverAndFields = (text) => String(text);
 // A reminder is { minutes, method }: method is 'popup' (a notification) or 'email'. A plain number (what the local
 // reader and a typed "X antes" give) is a popup. Two reminders at the same minutes can still differ by method.
 const popup = (minutes) => ({ minutes, method: 'popup' });
-const byEmail = (minutes) => ({ minutes, method: 'email' });
 
-// When nothing says otherwise: 1 day and 2 hours before by notification, and 1 day before by email too
-const defaultAlarms = () => [popup(1440), popup(120), byEmail(1440)];
+// When nothing says otherwise: notifications 1 day, 6 hours and 15 minutes before.
+const defaultAlarms = () => [popup(1440), popup(360), popup(15)];
 
 // Normalizes (a plain number is a popup), drops invalid ones, removes exact duplicates (same minutes and method) and
 // sorts from the furthest to the closest (a popup before an email at the same minutes)
@@ -537,11 +536,11 @@ function gptInstructions({ timeZone, duration, now, emoji = false }) {
         'The JSON is an event of the Google Calendar API (Events resource):',
         '{"summary": "...", "location": "...", "description": "...",',
         ' "start": {"dateTime": "YYYY-MM-DDTHH:MM:SS", "timeZone": "..."}, "end": {"dateTime": "YYYY-MM-DDTHH:MM:SS", "timeZone": "..."},',
-        ' "reminders": {"useDefault": false, "overrides": [{"method": "popup", "minutes": 1440}, {"method": "popup", "minutes": 120}]}}',
+        ' "reminders": {"useDefault": false, "overrides": [{"method": "popup", "minutes": 1440}, {"method": "popup", "minutes": 360}, {"method": "popup", "minutes": 15}]}}',
         `Use the time zone ${timeZone} when the text does not say another. Today is ${today}.`,
         `If the duration is not in the text, the event lasts ${duration} minutes. An event with no time uses {"date": "YYYY-MM-DD"} in start and end (end is the next day).`,
         'summary: short and clear (for example "Consulta: Reumatologia — Paula da Costa Paiva"). location: unit and address in one line.',
-        'If the text asks for reminders (avisos, alertas, lembretes antes), put them in reminders.overrides: the ones it says ("30 minutos antes"), or, when it only asks to generate them, 10080, 1440, 120 and 30 minutes.',
+        'If the text asks for reminders (avisos, alertas, lembretes antes), put them in reminders.overrides: the ones it says ("30 minutos antes"), or, when it only asks to generate them, 1440, 360 and 15 minutes.',
         ...(emoji ? ['summary starts with ONE emoji that fits the kind of event, then a space (for example "🩺 Consulta: Reumatologia", "🦷 Dentista", "🏋🏽‍♂️ Crossfit", "🏋🏽‍♂️ Treino", "🏃🏽‍♂️ Corrida", "🎂 Aniversário da Ana", "🎉 Festa de fim de ano", "💼 Reunião", "✈️ Voo"); with no fitting emoji, 📅.'] : []),
         'description: the other useful facts (professional, insurance, notes such as documents to bring or arrival time), one per line.',
         'If the text has no date, answer exactly {"error": "no date"}.'
