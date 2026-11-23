@@ -187,7 +187,9 @@ describe('versão com o commit (version.js)', () => {
     const { readCommit } = bot.src('version');
 
     test('(devel) fora de uma release; numa tag v*, sem rótulo; sem o commit, só a versão', () => {
-        const { inDevelopment, versionWithCommit, botVersion } = bot.src('version');
+        const {
+            inDevelopment, versionWithCommit, botVersion, zapbotUserAgentTemplate, expandUserAgent
+        } = bot.src('version');
         const { version } = require('../package.json');
         const release = { commit: 'abc1234', ref: `v${version}` };
         const main = { commit: 'def5678', ref: 'HEAD' };
@@ -198,6 +200,13 @@ describe('versão com o commit (version.js)', () => {
         assert.deepEqual([botVersion(release), botVersion(main)], [version, `${version} (devel)`]);
         assert.equal(inDevelopment(null), false);
         assert.equal(versionWithCommit(null), version);
+        assert.equal(zapbotUserAgentTemplate, 'ZapBot/$version ($build) ($revision)');
+        assert.equal(expandUserAgent(zapbotUserAgentTemplate, main),
+            `ZapBot/${version} (devel) (git+def5678/HEAD)`);
+        assert.equal(expandUserAgent(zapbotUserAgentTemplate, release),
+            `ZapBot/${version} (release) (git+abc1234/v${version})`);
+        assert.equal(expandUserAgent(zapbotUserAgentTemplate, null),
+            `ZapBot/${version} (release) (unknown)`);
     });
     const fs = require('fs');
     const os = require('os');

@@ -115,7 +115,8 @@ function listLine(s, i) {
     const repeat = s.repeat ? ` 🔁 ${REPETITIONS[s.repeat].label}` : '';
     const paused = s.paused ? t('adm.agenda.paused') : '';
     // The whole text, as registered; the following lines indented, like the destination's
-    const textAlt = s.text.replace(/\n/g, '\n   ');
+    const prepend = getSetting('cron.msgPrepend');
+    const textAlt = `${prepend}${s.text}`.replace(/\n/g, '\n   ');
     const destinations = itemDestinations(s).map(d => `\n   → ${destinationWhere(d)}`).join('');
     return `${i + 1}. ${TYPES[s.kind]?.icon ?? '📅'} *${fmtWhen(s.due_at)}*${repeat}${paused} — ${textAlt}${destinations}`;
 }
@@ -483,7 +484,10 @@ async function triggerItem(s, nowAlt) {
 async function itemSendOnDestination(s, d, late) {
     const inChat = { ...s, chat_id: d.id, chat_name: d.name, is_group: d.group ? 1 : 0 };
     const { text: assembled, mediaItems: mediaAltAlt, commands } = await assembleText(s.text, inChat);
-    const textAlt = itemText(s, assembled, late);
+    const prepend = s.kind === 'lembrete' ? getSetting('cron.msgPrepend') : '';
+    const textAlt = assembled
+        ? `${prepend}${itemText(s, assembled, late)}`
+        : '';
 
     // Media only (e.g.: "{/meme}"): there is no text to send
     if (textAlt && s.kind === 'agendar') {

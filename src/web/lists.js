@@ -77,7 +77,12 @@ async function alerts() {
         sections: [
             {
                 title: 'price', columns: ['#', 'kind', 'symbol', 'rule', 'created', 'notifies', 'message'],
-                rows: await Promise.all(price.map(async a => [a.id, a.kind === 'acao' ? 'stocks' : a.kind, a.symbol, `${a.op} ${priceText(a.target)}`, { date: a.created_at }, await recipientCell(a, { id: 'dest_id', name: 'dest_name', email: 'dest_email', group: 'dest_is_group' }), a.message ?? ''])),
+                rows: await Promise.all(price.map(async a => {
+                    const setting = a.kind === 'acao' ? 'stocks' : 'crypto';
+                    return [a.id, setting, a.symbol, `${a.op} ${priceText(a.target)}`, { date: a.created_at },
+                        await recipientCell(a, { id: 'dest_id', name: 'dest_name', email: 'dest_email', group: 'dest_is_group' }),
+                        a.message ? `${getSetting(`${setting}.alert.msgPrepend`)}${a.message}` : ''];
+                })),
                 ids: price.map(a => a.id), values: price.map(a => ({ rule: `${a.symbol} ${a.op} ${priceText(a.target)}`, message: a.message ?? '', recipients: peopleOf(a) })),
                 manage: {
                     kind: 'price', canAdd: true, canEdit: true, canDelete: true, editFields: ['rule', 'message', 'recipients'],
@@ -130,7 +135,8 @@ async function schedule() {
     return {
         sections: [{
             title: 'schedule', columns: ['#', 'kind', 'when', 'repeat', 'chat', 'text', 'alert'],
-            rows: await Promise.all(rows.map(async s => [s.id, s.kind, { date: s.due_at }, s.repeat || '—', await recipientCell({ ...s, recipients: s.recipients }, { id: 'chat_id', name: 'chat_name', email: 'no_email', group: 'is_group' }), s.text, bell(!s.paused, PLAY)])),
+            rows: await Promise.all(rows.map(async s => [s.id, s.kind, { date: s.due_at }, s.repeat || '—', await recipientCell({ ...s, recipients: s.recipients }, { id: 'chat_id', name: 'chat_name', email: 'no_email', group: 'is_group' }),
+                `${getSetting('cron.msgPrepend')}${s.text}`, bell(!s.paused, PLAY)])),
             ids: rows.map(s => s.id),
             values: rows.map(s => ({ kind: s.kind, text: s.text, dueAt: s.due_at, repeat: s.repeat || '', recipients: peopleOf({ recipients: s.recipients, dest_id: s.chat_id, dest_name: s.chat_name, dest_is_group: s.is_group }) })),
             manage: {

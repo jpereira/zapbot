@@ -39,8 +39,7 @@ const decodeEntities = (s) => String(s ?? '')
 const tagXml = (xml, tag) => decodeEntities(xml.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`))?.[1]);
 
 async function readFeed(url) {
-    // Some sites (e.g.: BleepingComputer) refuse axios' default User-Agent with 403
-    const { data: xml } = await axios.get(url, { responseType: 'text', timeout: 15000, headers: { 'User-Agent': 'Mozilla/5.0 (ZapBot RSS reader)' } });
+    const { data: xml } = await axios.get(url, { responseType: 'text', timeout: 15000 });
     const sourceAlt = tagXml(xml.match(/<channel>[\s\S]*?<\/title>/)?.[0] ?? '', 'title') || new URL(url).hostname;
 
     return [...xml.matchAll(/<item\b[\s\S]*?<\/item>/g)]

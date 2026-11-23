@@ -1,7 +1,7 @@
 {
   "summary": "Uma captura de tela de uma página da web",
   "usage": "/screenshot [-full] [-mobile] [-wait <segundos>] [-pdf] <url>",
-  "help": "Abre a página no navegador do próprio bot e manda uma imagem dela (a primeira tela). O endereço pode vir sem http://, e sem endereço usa o primeiro link da mensagem respondida. Só páginas públicas: endereços da rede local são recusados, e tudo que a página pedir de lá também. O navegador não compartilha nada com o WhatsApp Web (sem cookies, sem cache). O User-Agent vem da setting screenshot.userAgent (vazia: o mesmo do Chromium, sem o \"Headless\").",
+  "help": "Abre a página no navegador do próprio bot e manda uma imagem dela (a primeira tela). O endereço pode vir sem http://, e sem endereço usa o primeiro link da mensagem respondida. Só páginas públicas: endereços da rede local são recusados, e tudo que a página pedir de lá também. O navegador não compartilha nada com o WhatsApp Web (sem cookies, sem cache). O User-Agent mantém a identificação do Chromium e adiciona zapbot.client.userAgent.",
   "ex": [
     "/screenshot https://example.com",
     "/ss -full -mobile example.com",

@@ -17,6 +17,8 @@ const { normalizeTicker } = require('./actions');
 const { CRYPTO_SUPPORTED } = require('./currencies');
 const { isValidHttpUrl } = require('./util/url');
 const { compileRuleWatch } = require('./watch/rules');
+const axios = require('axios');
+const { zapbotUserAgentTemplate, expandUserAgent } = require('./version');
 
 /*
  * Settings: general configuration persisted in the `settings` table.
@@ -343,6 +345,13 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 500,
         desc: 'Máximo de itens do /cron, somando lembretes e mensagens.'
     },
+    'cron.msgPrepend': {
+        default: '⏰ ',
+        type: 'string',
+        preserveWhitespace: true,
+        allowEmpty: true,
+        desc: 'Texto adicionado ao começo das mensagens do /cron, na lista, na Web e no envio. Vazio: sem prefixo.'
+    },
     'crypto.alert.intervalMin': {
         default: 5,
         type: 'number', min: 1, max: 60,
@@ -352,6 +361,13 @@ const SETTINGS_SCHEMA = {
         default: 20,
         type: 'number', min: 1, max: 100,
         desc: 'Máximo de alertas de preço do /crypto.'
+    },
+    'crypto.alert.msgPrepend': {
+        default: '🔔 ',
+        type: 'string',
+        preserveWhitespace: true,
+        allowEmpty: true,
+        desc: 'Texto adicionado ao começo das mensagens dos eventos do /crypto -alert, na lista, na Web e no envio. Vazio: sem prefixo.'
     },
     'crypto.brl': {
         default: true,
@@ -821,12 +837,6 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 5, max: 120,
         desc: 'Segundos que o /screenshot espera a página carregar antes de tirar a captura (a página que nunca "acalma" sai com o que já carregou).'
     },
-    'screenshot.userAgent': {
-        default: '',
-        type: 'string',
-        allowEmpty: true,
-        desc: 'O User-Agent do /screenshot. Vazio: o mesmo do Chromium do bot (sem o "Headless", que muitos sites recusam).'
-    },
     'show.alert.deleted': {
         default: true,
         type: 'boolean',
@@ -891,6 +901,13 @@ const SETTINGS_SCHEMA = {
         default: 20,
         type: 'number', min: 1, max: 100,
         desc: 'Máximo de alertas de preço do /stocks.'
+    },
+    'stocks.alert.msgPrepend': {
+        default: '🔔 ',
+        type: 'string',
+        preserveWhitespace: true,
+        allowEmpty: true,
+        desc: 'Texto adicionado ao começo das mensagens dos eventos do /stocks -alert, na lista, na Web e no envio. Vazio: sem prefixo.'
     },
     'stocks.symbols': {
         default: ['USD', 'EUR', 'USDT', 'MSTR'],
@@ -1061,11 +1078,6 @@ const SETTINGS_SCHEMA = {
             return f;
         }
     },
-    'weather.userAgent': {
-        default: 'weather-bot/1.0',
-        type: 'string',
-        desc: 'O User-Agent das consultas às fontes extras do /weather. A MET Norway pede que ele identifique o cliente e dê um contato (ex.: "meubot/1.0 contato@exemplo.com").'
-    },
     'zapbot.api.enabled': {
         default: false,
         type: 'boolean',
@@ -1098,6 +1110,13 @@ const SETTINGS_SCHEMA = {
         type: 'list',
         desc: 'Para onde o POST /send e o send_message do MCP podem mandar além do seu próprio chat: telefones com DDI, ids de grupo (…@g.us) ou all (qualquer destino: use só se confiar em quem tem a chave).',
         item: apiDestination
+    },
+    'zapbot.client.userAgent': {
+        default: zapbotUserAgentTemplate,
+        type: 'string',
+        maxLength: 300,
+        desc: 'Modelo do User-Agent único das chamadas HTTP externas e do /screenshot. ' +
+            'Expande $version, $build e $revision conforme a instalação.'
     },
     'zapbot.email.alerts': {
         default: true,
@@ -1213,6 +1232,55 @@ const SETTINGS_SCHEMA = {
 
 const settings = new Map();
 
+function atualizarUserAgentAxios() {
+    axios.defaults ??= {};
+    axios.defaults.headers ??= {};
+    axios.defaults.headers.common ??= {};
+    axios.defaults.headers.common['User-Agent'] = getSetting('zapbot.client.userAgent');
+}
+
+atualizarUserAgentAxios();
+
+const AUTO_UA_PREFIX = /^ZapBot\/\d+\.\d+\.\d+(?: \(devel\))?(?: \(git\+[0-9a-f]{7}\/(?:HEAD|v\d+\.\d+\.\d+)\))?/;
+
+function sufixoDeUserAgentAutomatico(value) {
+    const match = String(value ?? '').match(AUTO_UA_PREFIX);
+    if (!match || match[0].length !== String(value).length && !/^\s/.test(String(value).slice(match[0].length))) return null;
+    return String(value).slice(match[0].length);
+}
+
+async function migrarUserAgentCliente() {
+    const rows = await dbAll(`SELECT key, value FROM settings
+        WHERE key IN ('zapbot.client.userAgent', 'weather.userAgent', 'screenshot.userAgent')`);
+    const saved = new Map(rows.flatMap(row => {
+        try {
+            return [[row.key, JSON.parse(row.value)]];
+        } catch {
+            return [];
+        }
+    }));
+    const key = 'zapbot.client.userAgent';
+    const current = saved.get(key) ?? SETTINGS_SCHEMA[key].default;
+    const currentText = String(current ?? '');
+    const suffix = currentText === zapbotUserAgentTemplate || currentText.startsWith(`${zapbotUserAgentTemplate} `)
+        ? currentText.slice(zapbotUserAgentTemplate.length).trim()
+        : sufixoDeUserAgentAutomatico(current);
+
+    if (suffix !== null) {
+        const legacy = [saved.get('weather.userAgent'), saved.get('screenshot.userAgent')]
+            .filter(value => typeof value === 'string' && value.trim() &&
+                !['auto', 'weather-bot/1.0'].includes(value.trim()) &&
+                sufixoDeUserAgentAutomatico(value) === null);
+        const combined = [suffix.trim(), ...legacy.map(value => value.trim())].filter(Boolean).join(' ');
+        const next = `${zapbotUserAgentTemplate}${combined ? ` ${combined}` : ''}`;
+        await dbRun('UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?',
+            [JSON.stringify(next), key]);
+        settings.set(key, next);
+    }
+
+    await dbRun("DELETE FROM settings WHERE key IN ('weather.userAgent', 'screenshot.userAgent')");
+}
+
 /*
  * Validates/normalizes a value for the key. Accepts the already typed value (coming from the
  * database) or text (coming from /set). Throws Error with the message for the user.
@@ -1238,11 +1306,12 @@ function validateSetting(key, value) {
         }
 
         case 'string': {
-            let s = String(value ?? '').trim();
+            let s = String(value ?? '');
+            if (!schema.preserveWhitespace) s = s.trim();
             if (schema.normalize) s = schema.normalize(s);
-            if (!s && schema.allowEmpty) return s;
+            if (!s.trim() && schema.allowEmpty) return s;
             // API keys go over 100 (OpenAI's sk-proj- ones are ~164)
-            const max = schema.secret ? 500 : 100;
+            const max = schema.secret ? 500 : (schema.maxLength ?? 100);
             if (!s || s.length > max) throw new Error(t('adm.settings.length', { max }));
             if (schema.options && !schema.options.includes(s)) throw new Error(t('adm.settings.unsupported', { s, list: schema.options.join(', ') }));
             return schema.validate ? schema.validate(s) : s;
@@ -1292,6 +1361,8 @@ async function loadSettings() {
         await dbRun('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', [key, JSON.stringify(schema.default)]);
     }
 
+    await migrarUserAgentCliente();
+
     for (const row of await dbAll('SELECT key, value FROM settings')) {
         if (!SETTINGS_SCHEMA[row.key]) {
             printInfo(`Setting '${row.key}' unknown, ignored.`);
@@ -1299,7 +1370,8 @@ async function loadSettings() {
         }
 
         try {
-            settings.set(row.key, validateSetting(row.key, JSON.parse(row.value)));
+            const stored = JSON.parse(row.value);
+            settings.set(row.key, validateSetting(row.key, stored));
         } catch (e) {
             const list = listWithoutOsInvalid(row.key, row.value);
             if (list) {
@@ -1312,6 +1384,8 @@ async function loadSettings() {
         }
     }
 
+    atualizarUserAgentAxios();
+
     await limitHistoryMonitor(getSetting('monitor.maxRecords'));
 
     printSuccess(`Loaded ${settings.size} settings (${[...settings.keys()].join(',')})`);
@@ -1321,7 +1395,8 @@ async function loadSettings() {
 }
 
 function getSetting(key) {
-    return settings.has(key) ? settings.get(key) : SETTINGS_SCHEMA[key]?.default;
+    const value = settings.has(key) ? settings.get(key) : SETTINGS_SCHEMA[key]?.default;
+    return key === 'zapbot.client.userAgent' ? expandUserAgent(value) : value;
 }
 
 /*
@@ -1354,6 +1429,7 @@ async function setSetting(key, value) {
         [key, JSON.stringify(value)]
     );
     settings.set(key, value);
+    if (key === 'zapbot.client.userAgent') atualizarUserAgentAxios();
     if (key === 'monitor.maxRecords') await limitHistoryMonitor(value);
 
     return value;

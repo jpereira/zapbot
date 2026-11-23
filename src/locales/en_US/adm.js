@@ -50,7 +50,7 @@ module.exports = {
     'adm.agenda.inDest': 'in {destination}',
     'adm.agenda.inChats': ' in {n} chats:\n{list}\n',
     'adm.agenda.created': '{icon} *{created}* for *{when}*{repeats}{where}📝 {text}',
-    'adm.agenda.reminderTitle': '⏰ *Reminder*',
+    'adm.agenda.reminderTitle': '*Reminder*',
     'adm.agenda.late': '\n\n_(late: was due {when})_',
     'adm.agenda.testNotFound': '❌ No. {n} does not exist. See the list with /cron -l\n💡 _/cron -test <no.>_',
     'adm.agenda.testTitle': '🧪 *Test of no. {n}* _(goes out at {when} → {where})_\n\n{text}',

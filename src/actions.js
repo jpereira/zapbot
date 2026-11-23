@@ -27,7 +27,6 @@ async function quoteAction(ticker) {
     try {
         ({ data } = await axios.get(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}`, {
             params: { interval: '1d', range: '5d' },
-            headers: { 'User-Agent': 'Mozilla/5.0' }, // without it Yahoo answers 429
             timeout: QUOTE_TIMEOUT_MS
         }));
     } catch (err) {

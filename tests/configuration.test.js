@@ -320,6 +320,10 @@ describe('documentação', () => {
                 const line = linesAlt.find(l => l.startsWith(`| \`${keyAlt}\` |`));
                 const defaults = line.split('|')[3].trim();
                 if (schema.type === 'boolean') assert.equal(defaults, `\`${schema.default ? 'on' : 'off'}\``, `${language.name} ${keyAlt}`);
+                if (keyAlt === 'zapbot.client.userAgent') {
+                    assert.equal(defaults, '`ZapBot/$version ($build) ($revision)`', language.name);
+                    continue;
+                }
                 if (schema.type === 'string' && schema.default !== '') assert.equal(defaults, `\`${schema.default}\``, `${language.name} ${keyAlt}`);
             }
         }
@@ -458,6 +462,15 @@ describe('settings', () => {
         assert.equal(await setSetting('gpt.api.key', ''), '');
     });
 
+    test('prefixos de alertas preservam literalmente os espaços', async () => {
+        const prefix = ' ⏰ ~> ';
+        for (const key of ['cron.msgPrepend', 'stocks.alert.msgPrepend', 'crypto.alert.msgPrepend']) {
+            assert.equal(await setSetting(key, prefix), prefix, key);
+            assert.equal(getSetting(key), prefix, key);
+            await setSetting(key, SETTINGS_SCHEMA[key].default);
+        }
+    });
+
     test('string secreta (chave de API): até 500 caracteres', async () => {
         const keyAlt = `sk-proj-${'x'.repeat(156)}`; // OpenAI's have ~164
         assert.equal(await setSetting('gpt.api.key', keyAlt), keyAlt);
@@ -493,6 +506,20 @@ describe('settings', () => {
         await setSetting('show.max', 7);
         await loadSettings();
         assert.equal(getSetting('show.max'), 7);
+    });
+
+    test('os User-Agents antigos migram para a configuração compartilhada', async () => {
+        const { zapbotUserAgent, zapbotUserAgentTemplate } = bot.src('version');
+        await bot.dbRun('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', ['weather.userAgent', JSON.stringify('weather-bot/1.0')]);
+        await bot.dbRun('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', ['screenshot.userAgent', JSON.stringify('MyOldAgent/1.0')]);
+        await loadSettings();
+        assert.equal(getSetting('zapbot.client.userAgent'), `${zapbotUserAgent()} MyOldAgent/1.0`);
+        assert.equal(JSON.parse((await bot.dbGet('SELECT value FROM settings WHERE key = ?', ['zapbot.client.userAgent'])).value), `${zapbotUserAgentTemplate} MyOldAgent/1.0`);
+        assert.equal(await bot.dbGet('SELECT key FROM settings WHERE key = ?', ['weather.userAgent']), undefined);
+        assert.equal(await bot.dbGet('SELECT key FROM settings WHERE key = ?', ['screenshot.userAgent']), undefined);
+        await setSetting('zapbot.client.userAgent', SETTINGS_SCHEMA['zapbot.client.userAgent'].default);
+        assert.equal(getSetting('zapbot.client.userAgent'), zapbotUserAgent());
+        assert.equal(JSON.parse((await bot.dbGet('SELECT value FROM settings WHERE key = ?', ['zapbot.client.userAgent'])).value), zapbotUserAgentTemplate);
     });
 
     test('valor inválido no banco vale o padrão (com erro no log)', async () => {

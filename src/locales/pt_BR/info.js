@@ -86,7 +86,7 @@ module.exports = {
     'alerts.yourPrivate': 'seu privado',
     'alerts.created': '🔔 *Alerta criado*\n{alert}\n💰 Agora: {price}\n💡 _Verificação a cada {every}._',
     'alerts.sinceCreation': ' _({change} desde a criação)_',
-    'alerts.fired': '🔔 *ALERTA DE PREÇO*\n\n{opIcon} {icon} *{pair}* ficou {op} {target}\n💰 Agora: *{price}*{change}\n📅 Alerta criado em {date}',
+    'alerts.fired': '*ALERTA DE PREÇO*\n\n{opIcon} {icon} *{pair}* ficou {op} {target}\n💰 Agora: *{price}*{change}\n📅 Alerta criado em {date}',
     'alerts.subject': '🔔 Alerta de preço: {pair} {op} {target}',
 
     // /stocks

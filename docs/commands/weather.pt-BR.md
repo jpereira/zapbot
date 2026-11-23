@@ -98,8 +98,8 @@ de outras fontes, para conferir:
 O setting `weather.sources` escolhe quais (`/set weather.sources met`; vazio deixa só a Open-Meteo). Uma
 fonte fora do ar, ou que não cobre o lugar, simplesmente não aparece, e o rodapé lista só as que
 responderam. A CPTEC só é consultada para cidades do Brasil, e a cidade é casada pelo nome **e** pelo
-estado: ela nunca chuta outra. A MET Norway pede um User-Agent que identifique o cliente com um contato:
-ajuste no `weather.userAgent` (por exemplo `/set weather.userAgent meubot/1.0 eu@exemplo.com`).
+estado: ela nunca chuta outra. Todas as fontes usam `zapbot.client.userAgent`; adicione um contato nesse
+setting se necessário.
 
 ## Alterando a cidade padrão
 

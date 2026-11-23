@@ -174,10 +174,25 @@ const botVersion = (origin = ORIGIN) => `${packageJson.version}${inDevelopment(o
 const versionWithCommit = (origin = ORIGIN) =>
     (origin ? `${botVersion(origin)} (git+${origin.commit}/${origin.ref})` : packageJson.version);
 
+const zapbotUserAgent = (origin = ORIGIN) => `ZapBot/${versionWithCommit(origin)}`;
+const zapbotUserAgentTemplate = 'ZapBot/$version ($build) ($revision)';
+
+function expandUserAgent(template, origin = ORIGIN) {
+    const values = {
+        version: packageJson.version,
+        build: inDevelopment(origin) ? 'devel' : 'release',
+        revision: origin ? `git+${origin.commit}/${origin.ref}` : 'unknown'
+    };
+    return String(template).replace(/\$(version|build|revision)\b/g, (_, name) => values[name]);
+}
+
 module.exports = {
     ORIGIN,
     inDevelopment,
     readCommit,
     versionWithCommit,
-    botVersion
+    botVersion,
+    zapbotUserAgent,
+    zapbotUserAgentTemplate,
+    expandUserAgent
 };

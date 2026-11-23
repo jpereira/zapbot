@@ -307,7 +307,10 @@ async function cmdSet({ msg, opts, args, chatId }) {
         }
 
         await setSetting(key, schema.default);
-        await msg.reply(t('adm.set.resetDone', { key, value: formatValueSetting(getSetting(key), ', ', schema.secret) }));
+        const value = key === 'zapbot.client.userAgent'
+            ? `\`${schema.default}\` → \`${getSetting(key)}\``
+            : formatValueSetting(getSetting(key), ', ', schema.secret);
+        await msg.reply(t('adm.set.resetDone', { key, value }));
         return;
     }
 

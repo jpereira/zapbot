@@ -377,7 +377,7 @@ describe('/set', () => {
 
     test('<trecho> ou /regex/ que não é uma chave: lista as que casam; nada casa: erro', async () => {
         const [r] = await bot.replyAlt('/set alert');
-        assert.match(r, /^⚙️ \*SETTINGS\* com "alert" \(10\)\n\n```\ncrypto\.alert\.intervalMin  5\n\ncrypto\.alert\.max          20\n\ndefi\.alert\.intervalMin    10\n\nshow\.alert\.deleted        on\n\nshow\.alert\.edited         on\n\nshow\.alert\.reaction       on\n\nshow\.alert\.status         on\n\nstocks\.alert\.intervalMin  5\n\nstocks\.alert\.max          20\n\nzapbot\.email\.alerts       on\n```\n💡 _\/set <chave> para detalhes_$/);
+        assert.match(r, /^⚙️ \*SETTINGS\* com "alert" \(12\)\n\n```\ncrypto\.alert\.intervalMin  5\n\ncrypto\.alert\.max          20\n\ncrypto\.alert\.msgPrepend   🔔 \n\ndefi\.alert\.intervalMin    10\n\nshow\.alert\.deleted        on\n\nshow\.alert\.edited         on\n\nshow\.alert\.reaction       on\n\nshow\.alert\.status         on\n\nstocks\.alert\.intervalMin  5\n\nstocks\.alert\.max          20\n\nstocks\.alert\.msgPrepend   🔔 \n\nzapbot\.email\.alerts       on\n```\n💡 _\/set <chave> para detalhes_$/);
 
         const keys = (textAlt) => [...textAlt.matchAll(/^([a-z][\w.]+)\s{2}/gm)].map(m => m[1]);
         assert.deepEqual(keys((await bot.replyAlt('/set GPT.'))[0]), ['gpt.admin.key', 'gpt.api.key', 'gpt.api.model', 'gpt.credit.since', 'gpt.credit.total', 'gpt.footer', 'gpt.gif.frameMs', 'gpt.gif.frames', 'gpt.image.gifModel', 'gpt.image.model', 'gpt.image.quality', 'gpt.image.size', 'gpt.pricing', 'gpt.pricing.auto', 'gpt.pricing.updated', 'gpt.status', 'gpt.timeout.ms', 'gpt.transcribe.model', 'gpt.tts.instructions', 'gpt.tts.model', 'gpt.tts.speed', 'gpt.tts.voice']);
@@ -413,6 +413,13 @@ describe('/set', () => {
     test('-reset volta ao padrão; chave desconhecida', async () => {
         await bot.setSetting('show.max', 5);
         assert.deepEqual(await bot.replyAlt('/set -r show.max'), ['♻️ *show.max* = 20 _(padrão)_']);
+        const { SETTINGS_SCHEMA } = bot.src('settings');
+        const userAgent = SETTINGS_SCHEMA['zapbot.client.userAgent'].default;
+        await bot.setSetting('zapbot.client.userAgent', 'custom/1.0');
+        const [resetUserAgent] = await bot.replyAlt('/set -r zapbot.client.userAgent');
+        assert.equal(resetUserAgent,
+            `♻️ *zapbot.client.userAgent* = \`${userAgent}\` → \`${bot.getSetting('zapbot.client.userAgent')}\` _(padrão)_`);
+        assert.equal(JSON.parse((await bot.dbGet('SELECT value FROM settings WHERE key = ?', ['zapbot.client.userAgent'])).value), userAgent);
         assert.match((await bot.replyAlt('/set -r naoexiste'))[0], /❌ Setting desconhecido: naoexiste/);
         assert.match((await bot.replyAlt('/set naoexiste 1'))[0], /❌ Setting desconhecido: naoexiste/);
         assert.match((await bot.replyAlt('/set naoexiste'))[0], /❌ Nenhum setting com "naoexiste"/);

@@ -233,6 +233,18 @@ describe('/crypto', () => {
 });
 
 describe('alertas de preço (-alert)', () => {
+    test('msgPrepend preserva os espaços configurados no alerta', async () => {
+        const { SETTINGS_SCHEMA, setSetting } = bot.src('settings');
+        await setSetting('crypto.alert.msgPrepend', ' ⏰ ~> ');
+        await bot.replyAlt('/crypto -alert BTC > 96000');
+        prices.BTC = 97000;
+
+        const beforeAlt = bot.client.sent.length;
+        await priceCheckAlerts({ force: true });
+        assert.ok(bot.client.sent[beforeAlt].content.startsWith(' ⏰ ~> *ALERTA DE PREÇO*'));
+        await setSetting('crypto.alert.msgPrepend', SETTINGS_SCHEMA['crypto.alert.msgPrepend'].default);
+    });
+
     test('cria, lista e dispara uma vez no seu privado', async () => {
         const [created] = await bot.replyAlt('/stocks -alert USD > 5.30');
         assert.match(created, /🔔 \*Alerta criado\*\n🇺🇸 USD\/BRL acima de \*R\$ 5,3000\*\n   📨 seu privado\n💰 Agora: R\$ 5,2000/);
@@ -353,8 +365,8 @@ describe('alertas de preço (-alert)', () => {
 
     test('a moeda antes do -alert; -msg vai no início do aviso', async () => {
         const [created] = await bot.replyAlt('/crypto BTC -alert > 96000 -to /Fulano/ -msg Isso é uma mensagem: hora de vender!');
-        assert.match(created, /^🔔 \*Alerta criado\*\n₿ BTC\/USDT acima de \*\$96,000\.00\*\n   📨 Fulano\n   💬 Isso é uma mensagem: hora de vender!\n💰 Agora/);
-        assert.match((await bot.replyAlt('/crypto -alert'))[0], /\n   📨 Fulano\n   💬 Isso é uma mensagem: hora de vender!\n   🗓️ /);
+        assert.match(created, /^🔔 \*Alerta criado\*\n₿ BTC\/USDT acima de \*\$96,000\.00\*\n   📨 Fulano\n   💬 🔔 Isso é uma mensagem: hora de vender!\n💰 Agora/);
+        assert.match((await bot.replyAlt('/crypto -alert'))[0], /\n   📨 Fulano\n   💬 🔔 Isso é uma mensagem: hora de vender!\n   🗓️ /);
 
         // -to can also come after -msg; and in /stocks
         await bot.replyAlt('/stocks USD -alert > 6 -msg Dólar subiu! -to /Fulano/');
@@ -368,7 +380,7 @@ describe('alertas de preço (-alert)', () => {
         await priceCheckAlerts({ force: true });
         const [notice] = bot.client.sent.slice(beforeAlt);
         assert.equal(notice.chatId, OTHERAlt.jid);
-        assert.match(notice.content, /^Isso é uma mensagem: hora de vender!\n\n🔔 \*ALERTA DE PREÇO\*\n\n📈 ₿ \*BTC\/USDT\*/);
+        assert.match(notice.content, /^🔔 Isso é uma mensagem: hora de vender!\n\n\*ALERTA DE PREÇO\*\n\n📈 ₿ \*BTC\/USDT\*/);
 
         assert.match((await bot.replyAlt('/crypto -alert BTC > 99000 -msg'))[0], /❌ Informe o texto do -msg/);
         assert.match((await bot.replyAlt('/crypto -alert -msg oi'))[0], /❌ O -msg só vale ao criar um alerta/);
@@ -482,7 +494,7 @@ describe('alertas de preço (-alert)', () => {
             await bot.replyAlt('/stocks -alert EUR > 7 -to email -msg *Euro* nas alturas!');
             prices.EUR = 7.1;
             await priceCheckAlerts({ force: true });
-            assert.match(emails.at(-1).text, /^Euro nas alturas!\n\n🔔 ALERTA DE PREÇO\n\n📈 🇪🇺 EUR\/BRL/);
+            assert.match(emails.at(-1).text, /^🔔 Euro nas alturas!\n\nALERTA DE PREÇO\n\n📈 🇪🇺 EUR\/BRL/);
         } finally {
             for (const v of Object.keys(env)) delete process.env[v];
         }

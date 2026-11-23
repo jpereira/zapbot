@@ -121,7 +121,6 @@ async function searchPrices({ cmd }) {
     let html;
     try {
         ({ data: html } = await axios.get(OPENAI_PRICES_URL, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (zapbot)' },
             timeout: envOuSetting('OPENAI_TIMEOUT_MS', 'gpt.timeout.ms'),
             responseType: 'text'
         }));

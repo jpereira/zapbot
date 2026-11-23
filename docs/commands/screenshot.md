@@ -38,7 +38,6 @@ of it**, with the page title and the final address (after redirects) in the capt
 
 ## User-Agent
 
-The browser identifies itself with the `screenshot.userAgent` setting. Empty (the default), it is the
-Chromium's own User-Agent **without the "Headless"** that many sites refuse. To pretend to be another
-browser: `/set screenshot.userAgent Mozilla/5.0 (...)`. The wait for the page is `screenshot.timeout`
-(30 seconds by default).
+The browser keeps Chromium's own User-Agent **without the "Headless"** and appends
+`zapbot.client.userAgent`, the identifier shared with the bot's other external requests. The wait for
+the page is `screenshot.timeout` (30 seconds by default).

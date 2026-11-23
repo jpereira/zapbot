@@ -9,7 +9,7 @@ module.exports = {
     usage: '/screenshot [-full] [-mobile] [-wait <seconds>] [-pdf] <url>',
     aliases: ['/ss'],
     summary: 'A picture of a web page',
-    help: 'Opens the page in the bot\'s own browser and sends a picture of it (the first screen). The address may come without http://, and with no address it uses the first link of the replied message. Only public pages: addresses of the local network are refused, and so is everything the page requests from there. The browser shares nothing with WhatsApp Web (no cookies, no cache). The User-Agent is the screenshot.userAgent setting (empty: the same as the Chromium\'s, without the "Headless").',
+    help: 'Opens the page in the bot\'s own browser and sends a picture of it (the first screen). The address may come without http://, and with no address it uses the first link of the replied message. Only public pages: addresses of the local network are refused, and so is everything the page requests from there. The browser shares nothing with WhatsApp Web (no cookies, no cache). The User-Agent keeps Chromium\'s identity and appends zapbot.client.userAgent.',
     ex: ['/screenshot https://example.com', '/ss -full -mobile example.com', '/ss -pdf -wait 5 https://example.com/report'],
     cmd_opts: [
         {

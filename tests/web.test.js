@@ -657,6 +657,8 @@ describe('alerts, shortcuts, schedule, stats and settings', () => {
         await bot.dbRun("INSERT INTO monitor_contacts (contact_id, contact_name, created_at, last_status, alert_enabled) VALUES ('5521@c.us', 'Ciclano', 1, 'online', 1)");
         const [price, watch, monitor] = await list('alerts');
         assert.deepEqual(price.rows[0].slice(1, 4), ['crypto', 'BTC', '> 96000']);
+        assert.equal(price.rows[0][6], '🔔 vender!');
+        assert.equal(price.values[0].message, 'vender!', 'editing keeps the stored message without the display prefix');
         await bot.dbRun("INSERT INTO price_alerts (kind, symbol, op, target, created_at) VALUES ('acao', 'USD', '>', 6.2, 1), ('acao', 'EUR', '<', 5.555, 1), ('crypto', 'ADA', '<', 0.00012, 1)");
         const targets = (await list('alerts'))[0];
         assert.deepEqual(targets.rows.slice(1).map(r => r[3]), ['> 6.20', '< 5.555', '< 0.00012'], 'a price keeps its cents');
@@ -673,8 +675,16 @@ describe('alerts, shortcuts, schedule, stats and settings', () => {
 
         await bot.dbRun("INSERT INTO schedules (kind, chat_id, chat_name, text, due_at, repeat, created_at, paused) VALUES ('agendar', 'x@c.us', 'Fulano', 'bom dia', 1900000000000, 'daily', 1, 1)");
         const [schedule] = await list('schedule');
-        assert.deepEqual([schedule.rows[0][1], schedule.rows[0][3], schedule.rows[0][5], schedule.rows[0][6]], ['agendar', 'daily', 'bom dia', { bell: false, text: 'off', icon: '⏸️', play: true }]);
+        assert.deepEqual([schedule.rows[0][1], schedule.rows[0][3], schedule.rows[0][5], schedule.rows[0][6]], ['agendar', 'daily', '⏰ bom dia', { bell: false, text: 'off', icon: '⏸️', play: true }]);
         assert.deepEqual(schedule.rows[0][4], { text: 'Fulano', title: 'Fulano (x@c.us)' });
+
+        await bot.setSetting('cron.msgPrepend', ' ⏰ ~> ');
+        const [scheduleWithPrefix] = await list('schedule');
+        assert.equal(scheduleWithPrefix.rows[0][5], ' ⏰ ~> bom dia');
+        await bot.dbRun("INSERT INTO schedules (kind, chat_id, chat_name, text, due_at, repeat, created_at, paused) VALUES ('lembrete', 'x@c.us', 'Fulano', 'revisar agenda', 1900000000000, 'daily', 1, 0)");
+        const [scheduleWithReminder] = await list('schedule');
+        assert.equal(scheduleWithReminder.rows[1][5], ' ⏰ ~> revisar agenda');
+        assert.equal(scheduleWithReminder.values[1].text, 'revisar agenda', 'editing keeps the saved text unchanged');
     });
 
     test('stats: totals against the previous period, a filled day by day series, hours, the weekday x hour heatmap, chats and people', async () => {

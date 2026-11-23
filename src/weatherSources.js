@@ -31,7 +31,6 @@ async function queryMet({ latitude, longitude }) {
     const { data } = await axios.get(MET_URL, {
         timeout: TIMEOUT_MS,
         params: { lat: Number(latitude).toFixed(4), lon: Number(longitude).toFixed(4) },
-        headers: { 'User-Agent': getSetting('weather.userAgent') }
     });
     const d = data?.properties?.timeseries?.[0]?.data?.instant?.details;
     if (d?.air_temperature == null) return null;

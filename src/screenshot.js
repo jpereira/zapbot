@@ -3,8 +3,8 @@
  *
  * Every shot gets its own isolated browser context (no cookies, cache or storage shared with the
  * WhatsApp Web session) and every request the page makes is checked: only public http(s) addresses
- * go out (anti-SSRF), the same rule /get uses. The User-Agent is the screenshot.userAgent setting;
- * empty, it is the Chromium's own, without the "Headless" that many sites refuse.
+ * go out (anti-SSRF), the same rule /get uses. The User-Agent keeps Chromium's identity and adds
+ * the ZapBot version and commit. A custom setting replaces the Chromium part.
  */
 
 const { client } = require('./client');
@@ -20,11 +20,10 @@ let busy = false;
 
 const isBusy = () => busy;
 
-// The User-Agent of the shot: the setting, or the Chromium's own without the "Headless"
+// Keep Chromium's actual User-Agent and append the shared client User-Agent.
 async function userAgent(browser) {
-    const custom = String(getSetting('screenshot.userAgent') ?? '').trim();
-    if (custom) return custom;
-    return String(await browser.userAgent()).replace('HeadlessChrome', 'Chrome');
+    const base = String(await browser.userAgent()).replace('HeadlessChrome', 'Chrome');
+    return `${base} ${getSetting('zapbot.client.userAgent')}`;
 }
 
 // Lets a request through only if it is a public http(s) address (or an inline data:/blob: resource)

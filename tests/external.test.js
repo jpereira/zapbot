@@ -6,6 +6,7 @@ const bot = require('./helpers/bot');
 
 const { test, describe, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
+const axios = require('axios');
 
 const { MessageMedia, errorHttp, processes, network } = bot;
 
@@ -149,7 +150,7 @@ describe('/weather', () => {
         assert.doesNotMatch(r, /⚠️/, 'dentro de 3°C: sem aviso');
         assert.match(r, /_atualizado às 14:00 · fonte: Open-Meteo, MET Norway, CPTEC\/INPE_$/);
         const met = network.calls.find(c => c.url.includes('api.met.no'));
-        assert.equal(met.cfg.headers['User-Agent'], 'weather-bot/1.0');
+        assert.equal(axios.defaults.headers.common['User-Agent'], bot.getSetting('zapbot.client.userAgent'));
         assert.deepEqual(met.cfg.params, { lat: '-22.9000', lon: '-43.1000' });
         assert.ok(network.calls.some(c => c.url.endsWith('/clima/previsao/3464/1')), 'a cidade certa pela UF');
     });
@@ -181,16 +182,19 @@ describe('/weather', () => {
         assert.doesNotMatch(other, /Outras fontes|CPTEC/, 'a cidade da UF errada não serve');
     });
 
-    test('weather.sources aceita met e cptec; weather.userAgent vai no cabeçalho da MET', async () => {
+    test('weather.sources aceita met e cptec; usa zapbot.client.userAgent', async () => {
         assert.deepEqual(await bot.setSetting('weather.sources', ['MET']), ['met']);
         await assert.rejects(bot.setSetting('weather.sources', ['xyz']), /não suportado/);
         await bot.setSetting('weather.sources', ['met']);
-        await bot.setSetting('weather.userAgent', 'meubot/2.0 contato@exemplo.com');
         network.responder('get', 'geocoding-api.open-meteo.com', { results: [{ ...local, name: 'Rio Bonito' }] });
         network.responder('get', 'api.open-meteo.com/v1/forecast', forecast(24));
         network.responder('get', 'api.met.no', { properties: { timeseries: [{ data: { instant: { details: { air_temperature: 24 } } } }] } });
         await bot.replyAlt('/weather Rio Bonito');
-        assert.equal(network.calls.find(c => c.url.includes('api.met.no')).cfg.headers['User-Agent'], 'meubot/2.0 contato@exemplo.com');
+        assert.equal(axios.defaults.headers.common['User-Agent'], bot.getSetting('zapbot.client.userAgent'));
+
+        await bot.setSetting('zapbot.client.userAgent', 'meubot/2.0 contato@exemplo.com');
+        await bot.replyAlt('/weather Rio Bonito');
+        assert.equal(axios.defaults.headers.common['User-Agent'], 'meubot/2.0 contato@exemplo.com');
     });
 
     test('cidade informada; calor e frio; valor ausente vira "-"', async () => {

@@ -67,7 +67,7 @@ const NEWS_TTL_MS = 6 * 60 * 60 * 1000;
 const WWEBJS_REPO = 'wwebjs/whatsapp-web.js';
 let news = { em: 0, data: null };
 
-const fetchIt = (url) => axios.get(url, { timeout: VERSION_TIMEOUT_MS, headers: { 'User-Agent': 'zapbot' } })
+const fetchIt = (url) => axios.get(url, { timeout: VERSION_TIMEOUT_MS })
     .then(r => r.data)
     .catch(() => null);
 

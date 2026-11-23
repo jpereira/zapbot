@@ -38,7 +38,6 @@ dela**, com o título da página e o endereço final (depois dos redirecionament
 
 ## User-Agent
 
-O navegador se identifica com a setting `screenshot.userAgent`. Vazia (o padrão), é o User-Agent do próprio
-Chromium **sem o "Headless"**, que muitos sites recusam. Para se passar por outro navegador:
-`/set screenshot.userAgent Mozilla/5.0 (...)`. A espera pela página é o `screenshot.timeout` (30 segundos
-por padrão).
+O navegador mantém o User-Agent do Chromium **sem o "Headless"** e adiciona
+`zapbot.client.userAgent`, a identificação compartilhada com as outras chamadas externas do bot. A espera
+pela página é o `screenshot.timeout` (30 segundos por padrão).

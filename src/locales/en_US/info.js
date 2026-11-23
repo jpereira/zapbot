@@ -86,7 +86,7 @@ module.exports = {
     'alerts.yourPrivate': 'your private chat',
     'alerts.created': '🔔 *Alert created*\n{alert}\n💰 Now: {price}\n💡 _Checked every {every}._',
     'alerts.sinceCreation': ' _({change} since creation)_',
-    'alerts.fired': '🔔 *PRICE ALERT*\n\n{opIcon} {icon} *{pair}* went {op} {target}\n💰 Now: *{price}*{change}\n📅 Alert created on {date}',
+    'alerts.fired': '*PRICE ALERT*\n\n{opIcon} {icon} *{pair}* went {op} {target}\n💰 Now: *{price}*{change}\n📅 Alert created on {date}',
     'alerts.subject': '🔔 Price alert: {pair} {op} {target}',
 
     // /stocks

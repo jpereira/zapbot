@@ -44,8 +44,10 @@ em português).
 | `contacts.cacheDays` | 1–365 | `30` | Dias que uma foto em `cache/contacts` vale antes de ser baixada de novo (`/contacts -r` força) |
 | `contacts.delayMs` | 0–5000 | `300` | Pausa, em milissegundos, entre uma foto e outra no `/contacts`, para não consultar o WhatsApp em rajada |
 | `cron.max` | 1–500 | `50` | Máximo de itens do [`/cron`](commands/cron.md), somando lembretes e mensagens |
+| `cron.msgPrepend` | texto | `⏰ ` | Texto literal antes das mensagens de `/cron`, na lista, na Web e no envio; mantém espaços no começo e no fim (`/set cron.msgPrepend " ⏰ ~> "`). Vazio: sem prefixo |
 | `crypto.alert.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](commands/stocks.md#alertas-de-preço) do `/crypto` |
 | `crypto.alert.max` | 1–100 | `20` | Máximo de alertas de preço do `/crypto` |
+| `crypto.alert.msgPrepend` | texto | `🔔 ` | Texto literal antes das mensagens dos eventos do `/crypto -alert`, na lista, na Web e no envio; mantém os espaços nas pontas |
 | `crypto.brl` | on/off | `on` | O [`/crypto`](commands/crypto.md) mostra também o preço de cada moeda em reais (o par da Binance contra o real, ou o preço em dólar × USDTBRL) |
 | `crypto.coins` | lista | `BTC, ETH, SOL, HYPE` | Moedas do `/crypto` (só as suportadas); normalmente alterada pelo `/crypto -a`/`-d` |
 | `cve.max` | 1–20 | `10` | Quantidade de CVEs exibidas pelo `/cve` (o `/cve <max>` sobrepõe) |
@@ -120,7 +122,6 @@ em português).
 | `pixelart.packs` | lista | `chuck-norris-lvl` | Packs do 16colo.rs sorteados pelo [`/pixelart`](commands/pixelart.md) sem argumentos |
 | `poll.retentionDays` | 1–365 | `90` | Dias que as enquetes e os votos ficam guardados para o [`/poll -r`](commands/poll.md#resultado) |
 | `screenshot.timeout` | 5–120 | `30` | Segundos que o [`/screenshot`](commands/screenshot.md) espera a página carregar (a página que nunca "acalma" sai com o que já carregou) |
-| `screenshot.userAgent` | texto | *(vazio)* | O User-Agent do `/screenshot`. Vazio: o do próprio Chromium, sem o "Headless" que muitos sites recusam |
 | `show.alert.deleted` | on/off | `on` | Avisa no seu privado quando alguém apaga uma mensagem; `off` só guarda para o `/show` |
 | `show.alert.edited` | on/off | `on` | Avisa no seu privado quando alguém edita uma mensagem; `off` só guarda para o `/show -e` |
 | `show.alert.reaction` | on/off | `on` | Avisa no seu privado quando alguém remove ou troca uma reação; `off` só guarda para o `/show -r` |
@@ -134,6 +135,7 @@ em português).
 | `sticker.name` | texto | `ZapBot` | Nome do pacote das figurinhas |
 | `stocks.alert.intervalMin` | 1–60 | `5` | Intervalo, em minutos, entre as verificações dos [alertas de preço](commands/stocks.md#alertas-de-preço) do `/stocks` |
 | `stocks.alert.max` | 1–100 | `20` | Máximo de alertas de preço do `/stocks` |
+| `stocks.alert.msgPrepend` | texto | `🔔 ` | Texto literal antes das mensagens dos eventos do `/stocks -alert`, na lista, na Web e no envio; mantém os espaços nas pontas |
 | `stocks.symbols` | lista | `USD, EUR, USDT, MSTR` | Símbolos exibidos pelo [`/stocks`](commands/stocks.md) : moedas contra o real (`USD`, `EUR`, `GBP`, `USDT`) e tickers do Yahoo Finance (`MSTR`, `NVDA`, `PETR4.SA`, `BRK-B`, `^GSPC`); normalmente alterada pelo `/stocks -a`/`-d` |
 | `stt.beam` | 1–10 | `1` | Tamanho do beam da busca do faster-whisper no [`/stt`](commands/stt.md) (`1` é o mais rápido; mais pode acertar um pouco mais e demora mais). O `-beam` muda na chamada |
 | `stt.engine` | `local`, `gpt` | `local` | Motor do [`/stt`](commands/stt.md) e do `/get -stt`: `local` (faster-whisper, sem chave) ou `gpt` (ChatGPT, API da OpenAI). `-gpt` e `-local` escolhem na chamada |
@@ -164,12 +166,12 @@ em português).
 | `weather.city` | texto | `Niteroi, Rio de Janeiro, Brazil` | Cidade do `/weather` quando nenhuma é informada |
 | `weather.maxDays` | 1–16 | `16` | Máximo de dias do `/weather N` (ou `Nd`), contando hoje; 16 é o limite da Open-Meteo |
 | `weather.sources` | lista | `met`, `cptec` | Fontes extras do [`/weather`](commands/weather.md#outras-fontes), além da Open-Meteo: `met` (MET Norway) e `cptec` (CPTEC/INPE, só Brasil). Vazio: só a Open-Meteo |
-| `weather.userAgent` | texto | `weather-bot/1.0` | O User-Agent das consultas às fontes extras. A MET Norway pede que ele identifique o cliente e dê um contato |
 | `zapbot.api.enabled` | on/off | `off` | Liga a API HTTP local ([API e MCP](api.md)): `/health`, `/status`, `/notes` e `/send`, com a `zapbot.api.key`. Vale ao reiniciar o bot |
 | `zapbot.api.host` | texto | `127.0.0.1` | Endereço em que a API escuta. O padrão só atende a própria máquina; fora dele, configure um proxy com HTTPS na frente. Vale ao reiniciar |
 | `zapbot.api.key` | texto (pode ser vazio) | *(vazio)* | A chave da API (cabeçalho `Authorization: Bearer <chave>` ou `X-API-Key`), com pelo menos 20 caracteres. Vazia: a API não inicia. Exibida mascarada; use uma chave longa e aleatória |
 | `zapbot.api.port` | 1024–65535 | `3100` | Porta da API HTTP. Vale ao reiniciar |
 | `zapbot.api.sendTo` | lista | *(vazia)* | Para onde o `POST /send` e o `send_message` do MCP podem mandar além do seu próprio chat: telefones com DDI, ids de grupo (`…@g.us`) ou `all` (qualquer destino: só se você confia em quem tem a chave) |
+| `zapbot.client.userAgent` | texto | `ZapBot/$version ($build) ($revision)` | Modelo do User-Agent das chamadas HTTP externas e do `/screenshot`; expande `$version`, `$build` e `$revision` conforme a instalação |
 | `zapbot.email.alerts` | on/off | `on` | Alertas por e-mail (crash, queda, reconexão...) pelo SMTP do QR Code. Veja [Alertas por e-mail](emails.md#alertas-por-e-mail) |
 | `zapbot.lang` | `en_US`, `pt_BR` | `en_US` | Idioma do bot: a ajuda (`-h`, `/help`) e todas as respostas, avisos, erros, datas e números saem nele. `/set zapbot.lang pt_BR` (ou `/set zapbot.lang=pt_BR`) troca para o português; `pt-BR`, `pt` e `en` também valem. As descrições que o `/set` mostra de cada setting continuam em português |
 | `zapbot.mcp.enabled` | on/off | `off` | **Experimental.** Liga o servidor MCP da API (`POST /mcp`), para um cliente de IA enviar mensagens (para o `zapbot.api.sendTo`) e ler as suas `/notes`. Exige `zapbot.api.enabled` e `zapbot.api.key` |

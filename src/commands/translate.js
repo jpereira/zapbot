@@ -26,7 +26,11 @@ const TIMEOUT_MS = 15000;
 const CODES = new Map(Object.keys(languages).filter(c => c !== 'auto').map(c => [c.toLowerCase(), c]));
 
 // The package's fetch has no time limit: without this a Google that does not respond would hold the command
-const withTimeLimit = (url, init) => fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
+const withTimeLimit = (url, init) => fetch(url, {
+    ...init,
+    headers: { ...init?.headers, 'User-Agent': getSetting('zapbot.client.userAgent') },
+    signal: AbortSignal.timeout(TIMEOUT_MS)
+});
 
 // Package error → message for the chat
 function errorTranslation(err) {

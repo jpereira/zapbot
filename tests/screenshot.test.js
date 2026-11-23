@@ -64,14 +64,15 @@ describe('/screenshot', () => {
         assert.equal(browser.calls.find(c => c[0] === 'goto')[1], 'https://8.8.8.8/page');
     });
 
-    test('the User-Agent is the Chromium\'s without "Headless", or the screenshot.userAgent setting', async () => {
+    test('the User-Agent includes Chromium and the shared client setting', async () => {
         await bot.execute('/screenshot http://8.8.8.8/');
-        assert.equal(browser.calls.find(c => c[0] === 'userAgent')[1], 'Mozilla/5.0 Chrome/130.0.0.0');
+        const zapbotUa = bot.getSetting('zapbot.client.userAgent');
+        assert.equal(browser.calls.find(c => c[0] === 'userAgent')[1], `Mozilla/5.0 Chrome/130.0.0.0 ${zapbotUa}`);
 
-        await bot.setSetting('screenshot.userAgent', 'MyAgent/1.0');
+        await bot.setSetting('zapbot.client.userAgent', 'MyAgent/1.0');
         browser.calls.length = 0;
         await bot.execute('/screenshot http://8.8.8.8/');
-        assert.equal(browser.calls.find(c => c[0] === 'userAgent')[1], 'MyAgent/1.0');
+        assert.equal(browser.calls.find(c => c[0] === 'userAgent')[1], 'Mozilla/5.0 Chrome/130.0.0.0 MyAgent/1.0');
     });
 
     test('-mobile uses a phone-sized screen; -full clips the whole page (up to 16000 px)', async () => {

@@ -99,8 +99,8 @@ other sources, to cross-check:
 The `weather.sources` setting chooses them (`/set weather.sources met`; empty keeps only Open-Meteo). A
 source that is down or does not cover the place just does not show up, and the footer lists only the ones that
 answered. The CPTEC is only asked for Brazilian cities, and the city is matched by name **and** state: it never
-guesses another one. MET Norway asks for a User-Agent that identifies the client with a contact: set it in
-`weather.userAgent` (for example `/set weather.userAgent mybot/1.0 me@example.com`).
+guesses another one. All extra sources use the shared `zapbot.client.userAgent`; add a contact there if
+needed.
 
 ## Changing the default city
 

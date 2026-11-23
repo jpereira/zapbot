@@ -115,7 +115,9 @@ function extractMessage(textAlt) {
 }
 
 // The -msg message, indented below the alert (in the list and in the confirmation)
-const messageLine = (a) => (a.message ? `\n   💬 ${a.message.replace(/\n/g, '\n   ')}` : '');
+const messageLine = (kind, a) => (a.message
+    ? `\n   💬 ${alertSetting(ALERT_TYPES[kind], 'msgPrepend')}${a.message.replace(/\n/g, '\n   ')}`
+    : '');
 
 // withDestinations: the old "→ A, B" at the end of the line (the removal notices); the lists put them below instead
 function describeAlert(kind, a, { withDestinations = true } = {}) {
@@ -126,7 +128,8 @@ function describeAlert(kind, a, { withDestinations = true } = {}) {
 }
 
 // What goes under the alert in the list and in the confirmation: where it notifies, one per line, and the message
-const detailsAlert = (a, { whenEmpty = '' } = {}) => describeDestinationsBlock(alertDestinations(a), { whenEmpty }) + messageLine(a);
+const detailsAlert = (kind, a, { whenEmpty = '' } = {}) =>
+    describeDestinationsBlock(alertDestinations(a), { whenEmpty }) + messageLine(kind, a);
 
 async function priceHandleAlert(kind, { msg, args, admin }) {
     const type = ALERT_TYPES[kind];
@@ -203,7 +206,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
             return;
         }
 
-        const linesAlt = alerts.map((a, i) => t('alerts.listItem', { n: i + 1, alert: describeAlert(kind, a, { withDestinations: false }), details: detailsAlert(a), date: formatDataShort(a.created_at) }));
+        const linesAlt = alerts.map((a, i) => t('alerts.listItem', { n: i + 1, alert: describeAlert(kind, a, { withDestinations: false }), details: detailsAlert(kind, a), date: formatDataShort(a.created_at) }));
         await msg.reply(t('alerts.list', {
             cmd: type.cmd,
             items: linesAlt.join('\n\n'),
@@ -269,7 +272,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
 
     await msg.reply(t('alerts.created', {
         alert: describeAlert(kind, { symbol: rule.sym, op: rule.op, target: rule.target }) +
-            describeDestinationsBlock(destinations, { whenEmpty: t('alerts.yourPrivate') }) + messageLine({ message: messageAlt }),
+            describeDestinationsBlock(destinations, { whenEmpty: t('alerts.yourPrivate') }) + messageLine(kind, { message: messageAlt }),
         price: type.fmt(price, rule.sym),
         every: plural(alertSetting(type, 'intervalMin'), t('alerts.minute'), t('alerts.minutes'))
     }));
@@ -319,8 +322,9 @@ async function priceCheckAlerts({ force = false } = {}) {
                 const changeAlt = fmtChange(price, a.price_at_creation);
                 const destinations = alertDestinations(a);
                 // The -msg message comes before everything
+                const prepend = alertSetting(type, 'msgPrepend');
                 await sendToDestinations(destinations,
-                    (a.message ? `${a.message}\n\n` : '') +
+                    `${prepend}${a.message ? `${a.message}\n\n` : ''}` +
                     t('alerts.fired', {
                         opIcon: OPERATORS[a.op].icon,
                         icon: type.icon(a.symbol),
