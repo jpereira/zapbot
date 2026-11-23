@@ -540,7 +540,7 @@ relatório sai todo dia nesse horário, no seu privado ou nos destinos do `-to`.
 ```
 
 ```text
-📊 Status do ZapBot 1.0.25 (devel) · últimas 24 h
+📊 Status do ZapBot 1.0.25 · últimas 24 h
 qui 01/10 06:00
 
 ▶️ Bot: ativo
@@ -666,10 +666,10 @@ problema. Ele também avisa quando há versão nova do `yt-dlp` e do `whatsapp-w
 
 ```text
 /bot -i
-ℹ️ ZapBot 1.0.25 (devel) · informações do sistema
+ℹ️ ZapBot 1.0.25 · informações do sistema
 
 🤖 Bot
-• ZapBot: 1.0.25 (devel) (git+7a89b92/HEAD)
+• ZapBot: 1.0.25 (git+7a89b92/v1.0.25)
 • Node.js: v24.9.0 (V8 13.6.233.10-node.27)
 • whatsapp-web.js: 1.34.7 (commit 58ddf15) · ✅ a mais recente · ⬆️ 1 commit novo no main
 • WhatsApp Web: 2.3000.1027123456

@@ -80,7 +80,7 @@ When the interface is on, the message the bot sends you at start (`🤖 ZapBot .
 does not know the IP of the server.
 
 The title of the browser tab and the login screen show the version that is running
-(`ZapBot 1.0.25 (devel) (git+abc1234/HEAD)`), which helps to know whether a deploy reached the server.
+(`ZapBot 1.0.25 (git+abc1234/v1.0.25)`), which helps to know whether a deploy reached the server.
 
 ## The sections at a glance
 
