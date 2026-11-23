@@ -303,6 +303,15 @@ tr:last-child td { border-bottom: 0; }
 .icon-btn:hover { background: var(--selected); }
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: grid; place-items: center; z-index: 10; }
 .modal { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; width: min(560px, 94vw); max-height: 90vh; overflow-y: auto; display: grid; gap: 12px; }
+.contact-trigger, .contact-heading { display: flex; align-items: center; gap: 10px; }
+.contact-trigger { max-width: 100%; text-align: left; border-radius: 6px; }
+.contact-trigger:hover { background: var(--hover); }
+.contact-trigger .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.contact-dialog { color: var(--text); margin: auto; }
+.contact-dialog::backdrop { background: rgba(0,0,0,.55); }
+.contact-details { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 10px; }
+.contact-details dt { color: var(--muted); }
+.contact-details dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .modal h3 { margin: 0; text-transform: none; letter-spacing: 0; color: var(--text); font-size: 16px; }
 .modal .field { display: grid; gap: 4px; }
 .modal .field span, .modal .check span { color: var(--muted); font-size: 12px; }

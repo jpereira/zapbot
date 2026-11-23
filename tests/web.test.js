@@ -338,6 +338,38 @@ describe('chats and messages', () => {
         }
     });
 
+    test('contact details use the chat history and expose verification only when available', async () => {
+        const profile = async () => (await get('/api/contact?chat=' + encodeURIComponent(CHAT), cookie)).json();
+        assert.equal((await get('/api/contact?chat=' + encodeURIComponent(CHAT))).status, 401);
+        assert.equal((await get('/api/contact?chat=' + encodeURIComponent(GROUP), cookie)).status, 404);
+        assert.equal((await get('/api/contact?chat=5521999999998%40c.us', cookie)).status, 404);
+
+        const offline = await profile();
+        assert.equal(offline.name, 'Fulano (perfil)');
+        assert.equal(offline.phone, '+5521999990001');
+        assert.equal(offline.verified, null);
+
+        const saved = bot.client.contacts.get(CHAT);
+        const page = bot.client.pupPage;
+        bot.client.contacts.set(CHAT, {
+            id: { _serialized: CHAT }, name: 'Fulano salvo', pushname: 'Fulano no perfil',
+            isBusiness: true, isMyContact: true, isBlocked: false, getAbout: async () => 'Recado',
+            verifiedName: 'Empresa', businessProfile: { description: 'Atendimento' }
+        });
+        bot.client.pupPage = { evaluate: async () => true };
+        try {
+            const live = await profile();
+            assert.deepEqual([live.name, live.about, live.verified, live.business, live.description],
+                ['Fulano salvo', 'Recado', true, true, 'Atendimento']);
+            bot.client.pupPage.evaluate = async () => false;
+            assert.equal((await profile()).verified, false);
+        } finally {
+            if (saved) bot.client.contacts.set(CHAT, saved);
+            else bot.client.contacts.delete(CHAT);
+            bot.client.pupPage = page;
+        }
+    });
+
     test('a chat with only the number as the stored name shows +number', async () => {
         await insert('N1', '5521977770003@c.us', { chatName: '5521977770003', body: 'x', at: 3000 });
         const { chats } = await (await get('/api/chats', cookie)).json();

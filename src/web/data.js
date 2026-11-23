@@ -9,7 +9,7 @@ const path = require('path');
 const { client } = require('../client');
 const { CONTACTS_DIR, MEDIA_DIR } = require('../constants');
 const { contactPhoto } = require('../contactPhotos');
-const { groupResolverName, privateResolverName, resolveLidToPhone, resolverMentions } = require('../contacts');
+const { contactName, groupResolverName, privateResolverName, resolveLidToPhone, resolverMentions } = require('../contacts');
 const { dbAll, dbGet } = require('../db');
 const { getSetting } = require('../settings');
 const { isJpegPreview, visibleBody } = require('../util/messageBody');
@@ -322,6 +322,58 @@ async function messageMedia(id) {
     return media ? { ...media, mime: mimeOf(media.file), name: path.basename(media.file), inline: Boolean(INLINE_TYPES[path.extname(media.file).toLowerCase()]) } : null;
 }
 
+// Use the same badge decision WhatsApp Web uses for contact displays, when available.
+async function contactBadge(id) {
+    return client.pupPage.evaluate(jid => {
+        const wid = window.require('WAWebWidFactory').createWid(jid);
+        const contact = window.require('WAWebCollections').Contact.get(wid);
+        if (!contact) return null;
+        const getters = window.require('WAWebContactGetters');
+        const checks = ['getShowBusinessCheckmarkAsPrimary', 'getShowBusinessCheckmarkAsSecondary',
+            'getShowBusinessCheckmarkInChatlist'];
+        const values = checks.filter(key => typeof getters[key] === 'function')
+            .map(key => getters[key](contact)).filter(value => typeof value === 'boolean');
+        return values.length ? values.some(Boolean) : null;
+    }, id).catch(() => null);
+}
+
+async function contactProfile(id) {
+    if (!/^\d+@(?:c\.us|lid)$/.test(id)) return null;
+    const stored = await dbGet(`SELECT chat_name, sender_name, sender_number, from_me FROM messages
+        WHERE chat_id = ? ORDER BY from_me, timestamp DESC, id DESC LIMIT 1`, [id]);
+    if (!stored) return null;
+    const resolved = id.endsWith('@lid') && client.pupPage
+        ? await withTimeout(resolveLidToPhone(id).catch(() => null), NAME_TIMEOUT_MS) : null;
+    const phoneId = resolved || (id.endsWith('@c.us') ? id : null);
+    const contact = client.pupPage
+        ? await withTimeout(client.getContactById(phoneId || id)
+            .catch(() => phoneId && phoneId !== id ? client.getContactById(id).catch(() => null) : null),
+        NAME_TIMEOUT_MS) : null;
+    const number = (phoneId && digits(phoneId)) || (!stored.from_me && stored.sender_number) || null;
+    const [about, verified, status, monitored] = await Promise.all([
+        contact?.getAbout ? withTimeout(contact.getAbout().catch(() => null), NAME_TIMEOUT_MS) : null,
+        client.pupPage ? withTimeout(contactBadge(contact?.id?._serialized || phoneId || id), NAME_TIMEOUT_MS) : null,
+        dbGet(`SELECT id, timestamp AS at FROM messages
+            WHERE chat_id = ? AND (sender_jid IN (?, ?) OR sender_number = ?)
+            ORDER BY timestamp DESC, id DESC LIMIT 1`, [STATUS, id, phoneId, number]),
+        dbGet('SELECT MAX(last_seen) AS lastSeen FROM monitor_contacts WHERE contact_id IN (?, ?)',
+            [id, phoneId])
+    ]);
+    const flag = value => typeof value === 'boolean' ? value : null;
+    return {
+        id, name: contactName(contact) || stored.chat_name?.trim()
+            || (!stored.from_me && stored.sender_name) || (number ? `+${number}` : id),
+        phone: number ? `+${number}` : null,
+        profileName: contact?.pushname || null,
+        businessName: contact?.verifiedName || null,
+        business: flag(contact?.isBusiness), saved: flag(contact?.isMyContact),
+        blocked: flag(contact?.isBlocked), verified, about: about || null,
+        description: contact?.businessProfile?.description || null,
+        lastStatus: status ? { chat: STATUS, id: status.id, at: status.at } : null,
+        lastSeen: monitored?.lastSeen ?? null
+    };
+}
+
 /** The profile photo of a chat (a JPEG), from the contacts cache or from WhatsApp; null without one */
 async function chatPhoto(chatId) {
     const id = String(chatId ?? '');
@@ -337,4 +389,4 @@ async function chatPhoto(chatId) {
     return photo ?? null;
 }
 
-module.exports = { chatInfo, chatName, chatPhoto, chatReactions, listChats, listMessages, messageMedia, REAL, searchMessages, STATUS };
+module.exports = { chatInfo, chatName, chatPhoto, chatReactions, contactProfile, listChats, listMessages, messageMedia, REAL, searchMessages, STATUS };

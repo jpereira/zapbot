@@ -144,6 +144,10 @@ Em **Status**, cada publicação aparece em um cartão com autor, data e hora no
 e a legenda ficam abaixo. O histórico usa os dados disponíveis no cache. O bot registra a hora de publicação dos novos status quando
 o WhatsApp fornece essa informação.
 
+Em uma conversa individual, clique no nome ou na foto do cabeçalho para abrir os dados do
+contato. O painel mostra o telefone, o recado, o selo de verificação e os dados comerciais
+disponíveis. Também dá acesso ao último Status salvo do contato, quando houver.
+
 ### As mensagens
 
 Todo o histórico que o bot tem no banco: texto, fotos, vídeos, áudios, mensagens de voz, **figurinhas**, documentos,

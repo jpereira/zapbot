@@ -3,6 +3,14 @@
 
 const TEXTS = {
     en: {
+        contact: {
+            title: 'Contact details', phone: 'Phone', about: 'About', profileName: 'Profile name',
+            businessName: 'Business name', business: 'Business account', description: 'Business description',
+            saved: 'Saved in contacts', blocked: 'Blocked', verified: 'Verification badge',
+            yes: 'Yes', no: 'No', unknown: 'Unavailable', close: 'Close',
+            lastStatus: 'Latest saved Status', lastSeen: 'Last seen by the monitor',
+            failed: 'Could not load contact details.'
+        },
         user: 'Login', password: 'Password', enter: 'Sign in', wrong: 'Wrong login or password.', blocked: (m) => `Too many attempts: try again in ${m} min.`,
         chats: 'Chats', search: 'Search a chat or a number', logout: 'Sign out', pick: 'Pick a chat on the left to see its history.',
         deleted: 'deleted', edited: 'edited', deletedAt: (d) => `deleted at ${d}`, editedAt: (d) => `edited at ${d}`,
@@ -38,6 +46,14 @@ const TEXTS = {
         noNotes: 'No notes here.', alertAt: 'alert', openImage: 'Open', lockedNote: 'locked', tagsCount2: (n) => `${n} notes`, pdfSkipped: (list) => `Not included (locked): ${list}`, pdfNone: 'Nothing to export (the tag is locked or empty).'
     },
     pt: {
+        contact: {
+            title: 'Dados do contato', phone: 'Telefone', about: 'Recado', profileName: 'Nome de perfil',
+            businessName: 'Nome comercial', business: 'Conta comercial', description: 'Descrição comercial',
+            saved: 'Salvo nos contatos', blocked: 'Bloqueado', verified: 'Selo de verificação',
+            yes: 'Sim', no: 'Não', unknown: 'Indisponível', close: 'Fechar',
+            lastStatus: 'Último Status salvo', lastSeen: 'Visto por último pelo monitor',
+            failed: 'Não foi possível carregar os dados do contato.'
+        },
         user: 'Login', password: 'Senha', enter: 'Entrar', wrong: 'Login ou senha incorretos.', blocked: (m) => `Tentativas demais: tente de novo em ${m} min.`,
         chats: 'Conversas', search: 'Buscar uma conversa ou número', logout: 'Sair', pick: 'Escolha uma conversa à esquerda para ver o histórico.',
         deleted: 'apagada', edited: 'editada', deletedAt: (d) => `apagada em ${d}`, editedAt: (d) => `editada em ${d}`,
@@ -217,6 +233,7 @@ async function apiProgress(path, label, shared = null) {
 
 /* login */
 function showLogin(message = '') {
+    document.querySelector('.contact-dialog')?.close();
     clearInterval(sessionTimer);
     sessionTimer = null;
     clearInterval(refreshTimer);
@@ -437,6 +454,50 @@ const startOfDay = (days) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.s
 const inputToMs = (value) => (value ? new Date(value).getTime() : null);
 const msToInput = (ms) => (ms ? new Date(ms - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16) : '');
 
+async function showContact(info) {
+    if (document.querySelector('.contact-dialog')) return;
+    const labels = T.contact;
+    const details = el('div', { 'aria-live': 'polite' }, T.loading);
+    const dialog = el('dialog', { class: 'modal contact-dialog', 'aria-label': labels.title },
+        el('div', { class: 'contact-heading' }, avatar(info), el('h3', {}, info.name)),
+        details,
+        el('div', { class: 'modal-actions' },
+            el('button', { class: 'btn', onclick: () => dialog.close() }, labels.close)));
+    dialog.addEventListener('close', () => dialog.remove(), { once: true });
+    document.body.append(dialog);
+    dialog.showModal();
+
+    try {
+        const response = await api(`/api/contact?chat=${encodeURIComponent(info.id)}`);
+        if (!response.ok) throw new Error('contact');
+        const profile = await response.json();
+        if (!dialog.open) return;
+        dialog.querySelector('h3').textContent = profile.name;
+        const yesNo = value => value == null ? labels.unknown : (value ? labels.yes : labels.no);
+        const fields = [
+            [labels.phone, profile.phone || labels.unknown],
+            [labels.profileName, profile.profileName !== profile.name ? profile.profileName : null],
+            [labels.about, profile.about || labels.unknown],
+            [labels.verified, profile.verified === true ? `🔵 ${labels.yes}` : yesNo(profile.verified)],
+            [labels.business, profile.business == null ? null : yesNo(profile.business)],
+            [labels.businessName, profile.businessName],
+            [labels.description, profile.description],
+            [labels.saved, profile.saved == null ? null : yesNo(profile.saved)],
+            [labels.blocked, profile.blocked == null ? null : yesNo(profile.blocked)],
+            [labels.lastSeen, profile.lastSeen ? fmtFull(profile.lastSeen) : null],
+            [labels.lastStatus, profile.lastStatus ? el('button', {
+                class: 'btn', onclick: () => { dialog.close(); jumpToMessage(profile.lastStatus); }
+            }, fmtFull(profile.lastStatus.at)) : null]
+        ];
+        details.replaceChildren(el('dl', { class: 'contact-details' },
+            fields.filter(([, value]) => value).flatMap(([label, value]) => [
+                el('dt', {}, label), el('dd', {}, value)
+            ])));
+    } catch {
+        if (dialog.open) details.textContent = labels.failed;
+    }
+}
+
 function renderMain() {
     const info = state.info;
     const main = document.getElementById('main');
@@ -448,8 +509,12 @@ function renderMain() {
     main.replaceChildren(
         el('div', { class: 'main-head' },
             el('button', { class: 'btn back', onclick: () => { document.querySelector('.app').classList.remove('chat-open'); } }, `← ${T.back}`),
-            avatar({ id: info.id, name: info.name }),
-            el('div', { class: 'grow' }, el('div', { class: 'name' }, info.name), el('div', { class: 'sub', id: 'showing' }, '')),
+            el('div', { class: 'grow' },
+                /^\d+@(?:c\.us|lid)$/.test(info.id)
+                    ? el('button', { class: 'contact-trigger', title: T.contact.title, onclick: () => showContact(info) },
+                        avatar(info), el('span', { class: 'name' }, info.name))
+                    : el('div', { class: 'contact-heading' }, avatar(info), el('div', { class: 'name' }, info.name)),
+                el('div', { class: 'sub', id: 'showing' }, '')),
             el('button', { class: 'btn', title: T.clearHistory, onclick: clearHistory }, '🧹')),
         el('div', { class: 'toolbar' },
             el('label', {}, T.from, fromInput), el('label', {}, T.to, toInput),

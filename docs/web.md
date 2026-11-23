@@ -143,6 +143,10 @@ In **Status**, each post has a card with its author, date and time in the header
 caption appear below. The history uses the data available in the cache. For new statuses, the bot records the publication time
 when WhatsApp supplies it.
 
+In a one-to-one chat, click the name or photo in the header to open the contact details.
+The panel shows the phone number, About text, verification badge and available business
+details. It also links to the contact’s latest saved Status when one is available.
+
 ### The messages
 
 The whole history the bot has in the database: text, photos, videos, audio, voice notes, **stickers**, documents,

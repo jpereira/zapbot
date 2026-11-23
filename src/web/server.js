@@ -29,7 +29,7 @@ const sha = (text) => crypto.createHash('sha256').update(String(text)).digest();
 const totp = require('../util/totp');
 const { versionWithCommit } = require('../version');
 const { searchPeople } = require('../destinations');
-const { chatInfo, chatPhoto, chatReactions, listChats, listMessages, messageMedia, searchMessages } = require('./data');
+const { chatInfo, chatPhoto, chatReactions, contactProfile, listChats, listMessages, messageMedia, searchMessages } = require('./data');
 const { exportChat } = require('./export');
 const { statsData } = require('./stats');
 const { notifyWeb } = require('./alert');
@@ -376,6 +376,10 @@ async function api(req, res, url) {
                 'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(result.name)}`, 'X-Messages': String(result.count), 'X-Truncated': String(result.truncated)
             });
             return res.end(result.pdf);
+        }
+        case '/api/contact': {
+            const profile = await contactProfile(chat);
+            return profile ? sendJson(res, 200, profile) : sendJson(res, 404, { error: 'no such contact' });
         }
         case '/api/photo': {
             const photo = await chatPhoto(chat);
