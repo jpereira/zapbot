@@ -21,7 +21,7 @@ You can send them in **any chat** (private, group, or the chat with yourself).
 - Every command accepts `-help` / `-h`: `/get -h` shows the help for that command only. A command typed without what it
   needs answers with just its `Usage:` and the hint to use `-h` (no ❌: a missing parameter is not an error):
   `/qr` replies ```Usage: /qr [-decode|-d] [<text>]``` and `💡 /qr -h for help`.
-- `/help` lists the commands you can use (the owner and admins see all of them); `/help get` or
+- `/help` shows the available categories and `/help -f` lists the commands. Use `/help get` or
   `/help /get` show a specific one, and `/help -r` groups the list by role (`owner`, `admin`, and
   `user`).
 - The commands have English names and there are no fixed aliases: the name is the same in any

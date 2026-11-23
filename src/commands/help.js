@@ -2,20 +2,65 @@
  * Comando /help.
  */
 
-const { aliasBlock, aliasesFor, listAliases } = require('../aliases');
+const { aliasesFor, listAliases } = require('../aliases');
 const { ROLES, answer } = require('../roles');
-const { activeCommands, findCommand, formatCommandHelp, helpProtocol } = require('./base');
+const { activeCommands, activeGroupCommands, findCommand, formatCommandHelp, helpProtocol, resolveGroupInput } = require('./base');
+const { GROUP_TARGETS } = require('./groupNamespace');
 const { locate } = require('./localize');
 const { t } = require('../i18n');
 
-// The /help -full order: from the most restricted to the common
+// Role view order, from the most restricted to the common.
 const ROLES_IN_HELP = [ROLES.OWNER, ROLES.ADMIN, ROLES.USER];
 
-/*
- * Each sees only what their level reaches (src/roles.js): the owner, everything; an admin (bot.admins), what
- * is not role owner; users (bot.users), only the role user ones, plus the admin ones the owner allowed with
- * /bot +cmd. Showing /backup to whoever cannot use it is like showing the kitchen menu.
- */
+const CATEGORIES = {
+    media: 'ascii carbon get giphy meme pixelart screenshot sticker stt tts',
+    ai: 'draw gpt ocr tldr translate',
+    finance: 'bills crypto defi stocks',
+    admin: 'alias backup batch block bot cache call contacts cron debug forward monitor mute search set show status unblock unmute watch web'
+};
+const GROUP_SECTIONS = {
+    configuration: 'info name desc photo remove-photo admins send edit add',
+    participants: 'members invite promote demote mention-all',
+    moderation: 'warn antilink antibadword antitag',
+    greetings: 'welcome goodbye',
+    participation: 'join leave list'
+};
+const CATEGORY_NAMES = ['groups', 'media', 'ai', 'finance', 'tools', 'admin', 'aliases'];
+const CATEGORY_ALIASES = { g: 'groups', group: 'groups', mod: 'moderation' };
+
+const oneLine = value => String(value).replace(/\s+/g, ' ').trim();
+const description = command => {
+    const localized = locate(command);
+    return oneLine(String(localized.summary ?? localized.help ?? '').replace(/[*_~`]/g, ''));
+};
+const listLine = command => `*${command.cmd}*\n_${description(command)}_`;
+const heading = key => `*${t(`help.category.${key}`)}*`;
+const section = (title, entries) => entries.length
+    ? `${title}\n\n${entries.join('\n\n')}`
+    : '';
+
+function commandCategories(can) {
+    const groups = activeGroupCommands().filter(can);
+    const lists = { groups, media: [], ai: [], finance: [], tools: [], admin: [] };
+    for (const cmd of activeCommands().filter(can)) {
+        if (GROUP_TARGETS.has(cmd.cmd)) continue;
+        const kind = Object.keys(CATEGORIES).find(key => CATEGORIES[key].split(' ').includes(cmd.cmd.slice(1)));
+        lists[kind ?? 'tools'].push(cmd);
+    }
+    return lists;
+}
+
+function groupSection(commands, onlyModeration = false) {
+    const sections = Object.entries(GROUP_SECTIONS)
+        .filter(([key]) => !onlyModeration || key === 'moderation')
+        .map(([key, names]) => section(heading(key), commands
+            .filter(cmd => names.split(' ').includes(cmd.cmd.slice(3))).map(listLine)))
+        .filter(Boolean);
+    if (!sections.length) return '';
+    return [onlyModeration ? null : heading('groups'), ...sections, t('help.groupActionTip')]
+        .filter(Boolean).join('\n\n');
+}
+
 async function cmdHelp({ msg, args: typed, opts, level, admin,
     canUse = (cmd) => findCommand(cmd)?.role === ROLES.USER }) {
     const who = level ?? (admin ? ROLES.ADMIN : ROLES.USER);
@@ -29,6 +74,19 @@ async function cmdHelp({ msg, args: typed, opts, level, admin,
     const [first, ...rest] = args.split(/\s+/);
     let requestedCommand = first;
 
+    const requestedCategory = !rest.length && (CATEGORY_ALIASES[first] ?? first);
+    const isCategory = CATEGORY_NAMES.includes(requestedCategory) || requestedCategory === 'moderation';
+    if (isCategory && requestedCategory === 'aliases') {
+        return listAliases(msg, c => can(c) && Boolean(findCommand(c.cmd)));
+    }
+    if (isCategory) {
+        const categories = commandCategories(can);
+        const text = requestedCategory === 'groups' || requestedCategory === 'moderation'
+            ? groupSection(categories.groups, requestedCategory === 'moderation')
+            : section(heading(requestedCategory), categories[requestedCategory].map(listLine));
+        return msg.reply(text || t('help.emptyCategory'));
+    }
+
     // /help /get  |  /help get  |  /help defi orca (only the help for that protocol)
     if (requestedCommand) {
         if (!requestedCommand.startsWith('/')) {
@@ -39,7 +97,18 @@ async function cmdHelp({ msg, args: typed, opts, level, admin,
             return listAliases(msg, c => can(c) && (admin || Boolean(findCommand(c.cmd))));
         }
 
-        const command = findCommand(requestedCommand);
+        if (['/g', '/group'].includes(requestedCommand) && !rest.length) {
+            return msg.reply(groupSection(activeGroupCommands().filter(can)) || t('help.emptyCategory'));
+        }
+
+        const grouped = resolveGroupInput([requestedCommand, ...rest].join(' '));
+        if (grouped?.candidates) {
+            const possible = grouped.candidates.filter(can).map(entry => entry.cmd);
+            return msg.reply(possible.length
+                ? t('mensagens.ambiguo', { caller: requestedCommand, list: possible.join(', ') })
+                : t('help.notFound', { cmd: requestedCommand }));
+        }
+        const command = grouped?.command ?? findCommand(requestedCommand);
 
         if (!command) {
             await msg.reply(t('help.notFound', { cmd: requestedCommand }));
@@ -59,33 +128,47 @@ async function cmdHelp({ msg, args: typed, opts, level, admin,
         return;
     }
 
-    // /help alone: each command in bold and, on the line below, what it does in italics (all the descriptions
-    // start at the same margin; WhatsApp only aligns columns in a monospaced font, which has no bold or italics).
-    // Outside a code block the line wraps by itself, at the phone width. The formatting symbols
-    // from WhatsApp that came in the description are removed, so as not to break the italics.
-    const visible = activeCommands().filter(can);
-    const line = (c) => {
-        const l = locate(c);
-        const description = String(l.summary ?? l.help ?? '').replace(/[*_~`]/g, '').replace(/\s+/g, ' ').trim();
-        return `*${c.cmd}*\n_${description}_`;
-    };
-    const list = opts?.opt?.role
-        ? ROLES_IN_HELP.map(g => [g, visible.filter(c => c.role === g)]).filter(([, cs]) => cs.length)
-            .map(([g, cs]) => `🔸 Role: ${g}\n\n${cs.map(line).join('\n\n')}`).join('\n\n')
-        : visible.map(line).join('\n\n');
-    // Whoever is not an admin also sees the aliases (shortcuts) that lead to commands they can use: they work
-    // as the commands do, so they belong in the menu
-    const shortcuts = admin ? [] : await aliasesFor(c => can(c) && Boolean(findCommand(c.cmd)));
-    // Each one as in the /alias list (the name, the description and where it leads), without the 🔇 and the 🔒
-    const aliasSection = shortcuts.length
-        ? `\n\n${t('help.aliasesTitle', { n: shortcuts.length })}\n\n${shortcuts.map(a => aliasBlock(a, { marks: false })).join('\n\n')}`
-        : '';
-    const helpText =
-        t('help.menuTitle') + (admin ? '' : ` ${t('help.menuUserNote')}`) + '\n\n' +
-        list + aliasSection +
-        `\n\n${t('help.menuFooter')}`;
+    const categories = commandCategories(can);
+    const title = t('help.menuTitle') + (admin ? '' : ` ${t('help.menuUserNote')}`);
+    if (opts?.opt?.role) {
+        const commands = Object.values(categories).flat();
+        const list = ROLES_IN_HELP.map(role => {
+            const entries = commands.filter(command => command.role === role)
+                .sort((a, b) => a.cmd.localeCompare(b.cmd));
+            return section(`🔸 Role: ${role}`, entries.map(listLine));
+        }).filter(Boolean);
+        return msg.reply([title, ...list, t('help.menuFooter')].join('\n\n'));
+    }
 
-    await msg.reply(helpText);
+    if (opts?.opt?.full) {
+        const blocks = CATEGORY_NAMES.map(key => {
+            if (key === 'groups') return groupSection(categories.groups);
+            if (key === 'aliases') {
+                const command = findCommand('/alias');
+                return command && can(command) ? section(heading(key), [
+                    `${t('help.aliasesHint')} */alias -l*`
+                ]) : '';
+            }
+            return section(heading(key), categories[key].map(listLine));
+        }).filter(Boolean);
+        return msg.reply([title, ...blocks, t('help.menuFooter')].join('\n\n'));
+    }
+
+    const aliases = await aliasesFor(c => can(c) && Boolean(findCommand(c.cmd)), { owner: Boolean(msg.fromMe) });
+    const menu = CATEGORY_NAMES.filter(key => key === 'aliases' ? aliases.length : categories[key].length)
+        .map(key => `/help ${key} · ${t(`help.categoryHint.${key}`)}`);
+    const exampleGroup = categories.groups.find(cmd => cmd.cmd === '/g.warn') ?? categories.groups[0];
+    const examples = [
+        categories.groups.some(cmd => GROUP_SECTIONS.moderation.split(' ').includes(cmd.cmd.slice(3)))
+            ? '/help mod' : null,
+        exampleGroup ? `/help ${exampleGroup.cmd}` : null,
+        categories.tools.some(cmd => cmd.cmd === '/calendar') ? '/help /calendar' : null
+    ].filter(Boolean);
+    return msg.reply([
+        title, menu.join('\n'), t('help.views'),
+        examples.length ? section(heading('examples'), examples) : null,
+        t('help.menuFooter')
+    ].filter(Boolean).join('\n\n'));
 }
 
 module.exports = {

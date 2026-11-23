@@ -7,7 +7,7 @@
  * {/command} runs and the reply goes in its place; a single message goes out
  */
 const { dbAll, dbGet, dbReady } = require('./db');
-const { commandsByPrefix, findCommand } = require('./commands/base');
+const { commandsByPrefix, findCommand, resolveGroupInput } = require('./commands/base');
 const { botConfig } = require('./botConfig');
 const { roleMoreRestricted } = require('./roles');
 const { findCommandAlt, withTargets, commandsInText, assembleText } = require('./textCommands');
@@ -55,6 +55,8 @@ async function isCommandOrAlias(nameAlt) {
 }
 
 async function resolverAlias(textAlt) {
+    const grouped = resolveGroupInput(textAlt);
+    if (grouped) return grouped;
     const [nameAlt] = textAlt.trim().split(/\s+/);
     const args = textAlt.trim().slice(nameAlt.length).trim();
     const command = findCommand(nameAlt);
@@ -82,10 +84,11 @@ async function resolveSaved(alias, nameAlt, args) {
     }
 
     const { command: commandAlt, leftovers } = applyParams(alias.command, args);
+    const grouped = resolveGroupInput(commandAlt);
     const [destination] = commandAlt.split(/\s+/);
-    const target = findCommand(destination);
+    const target = grouped ? grouped.command : findCommand(destination);
     if (!target) return null;
-    const argsFinal = [commandAlt.slice(destination.length).trim(), leftovers].filter(Boolean).join(' ');
+    const argsFinal = [grouped?.args ?? commandAlt.slice(destination.length).trim(), leftovers].filter(Boolean).join(' ');
     return {
         command: await withTargets(target, argsFinal), alias: nameAlt, destination, args: argsFinal,
         quiet: Boolean(alias.quiet), ownerOnly: Boolean(alias.owner_only)

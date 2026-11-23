@@ -63,6 +63,14 @@ test('-name e -desc: o resto do comando é o texto; sem texto no -desc apaga', a
     assert.match((await bot.replyAlt('/group -name A -desc B'))[0], /um de cada vez/);
 });
 
+test('/g actions pass only the selected setting and its arguments to the group handler', async () => {
+    await bot.replyAlt('/g.na Amigos da L200');
+    assert.deepEqual(calls, [['setSubject', 'Amigos da L200']]);
+    calls.length = 0;
+    await bot.replyAlt('/g info -name Outro nome');
+    assert.deepEqual(calls, []);
+});
+
 test('-send, -edit e -add; valores inválidos são recusados', async () => {
     const r = await bot.replyAlt('/group -send admins -edit all -add admins');
     assert.deepEqual(calls, [['setMessagesAdminsOnly', true], ['setInfoAdminsOnly', false], ['setAddMembersAdminsOnly', true]]);

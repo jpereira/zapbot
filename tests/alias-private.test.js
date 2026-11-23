@@ -36,7 +36,7 @@ describe('/alias -p', () => {
     test('o usuário não o vê: nem no /help, nem pelo nome, nem por prefixo; o público continua; -public devolve', async () => {
         await bot.replyAlt('/alias -q /moeda /uptime');
         await bot.replyAlt('/alias -q -p /meu /joke');
-        const section = (await bot.replyAlt('/help', FULANO))[0].split('🔗 *Atalhos*')[1] ?? '';
+        const [section] = await bot.replyAlt('/help aliases', FULANO);
         assert.match(section, /\*\/moeda\*/);
         assert.doesNotMatch(section, /\/meu/);
         // For the user it is a command that does not exist (the same answer as for any other name)
@@ -45,7 +45,7 @@ describe('/alias -p', () => {
 
         await bot.replyAlt('/alias -p /moeda');
         assert.deepEqual(await bot.replyAlt('/moeda', FULANO), ["⚠️ Comando '/moeda' desconhecido, tente: /help"]);
-        assert.doesNotMatch((await bot.replyAlt('/help', FULANO))[0], /🔗 \*Atalhos\*/);
+        assert.doesNotMatch((await bot.replyAlt('/help', FULANO))[0], /\/help aliases ·/);
         assert.equal((await bot.replyAlt('/moeda', OWNER_CHAT)).length > 0, true);
         await bot.replyAlt('/alias -public /moeda');
         assert.equal((await bot.replyAlt('/moeda', FULANO)).length > 0, true, 'público de novo');

@@ -15,26 +15,43 @@ const { OTHERAlt, OWNER } = bot;
 beforeEach(bot.restart);
 
 describe('/help', () => {
-    test('sem argumento (o dono): todos os comandos ativos', async () => {
-        const [r] = await bot.replyAlt('/help');
-        assert.match(r, /MENU DE AJUDA/);
-        assert.match(r, /\n\*\/alias\*\n_[^\n]+_\n\n[^]*\n\*\/ascii\*\n_/);
-        assert.match(r, /\n\*\/show\*\n_Mostra mensagens do cache do bot_\n/);
-        assert.match(r, /\n\*\/stocks\*\n_/);
-        assert.doesNotMatch(r, /Usage:|```/);
-        assert.ok(r.endsWith('_\n\n💡 Utilize */help /comando* ou */comando -h* para mais informações.'));
+    test('sem argumento mostra um índice curto e a lista completa usa as categorias', async () => {
+        const [menu] = await bot.replyAlt('/help');
+        assert.match(menu, /MENU DE AJUDA/);
+        for (const category of ['groups', 'media', 'ai', 'finance', 'tools', 'admin']) {
+            assert.match(menu, new RegExp(`/help ${category} ·`));
+        }
+        assert.doesNotMatch(menu, /Usage:|```|\/stocks ·/);
+        const [full] = await bot.replyAlt('/help -f');
+        assert.deepEqual(await bot.replyAlt('/help -full'), [full]);
+        const listed = [...full.matchAll(/^(\/[\w.-]+) · /gm)].map(match => match[1]);
+        const legacy = 'group members invite promote demote warn antilink antibadword antitag welcome goodbye everybody join leave';
+        const groupNames = new Set(legacy.split(' ').map(name => `/${name}`));
+        const expected = COMMANDS.commands.map(c => c.cmd).filter(cmd => !groupNames.has(cmd));
+        const actions = bot.src('commands/base').activeGroupCommands().map(c => c.cmd);
+        assert.deepEqual(listed.sort(), [...expected, ...actions].sort());
     });
 
-    test('a lista tem "*/cmd*" e, na linha de baixo, "_o que faz_": negrito e itálico, um par por comando', async () => {
-        const [r] = await bot.replyAlt('/help');
-        const linesAlt = r.split('\n');
-        const commands = linesAlt.map((l, i) => [l, linesAlt[i + 1]]).filter(([l]) => /^\*\//.test(l));
-        assert.equal(commands.length, COMMANDS.commands.length);
-        // WhatsApp formatting closes on each line (no leftover *, _ or ` inside the description)
-        for (const [cmd, description] of commands) {
-            assert.match(cmd, /^\*\/[a-z]+\*$/, cmd);
-            assert.match(description, /^_[^*_`~]+_$/, description);
-        }
+    test('grupos e moderação mostram ações sem duplicar comandos antigos', async () => {
+        const [groups] = await bot.replyAlt('/help groups');
+        assert.equal((await bot.replyAlt('/g -h'))[0], groups);
+        assert.match(groups, /\*Configuração\*[\s\S]*\/g\.members ·/);
+        assert.doesNotMatch(groups, /^\/(?:group|members) ·/m);
+        const [mod] = await bot.replyAlt('/help mod');
+        assert.equal((await bot.replyAlt('/help moderation'))[0], mod);
+        assert.match(mod, /\/g\.warn ·/);
+        assert.doesNotMatch(mod, /\/g\.members ·/);
+
+        await bot.setSetting('bot.users', [OTHERAlt.user]);
+        await bot.setSetting('bot.users.cmds', [`${OTHERAlt.user}=/g.members`]);
+        const user = { de: OTHERAlt.jid };
+        const [index] = await bot.replyAlt('/help', user);
+        assert.match(index, /\/help groups ·/);
+        assert.doesNotMatch(index, /\/help (admin|media|mod|finance)/);
+        const [limited] = await bot.replyAlt('/help groups', user);
+        assert.match(limited, /\/g\.members ·/);
+        assert.doesNotMatch(limited, /\/g\.(?:warn|invite) ·/);
+        assert.match((await bot.replyAlt('/help -r', user))[0], /\/g\.members ·/);
     });
 
     test('um comando, com ou sem "/", por nome ou alias', async () => {
@@ -51,8 +68,8 @@ describe('/help', () => {
     test('quem não é admin vê só os comandos comuns; o admin extra vê tudo', async () => {
         const [r] = await bot.replyAlt('/help', { de: OTHERAlt.jid });
         assert.match(r, /^🤖 \*MENU DE AJUDA\* _\(os comandos que você pode usar\)_/);
-        assert.match(r, /\n\*\/stocks\*\n_/);
-        assert.doesNotMatch(r, /\n\*\/(show|backup|bot|set)\*\n/);
+        assert.match(r, /\/help finance ·/);
+        assert.doesNotMatch(r, /\/help admin ·/);
 
         assert.deepEqual(await bot.replyAlt('/help show', { de: OTHERAlt.jid }),
             ['⛔ O /show é só do dono do bot (e dos admins).\n💡 _Veja os que você pode usar com /help_']);
@@ -61,23 +78,23 @@ describe('/help', () => {
         await bot.setSetting('bot.admins', [OTHERAlt.user]);
         const [admin] = await bot.replyAlt('/help', { de: OTHERAlt.jid });
         assert.match(admin, /^🤖 \*MENU DE AJUDA\*\n/);
-        assert.match(admin, /\n\*\/show\*\n_/);
+        assert.match(admin, /\/help admin ·/);
     });
 
     test('-role|-r: lista por role (owner, admin, user), só o que a pessoa pode usar', async () => {
         const [r] = await bot.replyAlt('/help -r');
-        assert.match(r, /🔸 Role: owner\n\n\*\/backup\*\n_[^]*\n\n🔸 Role: admin\n\n\*\/alias\*\n_[^]*\n\n🔸 Role: user\n\n\*\/ascii\*\n_/);
-        assert.ok(r.search(/\*\/show\*\n_/) < r.indexOf('Role: user'));
-        assert.deepEqual(await bot.replyAlt('/help -r'), [r]);
+        assert.match(r, /🔸 Role: owner\n\/backup ·[^]*🔸 Role: admin\n\/alias ·[^]*🔸 Role: user/);
+        assert.ok(r.indexOf('/show ·') < r.indexOf('Role: user'));
+        assert.deepEqual(await bot.replyAlt('/help -role'), [r]);
 
         const [other] = await bot.replyAlt('/help -r', { de: OTHERAlt.jid });
-        assert.match(other, /🔸 Role: user\n\n\*\/ascii\*\n_/);
+        assert.match(other, /🔸 Role: user\n\/ascii ·/);
         assert.doesNotMatch(other, /Role: (owner|admin)/);
 
         await bot.setSetting('bot.users.cmds', [`${OTHERAlt.user}=/ping,/show`]);
         await bot.setSetting('bot.users', [OTHERAlt.user]);
         const [delegated] = await bot.replyAlt('/help -r', { de: OTHERAlt.jid });
-        assert.match(delegated, /Role: admin\n\n\*\/show\*\n_[^]*\n\n🔸 Role: user\n\n\*\/help\*\n_[^]*\n\n\*\/ping\*\n_/);
+        assert.match(delegated, /Role: admin\n\/show ·[^]*🔸 Role: user\n\/help ·[^]*\/ping ·/);
         assert.doesNotMatch(delegated, /Role: owner/);
 
         // with the command, -r does not get in the way
@@ -86,7 +103,7 @@ describe('/help', () => {
 
     test('comando desativado por setting some do menu', async () => {
         await bot.setSetting('commands.disabled', 'noffa');
-        assert.doesNotMatch((await bot.replyAlt('/help'))[0], /\n\*\/noffa\*\n/);
+        assert.doesNotMatch((await bot.replyAlt('/help -f'))[0], /\/noffa ·/);
     });
 });
 
@@ -431,7 +448,7 @@ describe('/bot -info: a versão do faster-whisper', () => {
     });
 });
 
-describe('/help: os atalhos (alias) no fim, só os que levam a comandos que a pessoa pode usar', () => {
+describe('/help: a categoria de atalhos, só os que levam a comandos que a pessoa pode usar', () => {
     const FULANO = { de: OTHERAlt.jid };
 
     test('usuário: vê o /tuga (leva ao /tts, de usuário) com o -desc; não vê o que leva a comando de admin', async () => {
@@ -442,39 +459,32 @@ describe('/help: os atalhos (alias) no fim, só os que levam a comandos que a pe
         await bot.replyAlt('/alias -q /dois Oi {/joke} e {/crypto BTC}');
 
         const [help] = await bot.replyAlt('/help', FULANO);
-        const section = help.split('🔗 *Atalhos*')[1] ?? '';
-        assert.match(help, /\n\n🔗 \*Atalhos\* \(3\): funcionam como os comandos \(\/help alias mostra cada um por inteiro\)\n\n/);
-        // The same block as in the /alias list, without the 🔇 and the 🔒
-        assert.match(section, /\n\*\/tuga\*\n📝 Fala com a voz do tugão\n→ \/tts -q -l -v tugão \$@\n/);
-        assert.match(section, /\n\*\/moeda\*\n→ \/stocks USD\n/);
-        assert.match(section, /\n\*\/dois\*\n→ Oi \{\/joke\} e \{\/crypto BTC\}\n/);
-        assert.doesNotMatch(section, /🔇|🔒/);
-        const listed = (await bot.replyAlt('/help alias', FULANO))[0];
-        for (const block of ['*/tuga* 🔇\n📝 Fala com a voz do tugão\n→ /tts -q -l -v tugão $@', '*/moeda* 🔇\n→ /stocks USD']) assert.ok(listed.includes(block), block);
-        assert.doesNotMatch(section, /\/pessoal|\/forward/);
-        // The shortcuts come before the footer, which stays the last line
-        assert.match(help, /💡 Utilize \*\/help \/comando\* ou \*\/comando -h\* para mais informações\.$/);
-        assert.ok(help.indexOf('🔗 *Atalhos*') > help.indexOf('*/whois*'));
+        assert.match(help, /\/help aliases ·/);
+        const [listed] = await bot.replyAlt('/help aliases', FULANO);
+        assert.equal((await bot.replyAlt('/help alias', FULANO))[0], listed);
+        assert.match(listed, /\*\/tuga\* 🔇\n📝 Fala com a voz do tugão\n→ \/tts/);
+        assert.match(listed, /\*\/moeda\*/);
+        assert.match(listed, /\*\/dois\*/);
+        assert.doesNotMatch(listed, /\/pessoal|\/forward/);
     });
 
-    test('a regra do usuário (+cmd) também filtra; o admin e o dono não têm a seção (têm o /help alias)', async () => {
+    test('a regra do usuário (+cmd) também filtra; a categoria aparece para quem tem atalhos disponíveis', async () => {
         await bot.setSetting('bot.users', [OTHERAlt.user]);
         await bot.replyAlt('/alias -q /tuga /tts -q -l -v tugão $@');
         await bot.replyAlt('/alias -q /moeda /stocks USD');
         await bot.replyAlt('/bot +u /Fulano/ +cmd /stocks', { chat: OWNER.jid });
 
-        const [limited] = await bot.replyAlt('/help', FULANO);
-        assert.match(limited, /🔗 \*Atalhos\* \(1\)/);
+        const [limited] = await bot.replyAlt('/help aliases', FULANO);
         assert.match(limited, /\*\/moeda\*/);
         assert.doesNotMatch(limited, /\/tuga/);
 
-        assert.doesNotMatch((await bot.replyAlt('/help'))[0], /🔗 \*Atalhos\*/, 'o dono');
+        assert.match((await bot.replyAlt('/help'))[0], /\/help aliases ·/, 'o dono');
         await bot.setSetting('bot.admins', [OTHERAlt.user]);
-        assert.doesNotMatch((await bot.replyAlt('/help', FULANO))[0], /🔗 \*Atalhos\*/, 'o admin');
+        assert.match((await bot.replyAlt('/help', FULANO))[0], /\/help aliases ·/, 'o admin');
 
         // Without any shortcut that leads to something they can use: no section
         await bot.setSetting('bot.admins', []);
         await bot.replyAlt('/bot +u /Fulano/ +cmd /joke', { chat: OWNER.jid });
-        assert.doesNotMatch((await bot.replyAlt('/help', FULANO))[0], /🔗 \*Atalhos\*/);
+        assert.doesNotMatch((await bot.replyAlt('/help', FULANO))[0], /\/help aliases ·/);
     });
 });

@@ -160,6 +160,25 @@ for (const c of botConfig.commands) {
     if (!HANDLERS[c.cmd]) printError(`Command '${c.cmd}' is in commands.js but has no handler.`);
 }
 
+function handlerFor(command) {
+    const action = command.groupAction;
+    const handler = HANDLERS[action?.source.cmd ?? command.cmd];
+    if (!action?.option || !handler) return handler;
+    return context => {
+        const { opts } = context;
+        const { option, value } = action;
+        return handler({
+            ...context,
+            opts: {
+                ...opts,
+                opt: { ...opts.opt, [option]: value ? (opts.argv[0] ?? null) : true },
+                argv: value ? opts.argv.slice(1) : opts.argv,
+                given: new Set([...opts.given, option])
+            }
+        });
+    };
+}
+
 module.exports = {
-    HANDLERS
+    HANDLERS, handlerFor
 };

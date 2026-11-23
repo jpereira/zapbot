@@ -6,7 +6,7 @@ as notas, os alertas, os atalhos, a agenda, gráficos das suas conversas e os se
 
 !!! danger "Ela mostra todas as mensagens da sua conta"
     Quem entra lê tudo o que o bot guardou. Use uma senha longa, mantenha a interface em `127.0.0.1` (o padrão) e,
-    para abri-la na rede, ponha um **proxy reverso com HTTPS** na frente.
+    para abri-la na rede, configure um **proxy reverso com HTTPS** na frente.
 
 Todas as imagens desta página foram feitas com **dados inventados** (os nomes, os números e as mensagens não
 existem), no tema escuro, salvo quando disser o contrário. A interface segue o setting `zapbot.lang` (inglês ou

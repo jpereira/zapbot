@@ -7,7 +7,7 @@ exemplo) enviar mensagens e ler as suas `/notes`.
 
 !!! danger "Ela fala pela sua conta do WhatsApp"
     Quem tem a `zapbot.api.key` manda mensagens **como você**. Trate como uma senha: longa, aleatória, em
-    nenhum repositório. A API só escuta em `127.0.0.1` por padrão; para abrir para a rede, ponha um
+    nenhum repositório. A API só escuta em `127.0.0.1` por padrão; para abrir para a rede, configure um
     proxy reverso com HTTPS na frente.
 
 !!! warning "O servidor MCP é experimental"
@@ -34,7 +34,7 @@ ports:
   - "127.0.0.1:3100:3100"
 ```
 
-O `zapbot.api.host` é `127.0.0.1` por padrão; dentro de um container, ponha `0.0.0.0` (a porta publicada
+O `zapbot.api.host` é `127.0.0.1` por padrão; dentro de um container, use `0.0.0.0` (a porta publicada
 acima é o que a mantém fechada para a rede).
 
 Sem a `zapbot.api.key` a API não inicia (o log avisa), e ela precisa de pelo menos 20 caracteres: uma curta é
@@ -132,7 +132,7 @@ passe pela ponte `mcp-remote`, no `claude_desktop_config.json`:
 
 Depois peça, por exemplo: *"leia as minhas 3 últimas notas e me mande um resumo no WhatsApp"*. As
 descrições das ferramentas levam a marca `[EXPERIMENTAL]`, e o `send_message` só alcança o seu
-próprio chat a menos que você ponha mais destinos no `zapbot.api.sendTo`.
+próprio chat a menos que você adicione mais destinos no `zapbot.api.sendTo`.
 
 ## Boas práticas
 

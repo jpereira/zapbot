@@ -437,7 +437,8 @@ novo. O passo a passo (inclusive a versão de desenvolvimento, `main`) está em
 
 ## Comandos
 
-Digite no próprio chat. `/help` lista os comandos que você pode usar (`/help -r` agrupa por role);
+Digite no próprio chat. `/help` mostra as categorias disponíveis. Use `/help -f` para a lista completa
+ou `/help -r` para agrupar por role.
 `/<comando> -h` mostra a ajuda de um. Quem digita e cada comando têm um nível: **owner > admin > user**. A coluna **Role** diz o mínimo
 para usar cada comando:
 

@@ -459,7 +459,10 @@ async function showContact(info) {
     const labels = T.contact;
     const details = el('div', { 'aria-live': 'polite' }, T.loading);
     const dialog = el('dialog', { class: 'modal contact-dialog', 'aria-label': labels.title },
-        el('div', { class: 'contact-heading' }, avatar(info), el('h3', {}, info.name)),
+        el('div', { class: 'contact-heading' },
+            el('button', { class: 'contact-photo', type: 'button', title: labels.photo ?? info.name,
+                'aria-label': labels.photo ?? info.name, onclick: () => showPhoto(info) }, avatar(info)),
+            el('h3', {}, info.name)),
         details,
         el('div', { class: 'modal-actions' },
             el('button', { class: 'btn', onclick: () => dialog.close() }, labels.close)));
@@ -496,6 +499,15 @@ async function showContact(info) {
     } catch {
         if (dialog.open) details.textContent = labels.failed;
     }
+}
+
+function showPhoto(info) {
+    const dialog = el('dialog', { class: 'modal contact-photo-dialog', 'aria-label': info.name },
+        el('img', { src: `/api/photo?chat=${encodeURIComponent(info.id)}`, alt: info.name }),
+        el('button', { class: 'btn', onclick: () => dialog.close() }, T.contact.close));
+    dialog.addEventListener('close', () => dialog.remove(), { once: true });
+    document.body.append(dialog);
+    dialog.showModal();
 }
 
 function renderMain() {

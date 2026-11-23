@@ -5,6 +5,7 @@
 const { botConfig } = require('../botConfig');
 const { language, t } = require('../i18n');
 const { getSetting } = require('../settings');
+const { groupCommands, groupInput } = require('./groupNamespace');
 const { locate } = require('./localize');
 
 // Active commands: those in commands.js minus those in the 'commands.disabled' setting (via /set)
@@ -13,8 +14,27 @@ function activeCommands() {
     return botConfig.commands.filter(c => !disabled.includes(c.cmd));
 }
 
+function activeGroupCommands() {
+    const disabled = getSetting('commands.disabled');
+    return groupCommands(activeCommands()).filter(c => !disabled.includes(c.cmd))
+        .sort((a, b) => a.cmd.localeCompare(b.cmd));
+}
+
 function findCommand(name) {
+    if (name.startsWith('/g.')) return activeGroupCommands().find(c => c.cmd === name);
     return activeCommands().find(c => c.cmd === name || c.aliases?.includes(name));
+}
+
+function resolveGroupInput(line, { partial = true } = {}) {
+    const input = groupInput(line);
+    if (!input) return null;
+    if (input.menu) return { command: findCommand('/help'), args: 'g' };
+    const key = `/g.${input.action}`;
+    const candidates = activeGroupCommands();
+    const exact = candidates.find(c => c.cmd === key);
+    if (exact) return { command: exact, args: input.args };
+    const matches = partial && input.action.length >= 2 ? candidates.filter(c => c.cmd.startsWith(key)) : [];
+    return matches.length === 1 ? { command: matches[0], args: input.args } : { candidates: matches };
 }
 
 // Active commands whose name or alias starts with what was typed (e.g.: /watc → /watch), without repeating
@@ -205,7 +225,7 @@ function formatCommandHelp(command, { protocol } = {}) {
         lines.push('', t('help.aliases', { list: command.aliases.join(', ') }));
     }
 
-    lines.push('', t('help.more', { url: commandPage(original.cmd) }));
+    lines.push('', t('help.more', { url: commandPage(original.groupAction?.source.cmd ?? original.cmd) }));
 
     return lines.join('\n');
 }
@@ -239,6 +259,7 @@ function formatErrorCommand(e) {
 }
 
 module.exports = {
+    activeGroupCommands, resolveGroupInput,
     activeCommands,
     commandsByPrefix,
     findCommand,

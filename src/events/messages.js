@@ -11,7 +11,7 @@ const { textRunAlias, resolverAlias } = require('../aliases');
 const { ttsRewrite } = require('../ttsOption');
 const { handlePassword: handlePasswordNotes } = require('../notesLock');
 const { extractPassword, maskSecret } = require('../util/lockPassword');
-const { HANDLERS } = require('../commands/index');
+const { handlerFor } = require('../commands/index');
 const {
     scheduleName, contactName, removeDeviceSuffix, resolveLidToPhone, groupResolverName, privateResolverName
 } = require('../contacts');
@@ -512,7 +512,7 @@ client.on('message_create', (msg) => withContextDebug({
         // In private, the senderName of your messages is the OTHER participant's (see rawSenderId)
         printCall(msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName, logBody, chatName);
 
-        const handler = HANDLERS[command.cmd];
+        const handler = handlerFor(command);
 
         if (!handler) {
             await msg.reply(t('mensagens.naoImplementado', { cmd: command.cmd }));

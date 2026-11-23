@@ -6,7 +6,7 @@
 
 const { ROLES, roleMoreRestricted } = require('./roles');
 const { client } = require('./client');
-const { activeCommands, findCommand } = require('./commands/base');
+const { activeCommands, findCommand, resolveGroupInput } = require('./commands/base');
 const { printError, printExpand } = require('./log');
 const { optionsError, readOptions, assembleContext, denial } = require('./execute');
 const { dbGet, dbReady } = require('./db');
@@ -38,6 +38,8 @@ const breakLines = (textAlt) => String(textAlt ?? '').replace(/[ \t]*\\n[ \t]*/g
  * @returns {Promise<{command, args, alias?}|{aliasText: string}|null>}
  */
 async function findCommandAlt(line) {
+    const group = resolveGroupInput(line);
+    if (group) return group.command ? group : null;
     const caller = line.split(/\s+/, 1)[0].toLowerCase();
     const rest = line.slice(caller.length).trim();
     const direct = findCommand(caller);
@@ -148,7 +150,7 @@ async function runCommand(chatId, line, { chatName, isGroup, where: whereAlt = '
     printExpand(who?.senderName ?? client.info?.pushname ?? '-', origin ?? line, line);
 
     // The handler lives in commands/index, which loads /cron (and this file): only here, at the time
-    const { HANDLERS } = require('./commands/index');
+    const { handlerFor } = require('./commands/index');
     const replies = [];
     const msg = messageSynthetic(chatId, line, replies);
 
@@ -157,7 +159,7 @@ async function runCommand(chatId, line, { chatName, isGroup, where: whereAlt = '
     if (reject) return { text: reject, mediaItems: [], failed: true };
 
     try {
-        await HANDLERS[command.cmd](assembleContext({
+        await handlerFor(command)(assembleContext({
             msg, args, opts, chat: { chatId, chatName, isGroup }, who: { ...owner, ...who }
         }));
     } catch (err) {

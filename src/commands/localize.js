@@ -33,6 +33,21 @@ const so = (origin, fields) => Object.fromEntries(fields.filter(c => origin?.[c]
  * @returns {object} the definition with the language text (the same one, if it is the default or the translation is missing)
  */
 function locate(command, lang = language()) {
+    if (command.groupAction) {
+        const { source, option } = command.groupAction;
+        const localized = locate(source, lang);
+        if (!option) {
+            const rename = text => text?.replaceAll(source.cmd, command.cmd);
+            return {
+                ...command, summary: localized.summary, help: rename(localized.help),
+                usage: rename(localized.usage), ex: localized.ex?.map(rename),
+                cmd_opts: localized.cmd_opts?.map(o => ({ ...o, ex: o.ex?.map(rename) }))
+            };
+        }
+        const summary = localized.cmd_opts.find(o => o.opts?.[0] === option).desc;
+        const options = command.cmd_opts.map(o => localized.cmd_opts.find(source => source.opts?.[0] === o.opts[0]));
+        return { ...command, summary, cmd_opts: options };
+    }
     if (lang === DEFAULT) return command;
     const pt = translation(lang, command.cmd);
     if (!pt) return command;

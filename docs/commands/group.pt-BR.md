@@ -1,5 +1,31 @@
 # `/group` · admin
 
+## Namespace de grupos
+
+Use `/g <ação>`, `/g.<ação>` ou `/group <ação>`. Para descobrir as ações disponíveis,
+envie `/g -h`. Para a ajuda de uma ação, use `/g members -h`. Um prefixo único com pelo menos
+dois caracteres funciona nas duas grafias. Se houver mais de uma opção, o bot lista as
+correspondências que você tem permissão de usar.
+
+```text
+/g members
+/g.members
+/g.mem
+/g invite -revoke
+/g.warn spam
+```
+
+- Configuração do grupo atual: `info`, `name`, `desc`, `photo`, `remove-photo`, `admins`, `send`,
+  `edit` e `add`. Exemplo: `/g send admins -for 30m`.
+- Participantes e moderação: `members`, `invite`, `promote`, `demote`, `warn`, `antilink`,
+  `antibadword`, `antitag`, `welcome`, `goodbye` e `mention-all`.
+- Participação da conta: `join`, `leave` e `list`.
+
+Cada ação mantém as permissões do comando correspondente. Para delegar uma ação, use o
+nome completo, por exemplo `/bot +u +cmd /g.members`. Responder a uma mensagem continua
+selecionando o autor nas ações que aceitam reply, como `/g.warn spam`. A sintaxe com opções
+de `/group` e os comandos avulsos continuam disponíveis.
+
 Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo com
 `/bot +u +cmd /group` ([Delegando](index.md#delegando-um-comando-admin)).
 
@@ -14,7 +40,7 @@ mudar qualquer coisa, **a sua conta precisa ser admin do grupo**. O link de conv
 | `-admins`, `-a` | | Lista os admins (👑 criador, ⭐ admin) |
 | `-name` | `<texto>` | Muda o nome do grupo. Vai até o fim do comando (pode ter espaços) |
 | `-desc` | `[texto]` | Muda a descrição. Sem texto, apaga |
-| `-pic` | | Põe a foto do grupo com a imagem que você respondeu (ou a enviada com `/group -pic` na legenda) |
+| `-pic` | | Define a foto do grupo com a imagem que você respondeu (ou a enviada com `/group -pic` na legenda) |
 | `-rmpic` | | Tira a foto do grupo |
 | `-send` | `<admins\|all>` | Quem pode mandar mensagem: `admins` fecha o grupo para os outros |
 | `-edit` | `<admins\|all>` | Quem pode mudar o nome, a descrição e a foto |

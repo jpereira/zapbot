@@ -54,7 +54,7 @@
         "pic"
       ],
       "values": [],
-      "desc": "Põe a foto do grupo com a imagem que você respondeu (ou a enviada com o comando na legenda)."
+      "desc": "Define a foto do grupo com a imagem que você respondeu (ou a enviada com o comando na legenda)."
     },
     {
       "opts": [

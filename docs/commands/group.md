@@ -1,5 +1,30 @@
 # `/group` · admin
 
+## Group namespace
+
+Use `/g <action>`, `/g.<action>` or `/group <action>`. Run `/g -h` to see the actions available
+to you, or `/g members -h` for help with one action. A unique prefix of at least two characters
+works with either spelling. If several actions match, the bot lists the ones you can use.
+
+```text
+/g members
+/g.members
+/g.mem
+/g invite -revoke
+/g.warn spam
+```
+
+- Current group settings: `info`, `name`, `desc`, `photo`, `remove-photo`, `admins`, `send`,
+  `edit` and `add`. Example: `/g send admins -for 30m`.
+- Members and moderation: `members`, `invite`, `promote`, `demote`, `warn`, `antilink`,
+  `antibadword`, `antitag`, `welcome`, `goodbye` and `mention-all`.
+- Account participation: `join`, `leave` and `list`.
+
+Each action keeps the permissions of the corresponding command. Use the full name when
+delegating an action, for example `/bot +u +cmd /g.members`. Replying to a message still selects
+its author for actions that accept replies, such as `/g.warn spam`. The `/group` option syntax
+and standalone commands remain available.
+
 Role `admin`: only you and the extra admins. The owner can grant it to a person or group with
 `/bot +u +cmd /group` ([Delegating](index.md#delegating-an-admin-command)).
 

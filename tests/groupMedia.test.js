@@ -107,6 +107,49 @@ describe('/members', () => {
     });
 });
 
+describe('/g namespace', () => {
+    test('space, dot and unique prefixes select the same action', async () => {
+        const expected = await bot.replyAlt('/members');
+        for (const line of ['/g members', '/g.members', '/g mem', '/g.mem', '/group members']) {
+            assert.deepEqual(await bot.replyAlt(line), expected, line);
+        }
+        assert.match((await bot.replyAlt('/g inv -h'))[0], /\/g\.invite/);
+        const [choices] = await bot.replyAlt('/g.an');
+        assert.match(choices, /\/g\.antibadword.*\/g\.antilink.*\/g\.antitag/);
+        assert.match((await bot.replyAlt('/g -h'))[0], /\/g\.members/);
+    });
+
+    test('only the canonical action is granted and suggestions respect permissions', async () => {
+        await bot.setSetting('bot.users', []);
+        await bot.replyAlt('/bot +u +cmd /g.members,/g.antilink');
+        assert.deepEqual(bot.getSetting('bot.users.cmds'), [`${GROUP}=/g.members,/g.antilink`]);
+        const fromUser = { de: OTHERAlt.jid };
+        assert.match((await bot.replyAlt('/g.mem', fromUser))[0], /Família/);
+        const [choices] = await bot.replyAlt('/g.an', fromUser);
+        assert.match(choices, /\/g\.antilink/);
+        assert.doesNotMatch(choices, /antibadword|antitag/);
+        const [menu] = await bot.replyAlt('/g -h', fromUser);
+        assert.match(menu, /\/g\.members/);
+        assert.doesNotMatch(menu, /\/g\.(?:name|promote|invite)/);
+        const group = bot.client.chats.get(GROUP);
+        await bot.replyAlt('/g.name Outro nome', fromUser);
+        assert.equal(group.name, 'Família');
+    });
+
+    test('an alias stores a full action name and keeps the action permission', async () => {
+        const expected = await bot.replyAlt('/members');
+        await bot.replyAlt('/alias -q /quem /g members');
+        assert.deepEqual(await bot.replyAlt('/quem'), expected);
+        assert.match((await bot.replyAlt('/alias /curto /g.mem'))[0], /❌/);
+    });
+
+    test('a scoped info action cannot change a group name through another flag', async () => {
+        const group = bot.client.chats.get(GROUP);
+        await bot.replyAlt('/g.info -name Outro nome');
+        assert.equal(group.name, 'Família');
+    });
+});
+
 describe('/poll', () => {
     const pollAlt = async (line) => {
         const [r] = await bot.execute(line);

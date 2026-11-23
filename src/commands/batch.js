@@ -61,7 +61,7 @@ function blockMsg(msg, line, replies) {
 }
 
 async function runBlock(line, context) {
-    const { HANDLERS } = require('./index'); // in here: index imports this file
+    const { handlerFor } = require('./index'); // in here: index imports this file
     const replies = [];
     const resolved = await resolverAlias(line);
     const command = resolved?.command;
@@ -81,7 +81,7 @@ async function runBlock(line, context) {
             }
         });
     } else {
-        const handler = HANDLERS[command.cmd];
+        const handler = handlerFor(command);
         if (!handler) return { ok: false, answers: [t('adm.batch.notImplemented', { cmd: command.cmd })] };
         await handler({ ...context, msg, args, opts: commandReadOptions(command, args), quotedMsg: null });
     }

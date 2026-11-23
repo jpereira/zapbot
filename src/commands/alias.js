@@ -5,12 +5,13 @@ const { botConfig } = require('../botConfig');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
 const { aliasBlock, fixDash, textIsAlias, listAliases } = require('../aliases');
 const { commandsInText, commandsError, breakLines } = require('../textCommands');
-const { findCommand } = require('./base');
+const { findCommand, resolveGroupInput } = require('./base');
 const { listExampleFiles, loadExample } = require('../zb');
 const { getSetting, setSetting } = require('../settings');
 const { t } = require('../i18n');
 
 const aliasName = nameAlt => '/' + nameAlt.replace(/^\//, '');
+const reservedGroupAlias = name => /^\/(?:g(?:\.|$)|group\.)/i.test(name);
 const NAME = /^\/?[\p{L}\p{N}_.-]+$/u;
 const MATCH_MAX = 10;   // aliases shown when /alias <part> finds several
 
@@ -66,7 +67,7 @@ async function cmdAlias({ msg, args, collect = null }) {
         const [oldAlt2, freshAlt] = [aliasName(move[1]), aliasName(move[2])];
         if (!NAME.test(move[2])) return msg.reply(t('adm.alias.invalidName', { name: freshAlt }));
         if (freshAlt === '/all') return msg.reply(t('adm.alias.allReserved'));
-        if (botConfig.commands.some(c => c.cmd === freshAlt || c.aliases?.includes(freshAlt))) {
+        if (botConfig.commands.some(c => c.cmd === freshAlt || c.aliases?.includes(freshAlt)) || reservedGroupAlias(freshAlt)) {
             return msg.reply(t('adm.alias.isCommand', { name: freshAlt }));
         }
         if (!(await dbGet(`SELECT 1 FROM command_aliases WHERE name = ?${msg.fromMe ? '' : ' AND owner_only = 0'}`, [oldAlt2]))) {
@@ -117,7 +118,7 @@ async function cmdAlias({ msg, args, collect = null }) {
             return msg.reply(`${t('adm.alias.match', { term, n: found.length })}\n\n${shown.map(aliasBlock).join('\n\n')}${more}`,
                 undefined, { linkPreview: false });
         }
-        const isCommand = botConfig.commands.some(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt));
+        const isCommand = botConfig.commands.some(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt)) || reservedGroupAlias(nameAlt);
         return msg.reply(t(isCommand ? 'adm.alias.isCommand' : 'adm.alias.notFound', { name: nameAlt }));
     }
     // -q|-quiet: without the "🔗 Alias ..." header when running; -p|-private: only the owner sees and runs it (it is not
@@ -153,7 +154,7 @@ async function cmdAlias({ msg, args, collect = null }) {
         return msg.reply(t('adm.alias.exists', { name: nameAlt }));
     }
     if (nameAlt === '/all') return msg.reply(t('adm.alias.allReserved'));
-    if (botConfig.commands.some(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt))) {
+    if (botConfig.commands.some(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt)) || reservedGroupAlias(nameAlt)) {
         return msg.reply(t('adm.alias.isCommand', { name: nameAlt }));
     }
     let commandAlt = removeQuiet(registration[2].trim());
@@ -183,10 +184,12 @@ async function cmdAlias({ msg, args, collect = null }) {
         if (errorAlt) return msg.reply(errorAlt);
     } else {
         const destination = commandAlt.split(/\s+/, 1)[0];
-        const target = findCommand(destination);
+        const grouped = resolveGroupInput(commandAlt, { partial: false });
+        const target = grouped ? grouped.command : findCommand(destination);
         if (!target || target.cmd === '/alias') {
             return msg.reply(t('adm.alias.badTargetCmd'));
         }
+        if (grouped) commandAlt = [target.cmd, grouped.args].filter(Boolean).join(' ');
         if (target.cmd === '/me') {
             const errorAlt = await commandsError(commandAlt.slice(destination.length), '/alias');
             if (errorAlt) return msg.reply(errorAlt);

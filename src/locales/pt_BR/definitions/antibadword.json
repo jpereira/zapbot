@@ -43,7 +43,7 @@
       "values": [
         "<palavra>"
       ],
-      "desc": "Põe uma palavra na lista (até 100), uma por comando. Para uma frase, use aspas.",
+      "desc": "Adiciona uma palavra à lista (até 100), uma por comando. Para uma frase, use aspas.",
       "ex": [
         "/antibadword -add idiota",
         "/antibadword -add \"vai se ferrar\""

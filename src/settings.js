@@ -4,6 +4,7 @@
 
 const { OPENAI_MODELS, OPENAI_VOICES } = require('./openai');
 const { compileFilterDebug } = require('./debugOptions');
+const { groupCommands } = require('./commands/groupNamespace');
 const { botConfig } = require('./botConfig');
 const { ROLES } = require('./roles');
 const { t } = require('./i18n');
@@ -60,7 +61,8 @@ function userItem(v) {
 // "crypto" or "/crypto" → "/crypto"; command that does not exist or that the owner does not delegate: error
 function userCommand(v) {
     const nameAlt = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
-    const command = botConfig.commands.find(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt));
+    const command = [...botConfig.commands, ...groupCommands(botConfig.commands)]
+        .find(c => c.cmd === nameAlt || c.aliases?.includes(nameAlt));
     if (!command) throw new Error(t('adm.settings.unknownCommand', { name: nameAlt }));
     if (command.role !== ROLES.USER && !command.isDelegable) {
         throw new Error(t(command.role === ROLES.OWNER ? 'adm.settings.ownerOnlyCmd' : 'adm.settings.adminOnlyCmd', { cmd: command.cmd }));
@@ -303,14 +305,14 @@ const SETTINGS_SCHEMA = {
         desc: 'Recusa as ligações de voz e de vídeo que chegam (exceto de call.allow e do bot.admins) e responde com a call.message.'
     },
     'commands.disabled': {
-        // Off out of the box: three commands that most people do not want (jokes and news from the Linux world).
-        // /set -rm commands.disabled kernel cve walissu (or /set commands.disabled "") turns them on
-        default: ['/cve', '/kernel', '/walissu'],
+        // /set -rm commands.disabled kernel cve news walissu (or /set commands.disabled "") turns them on
+        default: ['/cve', '/kernel', '/news', '/walissu'],
         type: 'list',
-        desc: 'Comandos desativados em tempo de execução (somem do /help). Já vêm desativados: /cve, /kernel e /walissu (veja /set -rm commands.disabled).',
+        desc: 'Comandos desativados em tempo de execução (somem do /help). Já vêm desativados: /cve, /kernel, /news e /walissu (veja /set -rm commands.disabled).',
         item: (v) => {
             const typed = v.startsWith('/') ? v.toLowerCase() : `/${v.toLowerCase()}`;
-            const command = botConfig.commands.find(c => c.cmd === typed || c.aliases?.includes(typed));
+            const command = [...botConfig.commands, ...groupCommands(botConfig.commands)]
+                .find(c => c.cmd === typed || c.aliases?.includes(typed));
             if (!command) throw new Error(t('adm.settings.unknownCommand', { name: typed }));
             if (command.cmd === '/set') throw new Error(t('adm.settings.setNotDisabled'));
             return command.cmd;
@@ -1072,7 +1074,7 @@ const SETTINGS_SCHEMA = {
     'zapbot.api.host': {
         default: '127.0.0.1',
         type: 'string',
-        desc: 'Endereço em que a API escuta. O padrão (127.0.0.1) só atende a própria máquina; fora dele, ponha um proxy com HTTPS na frente. Muda só ao reiniciar o bot.'
+        desc: 'Endereço em que a API escuta. O padrão (127.0.0.1) só atende a própria máquina; fora dele, configure um proxy com HTTPS na frente. Muda só ao reiniciar o bot.'
     },
     'zapbot.api.key': {
         default: '',
@@ -1122,7 +1124,7 @@ const SETTINGS_SCHEMA = {
     'zapbot.web.host': {
         default: '127.0.0.1',
         type: 'string',
-        desc: 'Endereço em que a interface web escuta. O padrão (127.0.0.1) só atende a própria máquina; fora dele, ponha um proxy com HTTPS na frente. Muda só ao reiniciar o bot.'
+        desc: 'Endereço em que a interface web escuta. O padrão (127.0.0.1) só atende a própria máquina; fora dele, configure um proxy com HTTPS na frente. Muda só ao reiniciar o bot.'
     },
     'zapbot.web.login': {
         default: '',

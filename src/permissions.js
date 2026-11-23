@@ -10,6 +10,7 @@
  */
 
 const { botConfig } = require('./botConfig');
+const { groupCommands } = require('./commands/groupNamespace');
 const { t } = require('./i18n');
 const { ROLES } = require('./roles');
 const { getSetting, setSetting } = require('./settings');
@@ -17,7 +18,8 @@ const { getSetting, setSetting } = require('./settings');
 const KEY = 'bot.users.cmds';
 const ALWAYS_RELEASED = ['/help', '/whois', '/usage'];
 
-const command = (cmd) => botConfig.commands.find(c => c.cmd === cmd);
+const command = (cmd) => (cmd?.startsWith('/g.') ? groupCommands(botConfig.commands) : botConfig.commands)
+    .find(c => c.cmd === cmd);
 
 // A user can receive the command through a +cmd: admin and delegable
 const isDelegable = (cmd) => {
@@ -85,10 +87,12 @@ function permissionHere({ number: numberAlt, chatId, isGroup }) {
         onlyInGroups: soInGroups,
         rules: limit,
         can: (cmd) => {
-            const role = command(cmd)?.role ?? ROLES.USER;
+            const entry = command(cmd);
+            const role = entry?.role ?? ROLES.USER;
             if (role === ROLES.OWNER || (role === ROLES.ADMIN && !isDelegable(cmd))) return false;
             // delegable: only if some rule cites it (+cmd); without a rule or an "All, except" is not enough
-            if (role === ROLES.ADMIN) return allAlt.some(r => r?.only && r.commands.includes(cmd));
+            if (role === ROLES.ADMIN) return allAlt.some(r => r?.only
+                && (r.commands.includes(cmd) || r.commands.includes(entry.groupAction?.source.cmd)));
             return !limit.length || limit.some(r => allows(r, cmd));
         }
     };

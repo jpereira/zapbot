@@ -62,7 +62,7 @@ se algo foi lido errado. Até 40 linhas (o total sempre conta todas); com o `-sh
 - **Um por linha:** a lista pega o primeiro número de cada linha (`437 maromba` é 437, `maromba: 437`
   também). Se o primeiro não é o valor (`Dia 3 - 437`), use `-col -1` para o último, ou `-all` para todos.
 - **Ignorados:** datas (`15/11`, `2026-11-15`), horas (`12:30`, `9h30`) e números com 11 dígitos ou mais
-  (telefones, ids). Moeda (`R$`, `US$`, `USD$`, `EUR$`, `$`, `€`, `£` e os códigos `USD` e `EUR`), os caracteres invisíveis que o WhatsApp põe nas listas e a
+  (telefones, ids). Moeda (`R$`, `US$`, `USD$`, `EUR$`, `$`, `€`, `£` e os códigos `USD` e `EUR`), os caracteres invisíveis que que o WhatsApp insere nas listas e a
   formatação (`*437*`) não atrapalham.
 - **Contas:** `+ - * / % x × ÷ ^` (`%` é o resto) e parênteses, sem `eval` (é um parser pequeno): `100/2*6`
   dá 300 e `((1+7)*8)/2` dá 32. Uma linha só com números e operadores, como `437 - 351`, é uma conta;
@@ -114,7 +114,7 @@ As outras moedas funcionam do mesmo jeito, antes do número (`EUR`, `EUR$`, `USD
 
 ## Por nome
 
-O `-group` soma as linhas com o mesmo nome e põe os subtotais na fita:
+O `-group` soma as linhas com o mesmo nome e mostra os subtotais na fita:
 
 ```text
 (respondendo "437 maromba / 351 corrida / 200 maromba / 80 corrida")  /calc -group

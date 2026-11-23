@@ -148,8 +148,8 @@ contato são pessoas; a primeira que não é começa o pedido. Junto com a foto 
 
 ```text
 (respondendo a foto de um bolo de aniversário)
-/draw -p fulano beltrano ponha os dois apagando as velas neste bolo
-🎨 ponha os dois apagando as velas neste bolo
+/draw -p fulano beltrano coloque os dois apagando as velas neste bolo
+🎨 coloque os dois apagando as velas neste bolo
 ```
 
 O bot manda 3 imagens ao modelo, nesta ordem: a foto do bolo, o perfil do Fulano e o do Beltrano. Se
@@ -177,7 +177,7 @@ num grupo. Junto com o `@me`, é o jeito de você e a pessoa com quem fala entra
 
 (num grupo)
 /draw -p @this faça um cartaz com a foto deste grupo
-/draw -p @me @this ponha eu e o grupo numa tirinha
+/draw -p @me @this coloque eu e o grupo numa tirinha
 ```
 
 **Quem você está respondendo:** `@reply` (ou `$reply`) é quem escreveu a mensagem que você respondeu,

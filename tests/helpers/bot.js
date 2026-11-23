@@ -56,7 +56,7 @@ async function restart() {
     await setSetting('bot.denied.enabled', false); // the default is on; the tests that count replies expect silence
     await setSetting('zapbot.lang', 'pt_BR'); // the test assertions are in Portuguese; en_US has separate tests
     await setSetting('bot.flood.maxCommandRepeated', 0);
-    await setSetting('commands.disabled', []); // /cve, /kernel and /walissu come disabled; tests/commands-disabled.test.js has the default
+    await setSetting('commands.disabled', []); // /cve, /kernel, /news and /walissu come disabled; tests/commands-disabled.test.js has the default
 
     // The /get downloads cache does not leak from one test to the next
     const tmp = src('constants').TMP_DIR;

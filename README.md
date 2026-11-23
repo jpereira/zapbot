@@ -438,8 +438,8 @@ again. The step by step (including the development version, `main`) is in
 
 ## Commands
 
-Type them in the chat itself. `/help` lists the commands you can use (`/help -r` groups them by
-role); `/<command> -h` shows the help of one. The person typing and each command have a level:
+Type them in the chat itself. `/help` shows the available categories. Use `/help -f` for the full list
+or `/help -r` to group by role. `/<command> -h` shows the help of one. The person typing and each command have a level:
 **owner > admin > user**. The **Role** column tells the minimum needed to use each command:
 
 - `owner`: you, the account paired with the bot. Only you change who has access (`/bot +a`, `+u`,

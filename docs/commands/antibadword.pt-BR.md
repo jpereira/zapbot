@@ -18,7 +18,7 @@ as mensagens ficam (e o `/antibadword` avisa).
 | `-delete` | | Apaga a mensagem, para todos |
 | `-warn` | | Apaga e soma um aviso do [`/warn`](warn.md); no limite (`warn.max`) a pessoa é removida |
 | `-remove` | | Apaga e remove a pessoa do grupo na hora |
-| `-add` | `<palavra>` | Põe uma palavra na lista (até 100), uma por comando. Para uma frase, use aspas |
+| `-add` | `<palavra>` | Adiciona uma palavra à lista (até 100), uma por comando. Para uma frase, use aspas |
 | `-rm` | `<palavra>` | Tira uma palavra da lista |
 | `-list`, `-l` | | Mostra as palavras da lista |
 | *(nada)* | | Mostra o modo e quantas palavras há |

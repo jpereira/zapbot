@@ -1,11 +1,17 @@
 {
   "summary": "Lista os comandos ou detalha um deles",
-  "usage": "/help [-role|-r] [comando] [protocolo]",
-  "help": "Exibe o menu de ajuda, só com os comandos que você pode usar (o dono e os admins veem todos); com um comando, só a ajuda dele.",
+  "usage": "/help [-full|-f] [-role|-r] [categoria|comando] [protocolo]",
+  "help": "Mostra as categorias dos comandos que você pode usar. Escolha uma categoria ou consulte os detalhes de um comando.",
   "ex": [
     "/help show"
   ],
   "cmd_opts": [
+    {
+      "opts": ["full", "f"],
+      "values": [],
+      "desc": "Lista todos os comandos disponíveis por categoria.",
+      "ex": ["/help -f"]
+    },
     {
       "opts": [
         "role",
@@ -19,9 +25,9 @@
     },
     {
       "argv": [
-        "[comando]"
+        "[categoria|comando]"
       ],
-      "desc": "Comando (com ou sem /, nome ou alias).",
+      "desc": "Categoria ou comando (com ou sem /).",
       "ex": [
         "/help get"
       ]
