@@ -16,6 +16,7 @@ module.exports = {
         { opts: ['disable', 'off'], values: [], desc: 'Stop the web interface and revoke sessions.', cron: false },
         { opts: ['pass', 'p'], values: ['<password...>'], desc: 'Set the web password.', cron: false },
         { opts: ['login'], values: ['<name>'], desc: 'Set the web login name.', cron: false },
+        { opts: ['timeout', 't'], values: ['[minutes|off]'], desc: 'Show or set the idle logout interval.', cron: false },
         { opts: ['2fa', 'totp'], values: ['<new|qr|code|off>'], desc: 'Set up, show, confirm or disable 2FA.', cron: false }
     ]
 };

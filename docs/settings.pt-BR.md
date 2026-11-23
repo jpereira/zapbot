@@ -181,6 +181,7 @@ em português).
 | `zapbot.web.port` | 1024–65535 | `3200` | Porta da interface web. Vale após reiniciar |
 | `zapbot.web.refreshSeconds` | 0–300 | `15` | De quantos em quantos segundos a interface web busca as mensagens novas da conversa aberta (`0` desliga) |
 | `zapbot.web.sessionHours` | 1–720 | `12` | Horas que um login web vale (depois pede a senha de novo). Reiniciar o bot encerra todos os logins |
+| `zapbot.web.sessionTimeout` | 0–1440 | `30` | Minutos de inatividade antes de encerrar a sessão web. `0` desliga esse limite |
 | `zapbot.web.totp` | texto (pode ser vazio) | *(vazio)* | Segredo em base32 do código de 6 dígitos (Google Authenticator, Authy...) pedido no login da web **além da senha**. Vazio: só a senha. O `/set zapbot.web.totp new` cria o segredo e manda o QR code no seu privado; liga quando você digita o código do app. Veja [Interface web](web.md#login-em-duas-etapas-2fa) |
 | `zapbot.web.trustProxy` | on/off | `off` | Lê `X-Forwarded-For` e `X-Forwarded-Proto` dos proxies listados em `ZAPBOT_WEB_TRUSTED_PROXIES` |
 | `zapbot.web.url` | texto (pode ser vazio) | *(vazio)* | O endereço pelo qual você abre a [interface web](web.md) (`http://192.168.1.253:3200`, `https://zap.exemplo.com`), mostrado pelo bot na mensagem de início. Vazio: o bot descobre o IP da máquina (no Docker, preencha: o container não sabe o IP do servidor; o compose lê o `ZAPBOT_WEB_URL` do `docker/.env`) |

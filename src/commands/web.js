@@ -70,6 +70,15 @@ async function cmdWeb({ msg, chatId, opts, args }) {
             destroySessions();
             return say(t('web.command.saved'));
         }
+        if (opts.given.has('timeout')) {
+            if (opts.opt.timeout !== null) {
+                const value = opts.opt.timeout === 'off' ? 0 : opts.opt.timeout;
+                await setSetting('zapbot.web.sessionTimeout', value);
+                activeSessions();
+            }
+            const minutes = getSetting('zapbot.web.sessionTimeout');
+            return say(minutes ? t('web.command.timeout', { minutes }) : t('web.command.timeoutOff'));
+        }
         if (opts.given.has('list')) {
             const sessions = activeSessions();
             listedSessions = sessions.map(({ id }) => id);

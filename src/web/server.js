@@ -82,11 +82,21 @@ function forgetSession(token) {
     webNotes.forget(token);
 }
 
+function sessionDeadline(session, idleMinutes) {
+    return idleMinutes ? Math.min(session.until, session.lastActivity + idleMinutes * 60_000)
+        : session.until;
+}
+
 function activeSessions() {
+    const now = Date.now();
+    const idleMinutes = getSetting('zapbot.web.sessionTimeout');
+    const active = [];
     for (const [token, session] of sessions) {
-        if (session.until <= Date.now()) forgetSession(token);
+        const until = sessionDeadline(session, idleMinutes);
+        if (until <= now) forgetSession(token);
+        else active.push({ id: session.id, until });
     }
-    return [...sessions.values()];
+    return active;
 }
 
 function destroySessions(id) {
@@ -106,7 +116,7 @@ function sessionOf(req) {
     const token = cookies(req)[COOKIE];
     const session = sessions.get(token);
     if (!session) return null;
-    if (session.until <= Date.now()) {
+    if (sessionDeadline(session, getSetting('zapbot.web.sessionTimeout')) <= Date.now()) {
         forgetSession(token);
         return null;
     }
@@ -206,7 +216,8 @@ async function login(req, res) {
     const hours = getSetting('zapbot.web.sessionHours');
     activeSessions();
     if (sessions.size >= 256) forgetSession(sessions.keys().next().value);
-    sessions.set(token, { id: crypto.randomUUID(), until: Date.now() + hours * 3600_000 });
+    const now = Date.now();
+    sessions.set(token, { id: crypto.randomUUID(), until: now + hours * 3600_000, lastActivity: now });
     printInfo(`Web: login of '${shown(user)}' from ${address}`);
     res.setHeader('Set-Cookie', `${COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${hours * 3600}${isSecure(req) ? '; Secure' : ''}`);
     sendJson(res, 200, { ok: true });
@@ -286,6 +297,15 @@ async function api(req, res, url) {
 
     const token = sessionOf(req);
     if (!token) return sendJson(res, 401, { error: 'login required' });
+
+    if (route === '/api/activity') {
+        if (req.method === 'POST' && req.headers['x-zapbot-activity'] === '1') {
+            sessions.get(token).lastActivity = Date.now();
+        } else if (req.method !== 'GET') {
+            return sendJson(res, 400, { error: 'invalid activity request' });
+        }
+        return res.writeHead(204).end();
+    }
 
     // The only things that change anything: the password of a protected tag (here, in memory, for this login)
     if (req.method === 'POST' && (route === '/api/notes/unlock' || route === '/api/notes/lock')) {

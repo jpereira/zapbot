@@ -109,6 +109,45 @@ describe('password and session', () => {
         assert.match(trusted.headers.get('set-cookie'), /; Secure/);
     });
 
+    test('idle expiration ignores polling, honors user activity and keeps the absolute deadline', async () => {
+        const clock = Date.now;
+        let now = clock();
+        Date.now = () => now;
+        try {
+            await bot.setSetting('zapbot.web.sessionTimeout', 2);
+            await bot.setSetting('zapbot.web.sessionHours', 1);
+            const idle = await login();
+            const active = await login();
+            now += 60_000;
+            assert.equal((await get('/api/chats', idle.cookie)).status, 200);
+            assert.equal((await get('/api/activity', idle.cookie)).status, 204);
+            const touch = () => fetch(base + '/api/activity', {
+                method: 'POST', headers: { cookie: active.cookie, 'X-Zapbot-Activity': '1' }
+            });
+            assert.equal((await touch()).status, 204);
+            now += 60_000;
+            assert.equal((await get('/api/chats', idle.cookie)).status, 401);
+            assert.equal((await get('/api/chats', active.cookie)).status, 200);
+            await bot.setSetting('zapbot.web.sessionTimeout', 0);
+            now += 57 * 60_000;
+            assert.equal((await touch()).status, 204);
+            now += 60_000;
+            assert.equal((await touch()).status, 401);
+        } finally {
+            Date.now = clock;
+        }
+    });
+
+    test('/web -timeout reads, changes and disables the idle timeout', async () => {
+        const self = { chat: bot.OWNER.jid };
+        const [initial] = await bot.replyAlt('/web -timeout', self);
+        assert.match(initial, /30 min/);
+        await bot.replyAlt('/web -t 5', self);
+        assert.equal(bot.getSetting('zapbot.web.sessionTimeout'), 5);
+        await bot.replyAlt('/web -timeout off', self);
+        assert.equal(bot.getSetting('zapbot.web.sessionTimeout'), 0);
+    });
+
     test('/web lists and revokes sessions without exposing their cookies', async () => {
         const first = await login();
         const second = await login();
@@ -1568,7 +1607,7 @@ describe('the web interface: mute a /watch rule, the chat of a schedule, clear a
         assert.deepEqual(data.web.restartKeys, ['zapbot.web.enabled', 'zapbot.web.host', 'zapbot.web.port']);
         assert.ok('url' in data.web);
         const keys = data.sections[0].ids.filter(k => k.startsWith('zapbot.web.'));
-        assert.deepEqual(keys, ['zapbot.web.enabled', 'zapbot.web.host', 'zapbot.web.login', 'zapbot.web.pageSize', 'zapbot.web.password', 'zapbot.web.port', 'zapbot.web.refreshSeconds', 'zapbot.web.sessionHours', 'zapbot.web.totp', 'zapbot.web.trustProxy', 'zapbot.web.url', 'zapbot.web.warnAccess', 'zapbot.web.warnChangedPhone']);
+        assert.deepEqual(keys, ['zapbot.web.enabled', 'zapbot.web.host', 'zapbot.web.login', 'zapbot.web.pageSize', 'zapbot.web.password', 'zapbot.web.port', 'zapbot.web.refreshSeconds', 'zapbot.web.sessionHours', 'zapbot.web.sessionTimeout', 'zapbot.web.totp', 'zapbot.web.trustProxy', 'zapbot.web.url', 'zapbot.web.warnAccess', 'zapbot.web.warnChangedPhone']);
         // (the panel groups them, in app.js: all of them are in one of the groups)
         const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'web', 'public', 'app.js'), 'utf8');
         for (const key of keys) assert.ok(source.includes(`'${key}'`), `${key} is in the panel`);

@@ -215,6 +215,9 @@ async function apiProgress(path, label, shared = null) {
 
 /* login */
 function showLogin(message = '') {
+    clearInterval(sessionTimer);
+    sessionTimer = null;
+    clearInterval(refreshTimer);
     const userInput = el('input', { type: 'text', placeholder: T.user, autocomplete: 'username', autofocus: true });
     const input = el('input', { type: 'password', placeholder: T.password, autocomplete: 'current-password' });
     const codeInput = el('input', { type: 'text', inputmode: 'numeric', maxlength: '7', placeholder: T.code, autocomplete: 'one-time-code', class: state.needsCode ? '' : 'hidden' });
@@ -575,8 +578,9 @@ async function start() {
     state.refreshSeconds = session.refreshSeconds ?? 15;
     state.needsCode = Boolean(session.needsCode);
     state.version = session.version ?? '';
-    startRefresh();
     if (!session.authenticated) return showLogin();
+    startSessionChecks();
+    startRefresh();
 
     const rail = el('nav', { class: 'rail' },
         ...[['home', '🏠', T.home], ['history', '💬', T.navHistory], ['notes', '📝', T.notes], ['alerts', '🔔', T.alerts], ['aliases', '⚡', T.aliases], ['schedule', '⏰', T.schedule], ['stats', '📊', T.stats], ['settings', '⚙️', T.settings]].map(([name, icon, label]) =>
@@ -851,7 +855,7 @@ async function showStats(content, days = 30) {
  */
 const WEB_GROUPS = [
     ['🔌', 'webAccess', ['zapbot.web.enabled', 'zapbot.web.host', 'zapbot.web.port', 'zapbot.web.url', 'zapbot.web.trustProxy']],
-    ['🔐', 'webLogin', ['zapbot.web.login', 'zapbot.web.password', 'zapbot.web.totp', 'zapbot.web.sessionHours']],
+    ['🔐', 'webLogin', ['zapbot.web.login', 'zapbot.web.password', 'zapbot.web.totp', 'zapbot.web.sessionHours', 'zapbot.web.sessionTimeout']],
     ['🖥️', 'webScreen', ['zapbot.web.pageSize', 'zapbot.web.refreshSeconds']],
     ['🔔', 'webAlerts', ['zapbot.web.warnAccess', 'zapbot.web.warnChangedPhone']]
 ];
@@ -1211,6 +1215,27 @@ function noteCard(note, showTag, content) {
         note.media ? el('a', { class: 'dl', href: `${note.media.url}&download=1` }, `⬇ ${T.download}`) : null);
 }
 
+/* Session checks never count as activity. Only input from the user renews the idle deadline. */
+let sessionTimer = null;
+let lastActivity = 0;
+
+function startSessionChecks() {
+    if (sessionTimer) return;
+    lastActivity = 0;
+    sessionTimer = setInterval(() => api('/api/activity').catch(() => {}), 15_000);
+}
+
+function reportActivity(event) {
+    const now = Date.now();
+    if (!sessionTimer || !event.isTrusted || document.hidden || now - lastActivity < 5000) return;
+    lastActivity = now;
+    api('/api/activity', { method: 'POST', headers: { 'X-Zapbot-Activity': '1' } }).catch(() => {});
+}
+
+for (const event of ['pointerdown', 'keydown', 'wheel', 'touchmove']) {
+    document.addEventListener(event, reportActivity, { capture: true, passive: true });
+}
+
 /* new messages of the open chat (newest at the bottom, scrolled to the end): every zapbot.web.refreshSeconds */
 let refreshTimer = null;
 function startRefresh() {
@@ -1227,7 +1252,7 @@ function startRefresh() {
         if (!since) return;
         const params = new URLSearchParams({ chat: state.chat, order: 'asc', from: since, limit: 100 });
         if (state.to) return; // a closed period does not grow
-        const data = await (await api(`/api/messages?${params}`)).json().catch(() => null);
+        const data = await api(`/api/messages?${params}`).then(response => response.json()).catch(() => null);
         const seen = new Set([...box.querySelectorAll('.msg')].map(n => n.dataset.id));
         const fresh = (data?.messages ?? []).filter(m => !seen.has(m.id));
         if (!fresh.length) return;
@@ -1245,5 +1270,4 @@ function debounce(fn, ms) {
     return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
 }
 
-startRefresh();
 start().catch(() => showLogin());

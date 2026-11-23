@@ -11,6 +11,7 @@ the command shows whether the service is running and its URL.
 | `-disable`, `-off` | | Stops the service and revokes all sessions |
 | `-pass`, `-p` | `<password>` | Sets the password (at least eight characters). Quote a password with spaces |
 | `-login` | `<name>` | Sets the login name |
+| `-timeout`, `-t` | `[minutes\|off]` | Shows or sets the idle timeout. The default is 30 minutes |
 | `-2fa`, `-totp` | `<new\|qr\|code\|off>` | Creates a QR code, shows it again, confirms a code or disables 2FA |
 
 ```text
@@ -19,6 +20,7 @@ the command shows whether the service is running and its URL.
 /web -2fa new
 /web -2fa 123456
 /web -e
+/web -timeout 15
 /web -l
 /web -d 2
 /web -d

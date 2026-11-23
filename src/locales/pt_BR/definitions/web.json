@@ -9,6 +9,7 @@
     { "opts": ["disable", "off"], "desc": "Para a interface web e encerra as sessões." },
     { "opts": ["pass", "p"], "values": ["<senha>"], "desc": "Define a senha da interface web." },
     { "opts": ["login"], "values": ["<nome>"], "desc": "Define o nome de login da interface web." },
+    { "opts": ["timeout", "t"], "values": ["[minutos|off]"], "desc": "Consulta ou define o tempo de inatividade antes de sair." },
     { "opts": ["2fa", "totp"], "values": ["<new|qr|código|off>"], "desc": "Cria, exibe, confirma ou desativa o 2FA." }
   ]
 }

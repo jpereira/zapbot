@@ -1166,6 +1166,11 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 720,
         desc: 'Horas que o login da interface web vale (depois pede a senha de novo). Reiniciar o bot encerra todos os logins.'
     },
+    'zapbot.web.sessionTimeout': {
+        default: 30,
+        type: 'number', min: 0, max: 1440,
+        desc: 'Minutos sem atividade na interface web antes de encerrar a sessão (0 desliga).'
+    },
     'zapbot.web.totp': {
         default: '',
         type: 'string',

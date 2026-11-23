@@ -112,6 +112,10 @@ resposta, então ela não diz qual foi. A sessão é um token aleatório num coo
 na memória: reiniciar o bot desloga todo mundo. Ela dura `zapbot.web.sessionHours` (12 por padrão). Mais em
 [Segurança](#segurança).
 
+Após 30 minutos sem interação, a sessão expira. A busca automática de mensagens não renova o
+prazo. Altere com `/web -timeout 15` ou `/set zapbot.web.sessionTimeout 15`. Use `0` para
+desativar o limite de inatividade. O limite total de `zapbot.web.sessionHours` continua valendo.
+
 ## Início
 
 O que o bot guarda, os mesmos números do [`/cache`](commands/cache.md) e do `/status`: o **armazenamento** (uma barra
@@ -344,7 +348,7 @@ longa. Abaixo, a tabela com **todos os outros settings**.
 ### O painel da web
 
 Quatro cartões: **Acesso** (`enabled`, `host`, `port`, `url`, `trustProxy`), **Login e sessão** (`login`, `password`,
-`totp`, `sessionHours`), **Tela** (`pageSize`, `refreshSeconds`) e **Avisos** (`warnAccess`, `warnChangedPhone`). Ao lado
+`totp`, `sessionHours`, `sessionTimeout`), **Tela** (`pageSize`, `refreshSeconds`) e **Avisos** (`warnAccess`, `warnChangedPhone`). Ao lado
 do título, o endereço para abrir a interface.
 
 - um **interruptor** para os settings liga/desliga e uma caixa para números e texto: ela salva quando você sai da
@@ -429,6 +433,7 @@ muda aqui.
 | `zapbot.web.sessionHours` | `12` | Quanto tempo um login dura |
 | `zapbot.web.pageSize` | `100` | Mensagens carregadas por vez |
 | `zapbot.web.refreshSeconds` | `15` | De quanto em quanto tempo busca mensagens novas (`0`: nunca) |
+| `zapbot.web.sessionTimeout` | `30` | Minutos de inatividade antes de sair (`0` desliga) |
 | `zapbot.web.totp` | *(vazio)* | Segredo em base32 do código de 6 dígitos pedido além da senha |
 | `zapbot.web.trustProxy` | `off` | Lê cabeçalhos dos proxies listados em `ZAPBOT_WEB_TRUSTED_PROXIES` |
 | `zapbot.web.warnAccess` | `on` | Avisa (⚠️) quando alguém abre a página de login sem estar logado (limites acima) |

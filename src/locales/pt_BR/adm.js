@@ -350,6 +350,8 @@ module.exports = {
     'web.totp.privateOnly': '🔒 O QR code e o código do 2FA só saem no seu privado (as mensagens com você mesmo).',
     'web.command.revoked': 'Sessões encerradas: {count}.',
     'web.command.sessionMissing': 'Sessão indisponível. Use /web -l para atualizar a lista.',
+    'web.command.timeout': 'Tempo limite por inatividade: {minutes} min.',
+    'web.command.timeoutOff': 'Logout por inatividade desativado.',
     'web.command.environment': 'ZAPBOT_WEB_ENABLED controla a interface. Ajuste a variável no ambiente.',
     'web.command.credentials': 'Defina o login e a senha com /web -login e /web -p.',
     'web.command.stopped': 'Interface web desligada.',

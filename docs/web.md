@@ -111,6 +111,10 @@ gives the same answer, so it does not tell which was wrong. The session is a ran
 `SameSite=Strict` cookie, kept in memory: restarting the bot signs everybody out. It lasts `zapbot.web.sessionHours` (12
 by default). More in [Security](#security).
 
+The session expires after 30 minutes without interaction. Automatic message refresh does not
+renew it. Set the interval with `/web -timeout 15` or `/set zapbot.web.sessionTimeout 15`.
+Use `0` to disable idle expiry. The absolute `zapbot.web.sessionHours` limit still applies.
+
 ## Home
 
 What the bot keeps, the same numbers as [`/cache`](commands/cache.md) and `/status`: the **storage** (a colored bar
@@ -343,7 +347,7 @@ list. Below, the table with **all the other settings**.
 ### The web panel
 
 Four cards: **Access** (`enabled`, `host`, `port`, `url`, `trustProxy`), **Login and session** (`login`, `password`,
-`totp`, `sessionHours`), **Screen** (`pageSize`, `refreshSeconds`) and **Warnings** (`warnAccess`,
+`totp`, `sessionHours`, `sessionTimeout`), **Screen** (`pageSize`, `refreshSeconds`) and **Warnings** (`warnAccess`,
 `warnChangedPhone`). Next to the title, the address to open the interface.
 
 - a **switch** for the on/off settings and a box for numbers and text: it saves when you leave the box, with a
@@ -428,6 +432,7 @@ and `bot.login` cannot be changed here.
 | `zapbot.web.sessionHours` | `12` | How long a login lasts |
 | `zapbot.web.pageSize` | `100` | Messages loaded at a time |
 | `zapbot.web.refreshSeconds` | `15` | How often it looks for new messages (`0`: never) |
+| `zapbot.web.sessionTimeout` | `30` | Idle minutes before logout (`0` disables it) |
 | `zapbot.web.totp` | *(empty)* | Base32 secret of the 6-digit code asked besides the password |
 | `zapbot.web.trustProxy` | `off` | Reads forwarded headers from peers listed in `ZAPBOT_WEB_TRUSTED_PROXIES` |
 | `zapbot.web.warnAccess` | `on` | Warns you (⚠️) when someone opens the login page and is not logged in (flood limits above) |
