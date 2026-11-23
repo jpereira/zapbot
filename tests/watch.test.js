@@ -62,7 +62,7 @@ describe('detecção', () => {
         bot.createContact('status@broadcast', 'Fátima');
         const msg = bot.createMessage({
             text: 'Centro de Monitoramento da Defesa Civil de Niterói informa',
-            chat: 'status@broadcast', de: OTHERAlt.jid,
+            chat: 'status@broadcast', de: OTHERAlt.jid, timestamp: 1_790_000_000,
             extras: {
                 from: 'status@broadcast', author: '67658770853938:12@lid', isStatus: true,
                 _data: { notifyName: 'Fátima', chat: { name: 'Fátima' } }
@@ -76,6 +76,9 @@ describe('detecção', () => {
         assert.equal(saved.sender_jid, phoneAlt);
         assert.equal(saved.sender_name, 'Defesa Civil');
         assert.equal(saved.chat_name, 'Status de Defesa Civil');
+        const { messages } = await bot.src('web/data').listMessages({ chat: 'status@broadcast' });
+        assert.equal(messages[0].sender, 'Defesa Civil');
+        assert.equal(messages[0].at, 1_790_000_000_000);
         const hit = await bot.dbGet('SELECT * FROM watch_hits WHERE message_id = ?', [msg.id.id]);
         assert.equal(hit.sender_name, 'Defesa Civil');
         assert.equal(hit.sender_number, '5521999999988');

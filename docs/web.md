@@ -134,6 +134,10 @@ text in **all** the chats, and a click on a result opens that chat with the same
 
 ![The chat list, with the search boxes](assets/web/history-chats.png)
 
+In **Status**, each item shows its author, date and time above the media. The history uses
+the data available in the cache. For new statuses, the bot records the publication time
+when WhatsApp supplies it.
+
 ### The messages
 
 The whole history the bot has in the database: text, photos, videos, audio, voice notes, **stickers**, documents,

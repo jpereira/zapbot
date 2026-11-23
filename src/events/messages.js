@@ -87,6 +87,8 @@ client.on('message_create', (msg) => withContextDebug({
         const isGroup = chatId.endsWith('@g.us') ? 1 : 0;
         const isChannel = isChannelAlt(chatId);
         const isBroadcast = !isChannel && (chatId.endsWith('@broadcast') || Boolean(msg.isStatus));
+        const isStatus = chatId === 'status@broadcast' || Boolean(msg.isStatus);
+        const messageAt = isStatus ? (paraMs(msg.timestamp) || timestamp) : timestamp;
 
         // Group: name looked up by chatId (_data.chat may carry the wrong name)
         let chatName = isChannel
@@ -157,10 +159,9 @@ client.on('message_create', (msg) => withContextDebug({
             originalSenderJid ||
             t('core.desconhecido');
         if (isBroadcast) {
-            const status = chatId === 'status@broadcast' || msg.isStatus;
             chatName = senderJid === 'UNKNOWN'
-                ? t(status ? 'mensagens.status' : 'mensagens.transmissao')
-                : t(status ? 'mensagens.statusDe' : 'mensagens.transmissaoDe', { name: senderName });
+                ? t(isStatus ? 'mensagens.status' : 'mensagens.transmissao')
+                : t(isStatus ? 'mensagens.statusDe' : 'mensagens.transmissaoDe', { name: senderName });
         }
         Object.assign(contextDebug(), { chatName, senderName });
         printDebugLevel(1, 'message_create sender and chat', { chatName, senderName, senderJid });
@@ -278,7 +279,7 @@ client.on('message_create', (msg) => withContextDebug({
             [
                 msgIdPure, senderName, senderJid, senderNumber,
                 chatId, chatName, isGroup,
-                recordedBody || '', msgType, timestamp,
+                recordedBody || '', msgType, messageAt,
                 hasMedia, localMediaPath,
                 lat, lng,
                 'desativado', msg.fromMe ? 1 : 0, mentionsForRecord(msg.mentionedIds),

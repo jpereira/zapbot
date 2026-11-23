@@ -12,6 +12,7 @@ const TEXTS = {
         period: 'Period', from: 'From', to: 'To', apply: 'Apply', all: 'All', today: 'Today', days7: '7 days', days30: '30 days',
         order: 'Order', newestBottom: 'Newest at the bottom', oldestFirst: 'Oldest first', searchMsgs: 'Search the messages',
         download: 'Download', missing: 'media no longer in the cache', location: 'Location', you: 'You', status: 'Status',
+        unknownStatusAuthor: 'Unknown author',
         showing: (a, b) => `Showing ${a} → ${b}`, more: 'Load more', end: 'No more messages.', back: 'Back', messages: 'messages',
         newestFirst: 'Newest first', select: 'Select', exportSelected: (n) => `Export selected (${n})`, theme: 'Theme', language: 'Language', themeAuto: 'Theme: automatic', themeLight: 'Theme: light', themeDark: 'Theme: dark',
         add: 'Add', edit: 'Edit', remove: 'Delete', reset: 'Reset to default', save: 'Save', cancel: 'Cancel', confirmDelete: 'Delete it?', confirmReset: 'Back to the default value?', saved: 'Saved.', actions: 'Actions', protectedSetting: 'change it with /set in WhatsApp', secretHint: 'secret: the current value is never shown',
@@ -45,6 +46,7 @@ const TEXTS = {
         period: 'Período', from: 'De', to: 'Até', apply: 'Aplicar', all: 'Tudo', today: 'Hoje', days7: '7 dias', days30: '30 dias',
         order: 'Ordem', newestBottom: 'Mais nova embaixo', oldestFirst: 'Mais antiga primeiro', searchMsgs: 'Buscar nas mensagens',
         download: 'Baixar', missing: 'mídia que já saiu do cache', location: 'Localização', you: 'Você', status: 'Status',
+        unknownStatusAuthor: 'Autor desconhecido',
         showing: (a, b) => `Mostrando ${a} → ${b}`, more: 'Carregar mais', end: 'Não há mais mensagens.', back: 'Voltar', messages: 'mensagens',
         newestFirst: 'Mais nova primeiro', select: 'Selecionar', exportSelected: (n) => `Exportar selecionadas (${n})`, theme: 'Tema', language: 'Idioma', themeAuto: 'Tema: automático', themeLight: 'Tema: claro', themeDark: 'Tema: escuro',
         add: 'Adicionar', edit: 'Editar', remove: 'Apagar', reset: 'Voltar ao padrão', save: 'Salvar', cancel: 'Cancelar', confirmDelete: 'Apagar?', confirmReset: 'Voltar ao valor padrão?', saved: 'Salvo.', actions: 'Ações', protectedSetting: 'mude pelo /set no WhatsApp', secretHint: 'secreto: o valor atual nunca é mostrado',
@@ -304,11 +306,17 @@ function messageNodeUnsafe(message) {
             el('div', { class: 'notice' }, message.notice.kind === 'security' ? T.securityChanged(message.notice.who) : T.systemNotice(message.notice.text), ` · ${fmtTime(message.at)}`));
     }
     const isSticker = message.type === 'sticker';
+    const isStatus = state.info?.id === 'status@broadcast';
+    const author = isStatus ? (message.fromMe ? T.you : message.sender || T.unknownStatusAuthor) : null;
     const text = message.body ?? '';
     const watched = message.watch?.length ? message.watch : null;
     const mark = watched?.find(h => h.start != null);
     const bubble = el('div', { class: `bubble${watched ? ' watched' : ''}` },
-        state.info?.isGroup && !message.fromMe && message.sender ? el('div', { class: 'sender' }, message.sender) : null,
+        isStatus ? el('div', { class: 'status-meta' },
+            el('span', { class: 'sender' }, author),
+            el('time', { class: 'meta', datetime: new Date(message.at).toISOString() }, fmtFull(message.at)))
+            : state.info?.isGroup && !message.fromMe && message.sender
+                ? el('div', { class: 'sender' }, message.sender) : null,
         message.quoted ? el('div', { class: 'quote' }, message.quoted.missing
             ? el('i', {}, T.quotedGone)
             : [el('div', { class: 'qwho' }, message.quoted.fromMe ? T.you : (message.quoted.sender ?? '')), el('div', { class: 'qtext' }, `${message.quoted.deleted ? '🗑️ ' : ''}${message.quoted.body || `[${message.quoted.type}]`}`)]) : null,
@@ -319,7 +327,7 @@ function messageNodeUnsafe(message) {
             : linkify(text)) : null,
         watched ? el('div', { class: 'watch-label' }, `🔎 ${T.watchedBy}: ${watched.map(h => h.rule).join(', ')}`) : null,
         message.transcription ? el('div', { class: 'transcription' }, `📝 ${message.transcription}`) : null,
-        el('div', { class: 'meta' }, fmtTime(message.at)));
+        isStatus ? null : el('div', { class: 'meta' }, fmtTime(message.at)));
 
     const flagged = message.deleted || message.edits.length;
     const labels = [];
