@@ -223,10 +223,10 @@ and its files encrypted (AES-256-GCM) with a key made from a password that is **
   locks everything.
 - **Everything in one line:** `/notes -v -lock #foo` (or `-e`, `-l`, `-s`) asks the password and, once unlocked, runs
   the command. If the tag is already unlocked it just shows. It needs one protected tag.
-- **Only in your private chat:** unlocking (the password), reading (`-v`, `-l`, `-s`, `-e`, a lone `#tag`), adding
-  (`/notes #foo ...`) and editing (`-u`) only work there. In any other chat the same tag, even unlocked, behaves as
-  locked: lists, search and PDF show only the 🔒, adding and editing are refused (`🔒 The notes of #foo only open in
-  your own private chat`) and the command you typed there stays out of the history.
+- **Protected tag access:** unlock the tag in your own private chat. While it is unlocked, the owner
+  can reply to text, a photo or other media with `/notes #foo` in any chat to save an encrypted copy.
+  The confirmation hides the contents. With `notes.lockPrivateOnly` on, reading, editing, removing and
+  adding typed notes work in your own private chat.
 - **Never sent to others:** `-v`, `-e`, `-l` or `-s` of a protected tag with `-to` (a contact, a group or an email) is
   refused (`🔒 The notes of #foo are protected: they are not sent to other chats or emails (no -to)`). A list of all
   the notes sent with `-to` shows the 🔒 where the protected ones are, never their text. An alert of a protected note
@@ -281,7 +281,7 @@ What a protected tag protects, and what it does not, in the situations that matt
 |---|---|
 | The database or a backup leaks (`cache/zapbot.db`, `cache/backups`, `cache/notes`) | The text and the files of the protected notes are encrypted (AES-256-GCM); only the password opens them. Without it they are noise |
 | You lend your phone, or someone sees your WhatsApp Web | Lock the tag before (`/notes -lock #foo -now`): only `🔒 (protected note)` shows. It also locks by itself after `notes.lockMinutes` without use |
-| You share your screen, or type in a group by mistake | Protected notes only unlock and open in **your own private chat**; in a group or in someone's chat they stay locked even if the tag is unlocked, adding and editing are refused |
+| You share your screen, or type in a group by mistake | Protected notes only unlock and open in **your own private chat**; in a group or in someone's chat they stay locked even if the tag is unlocked, only the owner can save a replied message while the tag is unlocked |
 | `-to` by mistake (sending a view, a list or a PDF to someone) | Refused: protected notes are never sent to other chats or emails. A list of all the notes sent with `-to` shows `🔒` where they are |
 | An alert of a protected note | Says only that there is a note in the tag, never its text |
 | Someone reads the logs, `/show` or the history | The password never appears (`-lock ***`), and the commands you typed for the tag leave the `messages` table |
@@ -301,7 +301,7 @@ For a tag you use all the time (the `#stash` below), three [aliases](alias.md) m
 them. The `-desc` of each one explains it in `/alias`:
 
 ```text
-/alias -q -p /stash.add  -desc "Saves a note in the protected tag #stash, encrypted. The tag has to be unlocked first (/stash.view); locked, or outside your own private chat (a group, someone's chat), it refuses and the command stays out of the history"  /notes #stash $@
+/alias -q -p /stash.add  -desc "Saves a note in the protected tag #stash, encrypted. The tag has to be unlocked first (/stash.view); while it is unlocked, reply to a message in any chat to save it"  /notes #stash $@
 /alias -q -p /stash.lock -desc "Locks the protected tag #stash right now: afterwards only a lock shows. Use it before lending the phone or sharing the screen (it also locks by itself after notes.lockMinutes without use and when the bot restarts)"  /notes -lock #stash -now
 /alias -q -p /stash.view -desc "Unlocks the protected tag #stash and shows its notes: asks the password in your private chat (or /stash.view password, less safe: it travels in a normal command, the bot deletes it and hides it from logs and history). Never opens in a group or with -to; locks again after notes.lockMinutes without use"  /notes -v -lock $1 #stash
 ```

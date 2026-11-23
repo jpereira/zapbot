@@ -221,14 +221,21 @@ async function removeNotes(msg, textIdsTyped, soAlert) {
         return;
     }
 
+    const targets = notes.filter(n => ids.includes(n.id) && (!soAlert || n.alert_at));
+    const locked = targets.find(n => n.locked);
+    if (locked) {
+        await msg.reply(lock.lockedNotice(locked.tag));
+        return;
+    }
+
     if (soAlert) {
-        const withAlert = notes.filter(n => ids.includes(n.id) && n.alert_at);
+        const withAlert = targets;
         for (const n of withAlert) await dbRun('UPDATE notes SET alert_at = NULL WHERE id = ?', [n.id]);
         await msg.reply(countAlt('notes.rm.alertsRemoved', withAlert.length));
         return;
     }
 
-    for (const n of notes.filter(x => ids.includes(x.id))) {
+    for (const n of targets) {
         await dbRun('DELETE FROM notes WHERE id = ?', [n.id]);
         if (n.media_file) await fs.remove(n.media_file).catch(err => printError('/notes: image not deleted:', err.message));
         if (n.plain) await fs.remove(n.media_path).catch(() => {});
@@ -346,10 +353,11 @@ async function addAlt(msg, textTyped, quotedMsg) {
     // A protected tag only takes notes while unlocked (/notes -lock #tag); what is saved goes encrypted
     await lock.refresh();
     const protectedTag = lock.isProtected(tag.toLowerCase());
-    if (protectedTag && !(lock.isUnlocked(tag.toLowerCase()) && lock.allowedHere())) {
+    const ownerCapture = msg.fromMe && quotedMsg && origin !== msg && !typedAlong && !m && !withDestination;
+    if (protectedTag && !(lock.isUnlocked(tag.toLowerCase()) && (lock.allowedHere() || ownerCapture))) {
         await lock.purgeCopies(msg, `/notes #${tag} ***`);
         await msg.reply(lock.lockedNotice(tag.toLowerCase()));
-        return;
+        return 'locked';
     }
 
     if (withDestination && !m) {
@@ -398,6 +406,7 @@ async function addAlt(msg, textTyped, quotedMsg) {
         .filter(Boolean).join(' · ');
     await msg.reply(summary + (alert ? `\n⏰ ${fmtWhen(alert)} → ${noticeWhere(destinations)}` : ''),
         undefined, WITHOUT_PREVIEW);
+    return 'added';
 }
 
 async function update(msg, rest, quotedMsg) {
@@ -1082,7 +1091,7 @@ async function cmdNote(ctx) {
                 return;
             }
         }
-        if (!['locked', 'asked'].includes(await cmdNoteRun(ctx))) await hintLocked(ctx.msg, ctx.args);
+        if (!['locked', 'asked', 'added'].includes(await cmdNoteRun(ctx))) await hintLocked(ctx.msg, ctx.args);
     });
 }
 
@@ -1109,9 +1118,9 @@ async function viewWithLock({ msg, args, quotedMsg, chatId }, textAlt, password)
         await lock.tryInline({ msg, chatId, tag, password, then: show });
         return 'asked';
     }
-    if (lock.isUnlocked(tag)) return show();
-    await msg.reply(await lock.start({ chatId, tag, then: show }));
-    return 'asked'; // the question is the answer: no "locked" hint after it
+    if (lock.isUnlocked(tag)) await show();
+    else await msg.reply(await lock.start({ chatId, tag, then: show }));
+    return 'asked'; // The nested command or password prompt already handled the reply.
 }
 
 async function cmdNoteRun({ msg, args, quotedMsg, chatId }) {

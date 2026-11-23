@@ -357,6 +357,40 @@ describe('/notes -lock', () => {
         assert.equal(msg.deletedFor, 'todos');
     });
 
+    test('o dono salva texto e mídia por reply fora do privado com a tag liberada', async () => {
+        await protectFoo();
+        const secret = 'conteúdo da mensagem original';
+        const data = Buffer.from('arquivo do convite');
+        const quoted = bot.createMessage({
+            text: secret, chat: GROUP, de: bot.OTHERAlt.jid,
+            media: { mimetype: 'application/pdf', data: data.toString('base64'), filename: 'convite.pdf' }
+        });
+        await bot.setSetting('bot.admins', [bot.OTHERAlt.user]);
+        assert.match((await bot.replyAlt('/notes #foo', { chat: GROUP, de: bot.OTHERAlt.jid, quoted }))[0],
+            /🔒|permissão/i);
+        assert.equal((await dbAll('SELECT id FROM notes')).length, 0);
+
+        const replies = await bot.replyAlt('/notes #foo', { chat: GROUP, quoted });
+        assert.equal(replies.length, 1);
+        assert.match(replies[0], /📝/);
+        assert.doesNotMatch(replies[0], /conteúdo da mensagem original/);
+        const saved = await dbGet('SELECT * FROM notes WHERE tag = ?', ['foo']);
+        assert.ok(lock.isSealedText(saved.text));
+        assert.match(lock.unsealText('foo', saved.text), /conteúdo da mensagem original/);
+        assert.match(saved.media_path, /\.enc$/);
+        assert.ok(!fs.readFileSync(saved.media_path).includes(data));
+        assert.equal(quoted.deletedFor, undefined);
+
+        await bot.replyAlt('/notes -n #foo', PRIVATE);
+        await bot.replyAlt('/notes #foo', { chat: GROUP, quoted });
+        await bot.replyAlt(`/notes -rm ${saved.id}`, PRIVATE);
+        assert.equal((await dbAll('SELECT id FROM notes')).length, 1);
+        await bot.replyAlt('/notes -lock #foo', PRIVATE);
+        await bot.replyAlt(PASSWORD, PRIVATE);
+        await bot.replyAlt(`/notes -rm ${saved.id}`, PRIVATE);
+        assert.equal((await dbAll('SELECT id FROM notes')).length, 0);
+    });
+
     test('só abre e só se acessa no seu privado: liberada, num grupo ou com -to continua travada para quem lê', async () => {
         await bot.replyAlt('/notes #foo segredo 123', PRIVATE);
         await protectFoo();
@@ -367,6 +401,9 @@ describe('/notes -lock', () => {
         assert.match(view, /🔒 \(nota protegida\)/);
         assert.doesNotMatch(view, /segredo/);
         assert.equal(hint, '🔒 As notas da #foo só abrem no seu próprio privado (as mensagens com você mesmo).');
+        const withLock = await bot.replyAlt('/notes -v -lock #foo', { chat: GROUP });
+        assert.equal(withLock.filter(reply => reply === hint).length, 1);
+        assert.doesNotMatch(withLock.join('\n'), /segredo 123/);
         for (const cmd of ['/notes #foo', '/notes -s segredo', '/notes -e #foo']) {
             const replies = (await bot.replyAlt(cmd, { chat: GROUP })).join('\n');
             assert.doesNotMatch(replies, /segredo 123/, cmd);

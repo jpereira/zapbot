@@ -219,10 +219,10 @@ os arquivos cifrados (AES-256-GCM) com uma chave feita de uma senha que **nunca 
   tudo.
 - **Tudo em uma linha:** `/notes -v -lock #foo` (ou `-e`, `-l`, `-s`) pede a senha e, liberada a tag, já executa o
   comando. Se a tag já estiver liberada, só mostra. Precisa de uma tag protegida.
-- **Só no seu privado:** liberar (a senha), ler (`-v`, `-l`, `-s`, `-e`, uma `#tag` sozinha), anotar (`/notes #foo ...`) e
-  editar (`-u`) só funcionam lá. Em qualquer outro chat a mesma tag, mesmo liberada, se comporta como travada: listas,
-  busca e PDF mostram só o 🔒, anotar e editar são recusados (`🔒 As notas da #foo só abrem no seu próprio privado`) e o
-  comando que você digitou ali fica fora do histórico.
+- **Acesso à tag protegida:** desbloqueie no seu próprio privado. Com a tag desbloqueada, o dono pode
+  responder a texto, foto ou outra mídia com `/notes #foo` em qualquer conversa para salvar uma cópia
+  cifrada. A confirmação não mostra o conteúdo. Com `notes.lockPrivateOnly` ligado, leitura, edição,
+  remoção e notas digitadas funcionam no seu próprio privado.
 - **Nunca enviadas a outros:** `-v`, `-e`, `-l` ou `-s` de uma tag protegida com `-to` (um contato, um grupo ou um e-mail)
   é recusado (`🔒 As notas da #foo são protegidas: não vão para outros chats nem e-mails (sem -to)`). Uma lista de todas
   as notas enviada com `-to` mostra o 🔒 onde estão as protegidas, nunca o texto. O alerta de uma nota protegida diz só
@@ -277,7 +277,7 @@ O que uma tag protegida protege, e o que não protege, nas situações que impor
 |---|---|
 | O banco ou um backup vaza (`cache/zapbot.db`, `cache/backups`, `cache/notes`) | O texto e os arquivos das notas protegidas estão cifrados (AES-256-GCM); só a senha abre. Sem ela, é ruído |
 | Você empresta o celular, ou alguém vê o seu WhatsApp Web | Trave a tag antes (`/notes -lock #foo -now`): só aparece `🔒 (nota protegida)`. Ela também trava sozinha após `notes.lockMinutes` sem uso |
-| Você compartilha a tela, ou digita num grupo por engano | As notas protegidas só liberam e abrem no **seu próprio privado**; num grupo ou no chat de outra pessoa continuam travadas mesmo com a tag liberada, e anotar e editar são recusados |
+| Você compartilha a tela, ou digita num grupo por engano | As notas protegidas só liberam e abrem no **seu próprio privado**; num grupo ou no chat de outra pessoa continuam travadas mesmo com a tag liberada, e só o dono pode guardar uma mensagem por reply enquanto a tag está liberada |
 | `-to` por engano (mandar uma visualização, uma lista ou um PDF para alguém) | Recusado: as notas protegidas nunca vão para outros chats nem e-mails. Uma lista de todas as notas enviada com `-to` mostra `🔒` onde elas estão |
 | Um alerta de uma nota protegida | Diz só que há uma nota na tag, nunca o texto |
 | Alguém lê os logs, o `/show` ou o histórico | A senha nunca aparece (`-lock ***`), e os comandos que você digitou para a tag saem da tabela `messages` |
@@ -297,7 +297,7 @@ com `/alias -yes -examples secret-notes`; sem o `-yes` ele só os mostra), ou cr
 O `-desc` de cada um o explica no `/alias`:
 
 ```text
-/alias -q -p /stash.add  -desc "Guarda uma nota na tag protegida #stash, cifrada. A tag precisa estar liberada antes (/stash.view); travada, ou fora do seu privado (um grupo, o chat de outra pessoa), ela recusa e o comando fica fora do histórico"  /notes #stash $@
+/alias -q -p /stash.add  -desc "Guarda uma nota na tag protegida #stash, cifrada. A tag precisa estar liberada antes (/stash.view); com ela liberada, responda a uma mensagem em qualquer chat para guardá-la"  /notes #stash $@
 /alias -q -p /stash.lock -desc "Trava a tag protegida #stash agora: depois só aparece um cadeado. Use antes de emprestar o celular ou compartilhar a tela (ela também trava sozinha após notes.lockMinutes sem uso e quando o bot reinicia)"  /notes -lock #stash -now
 /alias -q -p /stash.view -desc "Libera a tag protegida #stash e mostra as notas: pede a senha no seu privado (ou /stash.view senha, menos seguro: viaja num comando comum, o bot a apaga e a esconde dos logs e do histórico). Nunca abre em grupo nem com -to; trava de novo após notes.lockMinutes sem uso"  /notes -v -lock $1 #stash
 ```
