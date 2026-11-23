@@ -114,15 +114,20 @@ describe('password and session', () => {
         const second = await login();
         const opts = { chat: bot.OWNER.jid };
         const [list] = await bot.replyAlt('/web -l', opts);
-        const ids = list.split('\n').map(line => line.split(' · ')[0]);
-        assert.equal(ids.length, 2);
-        assert.match(ids[0], /^[0-9a-f-]{36}$/);
-        assert.ok(!first.cookie.includes(ids[0]));
-        await bot.replyAlt('/web -d ' + ids[0], opts);
+        const lines = list.split('\n');
+        assert.equal(lines.length, 2);
+        assert.match(lines[0], /^1\. \d{4}-/);
+        assert.match(lines[1], /^2\. \d{4}-/);
+        await bot.replyAlt('/web -d 1', opts);
         assert.equal((await get('/api/chats', first.cookie)).status, 401);
         assert.equal((await get('/api/chats', second.cookie)).status, 200);
-        await bot.replyAlt('/web -destroy', opts);
+        await bot.replyAlt('/web -d 1', opts);
+        assert.equal((await get('/api/chats', second.cookie)).status, 200);
+        await bot.replyAlt('/web -d 2', opts);
         assert.equal((await get('/api/chats', second.cookie)).status, 401);
+        const third = await login();
+        await bot.replyAlt('/web -destroy', opts);
+        assert.equal((await get('/api/chats', third.cookie)).status, 401);
     });
 
     test('/web -p masks its password and revokes existing sessions', async () => {

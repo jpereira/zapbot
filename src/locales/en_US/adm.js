@@ -349,6 +349,7 @@ module.exports = {
     'web.totp.ownerOnly': '❌ The 2FA of the web interface is only set up by you, in your own chat.',
     'web.totp.privateOnly': '🔒 The QR code and the code of the 2FA only go out in your private chat (the messages with yourself).',
     'web.command.revoked': 'Sessions revoked: {count}.',
+    'web.command.sessionMissing': 'Session unavailable. Use /web -l to refresh the list.',
     'web.command.environment': 'ZAPBOT_WEB_ENABLED controls the interface. Change the environment variable.',
     'web.command.credentials': 'Set the login and password with /web -login and /web -p.',
     'web.command.stopped': 'Web interface is off.',

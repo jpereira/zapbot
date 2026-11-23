@@ -11,7 +11,7 @@ module.exports = {
     strict: true,
     cmd_opts: [
         { opts: ['list', 'l'], values: [], desc: 'List active sessions and their expiration.', cron: false },
-        { opts: ['destroy', 'd'], values: ['[id]'], desc: 'Revoke one session or all without an ID.', cron: false },
+        { opts: ['destroy', 'd'], values: ['[number]'], desc: 'Revoke a session by its number in the last list, or all without a number.', cron: false },
         { opts: ['enable', 'e'], values: [], desc: 'Enable and start the web interface.', cron: false },
         { opts: ['disable', 'off'], values: [], desc: 'Stop the web interface and revoke sessions.', cron: false },
         { opts: ['pass', 'p'], values: ['<password...>'], desc: 'Set the web password.', cron: false },

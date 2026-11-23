@@ -4,7 +4,7 @@
   "help": "No seu privado, gerencia o acesso web, encerra sessões e configura o login em duas etapas.",
   "cmd_opts": [
     { "opts": ["list", "l"], "desc": "Lista as sessões ativas e seus vencimentos." },
-    { "opts": ["destroy", "d"], "values": ["[id]"], "desc": "Encerra uma sessão pelo ID ou todas sem ID." },
+    { "opts": ["destroy", "d"], "values": ["[número]"], "desc": "Encerra uma sessão pelo número da última lista ou todas sem número." },
     { "opts": ["enable", "e"], "desc": "Ativa e inicia a interface web." },
     { "opts": ["disable", "off"], "desc": "Para a interface web e encerra as sessões." },
     { "opts": ["pass", "p"], "values": ["<senha>"], "desc": "Define a senha da interface web." },

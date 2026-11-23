@@ -5,8 +5,8 @@ o comando mostra se o serviço está rodando e o endereço de acesso.
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-list`, `-l` | | Lista as sessões ativas com IDs e vencimentos em UTC |
-| `-destroy`, `-d` | `[id]` | Encerra uma sessão pelo ID ou todas sem ID |
+| `-list`, `-l` | | Lista as sessões ativas numeradas de 1 a N, com vencimentos em UTC |
+| `-destroy`, `-d` | `[número]` | Encerra uma sessão pelo número na última lista ou todas sem número |
 | `-enable`, `-e` | | Ativa e inicia o serviço quando o login e a senha estão definidos |
 | `-disable`, `-off` | | Para o serviço e encerra todas as sessões |
 | `-pass`, `-p` | `<senha>` | Define a senha (mínimo de oito caracteres). Use aspas para senhas com espaços |
@@ -20,12 +20,12 @@ o comando mostra se o serviço está rodando e o endereço de acesso.
 /web -2fa 123456
 /web -e
 /web -l
+/web -d 2
 /web -d
 ```
 
 Escaneie o QR code com um app autenticador e substitua `123456` pelo código que ele mostra.
-Alterações de login, senha ou 2FA encerram as sessões existentes. Os IDs listados pelo
-comando são separados das credenciais do navegador.
+Alterações de login, senha ou 2FA encerram as sessões existentes. Use o número da última lista. Se a sessão já tiver expirado, atualize com `/web -l`.
 
 Se o Docker define `ZAPBOT_WEB_ENABLED`, a variável decide se o serviço pode ser iniciado
 ou parado. Veja [Interface web](../web.md) para configurar a rede e o acesso.

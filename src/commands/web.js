@@ -8,6 +8,8 @@ const { envOuSetting, getSetting, setSetting } = require('../settings');
 const { activeSessions, destroySessions, isWebRunning, startWeb, stopWeb, webUrl } = require('../web/server');
 const { cancelTotp, totpConfirm, totpSetup } = require('../webTotp');
 
+let listedSessions = [];
+
 async function cmdWeb({ msg, chatId, opts, args }) {
     if (!msg.fromMe || !(await isOwnPrivate(chatId))) {
         return client.sendMessage(chatId, t('web.totp.privateOnly'));
@@ -17,8 +19,13 @@ async function cmdWeb({ msg, chatId, opts, args }) {
     const { destroy, enable, disable, pass, login, '2fa': totp } = opts.opt;
     try {
         if (opts.given.has('destroy')) {
-            const count = destroySessions(destroy);
-            return say(t('web.command.revoked', { count }));
+            if (destroy === null) {
+                listedSessions = [];
+                return say(t('web.command.revoked', { count: destroySessions() }));
+            }
+            const id = /^[1-9]\d*$/.test(destroy) ? listedSessions[Number(destroy) - 1] : null;
+            if (!id || !destroySessions(id)) return say(t('web.command.sessionMissing'));
+            return say(t('web.command.revoked', { count: 1 }));
         }
         if (enable || disable) {
             const env = process.env.ZAPBOT_WEB_ENABLED?.trim();
@@ -64,7 +71,9 @@ async function cmdWeb({ msg, chatId, opts, args }) {
             return say(t('web.command.saved'));
         }
         if (opts.given.has('list')) {
-            const lines = activeSessions().map(({ id, until }) => `${id} · ${new Date(until).toISOString()}`);
+            const sessions = activeSessions();
+            listedSessions = sessions.map(({ id }) => id);
+            const lines = sessions.map(({ until }, i) => `${i + 1}. ${new Date(until).toISOString()}`);
             return say(lines.length ? lines.join('\n') : t('web.command.empty'));
         }
         return say(isWebRunning() ? t('web.command.started', { url: webUrl() }) : t('web.command.stopped'));
