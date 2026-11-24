@@ -563,10 +563,20 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 10, max: 2000,
         desc: 'Tamanho máximo (MB) baixado pelo yt-dlp no /get e no /sticker, antes da conversão.'
     },
+    'get.maxInlineSizeMB': {
+        default: 16,
+        type: 'number', min: 1, max: 100,
+        desc: 'Tamanho máximo (MB) para enviar mídias do /get inline; acima disso, envia como documento.'
+    },
     'get.maxSizeMB': {
         default: 20,
         type: 'number', min: 1, max: 100,
         desc: 'Tamanho máximo (MB) do arquivo convertido pelo ffmpeg no /get e no /sticker.'
+    },
+    'get.showAsMedia': {
+        default: true,
+        type: 'boolean',
+        desc: 'Envia no /get as mídias como mídia inline para abrir no WhatsApp, em vez de documento para baixar.'
     },
     'giphy.api.key': {
         default: '',

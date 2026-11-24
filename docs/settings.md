@@ -78,7 +78,9 @@ shows are in Portuguese; the ones here are in English).
 | `get.cache.maxDays` | 1–365 | `2` | Days cached downloads (`get.cache.tmp`) stay in `cache/tmp` before the periodic cleanup deletes them |
 | `get.cache.tmp` | on/off | `on` | Keeps in `cache/tmp` what yt-dlp downloads in `/get` and `/sticker`: the same link (and the same clip) is not downloaded again. See [Download cache](commands/get.md#download-cache). `off` deletes the original on every run |
 | `get.maxDownloadMB` | 10–2000 | `200` | Max size downloaded by yt-dlp in `/get` and `/sticker`, before conversion |
+| `get.maxInlineSizeMB` | 1–100 | `16` | Max size for sending `/get` media inline; larger files are sent as documents |
 | `get.maxSizeMB` | 1–100 | `20` | Max size of the file converted by ffmpeg in `/get` and `/sticker` |
+| `get.showAsMedia` | on/off | `on` | Sends `/get` media inline so it opens in WhatsApp, instead of as documents to download |
 | `giphy.api.key` | text (can be empty) | *(empty)* | GIPHY key, used when `GIPHY_API_KEY` is not in `config/.env`. Shown masked (`••••1234`); `/set -reset giphy.api.key` clears it |
 | `giphy.tag` | text | `fail` | Default tag for `/giphy` |
 | `gpt.admin.key` | text (can be empty) | *(empty)* | OpenAI admin key (`sk-admin-...`) for `/gpt -usage`, used when `OPENAI_ADMIN_KEY` is not in `config/.env`. Shown masked; `/set -reset gpt.admin.key` clears it |

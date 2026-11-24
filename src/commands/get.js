@@ -26,7 +26,26 @@ const { extractFirstUrl, isUrlPublic, isValidHttpUrl } = require('../util/url');
 let getInProgress = 0;
 
 const MSG_STICKER = { sendMediaAsSticker: true };
-const msgDocument = () => ({ caption: t('get.documentCaption'), sendMediaAsDocument: true });
+const msgDocument = (caption = t('get.documentCaption')) => ({ caption, sendMediaAsDocument: true });
+const documentForMedia = (size) => !getSetting('get.showAsMedia')
+    || size > getSetting('get.maxInlineSizeMB') * 1024 * 1024;
+const isXUrl = (url) => {
+    try {
+        return /(^|\.)x\.com$|(^|\.)twitter\.com$/i.test(new URL(url).hostname);
+    } catch {
+        return false;
+    }
+};
+
+function errorGet(e, verbose) {
+    if (!verbose && !e?.cmd && !e?.cause) return formatErrorCommand(e);
+    if (verbose) {
+        const textAlt = formatErrorCommand(e);
+        return e.details ? `${textAlt}\n🧾 *Detalhes*:\n\`\`\`\n${e.details}\n\`\`\`` : textAlt;
+    }
+    const message = e.noMedia ? e.message : t('get.mediaFailed');
+    return `❌ ${message}`;
+}
 
 async function cmdGet(ctx) {
     await downloadMedia(ctx, { cmd: '/get' });
@@ -61,7 +80,7 @@ async function downloadMedia({ msg, opts, quotedMsg, senderName }, { cmd }) {
         }
         if (!(await optionsValid(msg, opts, cmd))) return;
         for (const [i, url] of urls.entries()) {
-            await msg.reply(t('get.linkOf', { i: i + 1, n: urls.length }));
+            await msg.reply(t('get.linkOf', { i: i + 1, n: urls.length, url }), null, { linkPreview: false });
             await downloadOne({ msg, opts: { ...opts, argv: [url] }, quotedMsg: null, senderName });
         }
         return;
@@ -299,10 +318,13 @@ async function sendWithoutConverter(msg, media, opts) {
         return true;
     }
 
-    // Without a requested conversion: the original file, as a document (without a name, WhatsApp shows "Sem título")
+    // Without a requested conversion: sends the original media in the configured inline/document mode
     if (type === 'imagem' || (!audio && !sticker && !cut)) {
         const fileAlt = media.filename ? media : new MessageMedia(media.mimetype, media.data, `zapbot.${extension(media)}`);
-        await msg.reply(fileAlt, null, { ...msgDocument(), linkPreview: false });
+        const size = Buffer.from(fileAlt.data, 'base64').length;
+        await msg.reply(fileAlt, null, documentForMedia(size)
+            ? { ...msgDocument(), linkPreview: false }
+            : { linkPreview: false, ...stickerMeta() });
         return true;
     }
 
@@ -441,6 +463,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, preview }) 
             } catch (inner) {
                 const errorAlt = new Error(t('get.decodeFailed', { bin: BIN_FFMPEG }), { cause: inner });
                 errorAlt.cmd = cmdFfmpeg;
+                errorAlt.details = tailLog(logCmdFile);
                 throw errorAlt;
             }
 
@@ -457,6 +480,16 @@ async function converterAndSend({ msg, opts, senderName, url, media, preview }) 
 
         try {
             const outputAlt = MessageMedia.fromFilePath(outputFile);
+            const outputSize = fs.statSync(outputFile).size;
+            const sendAsDocument = documentForMedia(outputSize);
+            let caption = '';
+            if (url && isXUrl(url) && !isAudio && !isSticker) {
+                try {
+                    caption = (await postPhotos(url, argsDeCookies())).text;
+                } catch (err) {
+                    printInfo(`> X post text unavailable: ${err.message}`);
+                }
+            }
 
             if (isVerbose) {
                 let textMsg = '🛠️ *Verbose Mode*\n\n';
@@ -472,7 +505,14 @@ async function converterAndSend({ msg, opts, senderName, url, media, preview }) 
                 await msg.reply(outputAlt, null, { linkPreview: false, ...MSG_STICKER, ...stickerMeta() });
             } else {
                 printInfo(`> Sending the media ${outputFile} to '${senderName}'`);
-                await msg.reply(outputAlt, null, { linkPreview: false, ...msgDocument(), ...stickerMeta() });
+                const captionText = caption.slice(0, CAPTION_MAX);
+                await msg.reply(outputAlt, null, sendAsDocument
+                    ? { linkPreview: false, ...msgDocument(), ...stickerMeta() }
+                    : { linkPreview: false, caption: captionText, ...stickerMeta() });
+                if (sendAsDocument && caption) await msg.reply(caption.slice(0, CAPTION_MAX), null, { linkPreview: false });
+                if (caption.length > CAPTION_MAX) {
+                    await msg.reply(caption.slice(CAPTION_MAX), null, { linkPreview: false });
+                }
             }
         } catch (inner) {
             throw new Error(t('get.sendFailed', { file: outputFile }), {
@@ -484,11 +524,12 @@ async function converterAndSend({ msg, opts, senderName, url, media, preview }) 
         await completeNotice(msg, notice, t(isSticker ? 'get.stickerDone' : 'get.mediaDone'), { linkPreview: false });
     } catch (e) {
         // Photo-only post (carousel): without -a, -st or -t, the photos go to the chat, the last one with the post text
-        if (e.noMedia && url && !opts.opt.audio && !opts.opt.sticker && (await postSendPhotos(msg, notice, url, opts))) return;
+        if (url && !opts.opt.audio && !opts.opt.sticker && (e.noMedia || isXUrl(url))
+            && (await postSendPhotos(msg, notice, url, opts))) return;
         if (e.noMedia && url && opts.opt.sticker && (await postPhotoSticker(msg, notice, url, opts))) return;
         if (e.onDownload && preview && (await previewSticker(msg, preview, notice, e, opts.opt.pos))) return;
         printError(e.message);
-        await completeNotice(msg, notice, formatErrorCommand(e), { linkPreview: false });
+        await completeNotice(msg, notice, errorGet(e, opts.opt.verbose), { linkPreview: false });
     } finally {
         if (logCmd !== null) {
             try { fs.closeSync(logCmd); } catch { /* already closed */ }
@@ -580,7 +621,10 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
         try {
             await runCommand(BIN_FFMPEG, ffmpegArgs, logCmd);
         } catch (inner) {
-            throw new Error(t('get.decodeFailed', { bin: BIN_FFMPEG }), { cause: inner });
+            const errorAlt = new Error(t('get.decodeFailed', { bin: BIN_FFMPEG }), { cause: inner });
+            errorAlt.cmd = cmdFfmpeg;
+            errorAlt.details = tailLog(logCmdFile);
+            throw errorAlt;
         }
 
         const duration = await fileDuration(wav);
@@ -628,7 +672,7 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
         }
     } catch (e) {
         printError(e.message);
-        await completeNotice(msg, notice, formatErrorCommand(e), { linkPreview: false });
+        await completeNotice(msg, notice, errorGet(e, opts.opt.verbose), { linkPreview: false });
     } finally {
         if (logCmd !== null) {
             try { fs.closeSync(logCmd); } catch { /* already closed */ }
@@ -797,7 +841,11 @@ async function postSendPhotos(msg, notice, url, opts) {
             captionAlt += `\n\n${post.text.length > space ? `${post.text.slice(0, space - 1)}…` : post.text}`;
             if (post.text.length > space) rest = post.text.slice(space - 1);
         }
-        await msg.reply(photo, null, { linkPreview: false, caption: captionAlt });
+        await msg.reply(photo, null, {
+            linkPreview: false,
+            caption: captionAlt,
+            ...(documentForMedia(Buffer.from(photo.data, 'base64').length) ? { sendMediaAsDocument: true } : {})
+        });
         if (!last) await wait(PHOTOS_PAUSE_MS);
     }
     if (rest) await msg.reply(rest, null, { linkPreview: false });
@@ -850,7 +898,7 @@ async function postPhotoSticker(msg, notice, url, opts) {
 }
 
 // yt-dlp found the post but without video (photo-only carousel, image post): there is nothing to download
-const WITHOUT_MEDIA = /No video formats found|There is no video in this post|No video could be found in this tweet/i;
+const WITHOUT_MEDIA = /No video formats found|There is no video in this post|No video could be found in this tweet|Media #\d+ is not a video/i;
 function withoutMediaInLink(fileLog) {
     try {
         return Boolean(fileLog) && WITHOUT_MEDIA.test(fs.readFileSync(fileLog, 'utf8'));
@@ -864,7 +912,16 @@ function downloadError(logFile, inner, cmd) {
     const errorAlt = errorOnDownload(t(withoutMediaInLink(logFile) ? 'get.noMediaInLink' : 'get.downloadFailed', { bin: BIN_YT }), { cause: inner });
     errorAlt.cmd = cmd;
     errorAlt.noMedia = withoutMediaInLink(logFile);
+    errorAlt.details = tailLog(logFile);
     return errorAlt;
+}
+
+function tailLog(file) {
+    try {
+        return fs.readFileSync(file, 'utf8').trim().slice(-2000);
+    } catch {
+        return '';
+    }
 }
 
 // Fails before having the video: a link's sticker can still come from the preview

@@ -11,7 +11,7 @@ module.exports = {
     'get.perLinkOptions': '❌ Com vários links {options} não valem (cada link tem o seu trecho, foto ou figurinha): use um link por vez. Veja {cmd} -h.',
     'get.stickerOneLink': '❌ O /sticker recebe um link por vez.',
     'get.tooManyLinks': '❌ {n} links: no máximo {max} por vez.',
-    'get.linkOf': '🔗 {i}/{n}',
+    'get.linkOf': '{i}/{n} 🔗 📥 {url}',
     'get.unknownOption': '❌ Opção desconhecida: {option}\n💡 _Veja as opções com {cmd} -h_',
     'get.badTime': '❌ -{name} precisa de um tempo em segundos (0, 10, 2.5) ou em minutos (09:33, 1:02:03); com "-" na frente conta do final (-10, -01:44).',
     'get.timeTooBig': '❌ Valor de -{name} grande demais.',
@@ -52,6 +52,7 @@ module.exports = {
     'get.photosMissing': ' ({n} não baixaram)',
     'get.noMediaInLink': 'Esse link não tem vídeo nem áudio para baixar (é um post só de fotos?)',
     'get.downloadFailed': "Problemas para baixar com '{bin}'",
+    'get.mediaFailed': 'Não consegui baixar ou processar essa mídia. Confira se o post está público e tente novamente.',
 
     // /show (src/commands/show.js): texts of each type (show.<type>.<field>)
     'show.apagadas.label': 'Apagadas',

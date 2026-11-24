@@ -11,7 +11,7 @@ module.exports = {
     'get.perLinkOptions': '❌ With several links {options} do not apply (each link has its own time, photo or sticker): use one link at a time. Use {cmd} -h.',
     'get.stickerOneLink': '❌ /sticker takes one link at a time.',
     'get.tooManyLinks': '❌ {n} links: at most {max} at a time.',
-    'get.linkOf': '🔗 {i}/{n}',
+    'get.linkOf': '{i}/{n} 🔗 📥 {url}',
     'get.unknownOption': '❌ Unknown option: {option}\n💡 _See the options with {cmd} -h_',
     'get.badTime': '❌ -{name} needs a time in seconds (0, 10, 2.5) or in minutes (09:33, 1:02:03); with "-" in front it counts from the end (-10, -01:44).',
     'get.timeTooBig': '❌ Value of -{name} is too big.',
@@ -52,6 +52,7 @@ module.exports = {
     'get.photosMissing': ' ({n} did not download)',
     'get.noMediaInLink': 'This link has no video or audio to download (a post with only photos?)',
     'get.downloadFailed': "Problems downloading with '{bin}'",
+    'get.mediaFailed': "I couldn't download or process this media. Check that the post is public and try again.",
 
     // /show (src/comandos/show.js): texts of each type (show.<type>.<field>)
     'show.apagadas.label': 'Deleted',

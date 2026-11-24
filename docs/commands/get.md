@@ -6,7 +6,7 @@ message that contains the link. The typed URL wins over the replied message. A v
 caption (no reply) is handled as if it had been replied to.
 
 **Several links** at once: `/get <url> <url> <url>` (up to 10) downloads them one after the other, each with its own
-reply marked `🔗 1/3`, `🔗 2/3`... A link that fails does not stop the others. `-a` and the transcription (`-stt`)
+reply marked `1/3 🔗 📥 <url>`, `2/3 🔗 📥 <url>`... A link that fails does not stop the others. `-a` and the transcription (`-stt`)
 apply to all; what picks a piece of **one** link (`-ss`, `-es`, `-photo`, `-st` and `-pos`/`-pt`/`-pc`/`-pb`) is refused,
 and so is `/sticker` with more than one link: use one link at a time for those. The links come from the command, not
 from a replied message.
@@ -40,7 +40,7 @@ through ffmpeg. If the media has a link in the caption, the media wins.
 | `-vad` | `<on\|off>` | `on`: skips the silence and the music before transcribing (where whisper invents text); `off`: transcribes it all. Local engine only. The default is the `stt.vad` setting |
 | `-startSec`, `-ss` | `<time>` | Starts at this point of the original video (default 0), in seconds (`22`, `1.5`) or in `min:sec` (`09:33`, or `h:min:sec`). With a `-` in front, counts from the **end** of the video (`-10`, `-01:44`) |
 | `-endSec`, `-es` | `<time>` | Ends at this point of the original video, in the same format as `-ss` (`-es -5` ends 5 s before the end); must be greater than the start. Also works without `-ss` and for stickers |
-| `-verbose`, `-v` | | Shows the parameters used in yt-dlp/ffmpeg |
+| `-verbose`, `-v` | | Shows yt-dlp/ffmpeg commands and technical details if a download fails |
 | `<url>` | | Video link; wins over the replied message |
 
 The converted file is limited to 20 MB (setting `get.maxSizeMB`). The original file of a replied
@@ -49,7 +49,12 @@ media goes as it came from WhatsApp; with no name (a camera photo, for example),
 
 Choose audio or sticker per run. Stickers are at most six seconds long: without `-es`, they take
 the six seconds from `-ss` (or from the start), and a shorter range set by `-ss` and `-es` keeps the
-requested duration. The video and the audio are sent as a document.
+requested duration. `get.showAsMedia` sends media inline by default; off, it sends documents instead.
+Media larger than `get.maxInlineSizeMB` (16 MB by default) always goes as a document, even when inline
+media is enabled. X post text goes in the inline video's caption or in a separate message below a
+document. Download failures show a friendly message; `-v` includes technical details. Replies to WhatsApp
+images, videos or audio follow the same rule. Use `/set get.showAsMedia off` to always send documents
+with `📥 Here is the media to download.`.
 
 From a link, with `-ss`, `-es` or `-st`, yt-dlp downloads only the requested range
 (`--download-sections`, cut at the exact time with `--force-keyframes-at-cuts`), without the whole
@@ -80,9 +85,11 @@ On a replied media:
 
 #### Posts with only photos (carousel)
 
-For a link that has **only photos** (an Instagram carousel, for example), yt-dlp has nothing to download as
-a video. `/get` then takes the photos (the biggest version of each, the original) and sends **all of them
-to the chat**, each one with `Image i/N`, and the **text of the post** in the last one:
+For a link that has **only photos** (an Instagram or X carousel, for example), `/get` downloads each photo
+and sends **all of them inline as images**, each one with `Image i/N`, and the **text of the post** in the
+last one:
+
+On X, this also works with single-photo links such as `/status/123/photo/1`, as well as carousels.
 
 ```text
 /get https://www.instagram.com/p/XXXXXXXX/        (a carousel of 3 photos)

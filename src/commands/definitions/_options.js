@@ -34,7 +34,7 @@ const OPTION_ALERT_TO = {
 const OPTION_VERBOSE_FFMPEG = {
     opts: ['verbose', 'v'],
     values: [],
-    desc: 'Shows the commands used in yt-dlp and ffmpeg.'
+    desc: 'Shows the commands used in yt-dlp and ffmpeg, plus technical details when a download fails.'
 };
 
 // -status|-s of /gpt, /tldr and /draw: the call usage in the footer (see src/openaiChat.js)

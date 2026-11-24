@@ -20,6 +20,17 @@ const { createBackup, listBackups, removeBackup } = bot.src('backup');
 const URL = 'http://8.8.8.8/video'; // IP literal: no consulta de DNS
 const DAY = 24 * 60 * 60 * 1000;
 
+async function withPublicDns(fn) {
+    const dns = require('dns').promises;
+    const lookup = dns.lookup;
+    dns.lookup = async () => [{ address: '8.8.8.8', family: 4 }];
+    try {
+        return await fn();
+    } finally {
+        dns.lookup = lookup;
+    }
+}
+
 beforeEach(bot.restart);
 
 const binaries = () => processes.calls.map(c => path.basename(c.bin));
@@ -51,7 +62,8 @@ describe('/get', () => {
     // The downloads cache (get.cache.tmp) has its tests, further below
     beforeEach(() => bot.setSetting('get.cache.tmp', false));
 
-    test('vídeo: baixa com yt-dlp, converte com ffmpeg e manda como documento', async () => {
+    test('com get.showAsMedia desligado, envia vídeo como documento', async () => {
+        await bot.setSetting('get.showAsMedia', false);
         const r = await bot.execute(`/get ${URL}`, { de: OTHERAlt.jid });
         assert.ok(r[1].content instanceof MessageMedia);
         assert.equal(r[1].options.sendMediaAsDocument, true);
@@ -67,10 +79,60 @@ describe('/get', () => {
         assert.deepEqual(filesTemporary(), [], 'os temporários foram apagados');
     });
 
+    test('X: vídeo inline no player, com o texto do post na legenda', async () => {
+        const url = 'https://x.com/Since_Crypto/status/2124900959814090815?a=EgG_s--zszlIvMnvGiY&s=20';
+        processes.post = { description: 'Texto do post no X', formats: [{ url: 'https://video.example/v.mp4' }] };
+        network.responder('get', 'cdn.syndication.twimg.com/tweet-result', {
+            text: 'Texto do post no X', mediaDetails: [{ type: 'video' }]
+        });
+        const r = await withPublicDns(() => bot.execute(`/get ${url}`, { de: OTHERAlt.jid }));
+        const sent = r.find(x => x.content instanceof MessageMedia);
+        assert.ok(sent);
+        assert.equal(sent.options.sendMediaAsDocument, undefined);
+        assert.equal(sent.options.caption, 'Texto do post no X');
+        assert.match(sent.content.mimetype, /^video\//);
+        assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg']);
+        assert.ok(network.calls.some(c => c.url.includes('cdn.syndication.twimg.com/tweet-result')));
+    });
+
+    test('X: com get.showAsMedia desligado, mantém o documento e mostra o texto abaixo', async () => {
+        const url = 'https://x.com/Since_Crypto/status/2124900959814090815?a=EgG_s--zszlIvMnvGiY&s=20';
+        await bot.setSetting('get.showAsMedia', false);
+        network.responder('get', 'cdn.syndication.twimg.com/tweet-result', { text: 'Legenda do post' });
+        const r = await withPublicDns(() => bot.execute(`/get ${url}`, { de: OTHERAlt.jid }));
+        const sent = r.find(x => x.content instanceof MessageMedia);
+        assert.equal(sent.options.sendMediaAsDocument, true);
+        assert.ok(r.some(x => x.content === 'Legenda do post'));
+    });
+
+    test('get.showAsMedia é on por padrão; off envia documento para baixar', async () => {
+        const defaultMedia = await bot.execute(`/get ${URL}`);
+        assert.equal(defaultMedia.find(x => x.content instanceof MessageMedia).options.sendMediaAsDocument, undefined);
+
+        await bot.setSetting('get.showAsMedia', false);
+        const document = await bot.execute(`/get ${URL}`);
+        assert.equal(document.find(x => x.content instanceof MessageMedia).options.sendMediaAsDocument, true);
+
+        await bot.setSetting('get.showAsMedia', true);
+        const media = await bot.execute(`/get ${URL}`);
+        const sent = media.find(x => x.content instanceof MessageMedia);
+        assert.equal(sent.options.sendMediaAsDocument, undefined);
+        assert.match(sent.content.mimetype, /^video\//);
+    });
+
+    test('mídia convertida acima de get.maxInlineSizeMB vai como documento', async () => {
+        processes.outputSize = 17 * 1024 * 1024;
+        const r = await bot.execute(`/get ${URL}`);
+        const sent = r.find(x => x.content instanceof MessageMedia);
+        assert.equal(sent.options.sendMediaAsDocument, true);
+        assert.equal(sent.options.caption, '📥 Aqui está a mídia para download.');
+    });
+
     test('vários links: um depois do outro, com 🔗 i/n e as mesmas opções; mais de 10 é recusado', async () => {
         const URL2 = 'http://8.8.4.4/outro';
         const r = await bot.execute(`/get -a ${URL} ${URL2}`, { de: OTHERAlt.jid });
-        assert.deepEqual(r.filter(x => typeof x.content === 'string' && x.content.startsWith('🔗')).map(x => x.content), ['🔗 1/2', '🔗 2/2']);
+        assert.deepEqual(r.filter(x => typeof x.content === 'string' && x.content.includes('🔗 📥')).map(x => x.content),
+            [`1/2 🔗 📥 ${URL}`, `2/2 🔗 📥 ${URL2}`]);
         assert.equal(r.filter(x => x.content instanceof MessageMedia).length, 2, 'duas mídias');
         const downloads = processes.calls.filter(c => path.basename(c.bin) === 'yt-dlp');
         assert.deepEqual(downloads.map(c => c.args.at(-1)), [URL, URL2]);
@@ -89,6 +151,23 @@ describe('/get', () => {
         const links = Array.from({ length: 11 }, (_, i) => `http://8.8.8.${i + 1}/v`).join(' ');
         assert.match((await bot.replyAlt(`/get ${links}`))[0], /^❌ 11 links: no máximo 10 por vez\./);
         assert.equal(processes.calls.length, 0);
+    });
+
+    test('os sete links do relato aparecem na ordem do progresso, com a URL completa', async () => {
+        const links = [
+            'https://x.com/LeaoOpressor/status/2124832363553194437/photo/1',
+            'https://x.com/Since_Crypto/status/2124900959814090815?a=EgG_s--zszlIvMnvGiY&s=20',
+            'https://x.com/nikolas_dm/status/2124898692935340119/photo/1',
+            'https://x.com/nomaderaizofc/status/2124835329584833007?a=QflQR8MoDFA4elbX_0M&s=20',
+            'https://www.instagram.com/p/DgD-wh4BYqM/',
+            'https://www.instagram.com/p/De2QeH0tgPV/',
+            'https://www.instagram.com/p/DgGg3KwjmoH/?utm_source=ig_web_copy_link&knvt=NTc4MTIwNjQ2YQ=='
+        ];
+        network.responder('get', 'cdn.syndication.twimg.com/tweet-result', { text: 'Texto do post' });
+        const r = await withPublicDns(() => bot.execute(`/get ${links.join(' ')}`));
+        const progress = r.filter(x => typeof x.content === 'string' && x.content.includes('🔗 📥'));
+        assert.deepEqual(progress.map(x => x.content), links.map((url, i) => `${i + 1}/7 🔗 📥 ${url}`));
+        assert.equal(r.filter(x => x.content instanceof MessageMedia).length, 7);
     });
 
     test('-a: só o áudio em mp3', async () => {
@@ -302,10 +381,20 @@ describe('/get', () => {
         };
 
         processes.fail = 'yt-dlp';
-        assert.match(await errorInNotice(`/get -st ${URL}`), /Problemas para baixar com '\/venv\/bin\/yt-dlp'[\s\S]*🛠️ \*Cmd\*/);
+        processes.errorOutput = 'ERROR: X API rate limit exceeded\n';
+        const friendly = await errorInNotice(`/get ${URL}`);
+        assert.match(friendly, /Não consegui baixar ou processar essa mídia/);
+        assert.doesNotMatch(friendly, /yt-dlp|Cmd|Inner|rate limit/i);
+        const verbose = await errorInNotice(`/get -v ${URL}`);
+        assert.match(verbose, /Problemas para baixar com '\/venv\/bin\/yt-dlp'[\s\S]*🛠️ \*Cmd\*/);
+        assert.match(verbose, /rate limit/i);
 
         processes.fail = 'ffmpeg';
-        assert.match(await errorInNotice(`/get ${URL}`), /Problemas para decodificar com '\/usr\/bin\/ffmpeg'/);
+        const decodeFriendly = await errorInNotice(`/get ${URL}`);
+        assert.match(decodeFriendly, /Não consegui baixar ou processar essa mídia/);
+        assert.doesNotMatch(decodeFriendly, /ffmpeg|Cmd|Inner/);
+        const decodeVerbose = await errorInNotice(`/get -v ${URL}`);
+        assert.match(decodeVerbose, /Problemas para decodificar com '\/usr\/bin\/ffmpeg'[\s\S]*🛠️ \*Cmd\*/);
 
         processes.fail = null;
         processes.skipDownload = true;
@@ -349,7 +438,10 @@ describe('/get', () => {
 });
 
 describe('/get respondendo uma mídia do WhatsApp', () => {
-    beforeEach(() => bot.setSetting('get.cache.tmp', false));
+    beforeEach(async () => {
+        await bot.setSetting('get.cache.tmp', false);
+        await bot.setSetting('get.showAsMedia', false);
+    });
 
     const video = { mimetype: 'video/mp4', data: Buffer.from('mp4').toString('base64'), filename: 'v.mp4' };
     const photo = { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') };
@@ -366,6 +458,21 @@ describe('/get respondendo uma mídia do WhatsApp', () => {
         const [f] = await bot.execute('/get', replying(photo));
         assert.deepEqual([f.content.mimetype, f.content.data, f.content.filename], [photo.mimetype, photo.data, 'zapbot.jpeg']);
         assert.deepEqual(processes.calls, []);
+    });
+
+    test('com get.showAsMedia ligado, o reply da mídia vai inline', async () => {
+        await bot.setSetting('get.showAsMedia', true);
+        const r = await bot.execute('/get', replying(video));
+        assert.equal(r[0].options.sendMediaAsDocument, undefined);
+        assert.equal(r[0].content, video);
+    });
+
+    test('reply maior que get.maxInlineSizeMB vai como documento mesmo com inline ligado', async () => {
+        await bot.setSetting('get.showAsMedia', true);
+        await bot.setSetting('get.maxInlineSizeMB', 1);
+        const large = { mimetype: 'video/mp4', data: Buffer.alloc(1024 * 1024 + 1).toString('base64'), filename: 'grande.mp4' };
+        const r = await bot.execute('/get', replying(large));
+        assert.equal(r[0].options.sendMediaAsDocument, true);
     });
 
     test('-a: o áudio do vídeo em mp3, só com o ffmpeg', async () => {
@@ -455,6 +562,7 @@ describe('cache dos downloads (get.cache.tmp)', () => {
     const savedAlt = () => filesTemporary().filter(f => f.endsWith('_original.mp4'));
 
     test('ligado (padrão): o mesmo link não baixa de novo e o original fica em cache/tmp', async () => {
+        await bot.setSetting('get.showAsMedia', false);
         const r = await bot.execute(`/get ${URL}`);
         assert.equal(r[0].text, '✅ Mídia baixada com sucesso!');
         assert.deepEqual(binaries(), ['yt-dlp', 'ffmpeg']);
@@ -827,7 +935,7 @@ describe('/get -stt', () => {
 
         // Another yt-dlp error is still the general one
         processes.errorOutput = 'ERROR: HTTP Error 403';
-        assert.match((await bot.execute(`/stt ${URL}`, { expectedError: true })).at(-1).text, /Problemas para baixar com/);
+        assert.match((await bot.execute(`/stt ${URL}`, { expectedError: true })).at(-1).text, /Não consegui baixar ou processar essa mídia/);
     });
 
     test('não mistura com -a, -st nem -pos', async () => {
@@ -1023,6 +1131,45 @@ describe('/get de um post só de fotos (carrossel)', () => {
         assert.ok(network.calls.every(c => !/pequena/.test(c.url)), 'só a maior de cada item');
         assert.equal(r[0].text, '✅ 3 fotos enviadas!', 'o aviso vira a confirmação');
         assert.deepEqual(binaries().filter(b => b === 'ffmpeg'), [], 'nada de ffmpeg');
+    });
+
+    test('X: manda o carrossel como imagens inline e o texto no último item', async () => {
+        const url = 'https://x.com/LeaoOpressor/status/2124832363553194437/photo/1';
+        const text = 'Texto da publicação no X';
+        processes.errorOutput = 'ERROR: [twitter] 2124898692935340119: Media #1 is not a video\n';
+        const photos = Array.from({ length: 4 }, (_, i) => `https://pbs.twimg.com/media/foto${i}.jpg?name=orig`);
+        network.responder('get', 'cdn.syndication.twimg.com/tweet-result', {
+            text,
+            mediaDetails: photos.map(media_url_https => ({ type: 'photo', media_url_https }))
+        });
+        processes.post = null;
+        for (let i = 0; i < 4; i++) network.responder('get', `pbs.twimg.com/media/foto${i}.jpg`, jpeg(i));
+
+        const r = await withPublicDns(() => bot.execute(`/get ${url}`));
+        const media = r.filter(x => x.content instanceof MessageMedia);
+        assert.equal(media.length, 4);
+        assert.ok(media.every(x => x.content.mimetype.startsWith('image/')));
+        assert.ok(media.every(x => x.options.sendMediaAsDocument !== true));
+        assert.equal(media.at(-1).options.caption, `🖼️ Imagem 4/4\n\n${text}`);
+        assert.equal(r[0].text, '✅ 4 fotos enviadas!');
+        assert.equal(network.calls.filter(c => c.url.includes('pbs.twimg.com')).length, 4);
+    });
+
+    test('foto do carrossel acima do limite inline vai como documento', async () => {
+        await bot.setSetting('get.maxInlineSizeMB', 1);
+        const url = 'https://x.com/nikolas_dm/status/2124898692935340119/photo/1';
+        const imageUrl = 'https://pbs.twimg.com/media/grande.jpg?name=orig';
+        processes.errorOutput = 'ERROR: [twitter] 2124898692935340119: Media #1 is not a video\n';
+        network.responder('get', 'cdn.syndication.twimg.com/tweet-result', {
+            text: 'Legenda', mediaDetails: [{ type: 'photo', media_url_https: imageUrl }]
+        });
+        network.responder('get', 'pbs.twimg.com/media/grande.jpg', network.http({
+            data: Buffer.alloc(1024 * 1024 + 1), headers: { 'content-type': 'image/jpeg' }
+        }));
+        const r = await withPublicDns(() => bot.execute(`/get ${url}`));
+        const sent = r.find(x => x.content instanceof MessageMedia);
+        assert.equal(sent.options.sendMediaAsDocument, true);
+        assert.match(sent.options.caption, /Imagem 1\/1/);
     });
 
     test('texto acima de 1000 caracteres: a legenda é cortada e o resto vai numa mensagem', async () => {
