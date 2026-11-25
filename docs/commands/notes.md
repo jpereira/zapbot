@@ -9,6 +9,7 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 
 ```text
 /notes [-list|-l] [#tag...] [-to <destination>]...
+/notes [-view|-v] [-quiet|-q] <n...> #tag
 /notes -compact|-c [#tag...]
 /notes -search|-s [#tag...] <text|/regex/flags> [-to <destination>]...
 /notes -update|-u <id> [#tag] <new text>
@@ -31,7 +32,8 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 | `-compact`, `-c` | `[#tag...]` | Lists with one line per note (title, the icons 🖼️ media, ⏰ alert and 🔗 link, and the time), grouped by day. Also works at the end: `/notes #pt -c`, `/notes -l -c` |
 | `-search`, `-s` | `[#tag...] <text\|/regex/flags>` | Only the notes that match, grouped as in the list. See [Search](#search) |
 | `-update`, `-u` | `<id> [#tag] <new text>` | Replaces the note's text (and the tag, if one is given; the alert and the image stay). When replying to a message, with no text, uses that message's text (with the ↩️) |
-| `-view`, `-v` | `<id...\|#tag...>` | Shows the note with its media (text as the caption; with no media, just the text). The tag can be partial. With `-to`, sends to the destinations (or by email, with the image attached) |
+| `-view`, `-v` | `<id...\|#tag...\|n... #tag>` | Shows the note with its media (text as the caption; with no media, just the text). The tag can be partial. With one `#tag`, the numbers are positions in its list (`-v 1,4 #idea`; the header shows `2/5`). With `-to`, sends to the destinations (or by email, with the image attached) |
+| `-quiet`, `-q` | | Only the text (and the media): no header, date or tips. `/notes -q 1 #idea`, `/notes -v -q #idea` |
 | `-move`, `-m` | `#tag #newtag` | Renames the tag in all notes. If the new one already exists, the two merge |
 | `-desc`, `-d` | `#tag [<description>\|-rm]` | Tag description, shown in the list and in `/notes` alone. With no text, shows the current one; with `-rm`, deletes it. `-move` carries the description along |
 | `-export`, `-e` | `[#tag...]` | Sends the notes in a PDF, with the images and the text as the caption (header, footer with version, host, date and time, and pagination). With tags, only theirs. See [Export](#export) |
@@ -42,7 +44,7 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 | `-add`, `-a` | `#tag <text>` | Adds a note; the `#tag` is required and comes at the start of the text. The text goes up to the `-alert`, if there is one, and accepts multiple lines |
 | `-rm`, `-r` | `<id...\|#tag...\|all>` | Removes the notes with those IDs (`-r 2`, `-r 1 2 3` or `-r 1,2,3`), of a tag (`-r #home`) or all (`all`). With a `#tag`, the numbers are the **positions in that tag's list** (`-r #home 1` is the 1st of `#home`), not IDs. A whole tag or `all` asks for `-yes`. If any ID, position or tag doesn't exist, none is removed. Together with `-alert`, removes only the alert, keeping the notes |
 | `-yes`, `-y` | | With `-rm`: confirms removing a whole tag or all the notes (without it, the bot only says how many would go) |
-| `-alert` | `<when>` | Notifies you about the note (or all notes of a `#tag`) at a date/time. See [Alerts](#alerts) |
+| `-alert` | `<when>` | Notifies you about the note (or all notes of a `#tag`) at a date/time. Alone, shows each note with an alert in its own message (`1/N`). See [Alerts](#alerts) |
 | `-to` | `<destination>` | With `-alert`: notifies a contact, group, number or email instead of your private chat. With the list (`-l`, `#tag`) or `-export`: sends the list or the PDF there, instead of replying in the chat. Repeat it for several |
 
 ```text
@@ -107,13 +109,21 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 ```text
 /notes -v 76                  → #76: the media with the text as the caption (no media, just the text)
 /notes -v 3 5                 → several at once, one message for each
-/notes -v #idea               → all of #ideas
+/notes -v #idea               → all of #ideas (the header shows the position: 2/5)
+/notes 1 4 #idea              → the 1st and the 4th of the #idea list, as text
+/notes -v 1,2,5 #idea         → those positions, with the media
+/notes -q 1 #idea             → only the text, no header or date (-v -q: with the media)
+/notes -v 1,3 #secret -lock   → a protected tag: asks the password, then shows those
 /notes -v 76 -to /Family/    → sends to the group (by email, the file is attached)
 /notes -m #home #house       → renames the tag in all notes
 /notes -d #house Home stuff        → tag description
 /notes -d #house                → shows the description
 /notes -d #house -r            → deletes the description
 ```
+
+With one `#tag`, the numbers are the positions in its list (`/notes #tag` numbers them 1 to N), and they can come
+separated by spaces or commas; the same in `-rm` (`/notes -rm 1,2,5 #tag`). With positions, the `-lock` of a
+protected tag goes at the end: right after the options it is the password (`-lock <password> #tag`).
 
 The compact list (`/notes -c`) puts one line per note, grouped by tag and by day, with the tag description in
 italics, the ID, the start of the text, the icons and the time:

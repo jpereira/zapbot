@@ -162,6 +162,21 @@ function noteLine(n, plan = false, position = 0) {
         : `${marker} ${body}${alert.replace(/\n {3}/, '\n')}\n🕐 _${end}_`;
 }
 
+// "1 4 #tag", "1,2,5 #tag" or "#tag 1 4": positions in that tag's list (1 = the first of /notes #tag). null: another
+// shape (only one #tag, and numbers). bad: the positions out of the list
+function readPositions(textAlt, notes) {
+    const partsAlt = textAlt.toLowerCase().split(/[\s,]+/).filter(Boolean);
+    const tags = partsAlt.filter(p => p.startsWith('#'));
+    const numbers = partsAlt.filter(p => !p.startsWith('#'));
+    if (tags.length !== 1 || !numbers.length || !numbers.every(p => /^\d+$/.test(p))) return null;
+    const found = resolveTags([readTag(tags[0])], notes);
+    const tag = found.length === 1 ? found[0] : readTag(tags[0]);
+    const inTag = notes.filter(n => n.tag === tag);
+    const positions = [...new Set(numbers.map(Number))].sort((a, b) => a - b);
+    const bad = positions.filter(p => p < 1 || p > inTag.length);
+    return { tag, total: inTag.length, bad, picked: bad.length ? [] : positions.map(p => ({ note: inTag[p - 1], position: p })) };
+}
+
 // The ids of -rm / -alert -rm: 1 2 3, 1,2,3 or all. Does any not exist? None is touched.
 // With a #tag, the numbers are positions in that tag's list (-rm #casa 1 or -rm 1 #casa: the 1st of #casa)
 function readIds(textAlt, notes) {
@@ -470,11 +485,18 @@ async function alertAlt(msg, rest) {
         const tagsFound = resolveTags(tags, allNotes);
         const withAlert = allNotes.filter(n => n.alert_at && (!tags.length || tagsFound.includes(n.tag)));
         const label = tags.length ? ` ${tagsFound.map(t => `#${t}`).join(' ')}` : '';
-        await msg.reply(withAlert.length
-            ? `${t('notes.alert.listTitle', { tags: label })}\n\n${withAlert.map(noteLine).join('\n\n')}\n\n` +
-              t('notes.alert.listHint')
-            : `${label ? t('notes.alert.noneIn', { tags: label }) : t('notes.alert.none')}\n${t('notes.alert.createHint')}`,
-        undefined, WITHOUT_PREVIEW);
+        if (!withAlert.length) {
+            await msg.reply(`${label ? t('notes.alert.noneIn', { tags: label }) : t('notes.alert.none')}\n${t('notes.alert.createHint')}`,
+                undefined, WITHOUT_PREVIEW);
+            return;
+        }
+        // Each note in its own message (1/N), with the alert on top
+        for (const [i, n] of withAlert.entries()) {
+            const head = [`🔔 *${i + 1}/${withAlert.length}*`, n.tag && `#${n.tag}`, `#${n.id}`].filter(Boolean).join(' · ');
+            const alertLine = `⏰ ${fmtWhen(n.alert_at)} → ${noticeWhere(noteDestinations(n))}`;
+            await msg.reply([head, alertLine, n.text && formatText(n.text), n.media_path && mediaLabel(n)].filter(Boolean).join('\n'),
+                undefined, WITHOUT_PREVIEW);
+        }
         return;
     }
 
@@ -747,7 +769,7 @@ async function describeTag(msg, textAlt) {
 }
 
 // -view: sends each note (the image with the text as the caption; without an image, just the text)
-async function seeNotes(msg, filter) {
+async function seeNotes(msg, filter, { quiet = false } = {}) {
     const { destinations: destinationsText, given: withDestination, rest } = extractDestinations(filter);
     if (!rest.trim()) {
         await msg.reply(t('notes.view.usage'));
@@ -755,22 +777,33 @@ async function seeNotes(msg, filter) {
     }
 
     const allAlt = await listNotes();
+    const byPosition = readPositions(rest, allAlt);
+    if (byPosition?.bad.length || byPosition?.total === 0) {
+        await msg.reply(positionsError(byPosition, '/notes -v'));
+        return;
+    }
     const partsAlt = rest.toLowerCase().split(/[\s,]+/).filter(Boolean);
     const requestedAlt = partsAlt.filter(p => p.startsWith('#')).map(readTag);
     const tags = resolveTags(requestedAlt, allAlt);
     const ids = partsAlt.filter(p => !p.startsWith('#'));
-    const missing = [...ids.filter(i => !/^\d+$/.test(i) || !allAlt.some(n => n.id === Number(i))),
+    const missing = byPosition ? [] : [...ids.filter(i => !/^\d+$/.test(i) || !allAlt.some(n => n.id === Number(i))),
         ...requestedAlt.filter(t => !resolveTags([t], allAlt).some(x => allAlt.some(n => n.tag === x))).map(t => `#${t}`)];
     if (missing.length) {
         await msg.reply(t(missing.length > 1 ? 'notes.view.missingMany' : 'notes.view.missingOne', { list: missing.join(', ') }));
         return;
     }
 
-    const targets = allAlt.filter(n => ids.map(Number).includes(n.id) || tags.includes(n.tag));
+    const targets = byPosition ? byPosition.picked.map(p => p.note)
+        : allAlt.filter(n => ids.map(Number).includes(n.id) || tags.includes(n.tag));
     const destinations = await sendingDestinations(msg, destinationsText, withDestination);
     if (destinations === null) return;
 
-    const header = (n) => [`📝 *#${n.id}*`, n.tag && `#${n.tag}`, `_${formatData(n.created_at)}_`].filter(Boolean).join(' · ');
+    // In a tag the header carries the position in its list (2/5); a note asked by its id, the id
+    const place = (n) => {
+        const inTag = allAlt.filter(x => x.tag && x.tag === n.tag);
+        return n.tag && (byPosition || tags.includes(n.tag)) ? `${inTag.indexOf(n) + 1}/${inTag.length}` : `#${n.id}`;
+    };
+    const header = (n) => (quiet ? '' : [`📝 *${place(n)}*`, n.tag && `#${n.tag}`, `_${formatData(n.created_at)}_`].filter(Boolean).join(' · '));
     const withoutMarks = (t) => t.replace(/[*_]/g, '');
     const failures = [];
 
@@ -820,6 +853,23 @@ async function seeNotes(msg, filter) {
         await msg.reply(countAlt('notes.view.sent', targets.length, { where: describeDestinations(destinations) }));
     }
     if (failures.length) await msg.reply(`❌ ${failures.join('; ')}`);
+}
+
+function positionsError(byPosition, cmd) {
+    if (!byPosition.total) return t('notes.view.missingOne', { list: `#${byPosition.tag}` });
+    return t('notes.rm.missingPos', { list: byPosition.bad.map(p => `${p} (#${byPosition.tag}: ${byPosition.total})`).join(', '), cmd });
+}
+
+// /notes 1 4 #tag: those positions of the list, as /notes #tag shows them (the text; -v brings the media)
+async function listPositions(msg, textAlt, { quiet = false } = {}) {
+    const byPosition = readPositions(textAlt, await listNotes());
+    if (byPosition.bad.length || !byPosition.total) {
+        await msg.reply(positionsError(byPosition, '/notes'));
+        return;
+    }
+    const lines = byPosition.picked.map(({ note, position }) => (quiet ? formatText(note.text) : noteLine(note, false, position)));
+    const head = quiet ? '' : `🏷️ ${byPosition.tag} (${byPosition.picked.length}/${byPosition.total})\n\n`;
+    await msg.reply(`${head}${lines.join('\n\n')}`, undefined, WITHOUT_PREVIEW);
 }
 
 // /notes alone: each tag with its number of notes (the untagged last)
@@ -1132,6 +1182,13 @@ async function cmdNoteRun({ msg, args, quotedMsg, chatId }) {
     const typed = extractPassword(textAlt);
     const password = typed?.password ?? null;
     if (typed) textAlt = typed.rest;
+    // -quiet (-q) among the options at the start: only the text (and the media), no header and no footer
+    let quiet = false;
+    const leadingWords = textAlt.split(/\s+/);
+    let start = 0;
+    while (start < leadingWords.length && leadingWords[start].startsWith('-')) start++;
+    const kept = leadingWords.slice(0, start).filter(word => !(/^-(?:quiet|q)$/i.test(word) && (quiet = true)));
+    if (quiet) textAlt = [...kept, ...leadingWords.slice(start)].join(' ');
     const [optionAlt = '', ...words] = textAlt.split(/\s+/);
     const rest = textAlt.slice(optionAlt.length).trim();
     const nameAlt = optionAlt.toLowerCase();
@@ -1149,9 +1206,11 @@ async function cmdNoteRun({ msg, args, quotedMsg, chatId }) {
         return 'locked'; // it was not asking to see anything: no "locked" hint after it
     }
 
-    // "/notes -v -lock #tag": the password first, then it shows (no -now: that is another thing)
-    if (VIEWING.includes(nameAlt) && LOCK_TOKEN.test(textAlt) && !/(^|\s)-(?:now|no|n)(?=\s|$)/i.test(textAlt)) {
-        return viewWithLock({ msg, args, quotedMsg, chatId }, textAlt, password);
+    // "/notes -v -lock #tag": the password first, then it shows (no -now: that is another thing). With positions the
+    // -lock goes at the end (/notes 2 #tag -lock): right after the options it would be read as the password
+    const positionsLocked = /^\d/.test(textAlt) && LOCK_TOKEN.test(textAlt) && readPositions(textAlt.replace(LOCK_TOKEN, ' '), await listNotes());
+    if ((VIEWING.includes(nameAlt) || positionsLocked) && LOCK_TOKEN.test(textAlt) && !/(^|\s)-(?:now|no|n)(?=\s|$)/i.test(textAlt)) {
+        return viewWithLock({ msg, args, quotedMsg, chatId }, quiet ? `-q ${textAlt}` : textAlt, password);
     }
 
     // The -to of the lists/PDF: "/notes -to X", "/notes #casa -to X", "-l ... -to X", "-e ... -to X"
@@ -1164,7 +1223,9 @@ async function cmdNoteRun({ msg, args, quotedMsg, chatId }) {
     if (nameAlt === '-compact' || nameAlt === '-c') return listAlt(msg, rest, false, true);
     if (nameAlt === '-update' || nameAlt === '-u') return update(msg, rest, quotedMsg);
     if (nameAlt === '-search' || nameAlt === '-s') return listAlt(msg, rest, true);
-    if (nameAlt === '-view' || nameAlt === '-v') return seeNotes(msg, rest);
+    if (nameAlt === '-view' || nameAlt === '-v') return seeNotes(msg, rest, { quiet });
+    // 1 4 #tag (or 1,2,5 #tag): those positions of the tag's list. Only with the numbers first: /notes #tag 1234 is a note
+    if (/^\d/.test(textAlt) && !withDestination && readPositions(textAlt, await listNotes())) return listPositions(msg, textAlt, { quiet });
     if (nameAlt === '-desc' || nameAlt === '-d') return describeTag(msg, rest);
     if (nameAlt === '-move' || nameAlt === '-m') return moveTag(msg, rest);
     if (nameAlt === '-export' || nameAlt === '-e') return exportNotes(msg, rest);

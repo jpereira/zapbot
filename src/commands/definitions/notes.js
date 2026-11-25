@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/notes',
-    usage: '/notes #tag <text>  or  /notes [-list|-l] [#tag...] [-to <destination>]...  or  /notes -search|-view|-update|-export|-move|-desc|-rm|-alert|-lock <...>',
+    usage: '/notes #tag <text>  or  /notes [-list|-l] [#tag...] [-to <destination>]...  or  /notes [-view|-v] [-quiet|-q] <n...> #tag  or  /notes -search|-view|-update|-export|-move|-desc|-rm|-alert|-lock <...>',
     summary: 'Notes, with password-protected (encrypted) tags',
     help: 'Notes saved in the database. To add one, the syntax is /notes #tag <text>: without the #tag it errors, and just /notes #tag lists the tag\'s notes. Replying to a message, its text becomes the note, with ↩️ (/notes #reminder); with text typed along (/notes #reminder Remember this!), the typed text comes first and the replied message follows it, with ↩️ and its media; media (image, document, audio, video...) in the message itself or in the replied one is saved to disk along with the note. With nothing, shows the tags with the count and description of each; -l lists all notes, with the ID, grouped by #tag (one message per tag). The -alert reminds you of a note at a date/time (once; the note stays): in your private chat or at the -to destinations. PRIVACY: /notes -lock #tag protects a tag with a password (the text and the files are encrypted; the password is never stored); /notes -v -lock #tag asks it and shows; -lock #tag -now locks. A protected tag only unlocks and opens in your own private chat, locks again by itself after notes.lockMinutes, and is never sent with -to.',
     ex: [
@@ -64,9 +64,16 @@ module.exports = {
         },
         {
             opts: ['view', 'v'],
-            values: ['<id...|#tag...>'],
-            desc: 'Shows the note with its image (the text goes in the caption; without an image, just the text). Accepts several IDs or tags (the tag can be partial). With -to, sends to the destination; by email, the image is attached.',
-            ex: ['/notes -v 76', '/notes -v 3 5', '/notes -v #idea', '/notes -v 76 -to /Family/'],
+            values: ['<id...|#tag...|n... #tag>'],
+            desc: 'Shows the note with its image (the text goes in the caption; without an image, just the text). Accepts several IDs or tags (the tag can be partial); with one #tag, the numbers are the positions in its list (-v 1,4 #idea), and the header shows the position (2/5). With -to, sends to the destination; by email, the image is attached.',
+            ex: ['/notes -v 76', '/notes -v #idea', '/notes -v 1 4 #idea', '/notes -v 1,2,5 #idea', '/notes -v 76 -to /Family/'],
+            cron: false
+        },
+        {
+            opts: ['quiet', 'q'],
+            values: [],
+            desc: 'Only the text (and the media), without the header, the date or the tips: /notes -q 1 #idea, /notes -v -q #idea.',
+            ex: ['/notes -q 1,3 #idea', '/notes -v -q #idea'],
             cron: false
         },
         {
@@ -135,7 +142,7 @@ module.exports = {
         {
             opts: ['alert'],
             values: ['<when>'],
-            desc: 'Reminds you of the note at a date/time. With -add: /notes -a text -alert tomorrow 9h. With ID: /notes -alert 3 +2h. With #tag: reminds of all the tag\'s notes (/notes -alert #home 18h -to /Family/). Alone, lists the notes with an alert (with #tag, only the tag\'s); with -rm <id...|#tag...|all>, removes the alert. The when accepts +2h, 30m, 18h, tomorrow 9h, sexta 18:30, 25/12 10h.',
+            desc: 'Reminds you of the note at a date/time. With -add: /notes -a text -alert tomorrow 9h. With ID: /notes -alert 3 +2h. With #tag: reminds of all the tag\'s notes (/notes -alert #home 18h -to /Family/). Alone, shows each note with an alert in its own message (1/N), with when and where (with #tag, only the tag\'s); with -rm <id...|#tag...|all>, removes the alert. The when accepts +2h, 30m, 18h, tomorrow 9h, sexta 18:30, 25/12 10h.',
             cron: false
         },
         {

@@ -77,8 +77,6 @@ module.exports = {
 
     // ---- /notes: -alert
     'notes.alert.toOnlyCreate': `❌ O -to só vale ao criar o alerta: /notes -alert <id|#tag> amanhã 9h -to /Grupo L200/`,
-    'notes.alert.listTitle': `🔔 *ALERTAS DAS ANOTAÇÕES{tags}*`,
-    'notes.alert.listHint': `💡 _Tire com /notes -alert -rm <id...|#tag...|all>_`,
     'notes.alert.none': `🔔 Nenhuma anotação com alerta.`,
     'notes.alert.noneIn': `🔔 Nenhuma anotação em{tags} com alerta.`,
     'notes.alert.createHint': `💡 _Crie com /notes -alert <id|#tag> <quando>_`,

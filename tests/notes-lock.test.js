@@ -103,6 +103,28 @@ describe('/notes -lock', () => {
         assert.match(opened[0], /\*segredo 123\*/);
     });
 
+    test('posições numa tag protegida: o -lock no fim (-v 1,3 #foo -lock, -q 2 #foo -lo) pede a senha e mostra só aquelas', async () => {
+        for (const x of ['segredo 1', 'segredo 2', 'segredo 3']) await bot.replyAlt(`/notes #foo ${x}`, PRIVATE);
+        await protectFoo();
+        await bot.replyAlt('/notes -lock #foo -now', PRIVATE);
+
+        const sent = () => bot.client.sent.map(e => String(e.content));
+        assert.match((await bot.replyAlt('/notes -v 1,3 #foo -lock', PRIVATE))[0], /^🔑 Digite sua senha:/);
+        const before = sent().length;
+        await bot.replyAlt(PASSWORD, PRIVATE);
+        const shown = sent().slice(before).join('\n--\n');
+        assert.match(shown, /📝 \*1\/3\* · #foo[^]*segredo 1[^]*📝 \*3\/3\* · #foo[^]*segredo 3/);
+        assert.doesNotMatch(shown, /segredo 2/);
+
+        await bot.replyAlt('/notes -lock #foo -now', PRIVATE);
+        assert.match((await bot.replyAlt('/notes -q 2 #foo -lo', PRIVATE))[0], /^🔑 Digite sua senha:/);
+        const after = sent().length;
+        await bot.replyAlt(PASSWORD, PRIVATE);
+        const quiet = sent().slice(after).join('\n--\n');
+        assert.match(quiet, /\*segredo 2\*/);
+        assert.doesNotMatch(quiet, /segredo 1|segredo 3|🏷️/);
+    });
+
     test('/notes -v -lock #tag: pede a senha e, liberada, já mostra (também -e, -l e -s); já liberada, mostra direto', async () => {
         await bot.replyAlt('/notes #foo segredo 123', PRIVATE);
         await bot.replyAlt('/notes #foo outro 456', PRIVATE);

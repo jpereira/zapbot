@@ -9,6 +9,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 
 ```text
 /notes [-list|-l] [#tag...] [-to <destino>]...
+/notes [-view|-v] [-quiet|-q] <n...> #tag
 /notes -compact|-c [#tag...]
 /notes -search|-s [#tag...] <texto|/regex/flags> [-to <destino>]...
 /notes -update|-u <id> [#tag] <novo texto>
@@ -31,7 +32,8 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 | `-compact`, `-c` | `[#tag...]` | Lista com uma linha por nota (título, os ícones 🖼️ mídia, ⏰ alerta e 🔗 link, e a hora), agrupadas por dia. Também vale no fim: `/notes #pt -c`, `/notes -l -c` |
 | `-search`, `-s` | `[#tag...] <texto\|/regex/flags>` | Só as anotações que casam, agrupadas como na lista. Veja [Buscar](#buscar) |
 | `-update`, `-u` | `<id> [#tag] <novo texto>` | Troca o texto da anotação (e a tag, se vier uma; o alerta e a imagem ficam). Em resposta a uma mensagem, sem texto, usa o dela (com o ↩️) |
-| `-view`, `-v` | `<id...\|#tag...>` | Mostra a anotação com a mídia (texto na legenda; sem mídia, só o texto). A tag pode vir pela metade. Com `-to`, manda nos destinos (ou por e-mail, com a imagem anexada) |
+| `-view`, `-v` | `<id...\|#tag...\|n... #tag>` | Mostra a anotação com a mídia (texto na legenda; sem mídia, só o texto). A tag pode vir pela metade. Com uma `#tag`, os números são as posições na lista dela (`-v 1,4 #ideia`; o cabeçalho mostra `2/5`). Com `-to`, manda nos destinos (ou por e-mail, com a imagem anexada) |
+| `-quiet`, `-q` | | Só o texto (e a mídia): sem cabeçalho, data nem dicas. `/notes -q 1 #ideia`, `/notes -v -q #ideia` |
 | `-move`, `-m` | `#tag #novatag` | Renomeia a tag em todas as anotações. Se a nova já existe, as duas se juntam |
 | `-desc`, `-d` | `#tag [<descrição>\|-rm]` | Descrição da tag, que aparece na lista e no `/notes` sozinho. Sem texto, mostra a atual; com `-rm`, apaga. O `-move` leva a descrição junto |
 | `-export`, `-e` | `[#tag...]` | Manda as anotações num PDF, com as imagens e o texto como legenda (cabeçalho, rodapé com versão, host, data e hora, e paginação). Com tags, só as delas. Veja [Exportar](#exportar) |
@@ -42,7 +44,7 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 | `-add`, `-a` | `#tag <texto>` | Adiciona uma anotação; a `#tag` é obrigatória e vem no começo do texto. O texto vai até o `-alert`, se houver, e aceita várias linhas |
 | `-rm`, `-r` | `<id...\|#tag...\|all>` | Remove as anotações com esses IDs (`-r 2`, `-r 1 2 3` ou `-r 1,2,3`), de uma tag (`-r #casa`) ou todas (`all`). Com uma `#tag`, os números são as **posições na lista dela** (`-r #casa 1` é a 1ª da `#casa`), não IDs. Uma tag inteira ou `all` pede o `-yes`. Se algum ID, posição ou tag não existe, nenhuma sai. Junto com `-alert`, tira só o alerta, mantendo as anotações |
 | `-yes`, `-y` | | Com `-rm`: confirma a remoção de uma tag inteira ou de todas as anotações (sem ele, o bot só diz quantas sairiam) |
-| `-alert` | `<quando>` | Avisa da anotação (ou de todas as de uma `#tag`) numa data/hora. Veja [Alertas](#alertas) |
+| `-alert` | `<quando>` | Avisa da anotação (ou de todas as de uma `#tag`) numa data/hora. Sozinho, mostra cada anotação com alerta numa mensagem (`1/N`). Veja [Alertas](#alertas) |
 | `-to` | `<destino>` | Com `-alert`: avisa num contato, grupo, número ou e-mail em vez do seu privado. Com a lista (`-l`, `#tag`) ou o `-export`: manda a lista ou o PDF lá, em vez de responder no chat. Repita para vários |
 
 ```text
@@ -105,13 +107,21 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 ```text
 /notes -v 76                  → a nº 76: a mídia com o texto na legenda (sem mídia, só o texto)
 /notes -v 3 5                 → várias de uma vez, uma mensagem para cada
-/notes -v #idei               → todas da #ideias
+/notes -v #idei               → todas da #ideias (o cabeçalho mostra a posição: 2/5)
+/notes 1 4 #ideias            → a 1ª e a 4ª da lista da #ideias, em texto
+/notes -v 1,2,5 #ideias       → essas posições, com a mídia
+/notes -q 1 #ideias           → só o texto, sem cabeçalho nem data (-v -q: com a mídia)
+/notes -v 1,3 #segredo -lock  → uma tag protegida: pede a senha e mostra essas
 /notes -v 76 -to /Família/    → manda no grupo (por e-mail, o arquivo vai anexado)
 /notes -m #casa #lar       → renomeia a tag em todas as anotações
 /notes -d #lar Coisas da casa   → descrição da tag
 /notes -d #lar                → mostra a descrição
 /notes -d #lar -r            → apaga a descrição
 ```
+
+Com uma `#tag`, os números são as posições na lista dela (o `/notes #tag` numera de 1 a N), separados por espaço ou
+vírgula; o mesmo no `-rm` (`/notes -rm 1,2,5 #tag`). Com posições, o `-lock` de uma tag protegida vai no fim: logo
+depois das opções ele é a senha (`-lock <senha> #tag`).
 
 A lista compacta (`/notes -c`) traz uma linha por anotação, agrupada por tag e por dia, com a descrição da
 tag em itálico, o ID, o começo do texto, os ícones e a hora:

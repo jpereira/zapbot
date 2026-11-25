@@ -119,6 +119,45 @@ test('a sintaxe é /notes #tag <texto>: sem tag ou sem texto dá erro; opção d
     assert.equal((await notes()).length, 2);
 });
 
+test('posições na tag: /notes 1 4 #tag, -v 1 4 #tag, com vírgula; -rm 1,2 #tag; -q só o texto; fora da lista avisa', async () => {
+    for (const x of ['um', 'dois', 'tres', 'quatro', 'cinco']) await bot.execute(`/notes #t ${x}`);
+    await bot.execute('/notes #outra zzz');
+    const text = async (c) => (await bot.execute(c)).map(r => r.text).join('\n---\n');
+
+    assert.match(await text('/notes #t'), /1\. \*um\*[\s\S]*5\. \*cinco\*/, 'the list numbers 1 to N');
+    const two = await text('/notes 1 4 #t');
+    assert.match(two, /^🏷️ t \(2\/5\)\n\n1\. \*um\*[\s\S]*\n4\. \*quatro\*/);
+    assert.doesNotMatch(two, /dois|tres|cinco/);
+    assert.equal(await text('/notes 1,4 #t'), two, 'commas work too');
+
+    const view = await text('/notes -v 1,2,5 #t');
+    assert.match(view, /📝 \*1\/5\* · #t · [^\n]+\n\*um\*\n---\n📝 \*2\/5\* · #t[^\n]+\n\*dois\*\n---\n📝 \*5\/5\*/);
+    assert.match(await text('/notes -v #t'), /📝 \*3\/5\* · #t/, 'the whole tag shows the positions too');
+
+    assert.equal(await text('/notes -q 1,4 #t'), '*um*\n\n*quatro*', '-q: only the text');
+    assert.equal(await text('/notes -v -quiet 2 #t'), '*dois*');
+
+    assert.match(await text('/notes -v 9 #t'), /Essa posição não existe na lista da tag: 9 \(#t: 5\)/);
+    assert.match(await text('/notes 1 #nada'), /#nada não existe/);
+    assert.match(await text('/notes #t 1234'), /📝 \*#7\* · #t · 1234/, '#tag first and numbers: still a new note');
+
+    assert.match(await text('/notes -rm 1,2 #t'), /2 anotações removidas/);
+    assert.match(await text('/notes -rm 1 2 #t'), /2 anotações removidas/);
+    assert.match(await text('/notes #t'), /1\. \*cinco\*[\s\S]*2\. \*1234\*/);
+});
+
+test('-alert sozinho: cada nota com alerta numa mensagem, 1/N, com o quando e o destino', async () => {
+    await bot.execute('/notes #t um');
+    await bot.execute('/notes #t dois');
+    await bot.execute('/notes #outra tres');
+    await bot.execute('/notes -alert 2 amanhã 10h');
+    await bot.execute('/notes -alert 3 amanhã 11h');
+    const r = (await bot.execute('/notes -alert')).map(x => x.text);
+    assert.equal(r.length, 2);
+    assert.match(r[0], /^🔔 \*1\/2\* · #t · #2\n⏰ .+10:00 → seu privado\n\*dois\*$/);
+    assert.match(r[1], /^🔔 \*2\/2\* · #outra · #3\n⏰ .+11:00/);
+});
+
 test('#tag: agrupa na lista, filtra e remove por tag', async () => {
     await bot.replyAlt('/notes #casa Lembrar de comprar pão');
     await bot.replyAlt('/notes -a #Duvidas Olhar sobre ETFs');
@@ -540,7 +579,7 @@ test('tag parcial também no -export, no -alert (lista) e no -view; ambígua jun
     const [see] = await bot.replyAlt('/notes -v #idei');
     assert.match(see, /um|dois/);
     assert.match((await bot.replyAlt('/notes -v #nada'))[0], /#nada não existe/);
-    assert.match((await bot.replyAlt('/notes -v 1 #nada 9'))[0], /não existem/);
+    assert.match((await bot.replyAlt('/notes -v 1 #nada 9'))[0], /#nada não existe/);
     await bot.replyAlt('/notes -rm all -yes');
 });
 
@@ -600,10 +639,10 @@ test('-alert com #tag: coloca o alerta em todas as anotações da tag (com -to),
     assert.deepEqual((await bot.dbAll('SELECT id, alert_at IS NOT NULL AS a FROM notes ORDER BY id')).map(n => n.a), [1, 1, 0, 0]);
 
     // Lists only the tag's alerts
-    const [list] = await bot.replyAlt('/notes -alert #minhatag');
-    assert.match(list, /ALERTAS DAS ANOTAÇÕES #minhatag/);
-    assert.match(list, /um/);
-    assert.match(list, /dois/);
+    const alerts = await bot.replyAlt('/notes -alert #minhatag');
+    assert.equal(alerts.length, 2, 'one message per note');
+    assert.match(alerts[0], /^🔔 \*1\/2\* · #minhatag[^]*um/);
+    assert.match(alerts[1], /^🔔 \*2\/2\* · #minhatag[^]*dois/);
     assert.match((await bot.replyAlt('/notes -alert #outra'))[0], /Nenhuma anotação em #outra com alerta/);
 
     // Fires each one, in the group
