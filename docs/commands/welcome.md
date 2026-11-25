@@ -8,7 +8,7 @@ the group when someone joins (by invite link or added by an admin). It is **per 
 also [`/goodbye`](goodbye.md).
 
 ```text
-/welcome [-on|-off|-t] [<text>]
+/welcome [-on|-off|-test|-t] [<text>]
 ```
 
 | Option | Value | Description |

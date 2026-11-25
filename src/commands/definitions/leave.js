@@ -6,13 +6,13 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/leave',
-    usage: '/leave <group|num>...  or  /leave -l',
+    usage: '/leave <group|no.>...  or  /leave -l',
     summary: 'Leaves a group',
     help: 'Leaves one or more WhatsApp groups, separated by spaces or commas. Each group is looked up like in -to (by name or part of it; if several match, you pick from the list) or by its number in the /leave -l list. With nothing, lists the groups you are in. To come back, you need a new invite (/join).',
     ex: ['/leave /L200 Group/', '/leave 3', '/leave 3 1 /Family/ 5', '/leave -l'],
     cmd_opts: [
         {
-            argv: ['<group|num>...'],
+            argv: ['<group|no.>...'],
             desc: 'The groups, separated by spaces or commas: by name (a name with spaces goes between /.../ or quotes) or by the number in the last -l list. Loose words, without a number, slashes or quotes, are a single name.',
             ex: ['/leave /L200 Group/', '/leave 3 1 /Family/ 5']
         },

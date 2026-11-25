@@ -4,7 +4,7 @@ Unblocks a person blocked by [`/block`](block.md) or on the phone, or everyone w
 to a message, unblocks whoever wrote it. With nothing, shows the `/block` list.
 
 ```text
-/unblock [/contact/|@mention|+number|#]  or  /unblock -a
+/unblock [/contact/|@mention|+number|#]  or  /unblock -all|-a
 ```
 
 | Option | Value | Description |

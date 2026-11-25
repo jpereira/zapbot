@@ -194,12 +194,10 @@ also update while you are reading older messages.
 - **Select messages**: *Select* lets you click the messages you want (they get a ● mark) and *Export selected* makes a
   PDF with only them.
 - **Clear the history of a chat**: the 🧹 in the header of the chat deletes its messages (and their media) from the
-  cache, **except** the deleted ones, the edited ones (with the text before) and the ones with reactions. The window
-  tells how many go and how many stay, and asks you to type the name of the chat; nothing is deleted before that.
+  cache, **except** the deleted ones, the edited ones (with the text before) and the ones with reactions. A
+  confirmation tells how many go and how many stay; nothing is deleted before you say yes.
 
 ![Select on: three messages marked, ready to export](assets/web/history-select.png)
-
-![The 🧹 window: how many messages go, how many stay, and the name of the chat to confirm](assets/web/history-clear.png)
 
 ### Notices of WhatsApp
 

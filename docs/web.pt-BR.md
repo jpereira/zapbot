@@ -194,12 +194,10 @@ visíveis também são atualizadas enquanto você lê mensagens antigas.
 - **Selecionar mensagens**: *Selecionar* deixa você clicar nas mensagens que quer (elas ganham uma marca ●) e *Exportar
   selecionadas* faz um PDF só com elas.
 - **Limpar o histórico de uma conversa**: o 🧹 no cabeçalho da conversa apaga as mensagens dela (e a mídia) do cache,
-  **menos** as apagadas, as editadas (com o texto de antes) e as que têm reações. A janela diz quantas saem e quantas
-  ficam, e pede que você digite o nome da conversa; nada é apagado antes disso.
+  **menos** as apagadas, as editadas (com o texto de antes) e as que têm reações. Uma confirmação diz quantas saem e
+  quantas ficam; nada é apagado antes de você dizer sim.
 
 ![Selecionar ligado: três mensagens marcadas, prontas para exportar](assets/web/pt-BR/history-select.png)
-
-![A janela do 🧹: quantas mensagens saem, quantas ficam, e o nome da conversa para confirmar](assets/web/pt-BR/history-clear.png)
 
 ### Avisos do WhatsApp
 

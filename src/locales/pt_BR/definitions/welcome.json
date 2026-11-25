@@ -1,6 +1,6 @@
 {
   "summary": "Mensagem quando alguém entra no grupo",
-  "usage": "/welcome [-on|-off|-test] [<texto>]",
+  "usage": "/welcome [-on|-off|-test|-t] [<texto>]",
   "help": "Define a mensagem que o bot manda no grupo quando alguém entra (pelo link de convite ou adicionado por um admin). Vale por grupo: sem nada, mostra a deste grupo. {name} é a pessoa (uma menção) e {group}, o nome do grupo. Só funciona em grupos.",
   "ex": [
     "/welcome",

@@ -8,7 +8,7 @@ the group when someone leaves (or is removed). It is **per group**, and it only 
 also [`/welcome`](welcome.md).
 
 ```text
-/goodbye [-on|-off|-t] [<text>]
+/goodbye [-on|-off|-test|-t] [<text>]
 ```
 
 | Option | Value | Description |

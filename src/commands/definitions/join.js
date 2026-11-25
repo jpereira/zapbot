@@ -29,7 +29,7 @@ module.exports = {
         {
             opts: ['list', 'l'],
             values: [],
-            desc: 'Lists the groups you are in, numbered for /leave <num>.'
+            desc: 'Lists the groups you are in, numbered for /leave <no.>.'
         }
     ],
     role: ADMIN // joins groups

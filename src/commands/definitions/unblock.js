@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/unblock',
-    usage: '/unblock [/contact/|@mention|+number|#]  or  /unblock -all',
+    usage: '/unblock [/contact/|@mention|+number|#]  or  /unblock -all|-a',
     summary: 'Unblocks blocked people',
     help: 'Unblocks a blocked person (via /block or on the phone), or everyone with -all. Replying to a message, unblocks whoever wrote it. With nothing, lists the blocked ones.',
     cmd_opts: [

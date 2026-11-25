@@ -8,7 +8,7 @@ no grupo quando alguém entra (pelo link de convite ou adicionado por um admin).
 [`/goodbye`](goodbye.md).
 
 ```text
-/welcome [-on|-off|-t] [<texto>]
+/welcome [-on|-off|-test|-t] [<texto>]
 ```
 
 | Opção | Valor | Descrição |

@@ -4,7 +4,7 @@ Desbloqueia uma pessoa bloqueada pelo [`/block`](block.md) ou no celular, ou tod
 Respondendo uma mensagem, desbloqueia quem a escreveu. Sem nada, mostra a lista do `/block`.
 
 ```text
-/unblock [/contato/|@menção|+número|nº]  ou  /unblock -a
+/unblock [/contato/|@menção|+número|nº]  ou  /unblock -all|-a
 ```
 
 | Opção | Valor | Descrição |

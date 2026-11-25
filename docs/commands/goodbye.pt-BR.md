@@ -8,7 +8,7 @@ no grupo quando alguém sai (ou é removido). Vale **por grupo**, e só existe o
 [`/welcome`](welcome.md).
 
 ```text
-/goodbye [-on|-off|-t] [<texto>]
+/goodbye [-on|-off|-test|-t] [<texto>]
 ```
 
 | Opção | Valor | Descrição |

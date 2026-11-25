@@ -1,6 +1,6 @@
 {
   "summary": "Encaminha a mensagem respondida para pessoas, grupos ou e-mails",
-  "usage": "/forward [-q|-s] [-d] [-nohdr] [-N] [#lista]... <destinatário>... [texto] [-to <destino>]...  ou  /forward -add|-list|-rm|-move|-desc <...>",
+  "usage": "/forward [-quiet|-q|-status|-s] [-dry|-d] [-nohdr] [#lista]... [-N|-N,-N|-N..-N] [/contato/|@menção|+número]... [texto] [-to <destino>]...  ou  /forward -add|-a|-list|-l|-rm|-r|-move|-m|-desc <...>",
   "help": "Encaminha a mensagem que você respondeu (texto, foto, vídeo, áudio, documento, figurinha, localização...) para os destinatários. Sem resposta, diga antes a posição das mensagens acima: -1 é a logo acima, -1 -4 -6 ou -1,-4,-6 são várias, -3..-1 é uma faixa (até forward.max, enviadas da mais antiga para a mais nova; o cabeçalho vai uma vez, antes delas). Só envia se todos os destinatários forem encontrados; senão, não manda nada e o bot diz qual falhou. Responde na hora com quem vai receber e, no fim, edita essa mensagem com o status (um ❌ e o motivo para quem falhou); com -quiet, não mostra nada (nem status nem cabeçalho). Por padrão a mensagem vai com o cabeçalho \"Mensagem encaminhada pelo ZapBot!\" (setting forward.header) e o status aparece (setting forward.status); o -status força os dois e o -nohdr tira só o cabeçalho. Depois dos destinatários pode vir um texto: ele vai no começo e, com resposta, a mensagem respondida vai embaixo dele, depois de uma linha em branco.",
   "ex": [
     "/forward /Fulano de Tal/",

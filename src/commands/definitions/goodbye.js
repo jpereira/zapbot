@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/goodbye',
-    usage: '/goodbye [-on|-off|-test] [<text>]',
+    usage: '/goodbye [-on|-off|-test|-t] [<text>]',
     aliases: [],
     summary: 'Message when someone leaves the group',
     help: 'Sets the message the bot sends in the group when someone leaves (or is removed). It is per group: with nothing, shows this group\'s. {name} is the person and {group}, the group name. Works only in groups.',

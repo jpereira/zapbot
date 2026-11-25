@@ -1,6 +1,6 @@
 {
   "summary": "Desbloqueia pessoas bloqueadas",
-  "usage": "/unblock [/contato/|@menção|+número|nº]  ou  /unblock -all",
+  "usage": "/unblock [/contato/|@menção|+número|nº]  ou  /unblock -all|-a",
   "help": "Desbloqueia uma pessoa bloqueada (pelo /block ou no celular), ou todas com -all. Respondendo uma mensagem, desbloqueia quem a escreveu. Sem nada, lista os bloqueados.",
   "cmd_opts": [
     {

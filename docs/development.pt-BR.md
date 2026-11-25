@@ -213,40 +213,40 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 
 | Arquivo | O que cobre |
 |---|---|
-| `agenda.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to` num item só, `-edit`, `-pause`/`-resume` e os `{/comando}` e o `\n` no texto (e o `-test`) |
+| `schedule.test.js` | Datas digitadas (`6h`, `+2h`, `às 18h`, `sexta`...) e o `/cron`, nos modos mensagem e lembrete, com vários `-to` num item só, `-edit`, `-pause`/`-resume` e os `{/comando}` e o `\n` no texto (e o `-test`) |
 | `alias.test.js` | Cadastro persistente, descrições com aspas retas e curvas, listagem, remoção individual e total, nomes reservados, argumentos adicionais, permissões do destino e os aliases de texto (`{/comando}`, `\n` e as permissões de cada comando) |
-| `apagadas-editadas.test.js` | Eventos de apagar/editar (o Nome do aviso vem da agenda) (e os avisos `show.alert.*`) e o `/show` (apagadas, editadas e status, o chat pedido e a busca `-q`) |
+| `deleted-edited.test.js` | Eventos de apagar/editar (o Nome do aviso vem da agenda) (e os avisos `show.alert.*`) e o `/show` (apagadas, editadas e status, o chat pedido e a busca `-q`) |
 | `show-history.test.js` | `/show -a`: o histórico geral por mês, dia e hora, o período, as partes, as últimas N, a busca e o `-f -a -yes` |
 | `ascii.test.js` | O `/ascii`: as 5 linhas dentro do bloco de código, a quebra pela largura (`-w`), o `-c`, o texto da mensagem respondida, acentos e erros |
 | `backup.test.js` | `/backup` (criação, lista, restauração, envio no privado, por e-mail e com um ou vários `-to`) e o backup diário |
 | `batch.test.js` | O `/batch`: a separação em blocos (linhas em branco, URLs e `/` que não é comando), o resumo, o `-dry`, o `-stop`, a recusa de `/batch` dentro de `/batch` e o uso só pelo dono |
 | `block.test.js` | `/block` e `/unblock`: pelo nome, pelo número, respondendo, a lista (com os `@lid` convertidos para o telefone) e o nº dela, e o `/unblock -all` |
 | `bump.test.js` | Release e bump em repositórios temporários, versões dos exemplos, tags existentes e prévia sem alterações |
-| `canais.test.js` | Identificação de canais `@newsletter` nos avisos e no `/show` |
-| `comandos.test.js` | `/help` (só com os comandos de quem pediu), `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (o `-h` em blocos, o status sem opção, o `-on`/`-off`, o `-list-users`, e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rm`) |
-| `conexao-email.test.js` | Eventos de conexão, reinício (e as novas tentativas sem internet, no boot e no reinício, e o vigia do `ready`), watchdog, alertas por e-mail, crash e `docker stop` |
-| `configuracao.test.js` | `commands.js`, settings (e a validação dos valores persistidos), parser de opções, ajuda (uma forma do uso e um exemplo por linha) e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
-| `cotacoes.test.js` | `/stocks`, `/crypto` (e o filtro por moeda) e os alertas de preço (com um ou vários `-to`, o `-msg` e o `-rm` de vários) |
+| `channels.test.js` | Identificação de canais `@newsletter` nos avisos e no `/show` |
+| `commands.test.js` | `/help` (só com os comandos de quem pediu), `/debug`, `/uptime`, `/version`, `/ping`, `/noffa`, `/bot` (o `-h` em blocos, o status sem opção, o `-on`/`-off`, o `-list-users`, e o `-info`, com as versões novas do yt-dlp e do whatsapp-web.js), `/set` (e o `-append`/`-rm`) |
+| `connection-email.test.js` | Eventos de conexão, reinício (e as novas tentativas sem internet, no boot e no reinício, e o vigia do `ready`), watchdog, alertas por e-mail, crash e `docker stop` |
+| `configuration.test.js` | `commands.js`, settings (e a validação dos valores persistidos), parser de opções, ajuda (uma forma do uso e um exemplo por linha) e a coerência entre config, código, README e `docs/` (inclusive a ordem alfabética, os links e a versão estável da instalação) |
+| `quotes.test.js` | `/stocks`, `/crypto` (e o filtro por moeda) e os alertas de preço (com um ou vários `-to`, o `-msg` e o `-rm` de vários) |
 | `debug.test.js` | Níveis, parser dos comandos, filtro com destaque, logs de inicialização, cópia para chats e ocultação de credenciais |
 | `defi.test.js` | Solana (base58, PDA), contas da Orca (conferidas com o SDK oficial), o Project X (HyperEVM simulada), a Liquidswap (Aptos simulada: indexador e fullnode, com o preço das pools estáveis e a chave da API), o Morpho (API simulada, com as contas conferidas com as da API), o Aave V3 (blockchain simulada, com o Multicall3 de verdade) e o `/defi`: o filtro por protocolo, o `-rm` de vários, os endereços (inteiros só no privado), a lista (com o 🔔 e o limite), o resumo do `-fees` (com o total e o `-alert`) e o `-alert` (saída e volta da faixa, o `-fees`, o `-alert` no cadastro e vários `-to`) |
-| `dependencias.test.js` | Carregamento das dependências sem aviso do módulo `punycode` |
-| `diagnostico.test.js` | O `/bot -test`: os itens com ✅/❌/➖ (rede simulada), a falha de um teste na contagem e a recusa junto de outras opções; o `-flush-email` (sem SMTP, recusa) e a busca das pastas Sent e Trash |
-| `externos.test.js` | `/cve`, `/weather`, `/news`, `/gpt`, `/tldr`, `/draw`, `/translate`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
+| `dependencies.test.js` | Carregamento das dependências sem aviso do módulo `punycode` |
+| `diagnostics.test.js` | O `/bot -test`: os itens com ✅/❌/➖ (rede simulada), a falha de um teste na contagem e a recusa junto de outras opções; o `-flush-email` (sem SMTP, recusa) e a busca das pastas Sent e Trash |
+| `external.test.js` | `/cve`, `/weather`, `/news`, `/gpt`, `/tldr`, `/draw`, `/translate`, `/giphy`, `/meme`, `/joke`, `/kernel`, `/pixelart` |
 | `forward.test.js` | O `/forward`: vários destinatários (nome, `/Nome/`, menção, número, `-to` e-mail), só enviar se todos casarem, o cabeçalho do `forward.header`, mídia (legenda, áudio, anexo), localização, o status ✅/❌ e o uso só do dono e admins |
 | `get-cache.test.js` | `/get` (a URL, o link e a mídia respondida, e o anti-SSRF), `/cache` e a limpeza periódica |
-| `grupo.test.js` | `/everybody`, `/bills`, `/members`, `/walissu`, `/poll` (e o `-r`), `/sticker` (e o `-txt`) |
+| `groupMedia.test.js` | `/everybody`, `/bills`, `/members`, `/walissu`, `/poll` (e o `-r`), `/sticker` (e o `-txt`) |
 | `admins-invite.test.js` | `/promote` e `/demote` (por nome, menção, número e respondendo; já é admin, fora do grupo, o criador, o participante `@lid`, o bot sem ser admin e a recusa) e `/invite` (e `-revoke`) |
-| `grupos.test.js` | `/join` (link, código, `-info`, convite inválido e recusa) e `/leave` (pelo nome, pelo nº, a lista) |
+| `groups.test.js` | `/join` (link, código, `-info`, convite inválido e recusa) e `/leave` (pelo nome, pelo nº, a lista) |
 | `i18n.test.js` | O setting `zapbot.lang` (padrão `en_US`, aceita `pt-BR`/`pt`/`en`), os catálogos (mesmas chaves e `{placeholders}`), o texto das definições em inglês com a tradução em português de cada uma, e o `-h`/`/help` nos dois idiomas |
-| `i18n-adm.test.js`, `i18n-ai.test.js`, `i18n-core.test.js`, `i18n-data.test.js`, `i18n-grp.test.js`, `i18n-info.test.js`, `i18n-notes.test.js`, `i18n-novos.test.js` | As respostas em `en_US` (os outros testes rodam em `pt_BR`), um arquivo por assunto do catálogo: administração (`/bot`, `/set`, `/backup`, `/alias`, `/batch`, `/debug`, `/cron`), IA e mídia (`/gpt`, `/tldr`, `/draw`...), núcleo (login, opção e comando desconhecidos, avisos), dados (`/get`, `/show`, `/stats`, `/watch`, `/cache`), grupos (`/mute`, `/block`, `/poll`, `/leave`...), informação (`/stocks`, `/crypto`, `/bills`, `/whois`, `/me`, `/bot -status`, `/uptime`) e notas (`/notes`, `/monitor`) e os comandos novos (`/welcome`, `/promote`, `/invite`, `/ocr`, `/qr`, `/carbon`...) |
+| `i18n-adm.test.js`, `i18n-ai.test.js`, `i18n-core.test.js`, `i18n-data.test.js`, `i18n-grp.test.js`, `i18n-info.test.js`, `i18n-notes.test.js`, `i18n-new.test.js` | As respostas em `en_US` (os outros testes rodam em `pt_BR`), um arquivo por assunto do catálogo: administração (`/bot`, `/set`, `/backup`, `/alias`, `/batch`, `/debug`, `/cron`), IA e mídia (`/gpt`, `/tldr`, `/draw`...), núcleo (login, opção e comando desconhecidos, avisos), dados (`/get`, `/show`, `/stats`, `/watch`, `/cache`), grupos (`/mute`, `/block`, `/poll`, `/leave`...), informação (`/stocks`, `/crypto`, `/bills`, `/whois`, `/me`, `/bot -status`, `/uptime`) e notas (`/notes`, `/monitor`) e os comandos novos (`/welcome`, `/promote`, `/invite`, `/ocr`, `/qr`, `/carbon`...) |
 | `heartbeat.test.js` | Heartbeat e o `docker/app/healthcheck.js` (executado de verdade) |
-| `mascara-telefones.test.js` | Ofuscação de telefones no `/show`, `/watch` e `/bot` |
-| `mensagens.test.js` | Gravação (com o nome da sua agenda, não o pushname) e de localizações sem interpretar a miniatura como texto ou comando, roteamento, permissões (`role`, o `bot.users` com pessoas, grupos, `true`/`false` e as permissões persistidas, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +a`/`+u`, as listas do `-list-users`/`-list-users all`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
+| `mask-phones.test.js` | Ofuscação de telefones no `/show`, `/watch` e `/bot` |
+| `messages.test.js` | Gravação (com o nome da sua agenda, não o pushname) e de localizações sem interpretar a miniatura como texto ou comando, roteamento, permissões (`role`, o `bot.users` com pessoas, grupos, `true`/`false` e as permissões persistidas, bot desligado, admins extras do `bot.admins`, os atalhos `/bot +a`/`+u`, as listas do `-list-users`/`-list-users all`, os comandos de cada usuário (`+cmd`/`-cmd`), o `-reset` com a confirmação, o `/whois` e a proteção contra flood), o log dos comandos desconhecidos e a contagem do `/stats` (sem os avisos do sistema) |
 | `monitor.test.js` | Cadastro, filtro e remoção com o resolvedor compartilhado, alertas online persistentes, migração do banco, `-rm all`, consultas sequenciais, pausas, histórico por contato, limite de entradas, persistência e listagem em texto ou documento |
 | `notes.test.js` | O `/notes`: `-add`, `-list` e `-rm` (vários IDs, `all`, ID inexistente), as `#tags` (a parcial: `#idei` acha `#ideias`), `-tags`, `-desc`, `-move`, `-view` (com imagem), `-export` (PDF, com as imagens), `-search`, imagens e o `-alert` (no `-add` e por ID ou tag, quando inválido, `-to`, disparo único e `-alert -rm`) |
 | `mute.test.js` | `/mute` e `/unmute`: avisos silenciados por pessoa, grupo ou comunidade (só o alvo é o `-a`), a busca do alvo (nomes exatos, contato, grupo, menção e lista para escolher pelo nº) e a resposta a um aviso (de onde ele veio) |
-| `presenca.test.js` | Leitura de presença por LID, assinatura compartilhada, cache e ausência de horários válidos sem fabricar dados |
-| `saudacoes.test.js` | `/welcome` e `/goodbye`: o texto por grupo (`{name}`, `{group}`, menção), `-on`, `-off`, `-test`, os eventos `group_join`/`group_leave` e quem não dispara |
+| `presence.test.js` | Leitura de presença por LID, assinatura compartilhada, cache e ausência de horários válidos sem fabricar dados |
+| `greetings.test.js` | `/welcome` e `/goodbye`: o texto por grupo (`{name}`, `{group}`, menção), `-on`, `-off`, `-test`, os eventos `group_join`/`group_leave` e quem não dispara |
 | `ocr-qr-carbon.test.js` | `/ocr` (a foto para o ChatGPT), `/tts`, `/qr` (`-d`, leitura dos pixels com o jsqr), `/carbon` (SVG, temas, limites) e `/profile -set` (grupo, conta, recusa) |
 | `calendar.test.js` | `/calendar`: o leitor local nas duas mensagens de confirmação, datas e horas, o .ics, o link e o JSON do Google Calendar, o leitor do ChatGPT |
 | `web.test.js` | A interface web: login, sessões, TOTP, conversas e mensagens (edições, apagadas, respostas), mídia com Range, notas (tags travadas), listas, mudanças, estatísticas, exportar e os avisos de senha errada |
@@ -254,22 +254,37 @@ devolve `null`, como quando o WhatsApp não deixa editar.
 | `api.test.js` | A API HTTP local (chave, regras do `/send` e o limite de 10 por minuto) e o servidor MCP experimental (`initialize`, `tools/list`, `tools/call`) |
 | `contacts.test.js` | O `/contacts`: o vCard com fotos, os filtros, a exportação só no privado e o cache |
 | `games.test.js` | O `/games`: bola 8, verdade, desafio, trivia, e jogar só respondendo a mensagem do bot |
-| `perfil-ia.test.js` | O `-profile` do `/draw` e do `/gpt`: as fotos de perfil junto das imagens |
+| `profile-ai.test.js` | O `-profile` do `/draw` e do `/gpt`: as fotos de perfil junto das imagens |
 | `profile-about.test.js` | O `/profile -about` (pessoas, privado, respondendo, descrição do grupo) e o `-set <texto>` (139 caracteres, caracteres proibidos) |
 | `status-whatsapp.test.js` | O `/status` (texto, foto, tamanho, aviso de banimento) e o `/cron -status` |
 | `usage.test.js` | O limite de uso (`/bot +limit`, `/usage`, `/whois`): períodos, devolução na falha e a reserva |
 | `whois-id.test.js` | O `/whois -id`: os ids do chat e da pessoa |
 | `profile.test.js` | O `/profile`: a foto com a legenda `Contato: nome da agenda <telefone>` (por nome, menção e número), o nome da agenda no lugar do pushname, o seu perfil e o de quem escreveu a mensagem respondida, várias pessoas, sem foto, o download que falha, o `@lid`, `-mask`, grupo recusado e o uso só pelo dono |
-| `reacoes.test.js` | Reações removidas ou trocadas: o evento `message_reaction` (e o que não gera aviso), o aviso `show.alert.reaction`, o `/show -r`, o `/mute -r`, o `/bot -status` e a limpeza |
+| `reactions.test.js` | Reações removidas ou trocadas: o evento `message_reaction` (e o que não gera aviso), o aviso `show.alert.reaction`, o `/show -r`, o `/mute -r`, o `/bot -status` e a limpeza |
 | `search.test.js` | `/search`: neste chat, em todos no seu privado, o `-N` e o limite, mídias e textos longos |
 | `sticker-pos.test.js` | `/sticker -pos`: o recorte quadrado no topo, no meio (padrão) ou embaixo |
 | `stats.test.js`, `watch.test.js` | `/stats` (com o `/chat/`, o `-l` e o `-flush`) e `/watch` (e um ou vários `-to`) |
 | `status.test.js` | `/bot -status`: o relatório (com o aviso `show.alert.*` desligado e os silenciados do `/mute`) e o envio diário (e o `-to`: pessoas, grupos e e-mails) |
-| `telefone-bot.test.js` | Número da conta configurada, formato esperado, avisos e destinos internos |
+| `phone-bot.test.js` | Número da conta configurada, formato esperado, avisos e destinos internos |
 | `url.test.js` | Anti-SSRF do `/get` e da prévia do link: endereços internos bloqueados, respostas DNS mistas recusadas e IP fixado com revalidação dos redirects |
 | `util.test.js` | Formatação, contatos/`@lid`, menções, arquivos do cache e a versão com o commit e o `(devel)` (`version.js`) |
+| `alias-private.test.js` | `/alias -private`: um alias que só o dono vê e roda |
+| `antilink.test.js` | `/antilink`: os modos, os domínios liberados e quem nunca é pego |
+| `attempts.test.js` | Controle de tentativas (`/bot -login`, o login da web, o TOTP e as tags protegidas): o bloqueio e a memória limitada |
+| `calc.test.js` | `/calc`: a soma de listas e os cálculos |
+| `call.test.js`, `calls.test.js` | `/call` e as ligações recusadas: `call.reject`, `call.allow` e `call.message` |
+| `choices.test.js` | Escolha numa lista e as confirmações sim/não (`0` e `cancelar` desistem) |
+| `commands-disabled.test.js` | `commands.disabled`: `/cve`, `/kernel`, `/news` e `/walissu` desligados por padrão, fora do `/help`, e ligados com o `/set` |
+| `group.test.js` | `/group`: as informações, as mudanças e o fechamento com hora |
+| `moderation.test.js` | `/antitag` e `/antibadword`: marcar todo mundo e palavras proibidas |
+| `no-permission.test.js` | O aviso de sem permissão: `bot.denied.enabled` e `bot.denied.message` |
+| `notes-lock.test.js` | `/notes -lock`: tags protegidas (texto e arquivos cifrados, a senha pedida no seu privado) |
+| `stocks.test.js` | `/stocks` pelo Yahoo Finance (ações, ETFs e índices), os alertas de preço e o XAUT no `/crypto` |
+| `tts-segments.test.js` | `/tts` com várias linhas (uma fala por linha, uma nota de voz só) e o `-beat` |
+| `warn.test.js` | `/warn`: avisos no grupo, o limite `warn.max` que remove a pessoa, `-l` e `-c` |
+| `zb.test.js` | Arquivos `.zb`: o formato, a carga única no boot e o `/alias -examples` |
 
-Um comando ou opção novos entram com os testes deles; o `configuracao.test.js` falha se o comando
+Um comando ou opção novos entram com os testes deles; o `configuration.test.js` falha se o comando
 não tiver a página dele em `docs/commands/`, se estiver fora de ordem ou se algum link estiver
 quebrado.
 

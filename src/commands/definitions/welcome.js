@@ -6,7 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/welcome',
-    usage: '/welcome [-on|-off|-test] [<text>]',
+    usage: '/welcome [-on|-off|-test|-t] [<text>]',
     aliases: [],
     summary: 'Message when someone joins the group',
     help: 'Sets the message the bot sends in the group when someone joins (by invite link or added by an admin). It is per group: with nothing, shows this group\'s. {name} is the person (a mention) and {group}, the group name. Works only in groups.',

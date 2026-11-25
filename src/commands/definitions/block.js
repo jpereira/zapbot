@@ -9,7 +9,7 @@ module.exports = {
     usage: '/block [/contact/|@mention|+number]...  or  /block -l',
     aliases: [],
     summary: 'Blocks people on your WhatsApp account',
-    help: 'Blocks one or more people on your WhatsApp account, like Block on the phone. Replying to a message blocks whoever wrote it. With nothing, lists the blocked people (including the ones you blocked on the phone), numbered for /unblock <num>. Groups cannot be blocked.',
+    help: 'Blocks one or more people on your WhatsApp account, like Block on the phone. Replying to a message blocks whoever wrote it. With nothing, lists the blocked people (including the ones you blocked on the phone), numbered for /unblock <no.>. Groups cannot be blocked.',
     cmd_opts: [
         {
             opts: ['list', 'l'],

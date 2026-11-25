@@ -272,12 +272,6 @@ async function main() {
     await shot('history-select', 1180);
     await page.evaluate(() => { [...document.querySelectorAll('.toolbar .btn')].find(b => b.textContent.includes('☑')).click(); });
     await wait(300);
-    // clear the history of the chat (it asks for the name; the deleted, the edited and the reacted ones stay)
-    await page.evaluate(() => { [...document.querySelectorAll('.main-head .btn')].find(b => b.textContent.includes('🧹')).click(); });
-    await page.waitForSelector('.modal');
-    await page.type('.modal input[type=text]', 'Ana Souza');
-    await shot('history-clear', 860);
-    await closeModal();
 
     /* notes */
     await view('notes');

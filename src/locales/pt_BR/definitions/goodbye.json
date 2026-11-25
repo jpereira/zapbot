@@ -1,6 +1,6 @@
 {
   "summary": "Mensagem quando alguém sai do grupo",
-  "usage": "/goodbye [-on|-off|-test] [<texto>]",
+  "usage": "/goodbye [-on|-off|-test|-t] [<texto>]",
   "help": "Define a mensagem que o bot manda no grupo quando alguém sai (ou é removido). Vale por grupo: sem nada, mostra a deste grupo. {name} é a pessoa e {group}, o nome do grupo. Só funciona em grupos.",
   "ex": [
     "/goodbye",
