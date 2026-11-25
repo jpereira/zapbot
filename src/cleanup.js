@@ -98,6 +98,25 @@ async function cleanAll() {
     return { total, deleted: deletedAlt, edited, reactions, backups, allowed: Math.max(0, bytesBefore - getDirSize(CACHE_DIR)) };
 }
 
+// /cache -clean: what is past the retention windows, at once (the same as the periodic cleanup)
+async function cleanRetention() {
+    await cleanCacheOld();
+    await cleanFilesOld();
+    await cleanWatchOld();
+    await cleanEditedOld();
+    await cleanReactionsOld();
+    await cleanStatsOld();
+    await cleanPollsOld();
+    await cleanIgnoredOld();
+}
+
+// The temporary files (cache/tmp), even the recent ones and the cached /get downloads
+function cleanTemporary() {
+    const bytes = getDirSize(TMP_DIR);
+    cleanContentDirectory(TMP_DIR);
+    return { bytes };
+}
+
 /*
  * /cache -media: deletes the downloaded media (MEDIA_DIR). The messages stay in the
  * database without the file: a deleted one recovered later warns "file not
@@ -293,6 +312,8 @@ function startCleanupPeriodic() {
 
 module.exports = {
     startCleanupPeriodic,
+    cleanRetention,
+    cleanTemporary,
     cleanFilesOld,
     cleanCacheOld,
     cleanEditedOld,

@@ -322,6 +322,7 @@ tr:last-child td { border-bottom: 0; }
 .modal input[type=text], .modal input[type=datetime-local], .modal textarea, .modal select { background: var(--header); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; }
 .modal textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; resize: vertical; }
 .modal .error { color: var(--deleted); min-height: 1.2em; }
+.modal p.warning { color: var(--deleted); font-weight: 600; border: 1px solid var(--deleted); border-radius: 8px; padding: 10px 12px; margin: 0 0 12px; }
 .webpanel { min-width: 0; max-width: 100%; box-sizing: border-box; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 18px; }
 .wp-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 14px; min-width: 0; }
 .wp-group { background: var(--header); border-radius: 8px; padding: 10px 12px; display: grid; gap: 10px; align-content: start; }
@@ -415,6 +416,7 @@ button.rank:hover { background: var(--hover); }
 /* storage, like the phone's storage screen */
 .storage { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
 .storage-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+.storage-head .grow { flex: 1; }
 .storage-total { font-size: 28px; font-weight: 600; }
 .stack { display: flex; height: 26px; border-radius: 8px; overflow: hidden; background: var(--line); gap: 2px; }
 .stack .seg { min-width: 4px; height: 100%; }

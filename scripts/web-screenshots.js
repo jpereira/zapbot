@@ -258,6 +258,11 @@ async function main() {
 
     /* home */
     await shot('home', 1480);
+    // the /cache of the storage: each part with its size, and everything with the warning
+    await page.evaluate(() => [...document.querySelectorAll('.storage-head .btn')].find(b => b.textContent.includes('🧹')).click());
+    await page.waitForSelector('.modal');
+    await shot('home-clean', 860);
+    await closeModal();
 
     /* history */
     await view('history');
@@ -272,6 +277,16 @@ async function main() {
     await shot('history-select', 1180);
     await page.evaluate(() => { [...document.querySelectorAll('.toolbar .btn')].find(b => b.textContent.includes('☑')).click(); });
     await wait(300);
+    // clear the history of the chat: how many go and stay, and the box that deletes everything
+    await page.evaluate(() => { [...document.querySelectorAll('.main-head .btn')].find(b => b.textContent.includes('🧹')).click(); });
+    await page.waitForSelector('.modal');
+    await shot('history-clear', 860);
+    await closeModal();
+    // the big flush: the 🧹 next to "Chats", for every chat
+    await page.evaluate(() => document.querySelector('.side-head .btn').click());
+    await page.waitForSelector('.modal');
+    await shot('history-flush', 860);
+    await closeModal();
 
     /* notes */
     await view('notes');

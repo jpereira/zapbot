@@ -8,7 +8,10 @@ const fs = require('fs-extra');
 const path = require('path');
 
 const { client } = require('../client');
-const { MEDIA_DIR } = require('../constants');
+const { deleteAllBackups } = require('../backup');
+const { cleanAll, cleanMedia, cleanRetention, cleanTemporary } = require('../cleanup');
+const contactPhotos = require('../contactPhotos');
+const { CACHE_DIR, MEDIA_DIR } = require('../constants');
 const { chatInfo } = require('./data');
 const { registerMonitored } = require('../monitor');
 const { resolveLidToPhone } = require('../contacts');
@@ -19,6 +22,7 @@ const { printInfo } = require('../log');
 const { priceHandleAlert } = require('../priceAlerts');
 const webNotes = require('./notes');
 const { SETTINGS_SCHEMA, getSetting, setSetting } = require('../settings');
+const { getDirSize } = require('../util/files');
 
 class ManageError extends Error {}
 
@@ -249,9 +253,12 @@ async function toggleMonitor(body) {
 const KEPT = `(revoked = 1 OR id IN (SELECT message_id FROM message_edits) OR id IN (SELECT message_id FROM reactions)
     OR id IN (SELECT message_id FROM reaction_changes))`;
 
+// chat null: every chat
 async function chatCounts(chat) {
-    const row = await dbGet(`SELECT COUNT(*) AS total, SUM(CASE WHEN ${KEPT} THEN 1 ELSE 0 END) AS kept FROM messages WHERE chat_id = ?`, [chat]);
-    return { total: row.total ?? 0, kept: row.kept ?? 0, removed: (row.total ?? 0) - (row.kept ?? 0) };
+    const where = chat == null ? '' : 'WHERE chat_id = ?';
+    const row = await dbGet(`SELECT COUNT(*) AS total, SUM(CASE WHEN ${KEPT} THEN 1 ELSE 0 END) AS kept, COUNT(DISTINCT chat_id) AS chats
+        FROM messages ${where}`, chat == null ? [] : [chat]);
+    return { total: row.total ?? 0, kept: row.kept ?? 0, removed: (row.total ?? 0) - (row.kept ?? 0), chats: row.chats ?? 0 };
 }
 
 async function previewChat(body) {
@@ -261,20 +268,49 @@ async function previewChat(body) {
     return { ok: true, name: info.name, ...(await chatCounts(chat)) };
 }
 
-// Deletes the history of a chat, except the deleted, the edited and the reacted messages (it asks for the name of the chat)
+// Deletes the history of a chat, except the deleted, the edited and the reacted messages; with all, those too (with their
+// edits and reactions). The name of the chat confirms it. The /watch hits stay: they are the history of the rules.
 async function clearChat(body) {
     const chat = str(body.chat, 'chat', { max: 200 });
     const info = await chatInfo(chat);
     if (!info) throw new ManageError('chat: not found');
     if (String(body.confirm ?? '').trim().toLowerCase() !== String(info.name).trim().toLowerCase()) throw new ManageError('confirm: type the name of the chat');
-    const files = await dbAll(`SELECT media_path FROM messages WHERE chat_id = ? AND NOT ${KEPT} AND has_media = 1 AND media_path IS NOT NULL`, [chat]);
-    const removed = await dbRun(`DELETE FROM messages WHERE chat_id = ? AND NOT ${KEPT}`, [chat]);
+    const removed = await deleteMessages(chat, body.all === true);
+    return { ok: true, removed, kept: (await chatCounts(chat)).total };
+}
+
+// The messages of a chat (null: of every chat) and their media; with all, also the deleted, edited and reacted ones,
+// with their edits and reactions
+async function deleteMessages(chat, all) {
+    const where = [chat == null ? null : 'chat_id = ?', all ? null : `NOT ${KEPT}`].filter(Boolean);
+    const clause = where.length ? ` WHERE ${where.join(' AND ')}` : '';
+    const params = chat == null ? [] : [chat];
+    const files = await dbAll(`SELECT media_path FROM messages${clause}${where.length ? ' AND' : ' WHERE'} media_path IS NOT NULL`, params);
+    if (all) {
+        for (const table of ['message_edits', 'reactions', 'reaction_changes']) {
+            await dbRun(chat == null ? `DELETE FROM ${table}` : `DELETE FROM ${table} WHERE message_id IN (SELECT id FROM messages WHERE chat_id = ?)`, params);
+        }
+    }
+    const removed = await dbRun(`DELETE FROM messages${clause}`, params);
     const base = await fs.realpath(MEDIA_DIR).catch(() => null);
     for (const { media_path: file } of files) {
         const real = base ? await fs.realpath(path.resolve(MEDIA_DIR, file)).catch(() => null) : null;
         if (real?.startsWith(base + path.sep)) await fs.remove(real).catch(() => {});
     }
-    return { ok: true, removed: removed.changes, kept: (await chatCounts(chat)).total };
+    return removed.changes;
+}
+
+// The big flush: the history of every chat at once. The fixed confirmation keeps a stray API call from doing it
+const FLUSH_CONFIRM = 'every chat';
+
+async function previewAll() {
+    return { ok: true, confirm: FLUSH_CONFIRM, ...(await chatCounts(null)) };
+}
+
+async function clearAll(body) {
+    if (body.confirm !== FLUSH_CONFIRM) throw new ManageError(`confirm: "${FLUSH_CONFIRM}"`);
+    const removed = await deleteMessages(null, body.all === true);
+    return { ok: true, removed, kept: (await chatCounts(null)).total };
 }
 
 /* schedule */
@@ -357,13 +393,38 @@ const noteResult = (result) => {
     return result;
 };
 
+/* the cache (the /cache command): the parts picked, or everything */
+const CACHE_PARTS = {
+    retention: () => cleanRetention(),
+    media: () => cleanMedia(),
+    temporary: () => cleanTemporary(),
+    contacts: () => contactPhotos.cleanCache(),
+    backups: () => deleteAllBackups()
+};
+// Everything (/cache -all) also takes every message: a fixed confirmation keeps a stray API call from doing it
+const CACHE_ALL_CONFIRM = 'everything';
+
+async function cleanCachePicked(body) {
+    const before = getDirSize(CACHE_DIR);
+    if (body.all === true) {
+        if (body.confirm !== CACHE_ALL_CONFIRM) throw new ManageError(`confirm: "${CACHE_ALL_CONFIRM}"`);
+        await cleanAll();
+    } else {
+        const picked = Object.keys(CACHE_PARTS).filter(key => body[key] === true);
+        if (!picked.length) throw new ManageError('pick: at least one');
+        for (const key of picked) await CACHE_PARTS[key]();
+    }
+    return { ok: true, freed: Math.max(0, before - getDirSize(CACHE_DIR)) };
+}
+
 const HANDLERS = {
     alias: { add: saveAlias, edit: saveAlias, delete: deleteAlias },
     price: { add: addPrice, edit: editPrice, delete: deletePrice },
     tag: { add: async (body, token) => noteResult(await webNotes.addTag(token, body)), edit: async (body, token) => noteResult(await webNotes.editTag(token, body)), delete: async (body, token) => noteResult(await webNotes.deleteTag(token, body)) },
     note: { add: async (body, token) => noteResult(await webNotes.addNote(token, body)), edit: async (body, token) => noteResult(await webNotes.updateNote(token, body)), delete: async (body, token) => noteResult(await webNotes.deleteNote(token, body.id)) },
     watch: { add: saveWatch, edit: saveWatch, delete: deleteWatch, toggle: toggleWatch },
-    chat: { preview: previewChat, clear: clearChat },
+    chat: { preview: previewChat, clear: clearChat, previewAll, clearAll },
+    cache: { clean: cleanCachePicked },
     monitor: { add: addMonitor, edit: editMonitor, delete: deleteMonitor, toggle: toggleMonitor },
     monitorReading: { delete: deleteMonitorReading },
     schedule: { add: saveSchedule, edit: saveSchedule, delete: deleteSchedule, toggle: pauseSchedule },

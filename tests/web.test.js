@@ -9,7 +9,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { createServer, resetWeb } = bot.src('web/server');
-const { MEDIA_DIR, NOTES_DIR } = bot.src('constants');
+const { CONTACTS_DIR, MEDIA_DIR, NOTES_DIR, TMP_DIR } = bot.src('constants');
 const crypto = require('node:crypto');
 const { createHash } = bot.src('util/password');
 
@@ -1684,7 +1684,7 @@ describe('the web interface: mute a /watch rule, the chat of a schedule, clear a
         }
     });
 
-    test('clear the history of a chat: the deleted, the edited and the reacted stay; the others go, with their media; the name confirms', async () => {
+    test('clear the history of a chat: the deleted, the edited and the reacted stay; the others go, with their media; with all, everything goes; the name confirms', async () => {
         const CHAT = '120363000000000055@g.us';
         const insert = (id, at, extra = '') => bot.dbRun(`INSERT INTO messages (id, sender_name, sender_jid, sender_number, chat_id, chat_name, is_group, body, type, timestamp, has_media, media_path, from_me, revoked)
             VALUES (?, 'Maria', '5521988887777@c.us', '5521988887777', ?, 'Turma', 1, ?, 'chat', ?, ?, ?, 0, ?)`, [id, CHAT, `texto ${id}`, at, extra ? 1 : 0, extra || null, id === 'del' ? 1 : 0]);
@@ -1707,6 +1707,67 @@ describe('the web interface: mute a /watch rule, the chat of a schedule, clear a
         assert.equal(fs.existsSync(file), false, 'the media of the deleted ones is gone');
         assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM message_edits')).n, 1, 'the edits stay');
         assert.equal((await manage({ section: 'chat', op: 'preview', chat: 'nao@g.us' })).status, 400);
+
+        // all: the deleted, the edited and the reacted ones go too, with their media, edits and reactions
+        const kept = path.join(MEDIA_DIR, 'turma-apagada.jpg');
+        fs.writeFileSync(kept, 'x');
+        await bot.dbRun("UPDATE messages SET has_media = 1, media_path = 'turma-apagada.jpg' WHERE id = 'del'");
+        const everything = await manage({ section: 'chat', op: 'clear', chat: CHAT, confirm: 'Turma', all: true });
+        assert.deepEqual([everything.status, everything.body.removed, everything.body.kept], [200, 4, 0]);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM messages WHERE chat_id = ?', [CHAT])).n, 0);
+        assert.equal(fs.existsSync(kept), false, 'the media of a deleted message goes too');
+        for (const table of ['message_edits', 'reactions', 'reaction_changes']) {
+            assert.equal((await bot.dbGet(`SELECT COUNT(*) AS n FROM ${table}`)).n, 0, table);
+        }
+    });
+
+    test('the cache of the home: the parts picked (media, temporary, contact photos), or everything with the confirmation; the notes stay', async () => {
+        const put = (dir, name) => { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, name), 'x'); return path.join(dir, name); };
+        const media = put(MEDIA_DIR, 'cache-test.jpg');
+        const tmp = put(TMP_DIR, 'cache-test.tmp');
+        const photo = put(CONTACTS_DIR, '5521977770009.jpg');
+        const note = put(NOTES_DIR, 'cache-test-note.jpg');
+        await bot.dbRun("INSERT INTO messages (id, chat_id, chat_name, body, timestamp, type, revoked) VALUES ('cx', '5521977770009@c.us', 'x', 'y', ?, 'chat', 0)", [Date.now()]);
+
+        assert.equal((await manage({ section: 'cache', op: 'clean' })).status, 400, 'nothing picked');
+        const picked = await manage({ section: 'cache', op: 'clean', media: true, temporary: true });
+        assert.equal(picked.status, 200);
+        assert.deepEqual([fs.existsSync(media), fs.existsSync(tmp), fs.existsSync(photo)], [false, false, true], 'only the picked ones');
+        assert.equal((await manage({ section: 'cache', op: 'clean', contacts: true })).status, 200);
+        assert.equal(fs.existsSync(photo), false);
+        assert.ok(await bot.dbGet("SELECT 1 FROM messages WHERE id = 'cx'"), 'the messages stay without everything');
+
+        assert.equal((await manage({ section: 'cache', op: 'clean', all: true })).status, 400, 'everything needs the confirmation');
+        assert.equal((await manage({ section: 'cache', op: 'clean', all: true, confirm: 'everything' })).status, 200);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM messages')).n, 0);
+        assert.equal(fs.existsSync(note), true, 'the notes are never part of the cache');
+        fs.rmSync(note, { force: true });
+    });
+
+    test('the big flush: every chat at once, with a fixed confirmation; all takes the deleted, edited and reacted ones too', async () => {
+        const insert = (id, chat, revoked = 0) => bot.dbRun(`INSERT INTO messages (id, chat_id, chat_name, body, timestamp, type, revoked)
+            VALUES (?, ?, 'x', 'texto', 1, 'chat', ?)`, [id, chat, revoked]);
+        await insert('g1', '120363000000000777@g.us'); await insert('g2', '120363000000000777@g.us', 1);
+        await insert('p1', '5521977770001@c.us'); await insert('p2', '5521977770002@c.us');
+        await bot.dbRun("INSERT INTO reactions (message_id, sender_jid, reaction, reacted_at) VALUES ('p2', '1@c.us', '👍', 1)");
+        const count = async () => (await bot.dbGet('SELECT COUNT(*) AS n FROM messages')).n;
+        const before = await count();
+
+        const preview = (await manage({ section: 'chat', op: 'previewAll' })).body;
+        assert.equal(preview.total, before);
+        assert.ok(preview.chats >= 3);
+        assert.equal((await manage({ section: 'chat', op: 'clearAll', confirm: 'yes' })).status, 400, 'only the fixed confirmation');
+        assert.equal(await count(), before);
+
+        const kept = await manage({ section: 'chat', op: 'clearAll', confirm: preview.confirm });
+        assert.equal(kept.status, 200);
+        assert.deepEqual((await bot.dbAll("SELECT id FROM messages WHERE id IN ('g1', 'g2', 'p1', 'p2') ORDER BY id")).map(r => r.id), ['g2', 'p2'],
+            'the deleted one and the reacted one stay, in every chat');
+
+        const everything = await manage({ section: 'chat', op: 'clearAll', confirm: preview.confirm, all: true });
+        assert.deepEqual([everything.status, everything.body.kept], [200, 0]);
+        assert.equal(await count(), 0);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM reactions')).n, 0);
     });
 
     test('settings: the answer carries where the page is and which settings need a restart; every web setting is there', async () => {

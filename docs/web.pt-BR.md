@@ -126,6 +126,13 @@ As mensagens dos contadores são as de verdade: os avisos do WhatsApp não conta
 
 ![Início: o armazenamento como o de um celular, os contadores e as estatísticas dos últimos 30 dias](assets/web/pt-BR/home.png)
 
+O **🧹 Limpar** do armazenamento é o [`/cache`](commands/cache.md) com caixas de marcar: o que passou da retenção
+(`-clean`), as mídias (`-media`), os temporários, as fotos dos contatos e os backups (`-backup`), cada um com o seu
+tamanho; marque os que quiser. **Tudo** é o `/cache -all` (todas as mensagens, mídias, temporários e backups), com um
+aviso em vermelho. As notas nunca entram.
+
+![O 🧹 do armazenamento: cada parte com o seu tamanho, e o tudo com o aviso](assets/web/pt-BR/home-clean.png)
+
 ![Início no tema claro](assets/web/pt-BR/home-light.png)
 
 ## Histórico
@@ -194,10 +201,18 @@ visíveis também são atualizadas enquanto você lê mensagens antigas.
 - **Selecionar mensagens**: *Selecionar* deixa você clicar nas mensagens que quer (elas ganham uma marca ●) e *Exportar
   selecionadas* faz um PDF só com elas.
 - **Limpar o histórico de uma conversa**: o 🧹 no cabeçalho da conversa apaga as mensagens dela (e a mídia) do cache,
-  **menos** as apagadas, as editadas (com o texto de antes) e as que têm reações. Uma confirmação diz quantas saem e
-  quantas ficam; nada é apagado antes de você dizer sim.
+  **menos** as apagadas, as editadas (com o texto de antes) e as que têm reações. A janela diz quantas saem e quantas
+  ficam; marcando **Apagar tudo**, essas saem também, com a mídia, as edições e as reações (as ocorrências do `/watch`
+  ficam). Nada é apagado antes de você confirmar.
+- **Limpar todas as conversas de uma vez**: o 🧹 ao lado de *Conversas*, no alto da lista, é a mesma janela para o
+  histórico inteiro, com um aviso em vermelho de que leva todas as conversas (só um [`/backup`](commands/backup.md)
+  traz de volta).
 
 ![Selecionar ligado: três mensagens marcadas, prontas para exportar](assets/web/pt-BR/history-select.png)
+
+![A janela do 🧹: quantas mensagens saem, quantas ficam, e a opção de apagar tudo](assets/web/pt-BR/history-clear.png)
+
+![O 🧹 de Conversas: a mesma janela para todas as conversas, com o aviso](assets/web/pt-BR/history-flush.png)
 
 ### Avisos do WhatsApp
 
@@ -235,8 +250,8 @@ a tag (ou todas) no mesmo PDF do `/notes -pdf`, com as imagens.
 
 - **＋ Nova tag** pede um nome e uma descrição, como o `/notes -desc #tag <texto>`, e cria uma tag que aparece na lista
   mesmo sem notas. Dentro de uma tag, ✏️ muda a descrição (vazia remove) ou o nome (as notas vão junto). O **🗑️**
-  remove: uma tag vazia some na hora (pergunta antes); uma com notas pede para você **digitar o nome dela** para
-  confirmar, do mesmo jeito que o 🧹 do histórico, e aí apaga todas as notas, a mídia delas, a descrição da tag e o
+  remove: uma tag vazia some na hora (pergunta antes); uma com notas abre uma janela que diz quantas
+  notas saem, do mesmo jeito que o 🧹 do histórico, e, quando você confirma, apaga todas as notas, a mídia delas, a descrição da tag e o
   cadeado, se ela era protegida — o mesmo que o `/notes -rm #tag -yes` no WhatsApp, e um pouco mais (esse comando
   deixa a descrição e o cadeado para trás; aqui não).
 - **＋ Nova nota** adiciona uma nota na tag, com um alerta numa data e hora se você quiser. Em cada cartão, ✏️ edita o

@@ -28,7 +28,7 @@ const TEXTS = {
         vsPrevious: 'vs the previous period', noData: 'No data in this period yet.', cPerDay: 'Messages per day', cDeletedEdited: 'Deleted and edited per day', cHours: 'Messages by hour of the day',
         cHeat: 'When the chat is busy (weekday x hour)', cTypes: 'What the messages are', cChats: 'Chats with the most messages', cPeople: 'People who talk the most',
         text: 'text', mediaWord: 'media', weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], msgsWord: 'messages', share: 'of the total',
-        cannotShow: 'this message could not be shown', phTag: 'travel', phTagDesc: 'places to visit', phNoteTag: 'ideas', envForced: (env) => `Decided by the ${env} variable (config/.env), which has priority over this setting`, noticeOn: 'Off: click to turn it on', noticeOff: 'On: click to turn it off', runOn: 'Running: click to pause', runOff: 'Paused: click to resume', clearHistory: 'Clear the history of this chat', clearBtn: 'Clear', clearTitle: (name) => `Clear the history · ${name}`, clearInfo: (r) => `${r.removed} messages will be deleted (with their media). ${r.kept} stay: the deleted, the edited and the ones with reactions, with what they had before.`, clearNothing: 'Nothing to delete: every message here is a deleted, edited or reacted one.', clearConfirm: (name) => `Clear removable messages in “${name}”?`, clearDone: (r) => `${r.removed} messages deleted; ${r.kept} stay.`, webPanel: 'Web interface', webAt: 'Open at', webAccess: 'Access', webLogin: 'Login and session', webScreen: 'Screen', webAlerts: 'Warnings', notSet: 'not set', needsRestart: 'Takes effect when the bot restarts', restSettings: 'All the other settings', protectedHere: 'Change it with /set in WhatsApp',  meBtn: 'Me (my private chat)', watchedBy: '/watch', openInHistory: 'Open in the history, at this message', presenceSource: 'WhatsApp presence · time not confirmed', newTag: 'New tag', newNote: 'New note', editTagBtn: 'Edit the tag', removeTag: 'Remove the tag', confirmRemoveTag: 'Remove this tag (it has no notes)?', removeTagWithNotes: 'Remove the tag and everything in it', removeTagInfo: (n) => `${n} note${n === 1 ? '' : 's'} (and their media) will be deleted, along with the tag's description and lock, if any.`, historyBtn: 'History', loadingHistory: 'Loading the history…', searchContact: 'Search a contact or group (name or number) or type an email', pickContact: 'Search the contact (name or number)', noMatches: 'No contact found', privateChat: 'Empty: it goes to your private chat', useEmail: (email) => `✉️ Use ${email}`, updatedAt: (time) => `updated at ${time}`, noHistory: 'Nothing recorded yet.', removeReading: 'Remove this reading', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 ${who ? `${who}'s` : 'a participant\'s'} security code changed`, systemNotice: (text) => `ℹ️ ${text ?? 'WhatsApp notice'}`, loadMore: 'Load more', noMore: 'No more messages.', loadingFor: (name) => `Loading ${name}…`, loadingStats: 'Loading the statistics…', loadingHome: 'Loading…', statsOverview: 'Statistics', last30: 'last 30 days', seeAllStats: 'See all the statistics',
+        cannotShow: 'this message could not be shown', phTag: 'travel', phTagDesc: 'places to visit', phNoteTag: 'ideas', envForced: (env) => `Decided by the ${env} variable (config/.env), which has priority over this setting`, noticeOn: 'Off: click to turn it on', noticeOff: 'On: click to turn it off', runOn: 'Running: click to pause', runOff: 'Paused: click to resume', clearHistory: 'Clear the history of this chat', clearBtn: 'Clear', clearTitle: (name) => `Clear the history · ${name}`, clearInfo: (r) => `${r.removed} messages will be deleted (with their media). ${r.kept} stay: the deleted, the edited and the ones with reactions, with what they had before.`, clearNothing: 'Nothing to delete: every message here is a deleted, edited or reacted one.', clearEmpty: 'This chat has no messages in the database.', cacheBtn: 'Clean', deleteNote: 'Delete the note', notice: 'Notice', cacheClean: 'Clean the cache (/cache)', cacheRetention: 'What is past the retention windows (/cache -clean)', cachePick: 'Pick at least one.', cacheAll: 'Everything (/cache -all): every message (deleted, edited and reacted included), media, temporary files and backups', cacheAllWarning: '⚠️ Everything takes the whole history of every chat and the backups too: there is no undo. The notes always stay.', flushAll: 'Clear the history of every chat', flushBtn: 'Clear every chat', flushEmpty: 'There are no messages in the database.', flushWarning: (n) => `⚠️ This clears the history of all the ${n} chats at once, not only this one. There is no undo (only a /backup).`, clearAll: (n) => `Delete everything (${n}), including the deleted, the edited and the reacted ones, with their media`, webPanel: 'Web interface', webAt: 'Open at', webAccess: 'Access', webLogin: 'Login and session', webScreen: 'Screen', webAlerts: 'Warnings', notSet: 'not set', needsRestart: 'Takes effect when the bot restarts', restSettings: 'All the other settings', protectedHere: 'Change it with /set in WhatsApp',  meBtn: 'Me (my private chat)', watchedBy: '/watch', openInHistory: 'Open in the history, at this message', presenceSource: 'WhatsApp presence · time not confirmed', newTag: 'New tag', newNote: 'New note', editTagBtn: 'Edit the tag', removeTag: 'Remove the tag', confirmRemoveTag: 'Remove this tag (it has no notes)?', removeTagWithNotes: 'Remove the tag and everything in it', removeTagInfo: (n) => `${n} note${n === 1 ? '' : 's'} (and their media) will be deleted, along with the tag's description and lock, if any.`, historyBtn: 'History', loadingHistory: 'Loading the history…', searchContact: 'Search a contact or group (name or number) or type an email', pickContact: 'Search the contact (name or number)', noMatches: 'No contact found', privateChat: 'Empty: it goes to your private chat', useEmail: (email) => `✉️ Use ${email}`, updatedAt: (time) => `updated at ${time}`, noHistory: 'Nothing recorded yet.', removeReading: 'Remove this reading', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 ${who ? `${who}'s` : 'a participant\'s'} security code changed`, systemNotice: (text) => `ℹ️ ${text ?? 'WhatsApp notice'}`, loadMore: 'Load more', noMore: 'No more messages.', loadingFor: (name) => `Loading ${name}…`, loadingStats: 'Loading the statistics…', loadingHome: 'Loading…', statsOverview: 'Statistics', last30: 'last 30 days', seeAllStats: 'See all the statistics',
         code: '6-digit code', quotedGone: 'message not in the database', searchAll: 'Search all the messages', searchResults: (n) => `${n} results`, exportChat: 'Export PDF', reacted: 'reaction', removedReaction: 'removed', reactionHistory: 'Reaction history',
         reactionChanged: 'Changed reaction', reactionRemoved: 'Removed reaction', autoRefresh: 'New messages',
         home: 'Home', navHistory: 'History', notes: 'Notes', alerts: 'Alerts', aliases: 'Shortcuts', schedule: 'Schedule', stats: 'Stats', settings: 'Settings',
@@ -71,7 +71,7 @@ const TEXTS = {
         vsPrevious: 'em relação ao período anterior', noData: 'Ainda não há dados neste período.', cPerDay: 'Mensagens por dia', cDeletedEdited: 'Apagadas e editadas por dia', cHours: 'Mensagens por hora do dia',
         cHeat: 'Quando o movimento é maior (dia da semana x hora)', cTypes: 'O que são as mensagens', cChats: 'Conversas com mais mensagens', cPeople: 'Quem mais fala',
         text: 'texto', mediaWord: 'mídia', weekdays: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'], msgsWord: 'mensagens', share: 'do total',
-        cannotShow: 'não foi possível mostrar esta mensagem', phTag: 'viagens', phTagDesc: 'lugares para conhecer', phNoteTag: 'ideias', envForced: (env) => `Decidido pela variável ${env} (config/.env), que tem prioridade sobre este setting`, noticeOn: 'Desligado: clique para ligar', noticeOff: 'Ligado: clique para desligar', runOn: 'Ativo: clique para pausar', runOff: 'Pausado: clique para retomar', clearHistory: 'Limpar o histórico desta conversa', clearBtn: 'Limpar', clearTitle: (name) => `Limpar o histórico · ${name}`, clearInfo: (r) => `${r.removed} mensagens serão apagadas (com a mídia). ${r.kept} ficam: as apagadas, as editadas e as com reações, com o que tinham antes.`, clearNothing: 'Nada a apagar: toda mensagem daqui é apagada, editada ou tem reação.', clearConfirm: (name) => `Apagar as mensagens que podem ser removidas de “${name}”?`, clearDone: (r) => `${r.removed} mensagens apagadas; ${r.kept} ficam.`, webPanel: 'Interface web', webAt: 'Abra em', webAccess: 'Acesso', webLogin: 'Login e sessão', webScreen: 'Tela', webAlerts: 'Avisos', notSet: 'não definido', needsRestart: 'Vale quando o bot reiniciar', restSettings: 'Todos os outros settings', protectedHere: 'Mude com o /set no WhatsApp',  meBtn: 'Eu (meu privado)', watchedBy: '/watch', openInHistory: 'Abrir no histórico, nesta mensagem', presenceSource: 'presença do WhatsApp · horário não confirmado', newTag: 'Nova tag', newNote: 'Nova nota', editTagBtn: 'Editar a tag', removeTag: 'Remover a tag', confirmRemoveTag: 'Remover esta tag (ela não tem notas)?', removeTagWithNotes: 'Remover a tag e tudo dentro dela', removeTagInfo: (n) => `${n} nota${n === 1 ? '' : 's'} (e a mídia delas) serão apagadas, junto com a descrição e o cadeado da tag, se houver.`, historyBtn: 'Histórico', loadingHistory: 'Carregando o histórico…', searchContact: 'Busque um contato ou grupo (nome ou número) ou digite um e-mail', pickContact: 'Busque o contato (nome ou número)', noMatches: 'Nenhum contato encontrado', privateChat: 'Vazio: vai para o seu privado', useEmail: (email) => `✉️ Usar ${email}`, updatedAt: (time) => `atualizado às ${time}`, noHistory: 'Nada registrado ainda.', removeReading: 'Remover esta leitura', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 o código de segurança de ${who ?? 'um participante'} mudou`, systemNotice: (text) => `ℹ️ ${text ?? 'aviso do WhatsApp'}`, loadMore: 'Carregar mais', noMore: 'Não há mais mensagens.', loadingFor: (name) => `Carregando ${name}…`, loadingStats: 'Carregando as estatísticas…', loadingHome: 'Carregando…', statsOverview: 'Estatísticas', last30: 'últimos 30 dias', seeAllStats: 'Ver todas as estatísticas',
+        cannotShow: 'não foi possível mostrar esta mensagem', phTag: 'viagens', phTagDesc: 'lugares para conhecer', phNoteTag: 'ideias', envForced: (env) => `Decidido pela variável ${env} (config/.env), que tem prioridade sobre este setting`, noticeOn: 'Desligado: clique para ligar', noticeOff: 'Ligado: clique para desligar', runOn: 'Ativo: clique para pausar', runOff: 'Pausado: clique para retomar', clearHistory: 'Limpar o histórico desta conversa', clearBtn: 'Limpar', clearTitle: (name) => `Limpar o histórico · ${name}`, clearInfo: (r) => `${r.removed} mensagens serão apagadas (com a mídia). ${r.kept} ficam: as apagadas, as editadas e as com reações, com o que tinham antes.`, clearNothing: 'Nada a apagar: toda mensagem daqui é apagada, editada ou tem reação.', clearEmpty: 'Esta conversa não tem mensagens no banco.', cacheBtn: 'Limpar', deleteNote: 'Apagar a nota', notice: 'Aviso', cacheClean: 'Limpar o cache (/cache)', cacheRetention: 'O que passou da retenção (/cache -clean)', cachePick: 'Marque pelo menos um.', cacheAll: 'Tudo (/cache -all): todas as mensagens (inclusive apagadas, editadas e com reações), mídias, temporários e backups', cacheAllWarning: '⚠️ Tudo leva o histórico inteiro de todas as conversas e os backups também: não tem como desfazer. As notas ficam sempre.', flushAll: 'Limpar o histórico de todas as conversas', flushBtn: 'Limpar todas as conversas', flushEmpty: 'Não há mensagens no banco.', flushWarning: (n) => `⚠️ Isto limpa o histórico de todas as ${n} conversas de uma vez, não só de uma. Não tem como desfazer (só por um /backup).`, clearAll: (n) => `Apagar tudo (${n}), inclusive as apagadas, as editadas e as com reações, com a mídia delas`, webPanel: 'Interface web', webAt: 'Abra em', webAccess: 'Acesso', webLogin: 'Login e sessão', webScreen: 'Tela', webAlerts: 'Avisos', notSet: 'não definido', needsRestart: 'Vale quando o bot reiniciar', restSettings: 'Todos os outros settings', protectedHere: 'Mude com o /set no WhatsApp',  meBtn: 'Eu (meu privado)', watchedBy: '/watch', openInHistory: 'Abrir no histórico, nesta mensagem', presenceSource: 'presença do WhatsApp · horário não confirmado', newTag: 'Nova tag', newNote: 'Nova nota', editTagBtn: 'Editar a tag', removeTag: 'Remover a tag', confirmRemoveTag: 'Remover esta tag (ela não tem notas)?', removeTagWithNotes: 'Remover a tag e tudo dentro dela', removeTagInfo: (n) => `${n} nota${n === 1 ? '' : 's'} (e a mídia delas) serão apagadas, junto com a descrição e o cadeado da tag, se houver.`, historyBtn: 'Histórico', loadingHistory: 'Carregando o histórico…', searchContact: 'Busque um contato ou grupo (nome ou número) ou digite um e-mail', pickContact: 'Busque o contato (nome ou número)', noMatches: 'Nenhum contato encontrado', privateChat: 'Vazio: vai para o seu privado', useEmail: (email) => `✉️ Usar ${email}`, updatedAt: (time) => `atualizado às ${time}`, noHistory: 'Nada registrado ainda.', removeReading: 'Remover esta leitura', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 o código de segurança de ${who ?? 'um participante'} mudou`, systemNotice: (text) => `ℹ️ ${text ?? 'aviso do WhatsApp'}`, loadMore: 'Carregar mais', noMore: 'Não há mais mensagens.', loadingFor: (name) => `Carregando ${name}…`, loadingStats: 'Carregando as estatísticas…', loadingHome: 'Carregando…', statsOverview: 'Estatísticas', last30: 'últimos 30 dias', seeAllStats: 'Ver todas as estatísticas',
         code: 'Código de 6 dígitos', quotedGone: 'mensagem fora do banco', searchAll: 'Buscar em todas as mensagens', searchResults: (n) => `${n} resultados`, exportChat: 'Exportar PDF', reacted: 'reação', removedReaction: 'removida', reactionHistory: 'Histórico de reações',
         reactionChanged: 'Alterou a reação', reactionRemoved: 'Removeu a reação', autoRefresh: 'Mensagens novas',
         home: 'Início', navHistory: 'Histórico', notes: 'Notas', alerts: 'Alertas', aliases: 'Atalhos', schedule: 'Agenda', stats: 'Estatísticas', settings: 'Settings',
@@ -553,16 +553,48 @@ function renderMain() {
 async function clearHistory() {
     const chat = state.chat;
     const preview = await manage({ section: 'chat', op: 'preview', chat });
-    if (preview.error) { window.alert(preview.error); return; }
-    if (!preview.removed) { window.alert(T.clearNothing); return; }
-    if (!window.confirm(`${T.clearInfo(preview)}\n\n${T.clearConfirm(preview.name)}`)) return;
-    const result = await manage({ section: 'chat', op: 'clear', chat, confirm: preview.name });
-    if (result.error) { window.alert(result.error); return; }
-    window.alert(T.clearDone(result));
-    await loadChats();
-    const info = await (await api(`/api/chat?chat=${encodeURIComponent(chat)}`)).json().catch(() => null);
-    if (info?.id) { state.info = info; renderMain(); await loadMessages(true); }
-    else { state.chat = null; showHistory(document.getElementById('content')); }
+    if (preview.error) { messageBox(preview.error); return; }
+    if (!preview.total) { messageBox(T.clearEmpty); return; }
+    // By default the deleted, edited and reacted messages stay; the box deletes everything
+    openForm({
+        title: T.clearTitle(preview.name),
+        fields: [{ type: 'note', name: 'info', text: T.clearInfo(preview) }, { type: 'checkbox', name: 'all', label: T.clearAll(preview.total) }],
+        submitLabel: `🧹 ${T.clearBtn}`,
+        onSubmit: async (body) => {
+            if (!body.all && !preview.removed) return { error: T.clearNothing };
+            const result = await manage({ section: 'chat', op: 'clear', chat, confirm: preview.name, all: body.all });
+            if (result.error) return result;
+            await loadChats();
+            const info = await (await api(`/api/chat?chat=${encodeURIComponent(chat)}`)).json().catch(() => null);
+            if (info?.id) { state.info = info; renderMain(); await loadMessages(true); }
+            else { state.chat = null; showHistory(document.getElementById('content')); }
+            return result;
+        }
+    });
+}
+
+// The big flush: the history of every chat, with the same box that also takes the deleted, edited and reacted ones
+async function clearEverything() {
+    const preview = await manage({ section: 'chat', op: 'previewAll' });
+    if (preview.error) { messageBox(preview.error); return; }
+    if (!preview.total) { messageBox(T.flushEmpty); return; }
+    openForm({
+        title: T.flushAll,
+        fields: [
+            { type: 'note', name: 'warning', text: T.flushWarning(preview.chats), warn: true },
+            { type: 'note', name: 'info', text: T.clearInfo(preview) },
+            { type: 'checkbox', name: 'all', label: T.clearAll(preview.total) }
+        ],
+        submitLabel: `🧹 ${T.flushBtn}`,
+        onSubmit: async (body) => {
+            if (!body.all && !preview.removed) return { error: T.clearNothing };
+            const result = await manage({ section: 'chat', op: 'clearAll', confirm: preview.confirm, all: body.all });
+            if (result.error) return result;
+            state.chat = null;
+            showHistory(document.getElementById('content'));
+            return result;
+        }
+    });
 }
 
 async function exportSelected() {
@@ -731,7 +763,7 @@ async function showHistory(content) {
     const globalBox = el('input', { id: 'global-search', type: 'search', placeholder: T.searchAll, onkeydown: (event) => { if (event.key === 'Enter') searchEverywhere(event.target.value.trim()); } });
     content.replaceChildren(el('div', { class: `app${state.chat ? ' chat-open' : ''}` },
         el('div', { class: 'side' },
-            el('div', { class: 'side-head' }, el('span', { class: 'title' }, T.chats)),
+            el('div', { class: 'side-head' }, el('span', { class: 'title' }, T.chats), el('button', { class: 'btn', title: T.flushAll, onclick: clearEverything }, '🧹')),
             el('div', { class: 'search' }, searchBox, globalBox),
             el('div', { class: 'chats', id: 'chats' })),
         el('div', { class: 'main', id: 'main' }, el('div', { class: 'empty-main' }, T.pick))));
@@ -771,7 +803,8 @@ async function showHome(content) {
     const card = (label, value) => el('div', { class: 'card' }, el('div', { class: 'card-value' }, String(value)), el('div', { class: 'card-label' }, label));
     // Like the storage screen of a phone: the total, one segmented bar and, below, each kind with its color
     const storageCard = el('div', { class: 'storage' },
-        el('div', { class: 'storage-head' }, el('span', { class: 'storage-total' }, humanSize(storage.total)), el('span', { class: 'muted' }, T.storage)),
+        el('div', { class: 'storage-head' }, el('span', { class: 'storage-total' }, humanSize(storage.total)), el('span', { class: 'muted grow' }, T.storage),
+            el('button', { class: 'btn', title: T.cacheClean, onclick: () => cleanCache(storage) }, `🧹 ${T.cacheBtn}`)),
         el('div', { class: 'stack' }, parts.filter(([, , bytes]) => bytes > 0).map(([key, label, bytes]) => el('span', { class: `seg seg-${key}`, style: `width:${bytes / sum * 100}%`, title: `${label}: ${humanSize(bytes)}` }))),
         el('div', { class: 'storage-legend' }, parts.map(([key, label, bytes, text]) => el('div', { class: 'storage-item' },
             el('span', { class: `dot seg-${key}` }), el('div', {}, el('div', { class: 'storage-name' }, label), el('div', { class: 'muted' }, `${text} · ${Math.round(bytes / sum * 100)}%`))))));
@@ -789,6 +822,31 @@ async function showHome(content) {
             card(T.retEdited, T.days(retention.editedDays)), card(T.retReactions, T.days(retention.reactionDays))),
         el('div', { class: 'section-head' }, el('h3', {}, `${T.statsOverview} · ${T.last30}`), el('button', { class: 'btn', onclick: () => show('stats') }, T.seeAllStats)),
         stats.totals.msgs ? statsBody(stats, { compact: true }) : el('div', { class: 'empty' }, T.noData)));
+}
+
+// The /cache of the home: each part with its size, or everything (with the warning); the notes are never in it
+function cleanCache(storage) {
+    const sized = (label, bytes) => `${label} · ${humanSize(bytes)}`;
+    openForm({
+        title: T.cacheClean,
+        fields: [
+            { type: 'checkbox', name: 'retention', label: T.cacheRetention },
+            { type: 'checkbox', name: 'media', label: sized(T.media, storage.media.bytes) },
+            { type: 'checkbox', name: 'temporary', label: sized(T.temporary, storage.temporary.bytes) },
+            { type: 'checkbox', name: 'contacts', label: sized(T.contacts, storage.contacts.bytes) },
+            { type: 'checkbox', name: 'backups', label: `${sized(T.backups, storage.backups.bytes)} · ${T.backupsCount(storage.backups.count)}` },
+            { type: 'note', name: 'warning', text: T.cacheAllWarning, warn: true },
+            { type: 'checkbox', name: 'all', label: T.cacheAll }
+        ],
+        submitLabel: `🧹 ${T.cacheBtn}`,
+        onSubmit: async (body) => {
+            if (!Object.values(body).some(Boolean)) return { error: T.cachePick };
+            const result = await manage({ section: 'cache', op: 'clean', ...body, confirm: body.all ? 'everything' : undefined });
+            if (result.error) return result;
+            show('home');
+            return result;
+        }
+    });
 }
 
 /* statistics: charts drawn as SVG (no library: the page has a strict CSP) */
@@ -1073,7 +1131,7 @@ async function openHistory(kind, id) {
     try {
         data = await apiProgress(path, T.loadingHistory);
     } catch (err) {
-        window.alert(String(err.message ?? err));
+        messageBox(String(err.message ?? err));
         return;
     }
     const close = () => overlay.remove();
@@ -1082,7 +1140,7 @@ async function openHistory(kind, id) {
             el('tbody', {}, data.rows.map((row, i) => el('tr', {}, row.map(cell => el('td', { class: isShort(cell) ? 'nowrap' : '' }, cellNode(cell))),
                 kind === 'monitor' ? el('td', { class: 'row-actions' }, el('button', { class: 'icon-btn', title: T.removeReading, onclick: async () => {
                     const result = await manage({ section: 'monitorReading', op: 'delete', id: data.ids[i] });
-                    if (result.error) { window.alert(result.error); return; }
+                    if (result.error) { messageBox(result.error); return; }
                     close();
                     openHistory(kind, id);
                 } }, '🗑️')) : null)))))
@@ -1094,7 +1152,7 @@ async function openHistory(kind, id) {
 }
 
 /* a form in a window, from the field definitions of the section */
-function openForm({ title, fields, values = {}, onSubmit, submitLabel = null }) {
+function openForm({ title, fields, values = {}, onSubmit, submitLabel = null, noCancel = false }) {
     const inputs = fields.map((field) => {
         const value = values[field.name] ?? '';
         let input;
@@ -1102,7 +1160,7 @@ function openForm({ title, fields, values = {}, onSubmit, submitLabel = null }) 
         else if (field.type === 'select') input = el('select', {}, field.options.map(([v, label]) => el('option', { value: v, selected: String(value) === String(v) }, label)));
         else if (field.type === 'checkbox') input = el('input', { type: 'checkbox', checked: Boolean(value) });
         else if (field.type === 'people') input = peoplePicker(field, value);
-        else if (field.type === 'note') input = el('p', { class: 'muted' }, field.text);
+        else if (field.type === 'note') input = el('p', { class: field.warn ? 'warning' : 'muted' }, field.text);
         else if (field.type === 'datetime') input = el('input', { type: 'datetime-local', value: msToInput(Number(value) || (field.optional ? 0 : Date.now() + 3600_000)) });
         else input = el('input', { type: 'text', value: String(value), placeholder: field.placeholder ?? '' });
         return [field, input];
@@ -1123,10 +1181,19 @@ function openForm({ title, fields, values = {}, onSubmit, submitLabel = null }) 
     el('h3', {}, title),
     inputs.map(([field, input]) => field.type === 'note' ? input : el(field.type === 'people' ? 'div' : 'label', { class: field.type === 'checkbox' ? 'check' : 'field' }, el('span', {}, T.col[field.label] ?? field.label), input)),
     error,
-    el('div', { class: 'modal-actions' }, el('button', { type: 'button', class: 'btn', onclick: close }, T.cancel), el('button', { type: 'submit', class: 'btn on' }, submitLabel ?? T.save)));
+    el('div', { class: 'modal-actions' }, noCancel ? null : el('button', { type: 'button', class: 'btn', onclick: close }, T.cancel), el('button', { type: 'submit', class: 'btn on' }, submitLabel ?? T.save)));
     const overlay = el('div', { class: 'overlay', onclick: (event) => { if (event.target === overlay) close(); } }, form);
     document.body.append(overlay);
     (form.querySelector('input:not([type=checkbox]), textarea') ?? form).focus();
+}
+
+// The page's own popups, never the browser's confirm() and alert(): a question whose action runs on the confirm (its
+// error shows in the window), and a notice with only OK
+function confirmBox({ title, text, submitLabel = `🗑️ ${T.remove}`, action }) {
+    openForm({ title, fields: [{ type: 'note', name: 'info', text }], submitLabel, onSubmit: action });
+}
+function messageBox(text, title = T.notice) {
+    openForm({ title, fields: [{ type: 'note', name: 'info', text }], submitLabel: 'OK', noCancel: true, onSubmit: async () => null });
 }
 
 async function manage(body) {
@@ -1156,7 +1223,12 @@ async function showList(content, view, days = 30) {
                     onSubmit: (body) => run({ op: 'edit', ...(m.idField ? { [m.idField]: section.ids[i] } : { id: section.ids[i] }), ...body })
                 }) }, '✏️') : null,
                 m.canDelete && !section.values[i].protected ? el('button', { class: 'icon-btn', title: m.deleteLabel ? T.reset : T.remove, onclick: async () => {
-                    if (window.confirm(m.deleteLabel ? T.confirmReset : T.confirmDelete)) { const result = await run({ op: 'delete', id: section.ids[i] }); if (result.error) window.alert(result.error); }
+                    confirmBox({
+                        title: m.deleteLabel ? T.reset : T.remove,
+                        text: `${m.deleteLabel ? T.confirmReset : T.confirmDelete} ${section.rows[i].map(cell => (cell && typeof cell === 'object' ? cell.text ?? '' : String(cell ?? ''))).filter(Boolean).slice(0, 3).join(' · ')}`,
+                        submitLabel: m.deleteLabel ? `↺ ${T.reset}` : `🗑️ ${T.remove}`,
+                        action: () => run({ op: 'delete', id: section.ids[i] })
+                    });
                 } }, m.deleteLabel ? '↺' : '🗑️') : (section.values[i].protected ? el('span', { class: 'muted', title: T.protectedSetting }, '🔒') : null));
             const hasActions = m.canEdit || m.canDelete || m.history;
             const table = indexes.length
@@ -1228,18 +1300,24 @@ async function renderNotes(main, tags, content) {
         }) }, '✏️') : null,
         tag && current ? el('button', { class: 'btn', title: current.total ? T.removeTagWithNotes : T.removeTag, onclick: async () => {
             if (!current.total) {
-                if (!window.confirm(T.confirmRemoveTag)) return;
-                const result = await manage({ section: 'tag', op: 'delete', id: tag });
-                if (result.error) window.alert(result.error); else { state.notesTag = ''; showNotes(content); }
+                confirmBox({
+                    title: `${T.removeTag} · #${tag}`,
+                    text: T.confirmRemoveTag,
+                    submitLabel: `🗑️ ${T.removeTag}`,
+                    action: async () => {
+                        const result = await manage({ section: 'tag', op: 'delete', id: tag });
+                        if (!result.error) { state.notesTag = ''; showNotes(content); }
+                        return result;
+                    }
+                });
                 return;
             }
             openForm({
                 title: `${T.removeTagWithNotes} · #${tag}`,
-                fields: [{ type: 'note', name: 'info', text: T.removeTagInfo(current.total) }, { name: 'confirm', label: T.clearConfirm, type: 'text', placeholder: tag, required: true }],
-                values: {},
+                fields: [{ type: 'note', name: 'info', text: T.removeTagInfo(current.total) }],
                 submitLabel: `🗑️ ${T.removeTag}`,
-                onSubmit: async (body) => {
-                    const result = await manage({ section: 'tag', op: 'delete', id: tag, confirm: body.confirm });
+                onSubmit: async () => {
+                    const result = await manage({ section: 'tag', op: 'delete', id: tag, confirm: tag });
                     if (result.error) return result;
                     state.notesTag = '';
                     showNotes(content);
@@ -1295,11 +1373,15 @@ function noteCard(note, showTag, content) {
         values: { text: note.text, tag: note.tag, alertAt: note.alertAt },
         onSubmit: async (body) => { const result = await manage({ section: 'note', op: 'edit', id: note.id, ...body }); if (!result.error) showNotes(content); return result; }
     });
-    const remove = async () => {
-        if (!window.confirm(T.confirmDelete)) return;
-        const result = await manage({ section: 'note', op: 'delete', id: note.id });
-        if (result.error) window.alert(result.error); else showNotes(content);
-    };
+    const remove = () => confirmBox({
+        title: T.deleteNote,
+        text: note.text ? (note.text.length > 160 ? `${note.text.slice(0, 160)}…` : note.text) : T.confirmDelete,
+        action: async () => {
+            const result = await manage({ section: 'note', op: 'delete', id: note.id });
+            if (!result.error) showNotes(content);
+            return result;
+        }
+    });
     return el('div', { class: `note${note.protected ? ' protected' : ''}` },
         el('div', { class: 'note-head' },
             el('span', {}, `#${note.id} · ${fmtFull(note.createdAt)}`),

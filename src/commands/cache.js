@@ -6,7 +6,7 @@ const { deleteAllBackups, listBackups } = require('../backup');
 const { formatErrorCommand } = require('./base');
 const { BACKUP_DIR, CACHE_DIR, MEDIA_DIR } = require('../constants');
 const { dbGet } = require('../db');
-const { cleanFilesOld, cleanCacheOld, cleanEditedOld, cleanPollsOld, cleanIgnoredOld, cleanMedia, cleanReactionsOld, cleanStatsOld, cleanAll, cleanWatchOld } = require('../cleanup');
+const { cleanAll, cleanMedia, cleanRetention } = require('../cleanup');
 const { t } = require('../i18n');
 const { printError } = require('../log');
 const { humanSize, listCacheLevelOnly } = require('../util/files');
@@ -34,14 +34,7 @@ async function cmdCache({ msg, opts }) {
 
             // Normal cleanup: only what is past the retention windows
             if (opts.opt.clean) {
-                await cleanCacheOld();
-                await cleanFilesOld();
-                await cleanWatchOld();
-                await cleanEditedOld();
-                await cleanReactionsOld();
-                await cleanStatsOld();
-                await cleanPollsOld();
-                await cleanIgnoredOld();
+                await cleanRetention();
                 partsAlt.push(t('cache.cleaned'));
             }
 

@@ -125,6 +125,13 @@ the counters are the real ones: WhatsApp notices do not count.
 
 ![Home: the storage like a phone's, the counters and the statistics of the last 30 days](assets/web/home.png)
 
+The **🧹 Clean** of the storage is the [`/cache`](commands/cache.md) with boxes: what is past the retention windows
+(`-clean`), the media (`-media`), the temporary files, the contact photos and the backups (`-backup`), each with its
+size; tick the ones you want. **Everything** is the `/cache -all` (every message, media, temporary files and backups),
+with a warning in red. The notes are never part of it.
+
+![The 🧹 of the storage: each part with its size, and everything with the warning](assets/web/home-clean.png)
+
 ![Home in the light theme](assets/web/home-light.png)
 
 ## History
@@ -194,10 +201,17 @@ also update while you are reading older messages.
 - **Select messages**: *Select* lets you click the messages you want (they get a ● mark) and *Export selected* makes a
   PDF with only them.
 - **Clear the history of a chat**: the 🧹 in the header of the chat deletes its messages (and their media) from the
-  cache, **except** the deleted ones, the edited ones (with the text before) and the ones with reactions. A
-  confirmation tells how many go and how many stay; nothing is deleted before you say yes.
+  cache, **except** the deleted ones, the edited ones (with the text before) and the ones with reactions. The window
+  tells how many go and how many stay; ticking **Delete everything** takes those too, with their media, edits and
+  reactions (the `/watch` hits stay). Nothing is deleted before you confirm.
+- **Clear every chat at once**: the 🧹 next to *Chats*, at the top of the list, is the same window for the whole
+  history, with a warning in red that it takes every chat (only a [`/backup`](commands/backup.md) brings it back).
 
 ![Select on: three messages marked, ready to export](assets/web/history-select.png)
+
+![The 🧹 window: how many messages go, how many stay, and the box that deletes everything](assets/web/history-clear.png)
+
+![The 🧹 of Chats: the same window for every chat, with the warning](assets/web/history-flush.png)
 
 ### Notices of WhatsApp
 
@@ -234,8 +248,8 @@ all of them) as the same PDF of `/notes -pdf`, with the images.
 
 - **＋ New tag** asks for a name and a description, like `/notes -desc #tag <text>`, and creates a tag that shows up
   in the list even with no notes. Inside a tag, ✏️ changes the description (empty removes it) or the name (the notes
-  follow). **🗑️** removes it: an empty tag goes at once (it asks first); one with notes needs you to **type its name**
-  to confirm, the same way the 🧹 of the history does, and then deletes every note in it, their media, the tag's
+  follow). **🗑️** removes it: an empty tag goes at once (it asks first); one with notes opens a window that tells
+  how many notes go, the same way the 🧹 of the history does, and, once you confirm, deletes every note in it, their media, the tag's
   description and its lock, if it was protected — the same as `/notes -rm #tag -yes` in WhatsApp, and a bit more (that
   command leaves the description and the lock behind; this does not).
 - **＋ New note** adds a note to the tag, with an alert at a date and time if you want. On each card, ✏️ edits the text,
