@@ -97,6 +97,7 @@ The icons on the left open each part (on a phone they are a bar at the bottom):
 | ⚡ | Shortcuts | The [`/alias`](commands/alias.md) list |
 | ⏰ | Schedule | What [`/cron`](commands/cron.md) has scheduled |
 | 📊 | Statistics | Charts of the counters of [`/stats`](commands/stats.md) |
+| 🏴‍☠️ | Show | What [`/show`](commands/show.md) keeps (deleted, edited, reactions, statuses, channels) and who is muted |
 | ⚙️ | Settings | A panel for the web interface settings, then every other setting |
 
 At the bottom of the bar, the buttons switch the **theme** (automatic, light, dark) and the **language** (English or
@@ -358,6 +359,21 @@ between text and media (donut); messages by hour; a **weekday x hour heatmap** o
 ranking of the chats (click to open one) and of the people. Hover a bar or a cell to see the number.
 
 ![The statistics of the last 30 days](assets/web/stats.png)
+
+## Show
+
+What [`/show`](commands/show.md) keeps, in one place. On top, the four notices of `/show` in your private chat
+(deleted, edited, reactions, statuses): click to turn one on or off (the same as `show.alert.*`). Then a tab per kind,
+with the count: **deleted**, **edited** (before and after), **reactions** (the old one → the new one), deleted
+**statuses** and deleted **channel** posts, newest first, with a search in the text, the chat and the person.
+
+Each item has the photo (click it: the contact card, and there the photo in full size), the name (click it: only that
+person's items), the chat (click it: the History opens at that message), when it happened and what was recovered (the
+text and the media; click an image to see it big). 🔇 mutes the person (the same as [`/mute`](commands/mute.md), every
+notice, no deadline) and 🔊 unmutes; 🗑️ takes the item out of the cache. On the side, who deletes, edits and reacts the
+most, with the counts and the 🔇.
+
+![Show: the notices, the tabs, the recovered items and who deletes the most](assets/web/show.png)
 
 ## Settings
 

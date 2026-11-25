@@ -21,6 +21,7 @@ const { dbAll, dbGet, dbRun } = require('../db');
 const { printInfo } = require('../log');
 const { priceHandleAlert } = require('../priceAlerts');
 const webNotes = require('./notes');
+const webShow = require('./show');
 const { SETTINGS_SCHEMA, getSetting, setSetting } = require('../settings');
 const { getDirSize } = require('../util/files');
 
@@ -425,6 +426,7 @@ const HANDLERS = {
     watch: { add: saveWatch, edit: saveWatch, delete: deleteWatch, toggle: toggleWatch },
     chat: { preview: previewChat, clear: clearChat, previewAll, clearAll },
     cache: { clean: cleanCachePicked },
+    show: { delete: async (body) => noteResult(await webShow.deleteShowItem(body)), mute: async (body) => noteResult(await webShow.toggleMute(body)) },
     monitor: { add: addMonitor, edit: editMonitor, delete: deleteMonitor, toggle: toggleMonitor },
     monitorReading: { delete: deleteMonitorReading },
     schedule: { add: saveSchedule, edit: saveSchedule, delete: deleteSchedule, toggle: pauseSchedule },

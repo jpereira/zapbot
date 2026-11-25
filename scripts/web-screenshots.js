@@ -351,6 +351,12 @@ async function main() {
     await shot('schedule-edit', 900);
     await closeModal();
 
+    /* Show: what /show keeps */
+    await view('show');
+    await page.waitForSelector('.spy-feed');
+    await wait(400);
+    await shot('show', 1000);
+
     /* statistics */
     await view('stats');
     await page.waitForSelector('.chartcard');

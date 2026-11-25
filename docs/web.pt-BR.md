@@ -98,6 +98,7 @@ Os ícones da esquerda abrem cada parte (no celular eles viram uma barra embaixo
 | ⚡ | Atalhos | A lista do [`/alias`](commands/alias.md) |
 | ⏰ | Agenda | O que o [`/cron`](commands/cron.md) tem agendado |
 | 📊 | Estatísticas | Gráficos dos contadores do [`/stats`](commands/stats.md) |
+| 🏴‍☠️ | Show | O que o [`/show`](commands/show.md) guarda (apagadas, editadas, reações, status, canais) e quem está silenciado |
 | ⚙️ | Settings | Um painel dos settings da interface web e, depois, todos os outros settings |
 
 Embaixo da barra, os botões trocam o **tema** (automático, claro, escuro) e o **idioma** (inglês ou português; ele
@@ -360,6 +361,21 @@ as conversas esquentam; e o ranking das conversas (clique para abrir uma) e das 
 célula para ver o número.
 
 ![As estatísticas dos últimos 30 dias](assets/web/pt-BR/stats.png)
+
+## Show
+
+O que o [`/show`](commands/show.md) guarda, num lugar só. No alto, os quatro avisos do `/show` no seu privado
+(apagadas, editadas, reações, status): clique para ligar ou desligar (o mesmo que o `show.alert.*`). Depois uma aba
+por tipo, com a contagem: **apagadas**, **editadas** (antes e depois), **reações** (a antiga → a nova), **status**
+apagados e posts de **canais** apagados, os mais recentes primeiro, com busca no texto, na conversa e na pessoa.
+
+Cada item tem a foto (clique: a ficha do contato e, nela, a foto grande), o nome (clique: só os itens daquela pessoa),
+a conversa (clique: o Histórico abre naquela mensagem), quando aconteceu e o que foi recuperado (o texto e a mídia;
+clique numa imagem para ver grande). O 🔇 silencia a pessoa (o mesmo que o [`/mute`](commands/mute.md), todos os
+avisos, sem prazo) e o 🔊 tira o silêncio; o 🗑️ tira o item do cache. Ao lado, quem mais apaga, edita e reage, com as
+contagens e o 🔇.
+
+![Show: os avisos, as abas, os itens recuperados e quem mais apaga](assets/web/pt-BR/show.png)
 
 ## Settings
 

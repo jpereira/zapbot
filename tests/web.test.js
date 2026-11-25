@@ -1721,6 +1721,55 @@ describe('the web interface: mute a /watch rule, the chat of a schedule, clear a
         }
     });
 
+    test('Show: the counts, who deletes the most, each kind with search, person and pages; mute and take out', async () => {
+        const msg = (id, chat, number, extra = {}) => bot.dbRun(`INSERT INTO messages (id, chat_id, chat_name, is_group, sender_name, sender_jid, sender_number, body, timestamp, type, revoked, revoked_at, has_media)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [id, chat, extra.chatName ?? 'Turma', chat.endsWith('@g.us') ? 1 : 0, extra.name ?? 'Maria', `${number}@c.us`, number,
+            extra.body ?? `texto ${id}`, extra.at ?? 1000, extra.type ?? 'chat', extra.revoked ?? 1, extra.at ?? 1000, extra.media ? 1 : 0]);
+        const G = '120363000000000888@g.us';
+        await msg('d1', G, '5521977770001', { body: 'apagou isso', at: 3000 });
+        await msg('d2', G, '5521977770001', { body: 'e isso', at: 2000, media: true, type: 'image' });
+        await msg('d3', G, '5521977770002', { name: 'João', body: 'do João', at: 1000 });
+        await msg('s1', 'status@broadcast', '5521977770002', { name: 'João', body: 'um status', at: 4000 });
+        await msg('c1', '120363000000000999@newsletter', '5521977770003', { name: 'Canal', body: 'post', at: 5000 });
+        await msg('ok', G, '5521977770001', { revoked: 0 });
+        await bot.dbRun(`INSERT INTO message_edits (message_id, chat_id, chat_name, is_group, sender_name, sender_number, old_body, new_body, timestamp, edited_at)
+            VALUES ('ok', ?, 'Turma', 1, 'Maria', '5521977770001', 'antes', 'depois', 1000, 6000)`, [G]);
+        await bot.dbRun(`INSERT INTO reaction_changes (message_id, chat_id, chat_name, is_group, sender_name, sender_jid, sender_number, old_reaction, new_reaction, body, reacted_at, changed_at)
+            VALUES ('ok', ?, 'Turma', 1, 'João', '5521977770002@c.us', '5521977770002', '👍', '', 'texto ok', 1000, 7000)`, [G]);
+
+        const summary = await json('/api/show');
+        assert.deepEqual(summary.counts, { deleted: 3, status: 1, channels: 1, edited: 1, reactions: 1 });
+        assert.deepEqual(Object.keys(summary.alerts).sort(), ['show.alert.deleted', 'show.alert.edited', 'show.alert.reaction', 'show.alert.status']);
+        assert.deepEqual(summary.people.map(p => [p.name, p.deleted, p.edited, p.reactions]), [['Maria', 2, 1, 0], ['João', 1, 0, 1]]);
+
+        const deleted = await json('/api/show/items?kind=deleted');
+        assert.deepEqual(deleted.items.map(i => i.messageId), ['d1', 'd2', 'd3'], 'newest first');
+        assert.equal(deleted.items[1].media, true);
+        assert.deepEqual(deleted.items[0].person, { number: '5521977770001', id: '5521977770001@c.us', name: 'Maria', muted: false });
+        assert.deepEqual((await json('/api/show/items?kind=deleted&q=jo%C3%A3o')).items.map(i => i.messageId), ['d3'], 'the search looks at the person too');
+        assert.deepEqual((await json('/api/show/items?kind=deleted&person=5521977770001')).items.map(i => i.messageId), ['d1', 'd2']);
+        assert.deepEqual((await json('/api/show/items?kind=deleted&before=3000')).items.map(i => i.messageId), ['d2', 'd3'], 'the next page');
+        assert.deepEqual((await json('/api/show/items?kind=status')).items.map(i => i.text), ['um status']);
+        assert.deepEqual((await json('/api/show/items?kind=channels')).items.map(i => i.text), ['post']);
+        const [edit] = (await json('/api/show/items?kind=edited')).items;
+        assert.deepEqual([edit.before, edit.after], ['antes', 'depois']);
+        const [reaction] = (await json('/api/show/items?kind=reactions')).items;
+        assert.deepEqual(reaction.reaction, { from: '👍', to: '' });
+        assert.equal((await get('/api/show/items?kind=nope', cookie)).status, 400);
+
+        assert.equal((await manage({ section: 'show', op: 'mute', number: '5521977770001', name: 'Maria' })).body.muted, true);
+        assert.equal((await json('/api/show')).people[0].muted, true);
+        assert.ok(await bot.src('mute').muted('apagada', { chatId: G, senders: ['5521977770001@c.us'] }), 'the same /mute the bot uses');
+        assert.equal((await manage({ section: 'show', op: 'mute', number: '5521977770001' })).body.muted, false);
+        assert.equal((await manage({ section: 'show', op: 'mute', number: '12' })).status, 400);
+
+        assert.equal((await manage({ section: 'show', op: 'delete', kind: 'deleted', id: 'd3' })).status, 200);
+        assert.equal(await bot.dbGet("SELECT id FROM messages WHERE id = 'd3'"), undefined);
+        assert.equal((await manage({ section: 'show', op: 'delete', kind: 'deleted', id: 'ok' })).status, 400, 'a message that was not deleted is not a Show item');
+        assert.equal((await manage({ section: 'show', op: 'delete', kind: 'edited', id: edit.id })).status, 200);
+        assert.equal((await json('/api/show')).counts.edited, 0);
+    });
+
     test('the cache of the home: the parts picked (media, temporary, contact photos), or everything with the confirmation; the notes stay', async () => {
         const put = (dir, name) => { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, name), 'x'); return path.join(dir, name); };
         const media = put(MEDIA_DIR, 'cache-test.jpg');

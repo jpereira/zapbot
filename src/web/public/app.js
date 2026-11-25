@@ -28,7 +28,7 @@ const TEXTS = {
         vsPrevious: 'vs the previous period', noData: 'No data in this period yet.', cPerDay: 'Messages per day', cDeletedEdited: 'Deleted and edited per day', cHours: 'Messages by hour of the day',
         cHeat: 'When the chat is busy (weekday x hour)', cTypes: 'What the messages are', cChats: 'Chats with the most messages', cPeople: 'People who talk the most',
         text: 'text', mediaWord: 'media', weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], msgsWord: 'messages', share: 'of the total',
-        cannotShow: 'this message could not be shown', phTag: 'travel', phTagDesc: 'places to visit', phNoteTag: 'ideas', envForced: (env) => `Decided by the ${env} variable (config/.env), which has priority over this setting`, noticeOn: 'Off: click to turn it on', noticeOff: 'On: click to turn it off', runOn: 'Running: click to pause', runOff: 'Paused: click to resume', clearHistory: 'Clear the history of this chat', clearBtn: 'Clear', clearTitle: (name) => `Clear the history · ${name}`, clearInfo: (r) => `${r.removed} messages will be deleted (with their media). ${r.kept} stay: the deleted, the edited and the ones with reactions, with what they had before.`, clearNothing: 'Nothing to delete: every message here is a deleted, edited or reacted one.', clearEmpty: 'This chat has no messages in the database.', cacheBtn: 'Clean', deleteNote: 'Delete the note', notice: 'Notice', cacheClean: 'Clean the cache (/cache)', cacheRetention: 'What is past the retention windows (/cache -clean)', cachePick: 'Pick at least one.', cacheAll: 'Everything (/cache -all): every message (deleted, edited and reacted included), media, temporary files and backups', cacheAllWarning: '⚠️ Everything takes the whole history of every chat and the backups too: there is no undo. The notes always stay.', flushAll: 'Clear the history of every chat', flushBtn: 'Clear every chat', flushEmpty: 'There are no messages in the database.', flushWarning: (n) => `⚠️ This clears the history of all the ${n} chats at once, not only this one. There is no undo (only a /backup).`, clearAll: (n) => `Delete everything (${n}), including the deleted, the edited and the reacted ones, with their media`, webPanel: 'Web interface', webAt: 'Open at', webAccess: 'Access', webLogin: 'Login and session', webScreen: 'Screen', webAlerts: 'Warnings', notSet: 'not set', needsRestart: 'Takes effect when the bot restarts', restSettings: 'All the other settings', protectedHere: 'Change it with /set in WhatsApp',  meBtn: 'Me (my private chat)', watchedBy: '/watch', openInHistory: 'Open in the history, at this message', presenceSource: 'WhatsApp presence · time not confirmed', newTag: 'New tag', newNote: 'New note', editTagBtn: 'Edit the tag', removeTag: 'Remove the tag', confirmRemoveTag: 'Remove this tag (it has no notes)?', removeTagWithNotes: 'Remove the tag and everything in it', removeTagInfo: (n) => `${n} note${n === 1 ? '' : 's'} (and their media) will be deleted, along with the tag's description and lock, if any.`, historyBtn: 'History', loadingHistory: 'Loading the history…', searchContact: 'Search a contact or group (name or number) or type an email', pickContact: 'Search the contact (name or number)', noMatches: 'No contact found', privateChat: 'Empty: it goes to your private chat', useEmail: (email) => `✉️ Use ${email}`, updatedAt: (time) => `updated at ${time}`, noHistory: 'Nothing recorded yet.', removeReading: 'Remove this reading', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 ${who ? `${who}'s` : 'a participant\'s'} security code changed`, systemNotice: (text) => `ℹ️ ${text ?? 'WhatsApp notice'}`, loadMore: 'Load more', noMore: 'No more messages.', loadingFor: (name) => `Loading ${name}…`, loadingStats: 'Loading the statistics…', loadingHome: 'Loading…', statsOverview: 'Statistics', last30: 'last 30 days', seeAllStats: 'See all the statistics',
+        cannotShow: 'this message could not be shown', phTag: 'travel', phTagDesc: 'places to visit', phNoteTag: 'ideas', envForced: (env) => `Decided by the ${env} variable (config/.env), which has priority over this setting`, noticeOn: 'Off: click to turn it on', noticeOff: 'On: click to turn it off', runOn: 'Running: click to pause', runOff: 'Paused: click to resume', clearHistory: 'Clear the history of this chat', clearBtn: 'Clear', clearTitle: (name) => `Clear the history · ${name}`, clearInfo: (r) => `${r.removed} messages will be deleted (with their media). ${r.kept} stay: the deleted, the edited and the ones with reactions, with what they had before.`, clearNothing: 'Nothing to delete: every message here is a deleted, edited or reacted one.', clearEmpty: 'This chat has no messages in the database.', cacheBtn: 'Clean', deleteNote: 'Delete the note', notice: 'Notice', spy: { nav: 'Show', subtitle: 'What /show keeps: the deleted, the edited, the reactions, the statuses and the channels', kinds: { deleted: 'Deleted', edited: 'Edited', reactions: 'Reactions', status: 'Statuses', channels: 'Channels' }, alerts: 'Notices in your private chat', alertOn: 'On: click to turn it off', alertOff: 'Off: click to turn it on', people: 'Who deletes, edits and reacts the most', nobody: 'Nobody yet.', search: 'Search the text, the chat or the person', empty: 'Nothing here.', mute: 'Mute this person (/mute)', unmute: 'Unmute (/unmute)', muted: 'muted', removeTitle: 'Take it out of the cache', removeText: 'The bot forgets this item (and its media); WhatsApp is not touched.', removed: 'removed', media: 'Open the media', openChat: 'Open the chat at this message', mutedCount: (n) => `${n} muted` }, cacheClean: 'Clean the cache (/cache)', cacheRetention: 'What is past the retention windows (/cache -clean)', cachePick: 'Pick at least one.', cacheAll: 'Everything (/cache -all): every message (deleted, edited and reacted included), media, temporary files and backups', cacheAllWarning: '⚠️ Everything takes the whole history of every chat and the backups too: there is no undo. The notes always stay.', flushAll: 'Clear the history of every chat', flushBtn: 'Clear every chat', flushEmpty: 'There are no messages in the database.', flushWarning: (n) => `⚠️ This clears the history of all the ${n} chats at once, not only this one. There is no undo (only a /backup).`, clearAll: (n) => `Delete everything (${n}), including the deleted, the edited and the reacted ones, with their media`, webPanel: 'Web interface', webAt: 'Open at', webAccess: 'Access', webLogin: 'Login and session', webScreen: 'Screen', webAlerts: 'Warnings', notSet: 'not set', needsRestart: 'Takes effect when the bot restarts', restSettings: 'All the other settings', protectedHere: 'Change it with /set in WhatsApp',  meBtn: 'Me (my private chat)', watchedBy: '/watch', openInHistory: 'Open in the history, at this message', presenceSource: 'WhatsApp presence · time not confirmed', newTag: 'New tag', newNote: 'New note', editTagBtn: 'Edit the tag', removeTag: 'Remove the tag', confirmRemoveTag: 'Remove this tag (it has no notes)?', removeTagWithNotes: 'Remove the tag and everything in it', removeTagInfo: (n) => `${n} note${n === 1 ? '' : 's'} (and their media) will be deleted, along with the tag's description and lock, if any.`, historyBtn: 'History', loadingHistory: 'Loading the history…', searchContact: 'Search a contact or group (name or number) or type an email', pickContact: 'Search the contact (name or number)', noMatches: 'No contact found', privateChat: 'Empty: it goes to your private chat', useEmail: (email) => `✉️ Use ${email}`, updatedAt: (time) => `updated at ${time}`, noHistory: 'Nothing recorded yet.', removeReading: 'Remove this reading', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 ${who ? `${who}'s` : 'a participant\'s'} security code changed`, systemNotice: (text) => `ℹ️ ${text ?? 'WhatsApp notice'}`, loadMore: 'Load more', noMore: 'No more messages.', loadingFor: (name) => `Loading ${name}…`, loadingStats: 'Loading the statistics…', loadingHome: 'Loading…', statsOverview: 'Statistics', last30: 'last 30 days', seeAllStats: 'See all the statistics',
         code: '6-digit code', quotedGone: 'message not in the database', searchAll: 'Search all the messages', searchResults: (n) => `${n} results`, exportChat: 'Export PDF', reacted: 'reaction', removedReaction: 'removed', reactionHistory: 'Reaction history',
         reactionChanged: 'Changed reaction', reactionRemoved: 'Removed reaction', autoRefresh: 'New messages',
         home: 'Home', navHistory: 'History', notes: 'Notes', alerts: 'Alerts', aliases: 'Shortcuts', schedule: 'Schedule', stats: 'Stats', settings: 'Settings',
@@ -71,7 +71,7 @@ const TEXTS = {
         vsPrevious: 'em relação ao período anterior', noData: 'Ainda não há dados neste período.', cPerDay: 'Mensagens por dia', cDeletedEdited: 'Apagadas e editadas por dia', cHours: 'Mensagens por hora do dia',
         cHeat: 'Quando o movimento é maior (dia da semana x hora)', cTypes: 'O que são as mensagens', cChats: 'Conversas com mais mensagens', cPeople: 'Quem mais fala',
         text: 'texto', mediaWord: 'mídia', weekdays: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'], msgsWord: 'mensagens', share: 'do total',
-        cannotShow: 'não foi possível mostrar esta mensagem', phTag: 'viagens', phTagDesc: 'lugares para conhecer', phNoteTag: 'ideias', envForced: (env) => `Decidido pela variável ${env} (config/.env), que tem prioridade sobre este setting`, noticeOn: 'Desligado: clique para ligar', noticeOff: 'Ligado: clique para desligar', runOn: 'Ativo: clique para pausar', runOff: 'Pausado: clique para retomar', clearHistory: 'Limpar o histórico desta conversa', clearBtn: 'Limpar', clearTitle: (name) => `Limpar o histórico · ${name}`, clearInfo: (r) => `${r.removed} mensagens serão apagadas (com a mídia). ${r.kept} ficam: as apagadas, as editadas e as com reações, com o que tinham antes.`, clearNothing: 'Nada a apagar: toda mensagem daqui é apagada, editada ou tem reação.', clearEmpty: 'Esta conversa não tem mensagens no banco.', cacheBtn: 'Limpar', deleteNote: 'Apagar a nota', notice: 'Aviso', cacheClean: 'Limpar o cache (/cache)', cacheRetention: 'O que passou da retenção (/cache -clean)', cachePick: 'Marque pelo menos um.', cacheAll: 'Tudo (/cache -all): todas as mensagens (inclusive apagadas, editadas e com reações), mídias, temporários e backups', cacheAllWarning: '⚠️ Tudo leva o histórico inteiro de todas as conversas e os backups também: não tem como desfazer. As notas ficam sempre.', flushAll: 'Limpar o histórico de todas as conversas', flushBtn: 'Limpar todas as conversas', flushEmpty: 'Não há mensagens no banco.', flushWarning: (n) => `⚠️ Isto limpa o histórico de todas as ${n} conversas de uma vez, não só de uma. Não tem como desfazer (só por um /backup).`, clearAll: (n) => `Apagar tudo (${n}), inclusive as apagadas, as editadas e as com reações, com a mídia delas`, webPanel: 'Interface web', webAt: 'Abra em', webAccess: 'Acesso', webLogin: 'Login e sessão', webScreen: 'Tela', webAlerts: 'Avisos', notSet: 'não definido', needsRestart: 'Vale quando o bot reiniciar', restSettings: 'Todos os outros settings', protectedHere: 'Mude com o /set no WhatsApp',  meBtn: 'Eu (meu privado)', watchedBy: '/watch', openInHistory: 'Abrir no histórico, nesta mensagem', presenceSource: 'presença do WhatsApp · horário não confirmado', newTag: 'Nova tag', newNote: 'Nova nota', editTagBtn: 'Editar a tag', removeTag: 'Remover a tag', confirmRemoveTag: 'Remover esta tag (ela não tem notas)?', removeTagWithNotes: 'Remover a tag e tudo dentro dela', removeTagInfo: (n) => `${n} nota${n === 1 ? '' : 's'} (e a mídia delas) serão apagadas, junto com a descrição e o cadeado da tag, se houver.`, historyBtn: 'Histórico', loadingHistory: 'Carregando o histórico…', searchContact: 'Busque um contato ou grupo (nome ou número) ou digite um e-mail', pickContact: 'Busque o contato (nome ou número)', noMatches: 'Nenhum contato encontrado', privateChat: 'Vazio: vai para o seu privado', useEmail: (email) => `✉️ Usar ${email}`, updatedAt: (time) => `atualizado às ${time}`, noHistory: 'Nada registrado ainda.', removeReading: 'Remover esta leitura', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 o código de segurança de ${who ?? 'um participante'} mudou`, systemNotice: (text) => `ℹ️ ${text ?? 'aviso do WhatsApp'}`, loadMore: 'Carregar mais', noMore: 'Não há mais mensagens.', loadingFor: (name) => `Carregando ${name}…`, loadingStats: 'Carregando as estatísticas…', loadingHome: 'Carregando…', statsOverview: 'Estatísticas', last30: 'últimos 30 dias', seeAllStats: 'Ver todas as estatísticas',
+        cannotShow: 'não foi possível mostrar esta mensagem', phTag: 'viagens', phTagDesc: 'lugares para conhecer', phNoteTag: 'ideias', envForced: (env) => `Decidido pela variável ${env} (config/.env), que tem prioridade sobre este setting`, noticeOn: 'Desligado: clique para ligar', noticeOff: 'Ligado: clique para desligar', runOn: 'Ativo: clique para pausar', runOff: 'Pausado: clique para retomar', clearHistory: 'Limpar o histórico desta conversa', clearBtn: 'Limpar', clearTitle: (name) => `Limpar o histórico · ${name}`, clearInfo: (r) => `${r.removed} mensagens serão apagadas (com a mídia). ${r.kept} ficam: as apagadas, as editadas e as com reações, com o que tinham antes.`, clearNothing: 'Nada a apagar: toda mensagem daqui é apagada, editada ou tem reação.', clearEmpty: 'Esta conversa não tem mensagens no banco.', cacheBtn: 'Limpar', deleteNote: 'Apagar a nota', notice: 'Aviso', spy: { nav: 'Show', subtitle: 'O que o /show guarda: as apagadas, as editadas, as reações, os status e os canais', kinds: { deleted: 'Apagadas', edited: 'Editadas', reactions: 'Reações', status: 'Status', channels: 'Canais' }, alerts: 'Avisos no seu privado', alertOn: 'Ligado: clique para desligar', alertOff: 'Desligado: clique para ligar', people: 'Quem mais apaga, edita e reage', nobody: 'Ninguém ainda.', search: 'Busque no texto, na conversa ou na pessoa', empty: 'Nada aqui.', mute: 'Silenciar esta pessoa (/mute)', unmute: 'Tirar o silêncio (/unmute)', muted: 'silenciada', removeTitle: 'Tirar do cache', removeText: 'O bot esquece este item (e a mídia dele); o WhatsApp não é tocado.', removed: 'tirou', media: 'Abrir a mídia', openChat: 'Abrir a conversa nesta mensagem', mutedCount: (n) => `${n} silenciadas` }, cacheClean: 'Limpar o cache (/cache)', cacheRetention: 'O que passou da retenção (/cache -clean)', cachePick: 'Marque pelo menos um.', cacheAll: 'Tudo (/cache -all): todas as mensagens (inclusive apagadas, editadas e com reações), mídias, temporários e backups', cacheAllWarning: '⚠️ Tudo leva o histórico inteiro de todas as conversas e os backups também: não tem como desfazer. As notas ficam sempre.', flushAll: 'Limpar o histórico de todas as conversas', flushBtn: 'Limpar todas as conversas', flushEmpty: 'Não há mensagens no banco.', flushWarning: (n) => `⚠️ Isto limpa o histórico de todas as ${n} conversas de uma vez, não só de uma. Não tem como desfazer (só por um /backup).`, clearAll: (n) => `Apagar tudo (${n}), inclusive as apagadas, as editadas e as com reações, com a mídia delas`, webPanel: 'Interface web', webAt: 'Abra em', webAccess: 'Acesso', webLogin: 'Login e sessão', webScreen: 'Tela', webAlerts: 'Avisos', notSet: 'não definido', needsRestart: 'Vale quando o bot reiniciar', restSettings: 'Todos os outros settings', protectedHere: 'Mude com o /set no WhatsApp',  meBtn: 'Eu (meu privado)', watchedBy: '/watch', openInHistory: 'Abrir no histórico, nesta mensagem', presenceSource: 'presença do WhatsApp · horário não confirmado', newTag: 'Nova tag', newNote: 'Nova nota', editTagBtn: 'Editar a tag', removeTag: 'Remover a tag', confirmRemoveTag: 'Remover esta tag (ela não tem notas)?', removeTagWithNotes: 'Remover a tag e tudo dentro dela', removeTagInfo: (n) => `${n} nota${n === 1 ? '' : 's'} (e a mídia delas) serão apagadas, junto com a descrição e o cadeado da tag, se houver.`, historyBtn: 'Histórico', loadingHistory: 'Carregando o histórico…', searchContact: 'Busque um contato ou grupo (nome ou número) ou digite um e-mail', pickContact: 'Busque o contato (nome ou número)', noMatches: 'Nenhum contato encontrado', privateChat: 'Vazio: vai para o seu privado', useEmail: (email) => `✉️ Usar ${email}`, updatedAt: (time) => `atualizado às ${time}`, noHistory: 'Nada registrado ainda.', removeReading: 'Remover esta leitura', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 o código de segurança de ${who ?? 'um participante'} mudou`, systemNotice: (text) => `ℹ️ ${text ?? 'aviso do WhatsApp'}`, loadMore: 'Carregar mais', noMore: 'Não há mais mensagens.', loadingFor: (name) => `Carregando ${name}…`, loadingStats: 'Carregando as estatísticas…', loadingHome: 'Carregando…', statsOverview: 'Estatísticas', last30: 'últimos 30 dias', seeAllStats: 'Ver todas as estatísticas',
         code: 'Código de 6 dígitos', quotedGone: 'mensagem fora do banco', searchAll: 'Buscar em todas as mensagens', searchResults: (n) => `${n} resultados`, exportChat: 'Exportar PDF', reacted: 'reação', removedReaction: 'removida', reactionHistory: 'Histórico de reações',
         reactionChanged: 'Alterou a reação', reactionRemoved: 'Removeu a reação', autoRefresh: 'Mensagens novas',
         home: 'Início', navHistory: 'Histórico', notes: 'Notas', alerts: 'Alertas', aliases: 'Atalhos', schedule: 'Agenda', stats: 'Estatísticas', settings: 'Settings',
@@ -713,7 +713,7 @@ async function start() {
     startRefresh();
 
     const rail = el('nav', { class: 'rail' },
-        ...[['home', '🏠', T.home], ['history', '💬', T.navHistory], ['notes', '📝', T.notes], ['alerts', '🔔', T.alerts], ['aliases', '⚡', T.aliases], ['schedule', '⏰', T.schedule], ['stats', '📊', T.stats], ['settings', '⚙️', T.settings]].map(([name, icon, label]) =>
+        ...[['home', '🏠', T.home], ['history', '💬', T.navHistory], ['notes', '📝', T.notes], ['alerts', '🔔', T.alerts], ['aliases', '⚡', T.aliases], ['schedule', '⏰', T.schedule], ['stats', '📊', T.stats], ['show', '🏴‍☠️', T.spy.nav], ['settings', '⚙️', T.settings]].map(([name, icon, label]) =>
             el('button', { class: `rail-btn${state.view === name ? ' active' : ''}`, 'data-view': name, title: label, 'aria-label': label, onclick: () => show(name) },
                 el('span', { class: 'icon' }, icon), el('span', { class: 'cap' }, label))),
         el('span', { class: 'grow' }),
@@ -740,6 +740,7 @@ async function show(view) {
         if (view === 'home') await showHome(content);
         else if (view === 'notes') await showNotes(content);
         else if (view === 'stats') await showStats(content);
+        else if (view === 'show') await showSpy(content);
         else if (['alerts', 'aliases', 'schedule', 'settings'].includes(view)) await showList(content, view);
         else await showHistory(content);
     } finally {
@@ -847,6 +848,111 @@ function cleanCache(storage) {
             return result;
         }
     });
+}
+
+/* Show: what /show keeps (the deleted, the edited, the reactions, the statuses, the channels) and who is muted */
+const SPY_KINDS = { deleted: '🗑️', edited: '✏️', reactions: '😀', status: '📸', channels: '📰' };
+const SPY_ALERTS = [['show.alert.deleted', 'deleted'], ['show.alert.edited', 'edited'], ['show.alert.reaction', 'reactions'], ['show.alert.status', 'status']];
+
+function showImage(src, alt) {
+    const dialog = el('dialog', { class: 'modal contact-photo-dialog', 'aria-label': alt },
+        el('img', { src, alt }), el('button', { class: 'btn', onclick: () => dialog.close() }, T.contact.close));
+    dialog.addEventListener('close', () => dialog.remove(), { once: true });
+    document.body.append(dialog);
+    dialog.showModal();
+}
+
+async function showSpy(content) {
+    const S = T.spy;
+    state.spy ??= { kind: 'deleted', q: '', person: null };
+    const summary = await (await api('/api/show')).json();
+    const feed = el('div', { class: 'spy-feed' });
+    const more = el('button', { class: 'btn' }, T.loadMore);
+    const tabs = el('div', { class: 'spy-tabs' });
+    let next = null;
+
+    const toggleMute = async (who) => {
+        const result = await manage({ section: 'show', op: 'mute', number: who.number, name: who.name });
+        if (result.error) messageBox(result.error); else show('show');
+    };
+    const pickPerson = (who) => { state.spy.person = who.number ? { number: who.number, name: who.name } : null; renderTabs(); load(true); };
+
+    function card(item) {
+        const who = item.person;
+        const body = item.kind === 'edited'
+            ? [el('div', { class: 'spy-before' }, item.before ?? ''), el('div', { class: 'muted' }, '↓'), el('div', {}, item.after ?? '')]
+            : item.kind === 'reactions'
+                ? [el('div', { class: 'spy-reaction' }, `${item.reaction.from || '∅'} → ${item.reaction.to || S.removed}`), item.text ? el('div', { class: 'muted' }, item.text) : null]
+                : [item.text ? el('div', {}, item.text) : null, item.media ? media(item) : null];
+        return el('div', { class: 'spy-card' },
+            avatar({ id: who.id ?? item.chat, name: who.name }),
+            el('div', { class: 'spy-body' },
+                el('div', { class: 'spy-head' },
+                    el('button', { class: 'link', onclick: () => pickPerson(who) }, who.name),
+                    who.muted ? el('span', { title: S.muted }, '🔇') : null,
+                    el('span', { class: 'muted' }, fmtFull(item.at))),
+                el('button', { class: 'link muted', title: S.openChat, onclick: () => jumpToMessage({ chat: item.chat, id: item.messageId, at: item.sentAt ?? item.at }) }, `💬 ${item.chatName}`),
+                el('div', { class: 'spy-text' }, body)),
+            el('div', { class: 'row-actions' },
+                who.number ? el('button', { class: 'icon-btn', title: who.muted ? S.unmute : S.mute, onclick: () => toggleMute(who) }, who.muted ? '🔊' : '🔇') : null,
+                el('button', { class: 'icon-btn', title: S.removeTitle, onclick: () => confirmBox({
+                    title: S.removeTitle, text: S.removeText,
+                    action: async () => { const result = await manage({ section: 'show', op: 'delete', kind: item.kind, id: item.id }); if (!result.error) show('show'); return result; }
+                }) }, '🗑️')));
+    }
+
+    function media(item) {
+        const src = `/api/media?id=${encodeURIComponent(item.messageId)}`;
+        return ['image', 'sticker'].includes(item.type)
+            ? el('img', { class: 'spy-media', src, alt: S.media, loading: 'lazy', onclick: () => showImage(src, S.media) })
+            : el('a', { class: 'btn', href: src, target: '_blank', rel: 'noopener' }, `📎 ${S.media}`);
+    }
+
+    async function load(reset) {
+        const s = state.spy;
+        const params = new URLSearchParams({ kind: s.kind, q: s.q });
+        if (s.person) params.set('person', s.person.number);
+        if (!reset && next) params.set('before', String(next));
+        const page = await (await api(`/api/show/items?${params}`)).json();
+        next = page.next;
+        if (reset) feed.replaceChildren();
+        if (reset && !page.items.length) feed.append(el('div', { class: 'empty' }, S.empty));
+        feed.append(...page.items.map(card));
+        more.hidden = !next;
+    }
+    more.addEventListener('click', () => load(false));
+
+    function renderTabs() {
+        tabs.replaceChildren(...Object.entries(SPY_KINDS).map(([kind, icon]) => el('button', {
+            class: `btn${state.spy.kind === kind ? ' on' : ''}`, onclick: () => { state.spy.kind = kind; renderTabs(); load(true); }
+        }, `${icon} ${S.kinds[kind]} · ${summary.counts[kind]}`)),
+        state.spy.person ? el('button', { class: 'btn chip', onclick: () => { state.spy.person = null; renderTabs(); load(true); } }, `👤 ${state.spy.person.name} ✕`) : el('span'));
+    }
+
+    const search = el('input', { type: 'search', placeholder: S.search, value: state.spy.q,
+        onkeydown: (event) => { if (event.key === 'Enter') { state.spy.q = event.target.value.trim(); load(true); } } });
+    const alerts = el('div', { class: 'spy-alerts' }, el('span', { class: 'muted' }, S.alerts),
+        SPY_ALERTS.map(([key, kind]) => {
+            const on = summary.alerts[key];
+            return el('button', { class: `btn${on ? ' on' : ''}`, title: on ? S.alertOn : S.alertOff, onclick: async () => {
+                const result = await manage({ section: 'setting', op: 'edit', id: key, value: on ? 'off' : 'on' });
+                if (result.error) messageBox(result.error); else show('show');
+            } }, `${on ? '🔔' : '🔕'} ${S.kinds[kind]}`);
+        }));
+    const people = el('div', { class: 'spy-people' }, el('h3', {}, S.people),
+        summary.people.length ? summary.people.map(p => el('div', { class: `spy-person${state.spy.person?.number === p.number ? ' active' : ''}` },
+            avatar({ id: p.id, name: p.name }),
+            el('div', { class: 'grow' }, el('button', { class: 'link', onclick: () => pickPerson(p) }, p.name), p.muted ? el('span', { title: S.muted }, ' 🔇') : null,
+                el('div', { class: 'muted' }, `🗑️ ${p.deleted} · ✏️ ${p.edited} · 😀 ${p.reactions}`)),
+            el('button', { class: 'icon-btn', title: p.muted ? S.unmute : S.mute, onclick: () => toggleMute(p) }, p.muted ? '🔊' : '🔇'))) : el('div', { class: 'muted' }, S.nobody));
+
+    renderTabs();
+    content.replaceChildren(el('div', { class: 'page' },
+        el('div', { class: 'page-head' }, el('h2', {}, `🏴‍☠️ ${S.nav}`), el('span', { class: 'muted grow' }, `${S.subtitle} · ${S.mutedCount(summary.mutedCount)}`),
+            el('button', { class: 'btn', onclick: () => show('show') }, `↻ ${T.refresh}`)),
+        alerts, tabs, el('div', { class: 'search spy-search' }, search),
+        el('div', { class: 'spy-layout' }, el('div', {}, feed, more), people)));
+    await load(true);
 }
 
 /* statistics: charts drawn as SVG (no library: the page has a strict CSP) */

@@ -124,6 +124,9 @@ tr.row-off td { text-decoration: line-through; }
 tr.row-off .row-actions, tr.row-off button.bell { text-decoration: none; }
 button.bell:hover { background: var(--chip); }
 a.link { color: var(--accent); text-decoration: underline dotted; cursor: pointer; }
+button.link { background: none; border: 0; padding: 0; font: inherit; text-align: left; color: var(--accent); cursor: pointer; }
+button.link.muted { color: var(--muted); }
+button.link:hover { text-decoration: underline; }
 .msg.sys { align-self: center; align-items: center; max-width: 90%; }
 .msg.out { align-self: flex-end; align-items: flex-end; }
 .msg.in { align-self: flex-start; align-items: flex-start; }
@@ -417,6 +420,23 @@ button.rank:hover { background: var(--hover); }
 .storage { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
 .storage-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
 .storage-head .grow { flex: 1; }
+
+/* Show (/show): the notices, the tabs, the feed and who deletes the most */
+.spy-alerts, .spy-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; }
+.spy-search { margin: 6px 0 12px; }
+.spy-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.spy-feed { display: flex; flex-direction: column; gap: 8px; }
+.spy-card { display: flex; gap: 12px; align-items: flex-start; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.spy-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.spy-head { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.spy-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.spy-before { text-decoration: line-through; color: var(--muted); }
+.spy-reaction { font-size: 1.3em; }
+.spy-media { max-width: 220px; max-height: 220px; border-radius: 8px; cursor: zoom-in; margin-top: 4px; }
+.spy-people { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; position: sticky; top: 10px; }
+.spy-person { display: flex; gap: 10px; align-items: center; padding: 6px 4px; border-radius: 8px; }
+.spy-person.active { background: var(--selected); }
+@media (max-width: 900px) { .spy-layout { grid-template-columns: 1fr; } .spy-people { position: static; } }
 .storage-total { font-size: 28px; font-weight: 600; }
 .stack { display: flex; height: 26px; border-radius: 8px; overflow: hidden; background: var(--line); gap: 2px; }
 .stack .seg { min-width: 4px; height: 100%; }

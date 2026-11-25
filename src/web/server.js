@@ -38,6 +38,7 @@ const lists = require('./lists');
 const { ManageError, manage } = require('./manage');
 const webNotes = require('./notes');
 const { overview } = require('./overview');
+const { showItems, showSummary } = require('./show');
 
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const MAX_BODY = 32 * 1024; // the login is tiny; what is saved (a shortcut, a setting, the ids to export) is not
@@ -390,6 +391,13 @@ async function api(req, res, url) {
         }
         case '/api/media':
             return sendMedia(req, res, url);
+        case '/api/show':
+            return sendJson(res, 200, await showSummary());
+        case '/api/show/items': {
+            const page = await showItems({ kind: url.searchParams.get('kind') ?? '', q: url.searchParams.get('q') ?? '',
+                person: url.searchParams.get('person') ?? '', before: url.searchParams.has('before') ? Number(url.searchParams.get('before')) : null });
+            return page ? sendJson(res, 200, page) : sendJson(res, 400, { error: 'kind: deleted, status, channels, edited or reactions' });
+        }
         case '/api/overview':
             return sendJson(res, 200, await overview());
         case '/api/lists/alerts':
