@@ -101,7 +101,12 @@ test('localização vira texto com o link do mapa', async () => {
 
 test('sem a mensagem respondida, sem destinatários e sem nada para encaminhar', async () => {
     assert.deepEqual(await bot.replyAlt('/forward /Fulano/'), ['Responda a mensagem que você quer encaminhar, ou diga a posição dela (ex.: /forward -1 /Fulano/).\n💡 _/forward -h para ajuda_']);
-    assert.match((await bot.replyAlt('/forward', { quoted: quoted() }))[0], /^```Usage: \/forward \[-q\] \[-d\] \[-N\] \[#lista\]\.\.\. <destinatário>\.\.\. \[-to <destino>\]\.\.\.\n     \/forward -a|-list|-rm|-move|-desc <\.\.\.>\n/);
+    // The usage of the definition (the -add|-a|... pipes made the old regex an alternation that matched anything)
+    const usage = bot.src('commands/localize').locate(bot.src('commands/commands').commands.find(c => c.cmd === '/forward')).usage;
+    const [first, second] = usage.split(/\s{2}ou\s{2}/);
+    const [reply] = await bot.replyAlt('/forward', { quoted: quoted() });
+    assert.ok(reply.startsWith(`\`\`\`Usage: ${first}\n`), reply);
+    assert.ok(reply.includes(`${second}\`\`\``), reply);
     assert.deepEqual(await bot.replyAlt('/forward /Fulano/', { quoted: quoted({ text: '' }) }), ['❌ Essa mensagem não tem nada que eu possa encaminhar.']);
 });
 
