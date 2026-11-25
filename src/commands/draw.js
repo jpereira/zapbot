@@ -10,7 +10,8 @@ const path = require('path');
 
 const { MessageMedia } = require('whatsapp-web.js');
 
-const { completeNotice } = require('../client');
+const { client, completeNotice } = require('../client');
+const { mentionName } = require('../contacts');
 const { commandUsage } = require('./base');
 const { BIN_FFMPEG, TMP_DIR } = require('../constants');
 const { CHATGPT, engineProcessing, withEngineTip } = require('../engines');
@@ -60,17 +61,46 @@ async function referencePhoto(msg, quotedMsg, cmd) {
     return (await messageImage(msg, cmd)) ?? (await messageImage(quotedMsg, cmd));
 }
 
+// A replied message that is itself a command (the photo sent with "/draw ..." as its caption) is
+// only the photo: its text would put the command and the raw @numbers in the request
+const QUOTED_COMMAND = /^\s*\/\w/;
+
+// The caption shows the people by name: whoever is in the chat stays a real mention (@number plus
+// the id in `mentions`, which WhatsApp shows as the name), and whoever is not becomes @Name
+async function captionMentions(msg, textAlt) {
+    const users = [...new Set([...textAlt.matchAll(/@(\d{6,})/g)].map(m => m[1]))];
+    if (!users.length) return { text: textAlt, mentions: [] };
+
+    const ids = (msg.mentionedIds ?? []).map(m => typeof m === 'string' ? m : m?._serialized).filter(Boolean);
+    const chat = await msg.getChat().catch(() => null);
+    const inChat = new Set(chat?.isGroup
+        ? (chat.participants ?? []).map(p => p.id?._serialized?.split('@')[0])
+        : [chat?.id?._serialized?.split('@')[0], client.info?.wid?.user]);
+
+    const mentions = [];
+    for (const user of users) {
+        const jid = ids.find(id => id.split('@')[0] === user);
+        if (jid && inChat.has(user)) {
+            mentions.push(jid);
+            continue;
+        }
+        const nameAlt = await mentionName(user, ids);
+        if (nameAlt) textAlt = textAlt.replaceAll(`@${user}`, `@${nameAlt}`);
+    }
+    return { text: textAlt, mentions };
+}
+
 // The GIF goes as a looping video; if ffmpeg fails, the .gif still arrives, as a document
-async function sendGif(msg, b64, captionAlt, cmd) {
+async function sendGif(msg, b64, captionAlt, cmd, mentions = []) {
     let mp4;
     try {
         mp4 = await gifParaMp4(Buffer.from(b64, 'base64'));
     } catch (err) {
         printError(`${cmd} -gif: ffmpeg failed:`, err.message);
-        await msg.reply(new MessageMedia('image/gif', b64, 'desenho.gif'), null, { caption: captionAlt, sendMediaAsDocument: true });
+        await msg.reply(new MessageMedia('image/gif', b64, 'desenho.gif'), null, { caption: captionAlt, mentions, sendMediaAsDocument: true });
         return;
     }
-    await msg.reply(new MessageMedia('video/mp4', mp4.toString('base64'), 'desenho.mp4'), null, { caption: captionAlt, sendVideoAsGif: true });
+    await msg.reply(new MessageMedia('video/mp4', mp4.toString('base64'), 'desenho.mp4'), null, { caption: captionAlt, mentions, sendVideoAsGif: true });
 }
 
 /**
@@ -85,8 +115,9 @@ async function sendGif(msg, b64, captionAlt, cmd) {
  * @param {string} o.withoutRequest  the reply when there is nothing to draw
  * @param {string} [o.quality]  -quality: low | medium | high | auto (without it: the gpt.image.quality setting)
  * @param {string} [o.size]     -size: auto, square, landscape, portrait or WxH (without it: the gpt.image.size setting)
+ * @param {string} [o.shown]    the caption's request (without it, `request`): /draw keeps the -p people in it
  */
-async function drawAlt({ msg, cmd, request, quotedMsg = null, gif = null, profiles = [], noRequest: withoutRequest, quiet = false, quality = null, size = null }) {
+async function drawAlt({ msg, cmd, request, quotedMsg = null, gif = null, profiles = [], noRequest: withoutRequest, quiet = false, quality = null, size = null, shown = null }) {
     const base = await referencePhoto(msg, quotedMsg, cmd);
     if (base?.error) {
         await msg.reply(base.error);
@@ -97,7 +128,8 @@ async function drawAlt({ msg, cmd, request, quotedMsg = null, gif = null, profil
     const photo = images.length ? images : null;
 
     // Replying to a message, its text (on a photo, the caption) goes before the request
-    const textAlt = [quotedMsg?.body, request].filter(Boolean).join('\n\n').trim();
+    const quotedText = QUOTED_COMMAND.test(quotedMsg?.body ?? '') ? '' : quotedMsg?.body;
+    const textAlt = [quotedText, request].filter(Boolean).join('\n\n').trim();
     if (!textAlt && !(gif && photo)) {
         await msg.reply(withoutRequest);
         return;
@@ -112,7 +144,8 @@ async function drawAlt({ msg, cmd, request, quotedMsg = null, gif = null, profil
     const prompt = animation && photo
         ? withContext(t('draw.animatePrompt', { text: textAlt || t('draw.animateDefault') }))
         : withContext(textAlt);
-    const captionAlt = `${animation ? '🎞️' : '🎨'} ${textAlt.length > CAPTION_MAX ? `${textAlt.slice(0, CAPTION_MAX)}…` : textAlt}`.trim();
+    const { text: captionText, mentions } = await captionMentions(msg, [quotedText, shown ?? request].filter(Boolean).join('\n\n').trim());
+    const captionAlt = `${animation ? '🎞️' : '🎨'} ${captionText.length > CAPTION_MAX ? `${captionText.slice(0, CAPTION_MAX)}…` : captionText}`.trim();
 
     const notice = await msg.reply(engineProcessing('draw', CHATGPT), null, { linkPreview: false });
     try {
@@ -122,8 +155,8 @@ async function drawAlt({ msg, cmd, request, quotedMsg = null, gif = null, profil
         });
         // Media does not become an edit of the notice: it says the result comes below (and stays), and the media goes out afterward
         await completeNotice(msg, notice, withEngineTip(t(animation ? 'draw.gifBelow' : 'draw.imageBelow'), 'draw', CHATGPT, { sep: '\n', quiet, command: cmd.slice(1) }));
-        if (animation) await sendGif(msg, b64, captionAlt, cmd);
-        else await msg.reply(new MessageMedia('image/png', b64, 'desenho.png'), null, { caption: captionAlt });
+        if (animation) await sendGif(msg, b64, captionAlt, cmd, mentions);
+        else await msg.reply(new MessageMedia('image/png', b64, 'desenho.png'), null, { caption: captionAlt, mentions });
         await replyConsumption(msg);
     } catch (err) {
         const messageAlt = err.response?.data?.error?.message ?? '';
@@ -183,6 +216,7 @@ async function draw({ msg, args, opts, quotedMsg, chatId, isGroup }) {
 
     // -p [people]: the profile photos come along (the people leave the request)
     let profiles = [];
+    const shown = request;
     // (without -p, @me/@this at the start of the request count the same: /draw @me @this desenhe nós dois)
     const withP = opts?.given.has('profile');
     const profile = withP ? await textReadProfile(args) : readProfileImplicit(request);
@@ -193,7 +227,7 @@ async function draw({ msg, args, opts, quotedMsg, chatId, isGroup }) {
         if (!profiles) return;
     }
 
-    await drawAlt({ msg, cmd: '/draw', request, quotedMsg, gif, profiles, noRequest: commandUsage('/draw'), quiet: opts?.opt?.quiet, quality, size });
+    await drawAlt({ msg, cmd: '/draw', request, quotedMsg, gif, profiles, noRequest: commandUsage('/draw'), quiet: opts?.opt?.quiet, quality, size, shown });
 }
 
 // The -status|-s (or the gpt.status setting) shows the call usage in the footer

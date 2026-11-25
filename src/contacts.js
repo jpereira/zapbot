@@ -227,6 +227,7 @@ async function chatCurrentIds(chatId) {
 module.exports = {
     chatCurrentIds,
     isPhoneNumber,
+    mentionName,
     scheduleName,
     contactName,
     normalizeWid,

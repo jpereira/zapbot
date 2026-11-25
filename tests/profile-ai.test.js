@@ -265,3 +265,21 @@ test('imagem pronta: o aviso "Processando" vira "Imagem gerada abaixo" (e fica),
     assert.ok(posImage > posNotice, 'a imagem sai depois do aviso');
     assert.equal(sentAlt2.filter(e => e.content instanceof MessageMedia).length, 1);
 });
+
+test('a legenda mostra as pessoas pelo nome: quem está no chat vira menção, quem não está vira @Nome', async () => {
+    const outside = '5521922222222@c.us';
+    bot.createContact(outside, 'Beltrano');
+    const url = 'https://pps.whatsapp.net/v/perfil-Beltrano.jpg';
+    bot.client.photos.set(outside, url);
+    network.responder('get', url, network.http({ data: Buffer.from('jpeg-Beltrano'), headers: { 'content-type': 'image/jpeg' } }));
+
+    // replying to the photo sent with the earlier /draw: its caption (a command) stays out of the request
+    const quoted = bot.createMessage({ de: OWNER.jid, type: 'image', text: '/draw -p @5521911111111 antes', media: { mimetype: 'image/jpeg', data: PNG_4X2 } });
+    const sentAlt2 = await bot.execute('/draw -p @5521911111111 @5521922222222 os dois dançando', {
+        chat: GROUP, quoted, mentions: [OTHERAlt.jid, outside]
+    });
+    const image = sentAlt2.find(e => e.content instanceof MessageMedia);
+    assert.equal(image.options.caption, '🎨 @5521911111111 @Beltrano os dois dançando');
+    assert.deepEqual(image.options.mentions, [OTHERAlt.jid]);
+    assert.match(last().get('prompt'), /^os dois dançando\n\n/);
+});

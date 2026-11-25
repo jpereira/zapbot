@@ -4,7 +4,7 @@ Role `admin`: só você e os admins extras. O dono libera a uma pessoa ou grupo 
 `/bot +u +cmd /draw` ([Delegando](index.md#delegando-um-comando-admin)). Quem recebe só desenha: o `-model`
 (ver e trocar o modelo) é do dono e dos admins. Cada imagem **gasta a sua conta da OpenAI**.
 
-Desenha uma imagem com o ChatGPT (GPT Image da OpenAI, API `v1/images`) e manda no chat, com o pedido na legenda (cortado em 200 caracteres).
+Desenha uma imagem com o ChatGPT (GPT Image da OpenAI, API `v1/images`) e manda no chat, com o pedido na legenda (cortado em 200 caracteres; as pessoas do `-p` aparecem pelo nome, com menção se estão no chat).
 Com `-gif`, faz um **GIF animado**. Numa **foto** (a da própria mensagem, na legenda, ou a respondida), o
 pedido **edita** a foto ou, no `-gif`, a **anima**. Respondendo uma mensagem, o texto dela entra antes do
 pedido. O `/gpt -img` e o `/gpt -gif` são o mesmo código: o resultado é igual.
