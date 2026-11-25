@@ -77,7 +77,7 @@ module.exports = {
     'alerts.msgEmpty': '❌ Provide the -msg text: {cmd} -alert {example} -msg <text>',
     'alerts.none': '🔔 No alerts in {cmd}.\n💡 _Create one with {cmd} -alert {example}_',
     'alerts.listItem': '{n}. {alert}{details}\n   🗓️ {date}',
-    'alerts.list': '🔔 *PRICE ALERTS* _({cmd})_\n\n{items}\n\n💡 _Checked every {every}_\n💡 _Remove with {cmd} -alert -rm <num...|all>_',
+    'alerts.list': '🔔 *PRICE ALERTS* _({cmd} · every {every})_\n\n{items}\n\n💡 _-alert -rm <num...|all> removes_',
     'alerts.invalidRule': '❌ Invalid rule: "{rule}"\n💡 _Format: {cmd} -alert {example} (use > or <; no thousands separator)_',
     'alerts.unsupported': '❌ Unsupported currency: {sym}\n💡 _See the supported ones with {cmd} -l_',
     'alerts.limit': '❌ Limit of {max} alerts reached (setting {setting}). Remove one first.',

@@ -250,7 +250,7 @@ describe('alertas de preço (-alert)', () => {
         assert.match(created, /🔔 \*Alerta criado\*\n🇺🇸 USD\/BRL acima de \*R\$ 5,3000\*\n   📨 seu privado\n💰 Agora: R\$ 5,2000/);
 
         const [list] = await bot.replyAlt('/stocks -alert');
-        assert.match(list, /🔔 \*ALERTAS DE PREÇO\* _\(\/stocks\)_\n\n1\. 🇺🇸 USD\/BRL acima de \*R\$ 5,3000\*/);
+        assert.match(list, /🔔 \*ALERTAS DE PREÇO\* _\(\/stocks · a cada \d+ minutos?\)_\n\n1\. 🇺🇸 USD\/BRL acima de \*R\$ 5,3000\*/);
 
         // Not yet: nothing happens
         await priceCheckAlerts({ force: true });

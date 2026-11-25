@@ -105,9 +105,7 @@ module.exports = {
     'show.noneHere': '{icon} {none} {registered} neste chat.',
     'show.noneWhere': '{icon} {none} {where}.',
     'show.noneWithQuery': '{icon} {none} com "{query}" {where}.',
-    'show.noneOtherChat': '{icon} {none} neste chat.\n' +
-        '💡 _Para ver as de outro chat: /show -l e depois {cmd} -N <chat>_\n' +
-        '💡 _Para buscar em todos: {cmd} -q <texto|/regex/>_',
+    'show.noneOtherChat': '{icon} {none} neste chat.\n💡 *Dicas*\n-l mostra os chats\n{flags}-N <chat> abre um\n{flags}-q <texto|/regex/> busca em todos',
     'show.whereNone': 'em nenhum chat',
     'show.whereChat': 'em {name}',
     'show.whereHere': 'neste chat',
@@ -200,7 +198,7 @@ module.exports = {
     'stats.none': '📊 Nenhuma estatística guardada ainda.',
     'stats.listHeader': '📊 *Chats com estatísticas* ({count})\n_Até {days} guardados_\n\n',
     'stats.listLine': '{n}. {chat} — {msgs} msgs _(última em {date})_',
-    'stats.listFooter': '\n\n💡 _/stats /nome/ mostra um_\n💡 _/stats -f /nome/ apaga as dele_',
+    'stats.listFooter': '\n\n💡 *Dicas*\n/nome/ mostra um\n-f /nome/ apaga as dele',
     'stats.flushedAll': '🗑️ Estatísticas apagadas: {chats}.',
     'stats.flushNeedsChat': 'Informe o chat: /stats -f /Grupo/ (ou /stats -flush-all para todos).',
     'stats.flushedChat': '🗑️ Estatísticas de {chat} apagadas.',
@@ -221,12 +219,7 @@ module.exports = {
     'watch.multiMatch': '🔎 "{ref}" corresponde a {count} regras:\n\n',
     'watch.multiMatchFooter': '\n\n💡 _Repita com o nº da regra (ex.: /watch -s N) ou com ela inteira._',
     'watch.noRuleMatches': '❌ Nenhuma regra casa com "{ref}".\n💡 _Veja as regras com /watch -l_',
-    'watch.tips': '\n\n💡 *Dicas* _(N: o nº ou a própria regra)_\n' +
-        '/watch -s N mostra as mensagens completas.\n' +
-        '/watch -s N -q <texto|/regex/> só as que casam.\n' +
-        '/watch -s N -to <destino|off> troca os destinos.\n' +
-        '/watch -f N limpa as ocorrências.\n' +
-        '/watch -m N liga o 🔒 (telefones ofuscados nos avisos); -u N desliga.',
+    'watch.tips': '\n\n💡 *Dicas* _(N: o nº ou a própria regra)_\n-s N mostra as mensagens completas\n-s N -q <texto|/regex/> só as que casam\n-s N -to <destino|off> troca os destinos\n-f N limpa as ocorrências\n-m N ofusca os telefones (🔒)\n-u N mostra de novo',
     'watch.onlyIn': ' apenas em {icon} {name}',
     'watch.listTitle': '👀 *WATCH: REGRAS* ({count}/{max})\n\n',
     'watch.noRules': '_Nenhuma regra cadastrada._\n💡 _Adicione com /watch <texto|/regex/flags>_',

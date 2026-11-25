@@ -908,7 +908,7 @@ async function cmdShow({ msg, opts, chatId, chatName, admin }) {
             : target || allAlt2
                 ? tr('show.noneWhere', { icon: u.icon, none: tx(u, 'none'), where: whereAlt })
                 : inMyPrivate
-                    ? tr('show.noneOtherChat', { icon: u.icon, none: tx(u, 'none'), cmd })
+                    ? tr('show.noneOtherChat', { icon: u.icon, none: tx(u, 'none'), flags: cmd.replace(/^\/show ?/, '') ? `${cmd.replace(/^\/show ?/, '')} ` : '' })
                     : tr('show.noneHere', { icon: u.icon, none: tx(u, 'none'), registered: tx(u, 'registered') }));
         return;
     }

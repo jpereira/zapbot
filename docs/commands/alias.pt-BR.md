@@ -68,10 +68,9 @@ rodam sem o cabeçalho `🔗 Alias ...` (`-q`):
 */vai* 🔇
 → /ascii -c # VAMOS!
 
-💡 *Dicas*
-/alias <nome> </comando args> cria
-/alias -rm <nome...> remove
-🔇 = sem o cabeçalho ao executar
+💡 *Dicas* _(🔇 = sem o cabeçalho ao executar)_
+<nome> </comando args> cria
+-rm <nome...> remove
 ```
 
 O começo do nome de um alias salvo também completa (`/dol` roda o `/dolar`, se for o único;

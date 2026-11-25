@@ -196,7 +196,7 @@ describe('/cron -reminder: o modo lembrete', () => {
         await bot.replyAlt('/cron -reminder -private +1h primeiro');
 
         const [list] = await bot.replyAlt('/cron -reminder');
-        assert.match(list, /^📅 \*Agenda\* \(2\)\n\n1\. ⏰ \*[^*]+\* — ⏰ primeiro\n   → seu privado\n2\. ⏰ \*[^*]+\* — ⏰ segundo\n   → 👥 Família\n\n💡 _📅 mensagem · ⏰ lembrete_\n💡 _-edit <nº> muda_\n💡 _-pause\/-resume <nº\.\.\.> segura e solta_\n💡 _-rm <nº\.\.\.\|all> remove_$/);
+        assert.match(list, /^📅 \*Agenda\* \(2\)\n\n1\. ⏰ \*[^*]+\* — ⏰ primeiro\n   → seu privado\n2\. ⏰ \*[^*]+\* — ⏰ segundo\n   → 👥 Família\n\n💡 \*Dicas\* _\(📅 mensagem · ⏰ lembrete\)_\n-edit <nº> muda\n-pause\|-resume <nº\.\.\.> segura e solta\n-rm <nº\.\.\.\|all> remove$/);
         assert.equal((await bot.replyAlt('/cron -rem -l'))[0], list);
 
         assert.match((await bot.replyAlt('/cron -rem -rm 1'))[0], /🗑️ Removido: \*[^*]+\* — primeiro/);

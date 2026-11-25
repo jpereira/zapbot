@@ -48,12 +48,12 @@ Removing contacts or reducing the local history doesn't change the backups that 
 • 📤 Automatic destination: local only
 
 💡 Tips
-/backup -n creates one now
-/backup -l lists
-/backup -i <no.> shows details
-/backup -r <no.> restores
-/backup -s [no.] [-to <destination>] sends the file
-/backup -rm <no.|all> deletes
+-n creates one now
+-l lists
+-i <no.> shows details
+-r <no.> restores
+-s [no.] [-to <destination>] sends the file
+-rm <no.|all> deletes
 ```
 
 ```text

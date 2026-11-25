@@ -115,11 +115,12 @@ Uma listagem, com as dicas no fim, uma por linha:
     💬 "A Defesa Civil informa: alerta de chuva"
 
 💡 Dicas (N: o nº ou a própria regra)
-/watch -s N mostra as mensagens completas.
-/watch -s N -q <texto|/regex/> só as que casam.
-/watch -s N -to <destino|off> troca os destinos.
-/watch -f N limpa as ocorrências.
-/watch -m N liga o 🔒 (telefones ofuscados nos avisos); -u N desliga.
+-s N mostra as mensagens completas
+-s N -q <texto|/regex/> só as que casam
+-s N -to <destino|off> troca os destinos
+-f N limpa as ocorrências
+-m N ofusca os telefones (🔒)
+-u N mostra de novo
 ```
 
 ## Buscar

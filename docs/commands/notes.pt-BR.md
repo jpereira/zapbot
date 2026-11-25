@@ -145,9 +145,9 @@ tag em itálico, o ID, o começo do texto, os ícones e a hora:
 #16 Montar uma estante com paletes · 18:44
 #17 Conhecer a trilha nova perto da lagoa · 22:03
 
-💡 _🖼️ mídia · ⏰ alerta · 🔗 link_
-💡 _-v <nº> abre a nota inteira_
-💡 _sem o -c, a lista completa_
+💡 *Dicas* _(🖼️ mídia · ⏰ alerta · 🔗 link)_
+-v <nº> abre a nota inteira
+sem o -c, a lista completa
 ```
 
 - O cabeçalho do `-view` traz o ID, a tag e a data. Um ID ou tag que não existe cancela tudo, sem

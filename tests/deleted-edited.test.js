@@ -637,9 +637,8 @@ describe('/show -e (editadas)', () => {
 
     test('dica no seu privado aponta para o -e', async () => {
         const [r] = await bot.replyAlt('/show -e', { chat: PRIVATE_OWNER });
-        assert.equal(r, '✏️ Nenhuma mensagem editada neste chat.\n' +
-            '💡 _Para ver as de outro chat: /show -l e depois /show -e -N <chat>_\n' +
-            '💡 _Para buscar em todos: /show -e -q <texto|/regex/>_');
+        assert.equal(r, '✏️ Nenhuma mensagem editada neste chat.\n💡 *Dicas*\n-l mostra os chats\n' +
+            '-e -N <chat> abre um\n-e -q <texto|/regex/> busca em todos');
     });
 
     test('-f remove as editadas deste chat; não mexe nas apagadas', async () => {

@@ -709,7 +709,7 @@ test('-c: uma linha por nota, por dia, com 🖼️ ⏰ 🔗; o cabeçalho da tag
     for (const cmd of ['/notes #pt -c', '/notes -c #pt', '/notes -l #pt -c', '/notes -compact #pt']) {
         const [list] = await bot.replyAlt(cmd);
         assert.match(list, /^📝 \*ANOTAÇÕES\*\n\n🏷️ pt \(3\) · 🔗 2\n\n📆 \d\d\/\d\d\/\d{4}\n#1 Explicação sobre o dólar 🔗 · \d\d:\d\d\n#2 g1\.globo\.com\/x\/y\.ghtml 🔗 · \d\d:\d\d\n#3 Sem link · \d\d:\d\d\n/, cmd);
-        assert.match(list, /💡 _-v <nº> abre a nota inteira_/);
+        assert.match(list, /💡 \*Dicas\* _\(🖼️ mídia · ⏰ alerta · 🔗 link\)_\n-v <nº> abre a nota inteira\nsem o -c, a lista completa$/);
     }
     await bot.replyAlt('/notes -rm all -yes');
 });

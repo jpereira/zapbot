@@ -123,7 +123,7 @@ test('o setting stocks.symbols valida o ticker', async () => {
 
 test('/stocks MSTR -alert < 90: cria, lista e dispara uma vez quando o preço cai', async () => {
     assert.match((await bot.replyAlt('/stocks MSTR -alert < 90'))[0], /🏢 MSTR abaixo de \*US\$ 90,00\*\n   📨 seu privado\n💰 Agora: US\$ 100,00/);
-    assert.match((await bot.replyAlt('/stocks -alert'))[0], /🔔 \*ALERTAS DE PREÇO\* _\(\/stocks\)_\n\n1\. 🏢 MSTR abaixo de/);
+    assert.match((await bot.replyAlt('/stocks -alert'))[0], /🔔 \*ALERTAS DE PREÇO\* _\(\/stocks · a cada \d+ minutos?\)_\n\n1\. 🏢 MSTR abaixo de/);
 
     // Still above 90: nothing
     const beforeAlt = bot.client.sent.length;

@@ -105,9 +105,7 @@ module.exports = {
     'show.noneHere': '{icon} {none} {registered} in this chat.',
     'show.noneWhere': '{icon} {none} {where}.',
     'show.noneWithQuery': '{icon} {none} with "{query}" {where}.',
-    'show.noneOtherChat': '{icon} {none} in this chat.\n' +
-        '💡 _To see the ones from another chat: /show -l and then {cmd} -N <chat>_\n' +
-        '💡 _To search in all of them: {cmd} -q <text|/regex/>_',
+    'show.noneOtherChat': '{icon} {none} in this chat.\n💡 *Tips*\n-l lists the chats\n{flags}-N <chat> opens one\n{flags}-q <text|/regex/> searches all of them',
     'show.whereNone': 'in any chat',
     'show.whereChat': 'in {name}',
     'show.whereHere': 'in this chat',
@@ -200,7 +198,7 @@ module.exports = {
     'stats.none': '📊 No statistics stored yet.',
     'stats.listHeader': '📊 *Chats with statistics* ({count})\n_Kept for up to {days}_\n\n',
     'stats.listLine': '{n}. {chat} — {msgs} msgs _(last on {date})_',
-    'stats.listFooter': '\n\n💡 _/stats /name/ shows one_\n💡 _/stats -f /name/ deletes its statistics_',
+    'stats.listFooter': '\n\n💡 *Tips*\n/name/ shows one\n-f /name/ deletes its statistics',
     'stats.flushedAll': '🗑️ Statistics deleted: {chats}.',
     'stats.flushNeedsChat': 'Say the chat: /stats -f /Group/ (or /stats -flush-all for all).',
     'stats.flushedChat': '🗑️ Statistics of {chat} deleted.',
@@ -221,12 +219,7 @@ module.exports = {
     'watch.multiMatch': '🔎 "{ref}" matches {count} rules:\n\n',
     'watch.multiMatchFooter': '\n\n💡 _Repeat with the rule number (e.g. /watch -s N) or with the whole rule._',
     'watch.noRuleMatches': '❌ No rule matches "{ref}".\n💡 _See the rules with /watch -l_',
-    'watch.tips': '\n\n💡 *Tips* _(N: the number or the rule itself)_\n' +
-        '/watch -s N shows the full messages.\n' +
-        '/watch -s N -q <text|/regex/> only the matching ones.\n' +
-        '/watch -s N -to <destination|off> changes the destinations.\n' +
-        '/watch -f N clears the hits.\n' +
-        '/watch -m N turns on the 🔒 (phone numbers masked in alerts); -u N turns it off.',
+    'watch.tips': '\n\n💡 *Tips* _(N: the number or the rule itself)_\n-s N shows the full messages\n-s N -q <text|/regex/> only the matching ones\n-s N -to <destination|off> swaps the destinations\n-f N clears the matches\n-m N masks the phones (🔒)\n-u N shows them again',
     'watch.onlyIn': ' only in {icon} {name}',
     'watch.listTitle': '👀 *WATCH: RULES* ({count}/{max})\n\n',
     'watch.noRules': '_No rules registered._\n💡 _Add one with /watch <text|/regex/flags>_',

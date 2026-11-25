@@ -47,12 +47,12 @@ Remover contatos ou reduzir o histórico local não altera os backups já existe
 • 📤 Destino automático: só local
 
 💡 Dicas
-/backup -n cria um agora
-/backup -l lista
-/backup -i <nº> detalha
-/backup -r <nº> restaura
-/backup -s [nº] [-to <destino>] envia o arquivo
-/backup -rm <nº|all> apaga
+-n cria um agora
+-l lista
+-i <nº> detalha
+-r <nº> restaura
+-s [nº] [-to <destino>] envia o arquivo
+-rm <nº|all> apaga
 ```
 
 ```text

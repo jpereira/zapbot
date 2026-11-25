@@ -48,8 +48,9 @@ Kept for up to 90 days
 2. 👥 Work — 456 msgs (last on 01/10)
 3. 👤 Fulano — 78 msgs (last on 28/09)
 
-💡 /stats /name/ shows one
-💡 /stats -f /name/ deletes its statistics
+💡 Tips
+/name/ shows one
+-f /name/ deletes its statistics
 ```
 
 ```text

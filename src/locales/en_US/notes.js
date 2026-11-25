@@ -87,8 +87,8 @@ module.exports = {
     'notes.alert.fired': `🔔 *NOTE #{id}*\n\n{text}\n\n📅 Added on {date}`,
 
     // ---- /notes: lists
-    'notes.tips': `\n\n💡 *Tips*\n/notes #tag <text> adds a note\n/notes -v <id...|#tag...> shows it with the image\n/notes -r <id...|#tag... <position>> removes (a whole tag or all: -yes)\n-alert <when> sets an alert.`,
-    'notes.tipsCompact': `\n\n💡 _🖼️ media · ⏰ alert · 🔗 link_\n💡 _-v <no.> opens the whole note_\n💡 _without -c, the full list_`,
+    'notes.tips': `\n\n💡 *Tips*\n#tag <text> adds a note\n<n...> #tag shows those (-v with the media)\n-rm <n...> #tag removes\n-alert <when> sets an alert`,
+    'notes.tipsCompact': `\n\n💡 *Tips* _(🖼️ media · ⏰ alert · 🔗 link)_\n-v <no.> opens the whole note\nwithout -c, the full list`,
     'notes.tipsTags': `\n\n💡 _/notes #tag lists the notes of a tag_`,
     'notes.sentTo': `📝 Notes sent to {where}.`,
     'notes.sendFail': `❌ Couldn't send the notes: {error}`,

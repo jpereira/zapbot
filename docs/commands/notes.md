@@ -147,9 +147,9 @@ italics, the ID, the start of the text, the icons and the time:
 #16 Build a bookshelf with pallets · 6:44 PM
 #17 Try the new trail near the lake · 10:03 PM
 
-💡 _🖼️ media · ⏰ alert · 🔗 link_
-💡 _-v <no.> opens the whole note_
-💡 _without -c, the full list_
+💡 *Tips* _(🖼️ media · ⏰ alert · 🔗 link)_
+-v <no.> opens the whole note
+without -c, the full list
 ```
 
 - The `-view` header shows the ID, the tag and the date. An ID or tag that doesn't exist cancels

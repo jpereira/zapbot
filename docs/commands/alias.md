@@ -68,10 +68,9 @@ the ones that run without the `🔗 Alias ...` header (`-q`):
 */go* 🔇
 → /ascii -c # LET'S GO!
 
-💡 *Tips*
-/alias <name> </command args> creates
-/alias -rm <name...> removes
-🔇 = no header when running
+💡 *Tips* _(🔇 = no header when running)_
+<name> </command args> creates
+-rm <name...> removes
 ```
 
 The start of a saved name also completes (`/dol` runs `/dollar`, if it's the only match; with

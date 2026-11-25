@@ -344,8 +344,8 @@ describe('/watch com origem e listagem', () => {
         assert.match(r, /Total:\* 2 _\(exibindo as 1 mais recentes\)_/);
         assert.match(r, /pix recente/);
         assert.doesNotMatch(r, /pix antigo/);
-        assert.match(r, /\n\n💡 \*Dicas\* _\(N: o nº ou a própria regra\)_\n\/watch -s N mostra as mensagens completas\.\n/);
-        assert.match(r, /\n\/watch -s N -q <texto\|\/regex\/> só as que casam\.\n\/watch -s N -to <destino\|off> troca os destinos\.\n\/watch -f N limpa as ocorrências\.\n\/watch -m N liga o 🔒 .*; -u N desliga\.$/);
+        assert.match(r, /\n\n💡 \*Dicas\* _\(N: o nº ou a própria regra\)_\n-s N mostra as mensagens completas\n/);
+        assert.match(r, /\n-s N -q <texto\|\/regex\/> só as que casam\n-s N -to <destino\|off> troca os destinos\n-f N limpa as ocorrências\n-m N ofusca os telefones \(🔒\)\n-u N mostra de novo$/);
         assert.match((await bot.replyAlt('/watch -0'))[0], /quantidade/);
     });
 

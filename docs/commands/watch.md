@@ -115,11 +115,12 @@ A listing, with the tips at the end, one per line:
     💬 "Civil Defense reports: rain alert"
 
 💡 Tips (N: the number or the rule itself)
-/watch -s N shows the full messages.
-/watch -s N -q <text|/regex/> only the matching ones.
-/watch -s N -to <destination|off> changes the destinations.
-/watch -f N clears the hits.
-/watch -m N turns on the 🔒 (phone numbers masked in alerts); -u N turns it off.
+-s N shows the full messages
+-s N -q <text|/regex/> only the matching ones
+-s N -to <destination|off> swaps the destinations
+-f N clears the matches
+-m N masks the phones (🔒)
+-u N shows them again
 ```
 
 ## Search
