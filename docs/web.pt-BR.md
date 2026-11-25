@@ -372,8 +372,9 @@ apagados e posts de **canais** apagados, os mais recentes primeiro, com busca no
 Cada item tem a foto (clique: a ficha do contato e, nela, a foto grande), o nome (clique: só os itens daquela pessoa),
 a conversa (clique: o Histórico abre naquela mensagem), quando aconteceu e o que foi recuperado (o texto e a mídia;
 clique numa imagem para ver grande). O 🔇 silencia a pessoa (o mesmo que o [`/mute`](commands/mute.md), todos os
-avisos, sem prazo) e o 🔊 tira o silêncio; o 🗑️ tira o item do cache. Ao lado, quem mais apaga, edita e reage, com as
-contagens e o 🔇.
+avisos, sem prazo) e o 🔊 tira o silêncio; o 🗑️ tira o item do cache. Para tirar vários de uma vez, clique nos itens
+(Shift+clique marca um intervalo; **Todas**, acima da lista, marca todos) e depois no 🧹. Ao lado, quem mais apaga, edita e reage, com as contagens e o 🔇:
+clique numa pessoa para ver só os dela (o box fica destacado; clique de novo para ver todos).
 
 ![Show: os avisos, as abas, os itens recuperados e quem mais apaga](assets/web/pt-BR/show.png)
 

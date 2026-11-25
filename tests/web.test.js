@@ -1765,6 +1765,12 @@ describe('the web interface: mute a /watch rule, the chat of a schedule, clear a
 
         assert.equal((await manage({ section: 'show', op: 'delete', kind: 'deleted', id: 'd3' })).status, 200);
         assert.equal(await bot.dbGet("SELECT id FROM messages WHERE id = 'd3'"), undefined);
+        // Several at once (the selection of the page): the ones that are not Show items are skipped
+        const many = await manage({ section: 'show', op: 'delete', kind: 'deleted', ids: ['d1', 'd2', 'ok', 'nada'] });
+        assert.equal(many.status, 200);
+        assert.equal(many.body.removed, 2);
+        assert.equal((await json('/api/show')).counts.deleted, 0);
+        assert.equal((await manage({ section: 'show', op: 'delete', kind: 'deleted', ids: [] })).status, 400);
         assert.equal((await manage({ section: 'show', op: 'delete', kind: 'deleted', id: 'ok' })).status, 400, 'a message that was not deleted is not a Show item');
         assert.equal((await manage({ section: 'show', op: 'delete', kind: 'edited', id: edit.id })).status, 200);
         assert.equal((await json('/api/show')).counts.edited, 0);

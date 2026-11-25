@@ -126,19 +126,30 @@ async function showItems({ kind, q = '', person: number = '', before = null }) {
     return { items, next: rows.length > PAGE ? rows[PAGE - 1].at : null };
 }
 
-/** Takes one item out of the cache (a deleted message with its media, an edit, a reaction change) */
-async function deleteShowItem({ kind, id }) {
+const MAX_DELETE = 500;
+
+/**
+ * Takes items out of the cache (a deleted message with its media, an edit, a reaction change):
+ * one (id) or several of the same kind (ids, the ones selected on the page)
+ */
+async function deleteShowItem({ kind, id, ids }) {
     const k = KINDS[kind];
     if (!k) return { ok: false, error: 'kind: deleted, status, channels, edited or reactions' };
-    const row = await dbGet(`SELECT * FROM ${k.from} WHERE id = ? AND ${k.where}`, [id]);
-    if (!row) return { ok: false, error: 'item: not found' };
-    await dbRun(`DELETE FROM ${k.from} WHERE id = ?`, [id]);
-    if (k.from === 'messages' && row.media_path) {
-        const base = await fs.realpath(MEDIA_DIR).catch(() => null);
-        const real = base ? await fs.realpath(path.resolve(MEDIA_DIR, row.media_path)).catch(() => null) : null;
-        if (real?.startsWith(base + path.sep)) await fs.remove(real).catch(() => {});
+    const list = [...new Set((Array.isArray(ids) ? ids : [id]).filter(v => v !== undefined && v !== null && v !== ''))];
+    if (!list.length || list.length > MAX_DELETE) return { ok: false, error: `ids: 1 to ${MAX_DELETE} items` };
+    const base = await fs.realpath(MEDIA_DIR).catch(() => null);
+    let removed = 0;
+    for (const one of list) {
+        const row = await dbGet(`SELECT * FROM ${k.from} WHERE id = ? AND ${k.where}`, [one]);
+        if (!row) continue;
+        await dbRun(`DELETE FROM ${k.from} WHERE id = ?`, [one]);
+        removed++;
+        if (k.from === 'messages' && row.media_path && base) {
+            const real = await fs.realpath(path.resolve(MEDIA_DIR, row.media_path)).catch(() => null);
+            if (real?.startsWith(base + path.sep)) await fs.remove(real).catch(() => {});
+        }
     }
-    return { ok: true };
+    return removed ? { ok: true, removed } : { ok: false, error: 'item: not found' };
 }
 
 /** /mute and /unmute of a person, from the page: every kind of notice, with no deadline */

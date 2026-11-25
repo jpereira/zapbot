@@ -435,7 +435,15 @@ button.rank:hover { background: var(--hover); }
 .spy-media { max-width: 220px; max-height: 220px; border-radius: 8px; cursor: zoom-in; margin-top: 4px; }
 .spy-people { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; position: sticky; top: 10px; }
 .spy-person { display: flex; gap: 10px; align-items: center; padding: 6px 4px; border-radius: 8px; }
-.spy-person.active { background: var(--selected); }
+.spy-person { cursor: pointer; }
+.spy-person:hover { background: var(--hover); }
+.spy-person.active { background: color-mix(in srgb, var(--accent) 22%, var(--panel)); box-shadow: inset 3px 0 0 var(--accent); }
+.spy-name { font-weight: 600; }
+.spy-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.spy-all { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.spy-card { cursor: pointer; }
+.spy-card.picked { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--panel)); }
+.spy-pick { margin-top: 12px; pointer-events: none; } /* the click goes to the card (Shift+click included) */
 @media (max-width: 900px) { .spy-layout { grid-template-columns: 1fr; } .spy-people { position: static; } }
 .storage-total { font-size: 28px; font-weight: 600; }
 .stack { display: flex; height: 26px; border-radius: 8px; overflow: hidden; background: var(--line); gap: 2px; }

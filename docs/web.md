@@ -370,8 +370,9 @@ with the count: **deleted**, **edited** (before and after), **reactions** (the o
 Each item has the photo (click it: the contact card, and there the photo in full size), the name (click it: only that
 person's items), the chat (click it: the History opens at that message), when it happened and what was recovered (the
 text and the media; click an image to see it big). 🔇 mutes the person (the same as [`/mute`](commands/mute.md), every
-notice, no deadline) and 🔊 unmutes; 🗑️ takes the item out of the cache. On the side, who deletes, edits and reacts the
-most, with the counts and the 🔇.
+notice, no deadline) and 🔊 unmutes; 🗑️ takes the item out of the cache. To take out several at once, click the items
+(Shift+click picks a range; **All**, above the list, picks every one) and then 🧹. On the side, who deletes, edits and reacts the most, with the counts and the
+🔇: click a person to see only theirs (the box stays highlighted; click again to see everyone).
 
 ![Show: the notices, the tabs, the recovered items and who deletes the most](assets/web/show.png)
 
