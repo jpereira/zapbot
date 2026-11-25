@@ -43,7 +43,8 @@ function errorGet(e, verbose) {
         const textAlt = formatErrorCommand(e);
         return e.details ? `${textAlt}\n🧾 *Detalhes*:\n\`\`\`\n${e.details}\n\`\`\`` : textAlt;
     }
-    const message = e.noMedia ? e.message : t('get.mediaFailed');
+    // No media or a login: the reason itself helps; the rest is the general message
+    const message = e.noMedia || e.needsLogin ? e.message : t('get.mediaFailed');
     return `❌ ${message}`;
 }
 
@@ -770,8 +771,11 @@ function snippetOpts(opts, { start, end }) {
 async function downloadWithYtDlp(url, originalFile, logCmd, snippet = null, logFile = null) {
     // --no-playlist: a playlist link would download everything; --max-filesize: does not fill the disk
     // --force-keyframes-at-cuts: without it the snippet starts at the previous keyframe, before the -ss
+    // -f: an mp4 that already has video and audio or, without one (only the separate DASH streams, as on
+    // YouTube and some Facebook videos), the best video up to 720p plus the best audio, joined in an mp4.
+    // "-f mp4" alone took a video-only stream there: the video came without sound
     const cmdYtArgs = [
-        '-f', 'mp4', '--merge-output-format', 'mp4',
+        '-f', 'b[ext=mp4]/bv*[height<=720]+ba/b', '--merge-output-format', 'mp4',
         ...argsDeCookies(),
         '--no-playlist',
         '--max-filesize', `${getSetting('get.maxDownloadMB')}M`,
@@ -898,20 +902,26 @@ async function postPhotoSticker(msg, notice, url, opts) {
 }
 
 // yt-dlp found the post but without video (photo-only carousel, image post): there is nothing to download
-const WITHOUT_MEDIA = /No video formats found|There is no video in this post|No video could be found in this tweet|Media #\d+ is not a video/i;
-function withoutMediaInLink(fileLog) {
+const WITHOUT_MEDIA = /No video formats found|There is no video in this post|No video could be found in this tweet|Media #\d+ is not a video|\[facebook\][^\n]*No video found/i;
+// Content that only a logged-in account sees (age restriction, private): only the cookies of the site solve it
+const NEEDS_LOGIN = /age-restricted|requires authentication|login required|You need to log in|Sign in to confirm your age/i;
+const logMatches = (fileLog, regex) => {
     try {
-        return Boolean(fileLog) && WITHOUT_MEDIA.test(fs.readFileSync(fileLog, 'utf8'));
+        return Boolean(fileLog) && regex.test(fs.readFileSync(fileLog, 'utf8'));
     } catch {
         return false;
     }
-}
+};
+const withoutMediaInLink = (fileLog) => logMatches(fileLog, WITHOUT_MEDIA);
 
 // The yt-dlp error: the right message (no media on the link, or the general download problem) and the command
 function downloadError(logFile, inner, cmd) {
-    const errorAlt = errorOnDownload(t(withoutMediaInLink(logFile) ? 'get.noMediaInLink' : 'get.downloadFailed', { bin: BIN_YT }), { cause: inner });
+    const login = logMatches(logFile, NEEDS_LOGIN);
+    const key = login ? 'get.needsLogin' : withoutMediaInLink(logFile) ? 'get.noMediaInLink' : 'get.downloadFailed';
+    const errorAlt = errorOnDownload(t(key, { bin: BIN_YT }), { cause: inner });
     errorAlt.cmd = cmd;
-    errorAlt.noMedia = withoutMediaInLink(logFile);
+    errorAlt.noMedia = !login && withoutMediaInLink(logFile);
+    errorAlt.needsLogin = login;
     errorAlt.details = tailLog(logFile);
     return errorAlt;
 }

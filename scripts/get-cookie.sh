@@ -4,7 +4,7 @@
 # (/get and /sticker, for example the sensitive content of x.com).
 #
 # Uso: ./scripts/get-cookie.sh [-o arquivo] [-b navegador] dominio [dominio...]
-# E.g.: ./scripts/get-cookie.sh x.com twitter.com
+# E.g.: ./scripts/get-cookie.sh x.com twitter.com instagram.com youtube.com facebook.com
 #
 # The file gives access to the account: it gets chmod 600, stays out of git, and must be deleted
 # after being sent to the server.
@@ -36,12 +36,34 @@ TMP=$DIR/jar.txt
 yt-dlp -q --cookies-from-browser "$NAVEGADOR" --cookies "$TMP" --skip-download "https://$1" >/dev/null 2>&1 || true
 [ -s "$TMP" ] || { echo "Não consegui ler os cookies do $NAVEGADOR (feche-o e tente de novo)" >&2; exit 1; }
 
+# The cookie that only exists with the account logged in, per site (empty: the site has no check)
+cookie_login() {
+    case $1 in
+        x.com|twitter.com) echo auth_token ;;
+        facebook.com) echo c_user ;;
+        instagram.com) echo sessionid ;;
+        youtube.com) echo LOGIN_INFO ;;
+        *) echo '' ;;
+    esac
+}
+
 echo "# Netscape HTTP Cookie File" > "$SAIDA"
+semLogin=0
 for dominio in "$@"; do
     esc=${dominio//./\\.}
-    grep -E "^(#HttpOnly_)?\.?([^[:space:]]*\.)?${esc}[[:space:]]" "$TMP" >> "$SAIDA" || true
+    linhas=$(grep -E "^(#HttpOnly_)?\.?([^[:space:]]*\.)?${esc}[[:space:]]" "$TMP" || true)
+    [ -n "$linhas" ] && printf '%s\n' "$linhas" >> "$SAIDA"
+    total=$(printf '%s' "$linhas" | grep -c . || true)
+    nome=$(cookie_login "$dominio")
+    if [ "$total" -eq 0 ]; then
+        echo "⚠️  $dominio: nenhum cookie (abra o site no $NAVEGADOR e faça login)" >&2; semLogin=1
+    elif [ -n "$nome" ] && ! printf '%s\n' "$linhas" | grep -q -E "[[:space:]]${nome}[[:space:]]"; then
+        echo "⚠️  $dominio: $total cookies, mas sem $nome (a conta não está logada no $NAVEGADOR)" >&2; semLogin=1
+    else
+        echo "✅ $dominio: $total cookies${nome:+ (logado)}"
+    fi
 done
 chmod 600 "$SAIDA"
 
 echo "$(grep -c -v '^#' "$SAIDA" || true) cookies em $SAIDA"
-grep -q -E 'auth_token|ct0' "$SAIDA" || echo "⚠️  sem auth_token/ct0: faça login no $NAVEGADOR" >&2
+[ "$semLogin" -eq 0 ] || echo "⚠️  Faça login nos sites acima no $NAVEGADOR e rode de novo" >&2

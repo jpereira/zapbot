@@ -59,5 +59,5 @@ Roda **dentro do servidor**, com o [faster-whisper](https://github.com/SYSTRAN/f
 - Um link **sem vídeo nem áudio** (um carrossel do Instagram só com fotos, por exemplo) recebe
   `Esse link não tem vídeo nem áudio para baixar (é um post só de fotos?)`.
 - Divide o limite de 2 `/get` ao mesmo tempo, e uma URL da rede interna é recusada. Para o Instagram
-  e outros sites que pedem login, usa o mesmo `cookies.txt` do [`/get`](get.md#conteúdo-sensível-do-x).
+  e outros sites que pedem login, usa o mesmo `cookies.txt` do [`/get`](get.md#conteúdo-com-login).
   Todos os detalhes estão em [Transcrever a fala](get.md#transcrever-a-fala--stt).

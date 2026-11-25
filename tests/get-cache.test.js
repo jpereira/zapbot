@@ -938,6 +938,25 @@ describe('/get -stt', () => {
         assert.match((await bot.execute(`/stt ${URL}`, { expectedError: true })).at(-1).text, /Não consegui baixar ou processar essa mídia/);
     });
 
+    test('Facebook: o vídeo que pede login avisa dos cookies; o post sem vídeo diz que não há mídia', async () => {
+        const FB = 'https://www.facebook.com/share/v/19pYzHf4sz/';
+        processes.fail = 'yt-dlp';
+        processes.errorOutput = 'ERROR: [facebook] 1548052313193384: This video is age-restricted and requires authentication. Use --cookies-from-browser or --cookies for the authentication.\n';
+        const login = (await bot.execute(`/get ${FB}`, { expectedError: true })).at(-1).text;
+        assert.match(login, /Esse vídeo só abre com login \(restrição de idade ou conteúdo privado\)/);
+        assert.doesNotMatch(login, /Problemas para baixar|não tem vídeo/);
+
+        processes.errorOutput = 'ERROR: [facebook] 28927339876946499: No video found. Check if this post is accessible in your browser without being logged-in.\n';
+        assert.match((await bot.execute(`/get ${FB}`, { expectedError: true })).at(-1).text, /Esse link não tem vídeo nem áudio para baixar/);
+    });
+
+    test('sem um mp4 com vídeo e áudio (só os streams DASH, como no YouTube e no Facebook), junta o melhor vídeo e o melhor áudio', async () => {
+        await bot.execute(`/get ${URL}`);
+        const args = processes.calls.find(c => path.basename(c.bin) === 'yt-dlp' && c.args.includes('-o')).args;
+        assert.equal(args[args.indexOf('-f') + 1], 'b[ext=mp4]/bv*[height<=720]+ba/b');
+        assert.equal(args[args.indexOf('--merge-output-format') + 1], 'mp4');
+    });
+
     test('não mistura com -a, -st nem -pos', async () => {
         for (const o of ['-a', '-st', '-pos meio']) {
             const r = await bot.execute(`/get -t ${o} ${URL}`);

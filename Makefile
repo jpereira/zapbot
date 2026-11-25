@@ -166,7 +166,7 @@ volume: context ## Creates/inspects the selected environment's volumes
 	$(Q)$(DOCKER) volume inspect $(VOLUMES)
 
 cookies: context ## Copies FILE (cookies.txt, from ./scripts/get-cookie.sh) into the container cache; /get starts using it
-	$(Q)test -f "$(FILE)" || { echo "Arquivo não encontrado: $(FILE) (gere com ./scripts/get-cookie.sh x.com twitter.com)"; exit 1; }
+	$(Q)test -f "$(FILE)" || { echo "Arquivo não encontrado: $(FILE) (gere com ./scripts/get-cookie.sh x.com twitter.com instagram.com youtube.com facebook.com)"; exit 1; }
 	$(Q)$(DOCKER) cp "$(FILE)" $(SERVICE):$(COOKIES_DEST)
 	$(Q)$(DOCKER) exec $(SERVICE) chmod 600 $(COOKIES_DEST)
 	@echo "🍪 $(FILE) -> $(SERVICE):$(COOKIES_DEST)"

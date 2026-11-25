@@ -60,5 +60,5 @@ It runs **inside the server**, with [faster-whisper](https://github.com/SYSTRAN/
   `This link has no video or audio to download (a post with only photos?)`.
 - It shares the limit of 2 `/get` at once, and a URL to the internal network is refused. For
   Instagram and other sites that ask for login, it uses the same `cookies.txt` as
-  [`/get`](get.md#sensitive-content-on-x). All the details are in
+  [`/get`](get.md#content-that-needs-a-login). All the details are in
   [Transcribe the speech](get.md#transcribe-the-speech--stt).

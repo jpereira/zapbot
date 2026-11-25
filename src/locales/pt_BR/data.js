@@ -51,6 +51,7 @@ module.exports = {
     'get.photoOutOfRange': '❌ O post não tem a foto {n} (tem {total}).',
     'get.photosMissing': ' ({n} não baixaram)',
     'get.noMediaInLink': 'Esse link não tem vídeo nem áudio para baixar (é um post só de fotos?)',
+    'get.needsLogin': 'Esse vídeo só abre com login (restrição de idade ou conteúdo privado). O dono do bot libera com os cookies do site: veja "Conteúdo com login" no link do /get -h',
     'get.downloadFailed': "Problemas para baixar com '{bin}'",
     'get.mediaFailed': 'Não consegui baixar ou processar essa mídia. Confira se o post está público e tente novamente.',
 

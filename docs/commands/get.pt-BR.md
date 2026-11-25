@@ -1,6 +1,6 @@
 # `/get`
 
-Baixa vídeos de Instagram, YouTube, X/Twitter, TikTok e outros sites suportados pelo
+Baixa vídeos de Instagram, YouTube, X/Twitter, TikTok, Facebook e outros sites suportados pelo
 [yt-dlp](https://github.com/yt-dlp/yt-dlp). A URL pode vir como argumento ou você pode dar reply
 numa mensagem que contenha o link. A URL digitada vale mais que a mensagem respondida. Um vídeo, imagem ou áudio enviado com `/get`
 na legenda (sem responder) é tratado como se tivesse sido respondido.
@@ -157,30 +157,65 @@ um arquivo. Roda **dentro do servidor**, com o [faster-whisper](https://github.c
 - Não mistura com `-a`, `-st` nem `-pos`. O Instagram pode pedir login: vale o mesmo `cookies.txt`
   do resto do `/get` (veja abaixo).
 
-#### Conteúdo sensível do X
+#### Conteúdo com login
 
-O X só entrega vídeos marcados como sensíveis (NSFW) para quem está logado, e o yt-dlp sem login
-falha nesses links. A saída é dar a ele os cookies de uma conta logada (de preferência uma só para
-isso):
+O X só entrega vídeos marcados como sensíveis (NSFW) para quem está logado, e o Facebook faz o
+mesmo com os vídeos com restrição de idade; o yt-dlp sem login falha nesses links (o bot responde
+que o vídeo só abre com login). A saída é dar a ele os cookies de uma conta logada (de preferência
+uma só para isso).
 
 ![Demonstração do /get](../assets/demo/06-get.gif)
 
+Passo a passo, no seu computador (na pasta do projeto):
+
+1. **Faça login nos sites no Chrome:** abra cada um (x.com, facebook.com, instagram.com,
+   youtube.com...) e entre na conta. Precisa do `yt-dlp` instalado no computador
+   (`brew install yt-dlp`).
+2. **Feche o Chrome** (o banco de cookies fica travado com ele aberto).
+3. **Gere o arquivo com todos os sites de uma vez.** O `make cookies` troca o arquivo inteiro do
+   bot: o site que ficar de fora perde os cookies.
+
+   ```bash
+   ./scripts/get-cookie.sh x.com twitter.com instagram.com youtube.com facebook.com
+   ```
+
+   No macOS, o sistema pede a senha para liberar o "Chrome Safe Storage": clique em **Permitir**.
+   A saída mostra cada site:
+
+   ```text
+   ✅ x.com: 12 cookies (logado)
+   ✅ facebook.com: 9 cookies (logado)
+   ⚠️  instagram.com: 4 cookies, mas sem sessionid (a conta não está logada no chrome)
+   ```
+
+   Com ⚠️, faça login naquele site, feche o Chrome e rode de novo.
+4. **Copie para o bot** e **apague a cópia local**:
+
+   ```bash
+   make DOCK_REMOTE=1 cookies    # copia para o container: /app/cache/cookies.txt
+   rm cookies.txt
+   ```
+
+5. **Teste:** mande `/get` com o link que falhava. Não precisa reiniciar o bot: ele lê o arquivo a
+   cada download.
+
+Para ver quais sites estão no arquivo do bot (sem mostrar os valores):
+
 ```bash
-./scripts/get-cookie.sh x.com twitter.com    # lê os cookies do Chrome e grava ./cookies.txt (chmod 600)
-make DOCK_REMOTE=1 cookies           # copia para o container: /app/cache/cookies.txt
-rm cookies.txt
+docker --context homelab exec zapbot sh -c 'grep -v "^#" /app/cache/cookies.txt | cut -f1 | sort -u'
 ```
 
 - O `get-cookie.sh` usa o `yt-dlp --cookies-from-browser` (`-b firefox` troca o navegador; `-o`
-  muda o arquivo de saída) e guarda só os domínios pedidos. Ele avisa se faltar `auth_token`/`ct0`,
-  ou seja, se a conta não estiver logada no navegador.
+  muda o arquivo de saída) e guarda só os domínios pedidos. Ele confere o cookie de login de cada
+  site (`auth_token` no X, `c_user` no Facebook, `sessionid` no Instagram, `LOGIN_INFO` no YouTube).
 - O `make cookies` usa `docker cp` e dá `chmod 600`. O arquivo cai no volume do cache, então
-  sobrevive a `make recreate`; sem `DOCK_REMOTE=1`, vai para o container do Docker local. `FILE=outro.txt`
-  escolhe outro arquivo.
+  sobrevive a `make recreate` e ao deploy; sem `DOCK_REMOTE=1`, vai para o container do Docker
+  local. `FILE=outro.txt` escolhe outro arquivo.
 - Se `cache/cookies.txt` existe, o bot passa `--cookies` ao yt-dlp em todo download, de qualquer
   site. Sem o arquivo, baixa sem cookies. Para desligar, apague o arquivo do container.
 - O arquivo dá acesso à conta: não vai para o git (`cookies.txt` está no `.gitignore`) nem pelo
-  WhatsApp. Quando o X deslogar a sessão, o `/get` volta a falhar nesses links: gere e copie de novo.
+  WhatsApp. Quando um site deslogar a sessão (ou você sair da conta no Chrome), o `/get` volta a
+  responder que o vídeo só abre com login: repita os passos 1 a 4.
 
 Limites (o `/get` não é admin: quem estiver no `bot.users` usa; com ele em `true`, qualquer um):
 
