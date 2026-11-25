@@ -424,7 +424,7 @@ describe('/get', () => {
         processes.fail = 'yt-dlp';
         const r = await bot.execute(`/get -st ${URL}`, { expectedError: true });
         assert.equal(r[0].text, '⏳ Processando seu sticker, aguarde.');
-        assert.match(r[1].text, /Problemas para baixar com/);
+        assert.match(r[1].text, /Não consegui baixar ou processar essa mídia/);
     });
 
     test('no máximo 2 downloads ao mesmo tempo', async () => {

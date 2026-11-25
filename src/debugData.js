@@ -25,10 +25,9 @@ function cleanTextDebug(textAlt) {
     const s = settingsLoaded();
     if (s) {
         for (const [keyAlt, schema] of Object.entries(s.SETTINGS_SCHEMA)) {
+            if (!schema.secret) continue;
             const valueAlt = s.getSetting(keyAlt);
-            if (schema.secret && typeof valueAlt === 'string' && valueAlt.length >= 4) {
-                values.push(valueAlt);
-            }
+            if (typeof valueAlt === 'string' && valueAlt.length >= 4) values.push(valueAlt);
         }
     }
     let safe = String(textAlt);

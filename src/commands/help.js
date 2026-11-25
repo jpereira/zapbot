@@ -33,10 +33,10 @@ const description = command => {
     const localized = locate(command);
     return oneLine(String(localized.summary ?? localized.help ?? '').replace(/[*_~`]/g, ''));
 };
-const listLine = command => `*${command.cmd}*\n_${description(command)}_`;
+const listLine = command => `${command.cmd} · ${description(command)}`;
 const heading = key => `*${t(`help.category.${key}`)}*`;
 const section = (title, entries) => entries.length
-    ? `${title}\n\n${entries.join('\n\n')}`
+    ? `${title}\n${entries.join('\n')}`
     : '';
 
 function commandCategories(can) {

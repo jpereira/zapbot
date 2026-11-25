@@ -64,13 +64,13 @@ const SYSTEM_TYPES = new Set([
     'notification', 'notification_template', 'protocol'
 ]);
 
-client.on('message_create', (msg) => withContextDebug({
+// The bot's own debug log copy is skipped before anything traced runs (it would log itself)
+client.on('message_create', (msg) => (msg.fromMe && logIsCopy(msg.body)) ? undefined : withContextDebug({
     chatId: channelId(msg?.from, msg?.id?.remote, msg?.to) || msg?.id?.remote || msg?.from || msg?.to,
     command: isWebCredential(msg.body) ? '/web ***' : (visibleBody(msg.body).trim().startsWith('/') ? msg.body : null),
     depth: 0,
     maskPhones: false
 }, async () => {
-    if (msg.fromMe && logIsCopy(msg.body)) return;
     instrumentObject(msg, 'WhatsApp.Message', 2,
         ['reply', 'downloadMedia', 'getChat', 'getContact', 'getQuotedMessage', 'getMentions']);
     const sensitiveWeb = isWebCredential(msg.body);

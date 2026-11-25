@@ -35,7 +35,7 @@ describe('comandos desativados por padrão', () => {
         assert.deepEqual(bot.getSetting('commands.disabled'), ['/cve', '/news', '/walissu']);
         assert.match((await bot.replyAlt('/help -f'))[0], /\/kernel ·/);
 
-        await bot.replyAlt('/set -rm commands.disabled cve walissu');
+        await bot.replyAlt('/set -rm commands.disabled cve news walissu');
         assert.deepEqual(bot.getSetting('commands.disabled'), []);
 
         await bot.replyAlt('/set -reset commands.disabled');

@@ -17,7 +17,8 @@ const { printDebugLevel } = require('./log');
 const { cleanTextDebug } = require('./debugData');
 
 const ROOT = __dirname + path.sep;
-const IGNORE = new Set(['log.js', 'settings.js', 'botConfig.js']);
+// The logger reads settings, so these must not log themselves (getSetting expands the user agent via version.js)
+const IGNORE = new Set(['log.js', 'settings.js', 'botConfig.js', 'version.js']);
 const wrappers = new WeakMap();
 const trackedAlt = new WeakSet();
 let installed = false;

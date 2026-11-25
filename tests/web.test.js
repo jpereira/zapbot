@@ -341,7 +341,9 @@ describe('chats and messages', () => {
     test('contact details use the chat history and expose verification only when available', async () => {
         const profile = async () => (await get('/api/contact?chat=' + encodeURIComponent(CHAT), cookie)).json();
         assert.equal((await get('/api/contact?chat=' + encodeURIComponent(CHAT))).status, 401);
-        assert.equal((await get('/api/contact?chat=' + encodeURIComponent(GROUP), cookie)).status, 404);
+        const group = await get('/api/contact?chat=' + encodeURIComponent(GROUP), cookie);
+        assert.equal(group.status, 200, 'a group has details too');
+        assert.equal((await group.json()).kind, 'group');
         assert.equal((await get('/api/contact?chat=5521999999998%40c.us', cookie)).status, 404);
 
         const offline = await profile();

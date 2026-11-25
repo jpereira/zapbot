@@ -364,7 +364,7 @@ describe('/sticker', () => {
         const internalThumb = bot.createMessage({ text: 'http://8.8.8.8/post', de: OTHERAlt.jid, extras: { _data: { thumbnailUrl: 'http://192.168.0.1/t.jpg' } } });
         const withoutPreview = await bot.execute('/sticker', { quoted: internalThumb, expectedError: true });
         assert.equal(withoutPreview.length, 1);
-        assert.match(withoutPreview[0].text, /Problemas para baixar com/);
+        assert.match(withoutPreview[0].text, /Não consegui baixar ou processar essa mídia/);
 
         // A link that cannot be downloaded (private address): the preview also works, without a warning
         const private = bot.createMessage({ text: 'http://127.0.0.1/post', de: OTHERAlt.jid, extras: { _data: { thumbnail: 'AA==' } } });
@@ -380,7 +380,7 @@ describe('/sticker', () => {
         bot.processes.fail = 'yt-dlp';
         const r = await bot.execute('/sticker', { quoted: bot.createMessage({ text: 'http://8.8.8.8/a', de: OTHERAlt.jid }), expectedError: true });
         assert.equal(r.length, 1);
-        assert.match(r[0].text, /Problemas para baixar com/);
+        assert.match(r[0].text, /Não consegui baixar ou processar essa mídia/);
 
         const audio = bot.createMessage({ de: OTHERAlt.jid, media: { mimetype: 'audio/ogg', data: 'AA==' } });
         assert.deepEqual(await bot.replyAlt('/sticker', { quoted: audio }), ['❌ Não dá para fazer figurinha de um áudio.']);
