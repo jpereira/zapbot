@@ -32,12 +32,12 @@ module.exports = {
             desc: 'Lists the reminders and scheduled messages, with the full text (also without arguments).'
         },
         {
-            opts: ['pause'],
+            opts: ['pause', 'pa'],
             values: ['<n...|all>'],
             desc: 'Pauses item N, several (-pause 1 3 or 1,3) or all: it stays in the list, but is not sent until -resume. If any number does not exist, none is paused.'
         },
         {
-            opts: ['private'],
+            opts: ['private', 'pv'],
             values: [],
             desc: 'In reminder mode: reminds you in your private chat instead of the current chat.'
         },
@@ -47,7 +47,7 @@ module.exports = {
             desc: 'Repeats at the same time: every day, every week or every month.'
         },
         {
-            opts: ['resume'],
+            opts: ['resume', 're'],
             values: ['<n...|all>'],
             desc: 'Resumes paused items (one, several or all). A repeating one that came due while paused skips to the next time; a one-off is sent right away.'
         },
@@ -57,7 +57,7 @@ module.exports = {
             desc: 'Removes item N from the list, several at once (-rm 1 3 5 or -rm 1,3,5) or all. If any number does not exist, none is removed.'
         },
         {
-            opts: ['status'],
+            opts: ['status', 's'],
             values: [],
             desc: 'In message mode: posts the text on your WhatsApp Status instead of sending it to a chat (no -to, -private or -reminder). ⚠️ Risk: posting too often is what WhatsApp punishes with a ban.',
             ex: ['/cron 8h -r d -status Good morning! {/weather}']

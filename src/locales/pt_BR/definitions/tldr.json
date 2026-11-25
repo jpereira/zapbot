@@ -23,7 +23,8 @@
     },
     {
       "opts": [
-        "private"
+        "private",
+        "p"
       ],
       "values": [],
       "desc": "Envia no seu privado."

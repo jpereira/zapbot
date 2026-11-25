@@ -43,13 +43,13 @@ still work).
 |---|---|---|
 | `-quiet`, `-q` | | Does not show the engine tip ("💡 ... by ChatGPT, Tesseract, Piper...") at the end of the reply. To hide it always: the `gpt.footer` setting off |
 | `-model`, `-m` | `[model]` | Owner and admins only. Lists the models by use, the ones your key sees, and changes each one (see [Choosing the model](#choosing-the-model)) |
-| `-audio` | | Owner and admins only. Together with `-m`: the audio transcription model |
+| `-audio`, `-a` | | Owner and admins only. Together with `-m`: the audio transcription model |
 | `-img` | | Owner and admins only. Creates an image from the request (replying to a photo, it edits it). See [Image and GIF](#image-and-gif--img--gif) |
 | `-gif` | | Owner and admins only. Creates a GIF (replying to a photo, it animates it). See [Image and GIF](#image-and-gif--img--gif) |
 | `-voice`, `-v` | `[text]` | Replies with a robot voice note of the text (or of the replied message). See [Voice](#voice--voice) |
 | `-profile`, `-p` | | Adds the profile photo of one or more people to the images of the question (`-p /Rafael Silva/`, `@mention`, `+number`). See [With the profile photo of someone](#with-the-profile-photo-of-someone--profile) |
 | `-status`, `-s` | | Appends the call's usage to the reply footer: TX/RX bytes, tokens, cost and balance. See [Status](#status--status) |
-| `-prices` | | Owner and admins only. Fetches the prices from OpenAI's site and updates `gpt.pricing`. See [Status](#status--status) |
+| `-prices`, `-pr` | | Owner and admins only. Fetches the prices from OpenAI's site and updates `gpt.pricing`. See [Status](#status--status) |
 | `-usage`, `-u` | `[days]` | Owner and admins only. Usage for the last days (default 7, up to 31) and the current limits. See [Usage and limits](#usage-and-limits--usage) |
 
 ## Formatting on WhatsApp

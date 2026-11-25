@@ -27,7 +27,8 @@
     },
     {
       "opts": [
-        "alert"
+        "alert",
+        "al"
       ],
       "values": [],
       "desc": "Sem regra: lista os alertas. Com regra (ex.: BTC < 90000): avisa no seu privado (ou nos destinos do -to) quando o preço passar do valor. A moeda também pode vir antes: /crypto BTC -alert < 90000. Só o dono (ou um admin)."

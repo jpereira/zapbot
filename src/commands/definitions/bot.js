@@ -126,14 +126,14 @@ module.exports = {
             cron: false
         },
         {
-            opts: ['passwd'],
+            opts: ['passwd', 'pw'],
             values: ['<password|off>'],
             desc: 'Owner only: sets the password for /bot -login (min. 8 characters; only the scrypt hash is kept in the database, setting bot.login). With off, turns off the login.',
             ex: ['/bot -passwd mypassword'],
             cron: false
         },
         {
-            opts: ['login'],
+            opts: ['login', 'lo'],
             values: ['<password>'],
             desc: 'For outsiders, in private only: with the right password, becomes admin (goes into bot.admins) and the owner is notified by WhatsApp and email. Get it wrong 5 times, blocked for 15 min. The password is deleted from the message database.',
             ex: ['/bot -login mypassword'],

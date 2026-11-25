@@ -27,7 +27,7 @@ module.exports = {
             role: ADMIN
         },
         {
-            opts: ['alert'],
+            opts: ['alert', 'al'],
             values: [],
             desc: 'Without a rule: lists the alerts. With a rule (e.g. USD > 5.30 or MSTR < 90): notifies you in your private chat (or at the -to targets) when the price crosses the value (currencies in reais, stocks in the currency of the asset). The symbol can also come first: /stocks MSTR -alert < 90. Owner (or an admin) only.',
             cron: false

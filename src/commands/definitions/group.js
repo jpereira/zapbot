@@ -31,7 +31,7 @@ module.exports = {
             ex: ['/group -desc Rules: be nice', '/group -desc']
         },
         { opts: ['pic'], values: [], desc: 'Sets the group photo from the image you reply to (or the one sent with the command as the caption).' },
-        { opts: ['rmpic'], values: [], desc: 'Removes the group photo.' },
+        { opts: ['rmpic', 'rp'], values: [], desc: 'Removes the group photo.' },
         {
             opts: ['send'],
             values: ['<admins|all>'],

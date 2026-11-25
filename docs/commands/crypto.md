@@ -11,7 +11,7 @@ only the requested ones. Default: BTC, ETH, SOL and HYPE.
 | `-quiet`, `-q` | | Only the prices, one line per coin, with no header, no details and no footer. Handy for a text (`{/crypto -q}`) or for the [`/tts`](tts.md#commands-in-the-text) |
 | `-add`, `-a` | `<TOKEN>` | Enables a supported coin (bot owner or an [admin](bot.md#extra-admins) only) |
 | `-del`, `-d` | `<TOKEN>` | Disables a coin (bot owner or an [admin](bot.md#extra-admins) only) |
-| `-alert` | `[rule]` | Without a rule, lists the alerts; with a rule (e.g. `BTC < 90000`), creates one (bot owner or an [admin](bot.md#extra-admins) only). The coin can also come first: `/crypto BTC -alert < 90000`. See [Price alerts](stocks.md#price-alerts) |
+| `-alert`, `-al` | `[rule]` | Without a rule, lists the alerts; with a rule (e.g. `BTC < 90000`), creates one (bot owner or an [admin](bot.md#extra-admins) only). The coin can also come first: `/crypto BTC -alert < 90000`. See [Price alerts](stocks.md#price-alerts) |
 | `-msg`, `-m` | `<text>` | Together with `-alert`: the text goes at the start of the notification. It runs to the end of the command. See [Message in the notice](stocks.md#message-in-the-notice) |
 | `-rm` | `<#...\|all>` | Together with `-alert`: removes the alerts with those numbers (`-rm 2`, `-rm 1 2 3` or `-rm 1,2,3`), or all of them (`all`). If any number doesn't exist, none is removed |
 | `-to` | `<destination>` | Together with `-alert`: notifies a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/L200 Group/`), a number (`+5521999999999`) or by email (`email`) instead of your private chat. Repeat for several: a single alert that notifies all of them. See [Notify another chat or by email](stocks.md#notify-another-chat-or-by-email) |

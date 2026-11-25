@@ -25,7 +25,8 @@
     },
     {
       "opts": [
-        "alert"
+        "alert",
+        "al"
       ],
       "values": [],
       "desc": "Avisa quando o contato ficar online (com -add, ou sozinho num já cadastrado).",

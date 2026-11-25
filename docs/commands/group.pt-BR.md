@@ -41,7 +41,7 @@ mudar qualquer coisa, **a sua conta precisa ser admin do grupo**. O link de conv
 | `-name` | `<texto>` | Muda o nome do grupo. Vai até o fim do comando (pode ter espaços) |
 | `-desc` | `[texto]` | Muda a descrição. Sem texto, apaga |
 | `-pic` | | Define a foto do grupo com a imagem que você respondeu (ou a enviada com `/group -pic` na legenda) |
-| `-rmpic` | | Tira a foto do grupo |
+| `-rmpic`, `-rp` | | Tira a foto do grupo |
 | `-send` | `<admins\|all>` | Quem pode mandar mensagem: `admins` fecha o grupo para os outros |
 | `-edit` | `<admins\|all>` | Quem pode mudar o nome, a descrição e a foto |
 | `-add` | `<admins\|all>` | Quem pode adicionar pessoas ao grupo |

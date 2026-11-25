@@ -6,10 +6,10 @@ Jogos de grupo, para quando o chat precisa de uma pausa: a **bola 8 mágica**, *
 
 | Opção | Valor | Descrição |
 |---|---|---|
-| `-8ball` | | A bola 8 mágica: faça uma pergunta de sim ou não e ela responde (sim, não ou talvez) |
-| `-truth` | | Uma pergunta de verdade para o grupo |
-| `-dare` | | Um desafio para o grupo |
-| `-trivia` | | Uma pergunta de conhecimentos gerais com 4 opções. Responda com a letra (A, B, C ou D) em até 5 minutos: `-trivia B`. Uma pergunta aberta por chat |
+| `-8ball`, `-8` | | A bola 8 mágica: faça uma pergunta de sim ou não e ela responde (sim, não ou talvez) |
+| `-truth`, `-t` | | Uma pergunta de verdade para o grupo |
+| `-dare`, `-d` | | Um desafio para o grupo |
+| `-trivia`, `-tr` | | Uma pergunta de conhecimentos gerais com 4 opções. Responda com a letra (A, B, C ou D) em até 5 minutos: `-trivia B`. Uma pergunta aberta por chat |
 
 ## Bola 8 mágica
 

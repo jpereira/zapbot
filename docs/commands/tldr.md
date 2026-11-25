@@ -18,7 +18,7 @@ WhatsApp formatting conversion as `/gpt` (see
 | *(replying)* | | Summarizes from the replied message until now; a typed period or `-chat` win |
 | `-chat`, `-c` | `<chat>` | Summarizes another chat, the group or contact name (all the words, in any order, ignoring accents), `/regex/` or `@contact`. A name with a space goes in quotes: `-c "work rio"`. If several chats match, it lists them and waits for the number |
 | `-status`, `-s` | | Adds the call's usage to the footer: TX/RX bytes, tokens, cost and balance (see [Status](gpt.md#status--status)) |
-| `-private` | | Sends to your private chat instead of exposing it in the current chat |
+| `-private`, `-p` | | Sends to your private chat instead of exposing it in the current chat |
 
 ```text
 /tldr                → the last 100 messages of this chat

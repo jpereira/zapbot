@@ -56,7 +56,8 @@
     },
     {
       "opts": [
-        "audio"
+        "audio",
+        "a"
       ],
       "values": [],
       "desc": "Só junto do -m: escolhe o modelo da transcrição de áudio (setting gpt.transcribe.model). O áudio respondido é transcrito sem esta opção.",
@@ -79,7 +80,8 @@
     },
     {
       "opts": [
-        "prices"
+        "prices",
+        "pr"
       ],
       "values": [],
       "desc": "Atualiza a tabela de preços (setting gpt.pricing) pelo site da OpenAI.",

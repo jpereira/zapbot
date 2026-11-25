@@ -13,25 +13,25 @@ module.exports = {
     ex: ['/games -8ball will I pass the exam?', '/games -truth', '/games -dare', '/games -trivia', '/games -trivia B'],
     cmd_opts: [
         {
-            opts: ['8ball'],
+            opts: ['8ball', '8'],
             values: [],
             desc: 'The magic 8 ball: ask a yes/no question and it answers (yes, no or maybe).',
             ex: ['/games -8ball will it rain tomorrow?']
         },
         {
-            opts: ['truth'],
+            opts: ['truth', 't'],
             values: [],
             desc: 'A truth question for the group.',
             ex: ['/games -truth']
         },
         {
-            opts: ['dare'],
+            opts: ['dare', 'd'],
             values: [],
             desc: 'A dare for the group.',
             ex: ['/games -dare']
         },
         {
-            opts: ['trivia'],
+            opts: ['trivia', 'tr'],
             values: [],
             desc: 'A general-knowledge question with 4 options. Answer with the letter (A, B, C or D) within 5 minutes: `-trivia B`. One open question per chat.',
             ex: ['/games -trivia', '/games -trivia C'],

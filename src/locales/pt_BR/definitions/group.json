@@ -58,7 +58,8 @@
     },
     {
       "opts": [
-        "rmpic"
+        "rmpic",
+        "rp"
       ],
       "values": [],
       "desc": "Tira a foto do grupo."

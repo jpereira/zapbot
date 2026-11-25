@@ -18,7 +18,8 @@
     },
     {
       "opts": [
-        "flush-all"
+        "flush-all",
+        "fa"
       ],
       "values": [],
       "desc": "Apaga as estatísticas de todos os chats."

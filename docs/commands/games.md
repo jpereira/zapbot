@@ -6,10 +6,10 @@ Group games, for when the chat needs a break: the **magic 8 ball**, **truth**, *
 
 | Option | Value | Description |
 |---|---|---|
-| `-8ball` | | The magic 8 ball: ask a yes/no question and it answers (yes, no or maybe) |
-| `-truth` | | A truth question for the group |
-| `-dare` | | A dare for the group |
-| `-trivia` | | A general-knowledge question with 4 options. Answer with the letter (A, B, C or D) within 5 minutes: `-trivia B`. One open question per chat |
+| `-8ball`, `-8` | | The magic 8 ball: ask a yes/no question and it answers (yes, no or maybe) |
+| `-truth`, `-t` | | A truth question for the group |
+| `-dare`, `-d` | | A dare for the group |
+| `-trivia`, `-tr` | | A general-knowledge question with 4 options. Answer with the letter (A, B, C or D) within 5 minutes: `-trivia B`. One open question per chat |
 
 ## Magic 8 ball
 

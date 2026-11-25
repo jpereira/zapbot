@@ -84,7 +84,7 @@ Para o Aave:
 | `-alert`, `-a` | `[nº\|all\|valor]` | Sem nº: lista os alertas. Com nº (ou `all`): avisa quando a posição sair da faixa e quando voltar. Só da Orca e do Project X (a Liquidswap, o Morpho e o Aave não têm faixa). No cadastro (com `-address` ou `-wallet`), liga o alerta da posição nova, no seu privado (ou no `-to`); o valor é o limite das taxas, como o `-fees` (`-alert 2000`). Veja [Alerta de saída da faixa](#alerta-de-saída-da-faixa) |
 | `-fees` | `[valor\|off]` | Sozinho: o resumo das taxas a coletar (veja [Resumo das taxas](#resumo-das-taxas)). Junto com `-alert <nº\|all>`: avisa também quando as taxas a coletar passarem do valor, em dólar (ex.: `-fees 50`). Avisa uma vez e de novo depois de você coletar; `off` tira |
 | `-to` | `<destino>` | Junto com `-alert`: para onde vai o aviso. Um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou e-mail (`email` é o `QRCODE_EMAIL_SMTP_TO`) ([Destinos](index.md#destinos-contato-grupo-número-ou-e-mail)). Repita para vários: o aviso sai em todos. Sem ele, o seu privado |
-| `-address` | `<endereço>` | Com `orca`: cadastra a posição da Orca pelo endereço dela |
+| `-address`, `-ad` | `<endereço>` | Com `orca`: cadastra a posição da Orca pelo endereço dela |
 | `-pool` | `<endereço>` | Com `orca -address`: a pool. Opcional; se vier, o bot confere se bate |
 | `-nft` | `<mint>` | Com `orca -address`: o NFT da posição. Opcional; se vier, o bot confere se bate |
 | `-wallet`, `-w` | `<0x...>` | Com `prjx`, `morpho` ou `aave`: cadastra a carteira (`0x` e 40 caracteres hexadecimais); com `liquidswap`, a carteira da Aptos (`0x` e até 64). O bot lê todas as posições abertas dela |

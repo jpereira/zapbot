@@ -9,7 +9,7 @@ live in SQLite and survive restarts; the database backup includes them too.
 | *(none)* | Registered contacts, ids, interval, observed state, last check and the last `monitor.maxRecords` times per contact |
 | `-add`, `-a` | Registers a person by address book name, `/name with spaces/`, mention or number with country and area code |
 | `-rm`, `-r` | Removes by list id or by name, `/name with spaces/`, real mention or phone; `all` deletes all local registrations and histories |
-| `-alert` | With `-add`, turns on the online alert; alone, turns it on for a registered contact, via the same resolver or id |
+| `-alert`, `-al` | With `-add`, turns on the online alert; alone, turns it on for a registered contact, via the same resolver or id |
 | `-list`, `-l` | All contacts or only the given contact, with the last `monitor.maxRecords` distinct times per contact; long reports go in a `.txt` |
 
 ![/monitor demo](../assets/demo/03-monitor.gif)

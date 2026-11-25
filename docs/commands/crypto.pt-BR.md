@@ -11,7 +11,7 @@ das pedidas. Por padrão: BTC, ETH, SOL e HYPE.
 | `-quiet`, `-q` | | Só os preços, uma linha por moeda, sem cabeçalho, sem detalhes e sem rodapé. Bom para um texto (`{/crypto -q}`) ou para o [`/tts`](tts.md#comandos-no-texto) |
 | `-add`, `-a` | `<TOKEN>` | Ativa uma moeda suportada (só o dono do bot ou um [admin](bot.md#admins-extras)) |
 | `-del`, `-d` | `<TOKEN>` | Desativa uma moeda (só o dono do bot ou um [admin](bot.md#admins-extras)) |
-| `-alert` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `BTC < 90000`), cria um (só o dono do bot ou um [admin](bot.md#admins-extras)). A moeda também pode vir antes: `/crypto BTC -alert < 90000`. Veja [Alertas de preço](stocks.md#alertas-de-preço) |
+| `-alert`, `-al` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `BTC < 90000`), cria um (só o dono do bot ou um [admin](bot.md#admins-extras)). A moeda também pode vir antes: `/crypto BTC -alert < 90000`. Veja [Alertas de preço](stocks.md#alertas-de-preço) |
 | `-msg`, `-m` | `<texto>` | Junto com `-alert`: o texto vai no início do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](stocks.md#mensagem-no-aviso) |
 | `-rm` | `<nº...\|all>` | Junto com `-alert`: remove os alertas com esses nºs (`-rm 2`, `-rm 1 2 3` ou `-rm 1,2,3`), ou todos (`all`). Se algum nº não existe, nenhum sai |
 | `-to` | `<destino>` | Junto com `-alert`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Veja [Avisar em outro chat ou por e-mail](stocks.md#avisar-em-outro-chat-ou-por-e-mail) |

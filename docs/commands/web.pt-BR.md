@@ -10,7 +10,7 @@ o comando mostra se o serviço está rodando e o endereço de acesso.
 | `-enable`, `-e` | | Ativa e inicia o serviço quando o login e a senha estão definidos |
 | `-disable`, `-off` | | Para o serviço e encerra todas as sessões |
 | `-pass`, `-p` | `<senha>` | Define a senha (mínimo de oito caracteres). Use aspas para senhas com espaços |
-| `-login` | `<nome>` | Define o nome de login |
+| `-login`, `-lg` | `<nome>` | Define o nome de login |
 | `-timeout`, `-t` | `[minutos\|off]` | Consulta ou define o limite de inatividade. O padrão é 30 minutos |
 | `-2fa`, `-totp` | `<new\|qr\|código\|off>` | Cria um QR code, exibe de novo, confirma um código ou desativa o 2FA |
 

@@ -16,7 +16,7 @@ Markdown para a formatação do WhatsApp do `/gpt` (veja [Formatação no WhatsA
 | *(respondendo)* | | Resume da mensagem respondida até agora; o período digitado ou o `-chat` ganham |
 | `-chat`, `-c` | `<chat>` | Resume outro chat, nome do grupo ou do contato (todas as palavras, em qualquer ordem, sem diferenciar acentos), `/regex/` ou `@contato`. Nome com espaço vai entre aspas: `-c "trabalho rio"`. Se vários chats casarem, lista e espera o nº |
 | `-status`, `-s` | | Acrescenta no rodapé o consumo da chamada: bytes TX/RX, tokens, custo e saldo (veja [Status](gpt.md#status--status)) |
-| `-private` | | Envia no seu privado em vez de expor no chat atual |
+| `-private`, `-p` | | Envia no seu privado em vez de expor no chat atual |
 
 ```text
 /tldr                → as últimas 100 mensagens deste chat

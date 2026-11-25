@@ -20,7 +20,7 @@ with the result (below).
 | `-N` | `-N,-N` · `-N..-N` | Without a reply: the position of the messages above (see [Several messages](#several-messages--n)) |
 | `-quiet`, `-q` | | Shows **nothing**: no status (neither the notice while sending nor the list at the end) and no header on what is sent. Only failures are reported |
 | `-status`, `-s` | | Forces the header on what is sent **and** the status (the notice and the summary of who received it), even with the `forward.header` and `forward.status` settings off |
-| `-nohdr` | | Sends without the `🤖 Message forwarded by ZapBot!` header only (the status stays; `-q` drops both). See [Header](#header) |
+| `-nohdr`, `-nh` | | Sends without the `🤖 Message forwarded by ZapBot!` header only (the status stays; `-q` drops both). See [Header](#header) |
 | `-dry`, `-d` | | Only validates the recipients: replies with who was found (or what is wrong) and sends nothing. Needs no reply or positions |
 | `-add`, `-a` | `#list <recipients>...` | Creates the [recipient list](#recipient-lists) (or adds to it). Recipients are resolved now and saved with their ids; never replaces |
 | `-list`, `-l` | `[#list...]` | Without a name, all the lists with their size; with names, their recipients (the name can be partial) |

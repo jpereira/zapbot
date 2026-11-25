@@ -38,7 +38,7 @@ module.exports = {
             cron: false
         },
         {
-            opts: ['audio'],
+            opts: ['audio', 'a'],
             values: [],
             desc: 'Only together with -m: picks the audio transcription model (setting gpt.transcribe.model). A replied audio is transcribed without this option.',
             ex: ['/gpt -m gpt-transcribe -audio'],
@@ -53,7 +53,7 @@ module.exports = {
             cron: false
         },
         {
-            opts: ['prices'],
+            opts: ['prices', 'pr'],
             values: [],
             desc: 'Updates the price table (setting gpt.pricing) from the OpenAI site.',
             ex: ['/gpt -prices'],

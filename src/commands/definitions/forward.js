@@ -41,7 +41,7 @@ module.exports = {
             ex: ['/forward -s /Jorge Pereira/']
         },
         {
-            opts: ['nohdr'],
+            opts: ['nohdr', 'nh'],
             values: [],
             desc: 'Sends without the "Message forwarded by ZapBot!" header only (the status stays; -q drops both, the setting forward.header turns it off for all).',
             ex: ['/forward -nohdr /Jorge Pereira/', '/forward -q -nohdr #friends']

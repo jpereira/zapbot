@@ -9,7 +9,8 @@
   "cmd_opts": [
     {
       "opts": [
-        "copy-to"
+        "copy-to",
+        "ct"
       ],
       "values": [
         "[destino]"

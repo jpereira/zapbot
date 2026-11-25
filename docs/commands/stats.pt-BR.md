@@ -21,7 +21,7 @@ WhatsApp (alguém entrou no grupo, o nome mudou, a criptografia, uma chamada...)
 | `-me` | | As suas estatísticas, somadas em todos os chats (ou só no chat informado) |
 | `-list`, `-l` | | Lista os chats com estatísticas, do que mais fala para o que menos, com o total e o dia da última mensagem |
 | `-flush`, `-f` | `</chat/>` | Apaga as estatísticas de um chat |
-| `-flush-all` | | Apaga as estatísticas de todos os chats |
+| `-flush-all`, `-fa` | | Apaga as estatísticas de todos os chats |
 
 ![Demonstração do /stats](../assets/demo/11-stats.gif)
 

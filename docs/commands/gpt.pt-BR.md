@@ -41,13 +41,13 @@ resto do texto, um `-x` é pergunta. O `/tldr` e o `/draw` agem igual (o `-2h` e
 |---|---|---|
 | `-quiet`, `-q` | | Não mostra a dica do motor ("💡 ... por ChatGPT, Tesseract, Piper...") no fim da resposta. Para esconder sempre: o setting `gpt.footer` em `off` |
 | `-model`, `-m` | `[modelo]` | Só dono e admins. Lista os modelos por uso, os que a sua chave vê, e troca o de cada um (veja [Escolhendo o modelo](#escolhendo-o-modelo)) |
-| `-audio` | | Só dono e admins. Junto do `-m`: o modelo da transcrição de áudio |
+| `-audio`, `-a` | | Só dono e admins. Junto do `-m`: o modelo da transcrição de áudio |
 | `-img` | | Só dono e admins. Cria uma imagem com o pedido (respondendo uma foto, a edita). Veja [Imagem e GIF](#imagem-e-gif--img--gif) |
 | `-gif` | | Só dono e admins. Cria um GIF (respondendo uma foto, a anima). Veja [Imagem e GIF](#imagem-e-gif--img--gif) |
 | `-voice`, `-v` | `[texto]` | Responde uma nota de voz de robô com o texto (ou com o da mensagem respondida). Veja [Voz](#voz--voice) |
 | `-profile`, `-p` | | Junta a foto de perfil de uma ou mais pessoas às imagens da pergunta (`-p /Rafael Silva/`, `@menção`, `+número`). Veja [Com a foto de perfil de alguém](#com-a-foto-de-perfil-de-alguém--profile) |
 | `-status`, `-s` | | Acrescenta no rodapé da resposta o consumo da chamada: bytes TX/RX, tokens, custo e saldo. Veja [Status](#status--status) |
-| `-prices` | | Só dono e admins. Busca os preços no site da OpenAI e atualiza o `gpt.pricing`. Veja [Status](#status--status) |
+| `-prices`, `-pr` | | Só dono e admins. Busca os preços no site da OpenAI e atualiza o `gpt.pricing`. Veja [Status](#status--status) |
 | `-usage`, `-u` | `[dias]` | Só dono e admins. O consumo dos últimos dias (padrão 7, até 31) e os limites de agora. Veja [Consumo e limites](#consumo-e-limites--usage) |
 
 ## Formatação no WhatsApp

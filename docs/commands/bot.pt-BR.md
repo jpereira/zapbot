@@ -37,8 +37,8 @@ usuários e o envio diário), as versões do que ele usa
 | `-test`, `-t` | Testa tudo (cache, disco, banco, WhatsApp, internet, velocidade, SMTP, IMAP e programas), com ✅ ou ❌ em cada item. As outras opções são recusadas. Veja [Teste do bot](#teste-do-bot) |
 | `-denied`, `-d` | `[on\|off\|reset\|<texto>]`: o aviso de quem digita um comando que não pode usar, em vez do silêncio. Sem valor, mostra o aviso; `on`/`off` ligam e desligam; `reset` volta ao texto padrão; qualquer outro texto vira a mensagem (`$cmd` é o comando digitado e `$admin`, o dono do bot). Veja [Aviso de comando negado](#aviso-de-comando-negado) |
 | `-flood`, `-f` | `[off\|on\|<N>[/<segundos>]]`: a [proteção contra flood](#proteção-contra-flood). Sem valor, mostra; `off` desliga; `on` volta aos padrões (3 vezes em 2 segundos); `N` muda o máximo e `N/S` também o intervalo em segundos |
-| `-passwd` | `<senha\|off>`: só o dono. Define a senha do `-login` (mín. 8 caracteres; só o hash scrypt fica no banco, no setting `bot.login`). Com `off`, desliga o login |
-| `-login` | `<senha>`: para quem é de fora, só no privado. Com a senha certa, a pessoa entra no `bot.admins` e o dono é avisado por WhatsApp e e-mail. Erra 5 vezes, fica 15 min bloqueada. A senha é apagada do banco de mensagens. Para revogar: `/bot -a +número` |
+| `-passwd`, `-pw` | `<senha\|off>`: só o dono. Define a senha do `-login` (mín. 8 caracteres; só o hash scrypt fica no banco, no setting `bot.login`). Com `off`, desliga o login |
+| `-login`, `-lo` | `<senha>`: para quem é de fora, só no privado. Com a senha certa, a pessoa entra no `bot.admins` e o dono é avisado por WhatsApp e e-mail. Erra 5 vezes, fica 15 min bloqueada. A senha é apagada do banco de mensagens. Para revogar: `/bot -a +número` |
 | `-flush-email`, `-fe` | conecta no IMAP do e-mail (precisa de `QRCODE_EMAIL_IMAP_HOST`) e mostra quantas mensagens há em Sent e Trash; com `-yes` (ou `-y`), apaga todas. Só o dono apaga. As outras opções são recusadas. Veja [Limpar o e-mail](#limpar-o-e-mail) |
 | `-mask`, `-m` | Ofusca telefones na saída desta execução. Ex.: `+55219****44` |
 

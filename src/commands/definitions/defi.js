@@ -18,7 +18,7 @@ module.exports = {
     ],
     cmd_opts: [
         {
-            opts: ['address'],
+            opts: ['address', 'ad'],
             values: ['<address>'],
             desc: 'Registers the Orca position by its address.',
             cron: false,

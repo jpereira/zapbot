@@ -18,7 +18,7 @@ function compileFilterDebug(valueAlt) {
 
 function readOptionsDebug(args) {
     const aliases = { on: 'on', off: 'off', level: 'level', lvl: 'level', filter: 'filter',
-        f: 'filter', 'copy-to': 'copyTo' };
+        f: 'filter', 'copy-to': 'copyTo', ct: 'copyTo' };
     const optionsAlt = {};
     let textAlt = args.trim();
     while (textAlt) {

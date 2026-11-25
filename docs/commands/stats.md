@@ -22,7 +22,7 @@ joined the group, the name changed, encryption, a call...), which have no author
 | `-me` | | Your statistics, summed across all chats (or only in the given chat) |
 | `-list`, `-l` | | Lists the chats with statistics, from the one that talks the most to the least, with the total and the day of the last message |
 | `-flush`, `-f` | `</chat/>` | Deletes a chat's statistics |
-| `-flush-all` | | Deletes the statistics of all chats |
+| `-flush-all`, `-fa` | | Deletes the statistics of all chats |
 
 ![Demo of /stats](../assets/demo/11-stats.gif)
 

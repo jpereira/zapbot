@@ -9,7 +9,7 @@ histórico ficam no SQLite e sobrevivem a reinícios; o backup do banco também 
 | *(nenhuma)* | Contatos cadastrados, ids, intervalo, estado observado, última verificação e últimos `monitor.maxRecords` horários por contato |
 | `-add`, `-a` | Cadastra uma pessoa pelo nome da agenda, `/nome com espaços/`, menção ou número com DDI e DDD |
 | `-rm`, `-r` | Remove pelo id da lista ou por nome, `/nome com espaços/`, menção real ou telefone; `all` apaga todos os cadastros e históricos locais |
-| `-alert` | Com `-add`, ativa o aviso online; sozinho, ativa para um contato cadastrado, pelo mesmo resolvedor ou id |
+| `-alert`, `-al` | Com `-add`, ativa o aviso online; sozinho, ativa para um contato cadastrado, pelo mesmo resolvedor ou id |
 | `-list`, `-l` | Todos os contatos ou somente o contato informado, com os últimos `monitor.maxRecords` horários distintos por contato; relatório extenso vai em `.txt` |
 
 ![Demonstração do /monitor](../assets/demo/03-monitor.gif)

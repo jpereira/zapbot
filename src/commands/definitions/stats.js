@@ -19,7 +19,7 @@ module.exports = {
             role: ADMIN
         },
         {
-            opts: ['flush-all'],
+            opts: ['flush-all', 'fa'],
             values: [],
             desc: 'Deletes the stats of all chats.',
             cron: false,

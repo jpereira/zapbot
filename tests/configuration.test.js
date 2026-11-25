@@ -674,7 +674,7 @@ describe('ajuda', () => {
         const general = formatCommandHelp(findCommand('/defi'));
         const groups = general.split('\n').filter(l => l.startsWith(' > '));
         assert.deepEqual(groups, [' > Orca', ' > Aave', ' > Orca e Project X', ' > Project X, Liquidswap, Morpho e Aave', ' > Todos']);
-        assert.match(general, / > Orca\n {2}-address <endereço>\n {4}Cadastra a posição da Orca/);
+        assert.match(general, / > Orca\n {2}-address, -ad <endereço>\n {4}Cadastra a posição da Orca/);
 
         const morpho = formatCommandHelp(findCommand('/defi'), { protocol: 'morpho' });
         assert.match(morpho, /^Usage: \/defi morpho \[-mask\]\n {7}\/defi morpho -wallet <0x\.\.\.> \[-name <nome>\]\nPosição, empréstimos e risco no Morpho/);
@@ -683,7 +683,7 @@ describe('ajuda', () => {
         assert.doesNotMatch(morpho, / > |Argumentos:/);
 
         const orca = formatCommandHelp(findCommand('/defi'), { protocol: 'orca' });
-        assert.match(orca, /-address <endereço>/);
+        assert.match(orca, /-address, -ad <endereço>/);
         assert.doesNotMatch(orca, /^ {2}-wallet/m);
 
         // By the command's -help and by /help
@@ -844,4 +844,17 @@ describe('escape de opção (\\-foo)', () => {
         assert.equal(unescape('\\-q'), '-q');
         assert.equal(unescape(undefined), '');
     });
+});
+
+test('as formas curtas das opções longas resolvem para a opção (o parser e o /help usam o mesmo cmd_opts)', () => {
+    const { GetOptFromCommand } = bot.src('options');
+    const given = (cmd, line) => [...GetOptFromCommand(line, CONFIG.commands.find(c => c.cmd === cmd)).given];
+    for (const [cmd, line, option] of [
+        ['/tldr', '-p', 'private'], ['/gpt', '-pr', 'prices'], ['/gpt', '-a x', 'audio'], ['/stats', '-fa', 'flush-all'],
+        ['/cron', '-pa 1', 'pause'], ['/cron', '-re 1', 'resume'], ['/cron', '-pv 18h x', 'private'], ['/forward', '-nh x', 'nohdr'],
+        ['/games', '-tr', 'trivia'], ['/games', '-t', 'truth'], ['/crypto', 'BTC -al < 10', 'alert'], ['/stocks', 'MSTR -al < 90', 'alert'],
+        ['/monitor', '-al 1', 'alert'], ['/defi', '-ad x', 'address'], ['/group', '-rp', 'rmpic'], ['/web', '-lg nome', 'login'],
+        ['/bot', '-pw', 'passwd'], ['/bot', '-lo', 'login']
+    ]) assert.ok(given(cmd, line).includes(option), `${cmd} ${line} → -${option}`);
+    assert.equal(bot.src('debugOptions').readOptionsDebug('-ct').copyTo, null, '/debug has its own parser');
 });

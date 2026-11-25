@@ -19,7 +19,7 @@ destinatários forem encontrados**: se algum não casar, não manda nada e o bot
 | `-N` | `-N,-N` · `-N..-N` | Sem resposta: a posição das mensagens acima (veja [Várias mensagens](#várias-mensagens--n)) |
 | `-quiet`, `-q` | | Não mostra **nada**: nem status (nem o aviso enquanto envia, nem a lista no fim) nem o cabeçalho no que é enviado. Só as falhas são avisadas |
 | `-status`, `-s` | | Força o cabeçalho no que é enviado **e** o status (o aviso e o resumo de quem recebeu), mesmo com os settings `forward.header` e `forward.status` desligados |
-| `-nohdr` | | Envia sem o cabeçalho `🤖 Mensagem encaminhada pelo ZapBot!` apenas (o status fica; o `-q` tira os dois). Veja [Cabeçalho](#cabeçalho) |
+| `-nohdr`, `-nh` | | Envia sem o cabeçalho `🤖 Mensagem encaminhada pelo ZapBot!` apenas (o status fica; o `-q` tira os dois). Veja [Cabeçalho](#cabeçalho) |
 | `-dry`, `-d` | | Só valida os destinatários: responde quem foi encontrado (ou o que está errado) e não envia nada. Não precisa de resposta nem de posições |
 | `-add`, `-a` | `#lista <destinatários>...` | Cria a [lista de destinatários](#listas-de-destinatários) (ou acrescenta). Os destinatários são resolvidos agora e guardados com os ids; nunca substitui |
 | `-list`, `-l` | `[#lista...]` | Sem nome, todas as listas com o tamanho; com nomes, os destinatários delas (o nome pode ser parcial) |

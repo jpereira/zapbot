@@ -38,7 +38,8 @@
     },
     {
       "opts": [
-        "pause"
+        "pause",
+        "pa"
       ],
       "values": [
         "<nº...|all>"
@@ -47,7 +48,8 @@
     },
     {
       "opts": [
-        "private"
+        "private",
+        "pv"
       ],
       "values": [],
       "desc": "No modo lembrete: lembra no seu privado em vez do chat atual."
@@ -64,7 +66,8 @@
     },
     {
       "opts": [
-        "resume"
+        "resume",
+        "re"
       ],
       "values": [
         "<nº...|all>"
@@ -82,7 +85,8 @@
     },
     {
       "opts": [
-        "status"
+        "status",
+        "s"
       ],
       "values": [],
       "desc": "No modo mensagem: posta o texto no seu Status do WhatsApp em vez de enviar a um chat (sem -to, -private nem -reminder). ⚠️ Risco: postar demais é o que o WhatsApp pune com banimento.",

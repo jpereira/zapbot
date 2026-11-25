@@ -39,7 +39,7 @@ anything, **your account has to be an admin of the group**. The invite link is i
 | `-name` | `<text>` | Changes the group name. It runs to the end of the command (may have spaces) |
 | `-desc` | `[text]` | Changes the description. With no text, clears it |
 | `-pic` | | Sets the group photo from the image you reply to (or the one sent with `/group -pic` as the caption) |
-| `-rmpic` | | Removes the group photo |
+| `-rmpic`, `-rp` | | Removes the group photo |
 | `-send` | `<admins\|all>` | Who can send messages: `admins` closes the group for the others |
 | `-edit` | `<admins\|all>` | Who can change the name, description and photo |
 | `-add` | `<admins\|all>` | Who can add people to the group |

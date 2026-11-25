@@ -12,7 +12,8 @@
   "cmd_opts": [
     {
       "opts": [
-        "8ball"
+        "8ball",
+        "8"
       ],
       "values": [],
       "desc": "A bola 8 mágica: faça uma pergunta de sim ou não e ela responde (sim, não ou talvez).",
@@ -22,7 +23,8 @@
     },
     {
       "opts": [
-        "truth"
+        "truth",
+        "t"
       ],
       "values": [],
       "desc": "Uma pergunta de verdade para o grupo.",
@@ -32,7 +34,8 @@
     },
     {
       "opts": [
-        "dare"
+        "dare",
+        "d"
       ],
       "values": [],
       "desc": "Um desafio para o grupo.",
@@ -42,7 +45,8 @@
     },
     {
       "opts": [
-        "trivia"
+        "trivia",
+        "tr"
       ],
       "values": [],
       "desc": "Uma pergunta de conhecimentos gerais com 4 opções. Responda com a letra (A, B, C ou D) em até 5 minutos: `-trivia B`. Uma pergunta aberta por chat.",

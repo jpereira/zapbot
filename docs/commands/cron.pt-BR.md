@@ -15,14 +15,14 @@ Faz algo na hora marcada. Tem dois modos, na mesma agenda:
 | `<quando>` | | Quando: `6h`, `às 18h`, `+2h`, `30m`, `amanhã 9h`, `sexta 18h`, `25/12 10:00`... Veja [Quando](#quando) |
 | `-to` | `<destino>` | Modo mensagem: envia num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`) ou num número (`+5521999999999`) em vez do chat atual. Repita para vários: um item só, que sai em todos os destinos. Nomes exatos têm prioridade; vários resultados: você escolhe na lista. E-mail não vale: a mensagem sai no WhatsApp. Veja [Destinos](index.md#destinos-contato-grupo-número-ou-e-mail) |
 | `-reminder`, `-rem` | | Modo lembrete |
-| `-private` | | Modo lembrete: lembra no seu privado em vez do chat atual |
+| `-private`, `-pv` | | Modo lembrete: lembra no seu privado em vez do chat atual |
 | `-repeat`, `-r` | `<d\|diario\|s\|semanal\|m\|mensal>` | Repete no mesmo horário: todo dia, toda semana ou todo mês |
 | `-list`, `-l` | | Lista os lembretes e as mensagens, com o texto inteiro (o mesmo que o comando sem nada) |
 | `-edit` | `<nº>` | Edita o item nº N: troca a hora, o texto e/ou o `-repeat`. Veja [Editar, pausar e retomar](#editar-pausar-e-retomar) |
-| `-pause` | `<nº...\|all>` | Pausa o item nº N, vários (`-pause 1 3` ou `1,3`) ou todos: fica na lista, mas não sai. Se algum nº não existe, nenhum é pausado |
-| `-resume` | `<nº...\|all>` | Retoma itens pausados: um, vários ou todos |
+| `-pause`, `-pa` | `<nº...\|all>` | Pausa o item nº N, vários (`-pause 1 3` ou `1,3`) ou todos: fica na lista, mas não sai. Se algum nº não existe, nenhum é pausado |
+| `-resume`, `-re` | `<nº...\|all>` | Retoma itens pausados: um, vários ou todos |
 | `-rm` | `<nº...\|all>` | Remove o item nº N da lista, vários de uma vez (`-rm 1 3 5` ou `-rm 1,3,5`) ou todos. Se algum nº não existe, nenhum sai |
-| `-status` | | Modo mensagem: posta o texto no seu Status do WhatsApp em vez de enviar a um chat ([`/status`](status.md)) |
+| `-status`, `-s` | | Modo mensagem: posta o texto no seu Status do WhatsApp em vez de enviar a um chat ([`/status`](status.md)) |
 | `-test` | `<nº>` | Monta o item nº N agora, rodando os `{/comando}` do texto, e mostra aqui como ele sairia. Veja [Comandos no texto](#comandos-no-texto) |
 
 ![Demonstração do /cron](../assets/demo/09-cron.gif)

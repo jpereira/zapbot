@@ -67,7 +67,8 @@
     },
     {
       "opts": [
-        "nohdr"
+        "nohdr",
+        "nh"
       ],
       "values": [],
       "desc": "Envia sem o cabeçalho \"Mensagem encaminhada pelo ZapBot!\" apenas (o status continua; o -q tira os dois, o setting forward.header tira de todas).",

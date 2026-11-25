@@ -35,7 +35,8 @@
     },
     {
       "opts": [
-        "alert"
+        "alert",
+        "al"
       ],
       "values": [],
       "desc": "Sem regra: lista os alertas. Com regra (ex.: USD > 5.30 ou MSTR < 90): avisa você no privado (ou nos destinos do -to) quando o preço cruzar o valor (moedas em reais, ações na moeda do ativo). O símbolo também pode vir antes: /stocks MSTR -alert < 90. Só o dono (ou um admin)."

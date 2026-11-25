@@ -26,7 +26,7 @@ module.exports = {
             role: ADMIN
         },
         {
-            opts: ['alert'],
+            opts: ['alert', 'al'],
             values: [],
             desc: 'Without a rule: lists the alerts. With a rule (e.g. BTC < 90000): notifies you in your private chat (or at the -to targets) when the price crosses the value. The coin can also come first: /crypto BTC -alert < 90000. Owner (or an admin) only.',
             cron: false

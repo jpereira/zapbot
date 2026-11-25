@@ -205,7 +205,8 @@
     },
     {
       "opts": [
-        "passwd"
+        "passwd",
+        "pw"
       ],
       "values": [
         "<senha|off>"
@@ -217,7 +218,8 @@
     },
     {
       "opts": [
-        "login"
+        "login",
+        "lo"
       ],
       "values": [
         "<senha>"

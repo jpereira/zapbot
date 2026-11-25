@@ -14,14 +14,14 @@ Does something at the scheduled time. It has two modes, in the same schedule:
 | `<when>` | | When: `6h`, `at 18h`, `+2h`, `30m`, `tomorrow 9h`, `friday 18h`, `25/12 10:00`... See [When](#when) |
 | `-to` | `<destination>` | Message mode: sends to a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/L200 Group/`) or a number (`+5521999999999`) instead of the current chat. Repeat it for several: a single item, which goes out to all destinations. Exact names take priority; several results: you pick from the list. Email doesn't work: the message goes out on WhatsApp. See [Destinations](index.md#destinations-contact-group-number-or-email) |
 | `-reminder`, `-rem` | | Reminder mode |
-| `-private` | | Reminder mode: reminds you in your private chat instead of the current chat |
+| `-private`, `-pv` | | Reminder mode: reminds you in your private chat instead of the current chat |
 | `-repeat`, `-r` | `<d\|daily\|w\|weekly\|m\|monthly>` | Repeats at the same time: every day, every week or every month |
 | `-list`, `-l` | | Lists the reminders and messages, with the full text (the same as the command with nothing) |
 | `-edit` | `<n>` | Edits item #N: changes the time, the text and/or the `-repeat`. See [Edit, pause and resume](#edit-pause-and-resume) |
-| `-pause` | `<n...\|all>` | Pauses item #N, several (`-pause 1 3` or `1,3`) or all: they stay in the list but don't go out. If any number doesn't exist, none is paused |
-| `-resume` | `<n...\|all>` | Resumes paused items: one, several or all |
+| `-pause`, `-pa` | `<n...\|all>` | Pauses item #N, several (`-pause 1 3` or `1,3`) or all: they stay in the list but don't go out. If any number doesn't exist, none is paused |
+| `-resume`, `-re` | `<n...\|all>` | Resumes paused items: one, several or all |
 | `-rm` | `<n...\|all>` | Removes item #N from the list, several at once (`-rm 1 3 5` or `-rm 1,3,5`) or all. If any number doesn't exist, none is removed |
-| `-status` | | Message mode: posts the text on your WhatsApp Status instead of sending it to a chat ([`/status`](status.md)) |
+| `-status`, `-s` | | Message mode: posts the text on your WhatsApp Status instead of sending it to a chat ([`/status`](status.md)) |
 | `-test` | `<n>` | Builds item #N now, running the `{/command}` in the text, and shows here how it would go out. See [Commands in the text](#commands-in-the-text) |
 
 ![Demo of /cron](../assets/demo/09-cron.gif)

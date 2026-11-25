@@ -18,7 +18,7 @@ module.exports = {
             ex: ['-a /Jorge Chip L200/', '-a @Fulano', '-a +5521999999999']
         },
         {
-            opts: ['alert'],
+            opts: ['alert', 'al'],
             values: [],
             desc: 'Alerts you when the contact comes online (with -add, or alone on a registered one).',
             ex: [

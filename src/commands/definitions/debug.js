@@ -13,7 +13,7 @@ module.exports = {
     ex: ['/debug -on', '/debug -on -lvl 2 -f /sapato/ -copy-to /Jorge Pereira/'],
     cmd_opts: [
         {
-            opts: ['copy-to'],
+            opts: ['copy-to', 'ct'],
             values: ['[destination]'],
             desc: 'Copies the logs to a contact, group, mention or number, as in -to; does not accept email. With no destination, uses this chat.',
             ex: ['-copy-to /Jorge Pereira/', '-copy-to @Jorge (mention)', '-copy-to']
