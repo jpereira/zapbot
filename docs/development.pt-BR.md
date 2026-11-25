@@ -173,8 +173,13 @@ DEBUG_TESTES=1 make test                    # mostra o log do bot durante os tes
 make test.coverage                          # cobertura de src/
 make docs.build                            # documentação em modo estrito
 make check                                 # lint + testes + documentação
+make hooks                                 # lint + testes antes de cada commit (.githooks/pre-commit)
 make DOCK_REMOTE=1 test                     # testes da imagem em execução no servidor
 ```
+
+Rode `make hooks` uma vez por clone: ele aponta o `core.hooksPath` para `.githooks/`, e o hook `pre-commit`
+roda o ESLint e a suíte inteira (uns 30 s) e barra o commit se algum falhar. Ele confere o working tree,
+staged ou não; `git commit --no-verify` pula uma vez.
 
 No GitHub, o workflow **Tests** (`.github/workflows/ci.yml`) roda o `make lint`, o `make test` e o
 `make docs.build` a cada push no `main` e em cada pull request; o selo no topo do README e da página

@@ -1,0 +1,23 @@
+#!/bin/sh
+# Blocks the commit when lint or the test suite fails. Enable with: make hooks
+# It checks the working tree (staged and unstaged changes alike). Skip once with: git commit --no-verify
+
+log=$(mktemp)
+trap 'rm -f "$log"' EXIT
+
+echo "pre-commit: eslint..."
+if ! npx eslint . >"$log" 2>&1; then
+    tail -n 40 "$log"
+    echo "pre-commit: eslint failed, commit blocked"
+    exit 1
+fi
+
+echo "pre-commit: npm test..."
+if ! npm test >"$log" 2>&1; then
+    sed -n '/failing tests:/,$p' "$log" | grep -E '^(test at|✖)' | head -n 40
+    grep -E '^ℹ (tests|pass|fail)' "$log"
+    echo "pre-commit: tests failed, commit blocked (full log: npm test)"
+    exit 1
+fi
+grep -E '^ℹ (pass|fail)' "$log" | tr '\n' ' '
+echo

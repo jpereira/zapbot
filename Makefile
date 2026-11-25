@@ -66,7 +66,7 @@ DOCS_PATH := $(shell sed -nE 's|^site_url: *https?://[^/]+||p' mkdocs.yml)
 .DEFAULT_GOAL := help
 
 .PHONY: help all context build deploy smoke logs ps shell images volume cookies clean recreate destroy prune \
-    deps test test.coverage lint check docs docs.deps docs.build
+    deps hooks test test.coverage lint check docs docs.deps docs.build
 
 help: ## Shows this help
 	@echo "Destino: $(if $(filter 1,$(DOCK_REMOTE)),remoto,local) · $(DOCKER_CONTEXT) · $(SERVICE)"
@@ -96,6 +96,9 @@ all: build ## Alias for build
 
 deps: ## Installs the lock's dependencies, including npm's development ones (ESLint), without downloading Chromium
 	$(Q)PUPPETEER_SKIP_DOWNLOAD=true $(NPM) ci --include=dev --no-audit --no-fund
+
+hooks: ## Turns on the versioned git hooks (.githooks/pre-commit: lint + tests before each commit) in this clone
+	$(Q)git config core.hooksPath .githooks
 
 test: $(if $(filter 1,$(DOCK_REMOTE)),context) ## Local tests or in the remote container
 	$(Q)$(RUN_TEST)
