@@ -4,13 +4,13 @@
 
 const { client } = require('../client');
 const { contactName, resolveLidToPhone } = require('../contacts');
-const { messageResolverMentions } = require('../mentions');
+const { resolveMessageMentions } = require('../mentions');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { printError, printInfo } = require('../log');
 const { t } = require('../i18n');
-const { ignoreNotice, registerNotice } = require('../mudo');
+const { ignoreNotice, registerNotice } = require('../mute');
 const { getSetting } = require('../settings');
-const { formatData, paraMs } = require('../util/format');
+const { formatData, toMillis } = require('../util/format');
 const { headerOrigin, isChannelAlt } = require('../util/origin');
 
 /*
@@ -44,7 +44,7 @@ async function sendReactionUndone(destination, row, { count = null } = {}) {
     const title = t(`reacoes.${removed ? 'removida' : 'trocada'}${count ? 'Contagem' : 'Detectada'}`, { count });
 
     // Raw mentions (@265472113143884) become the name only on display; the original text stays in the database
-    const body = await messageResolverMentions(row.body, row.message_id);
+    const body = await resolveMessageMentions(row.body, row.message_id);
     const messageAlt = row.body == null ? t('reacoes.foraDoCache')
         : `"${body.length > SNIPPET ? `${body.slice(0, SNIPPET)}…` : body || t('reacoes.semTexto')}"`;
 
@@ -126,7 +126,7 @@ client.on('message_reaction', async (reaction) => {
         await dbReady;
 
         const fresh = String(reaction.reaction ?? '');
-        const when = Math.round(paraMs(reaction.timestamp)) || Date.now();
+        const when = Math.round(toMillis(reaction.timestamp)) || Date.now();
         const beforeAlt = await dbGet('SELECT * FROM reactions WHERE message_id = ? AND sender_jid = ?', [keyAlt.id, sender]);
 
         if (fresh) {

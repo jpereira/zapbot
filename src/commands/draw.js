@@ -18,7 +18,7 @@ const { t } = require('../i18n');
 const { parseQuality, parseSize } = require('../imageOptions');
 const { unescape } = require('../util/format');
 const { printError } = require('../log');
-const { imagesContext, textReadProfile, readProfileImplicit, resolverProfiles } = require('./profileInAi');
+const { imagesContext, textReadProfile, readProfileImplicit, resolveProfiles } = require('./profileInAi');
 const { WITHOUT_KEY, keyOpenAi, errorOpenAi, generateImage, measureConsumption } = require('../openaiChat');
 const { SETTINGS_SCHEMA, getSetting } = require('../settings');
 const { runCommand } = require('../util/processes');
@@ -189,7 +189,7 @@ async function draw({ msg, args, opts, quotedMsg, chatId, isGroup }) {
     if (withP || profile) {
         for (const item of profile?.items ?? []) request = request.replace(item, '');
         request = request.replace(/\s{2,}/g, ' ').trim();
-        profiles = await resolverProfiles({ msg, quotedMsg, chatId, isGroup, items: profile?.items ?? [], cmd: '/draw' });
+        profiles = await resolveProfiles({ msg, quotedMsg, chatId, isGroup, items: profile?.items ?? [], cmd: '/draw' });
         if (!profiles) return;
     }
 

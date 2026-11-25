@@ -9,7 +9,7 @@
 
 const { readPerson, withoutDelimiters } = require('./block');
 const { client } = require('../client');
-const { scheduleName, groupResolverName } = require('../contacts');
+const { scheduleName, resolveGroupName } = require('../contacts');
 const { withoutAccents } = require('../util/format');
 const { dataAlt, photoAlt } = require('./profile');
 const { t } = require('../i18n');
@@ -90,7 +90,7 @@ async function textReadProfile(textAlt) {
  * People's profile photos. Replies the error (no photo, person not found, no person) and returns null.
  * @returns {Promise<Array<{ name: string, image: { mimetype: string, data: string } }> | null>}
  */
-async function resolverProfiles({ msg, quotedMsg, chatId, isGroup, items, cmd }) {
+async function resolveProfiles({ msg, quotedMsg, chatId, isGroup, items, cmd }) {
     const people = [];
 
     // Nobody: in private, the other person; in a group, whoever wrote the replied message
@@ -112,7 +112,7 @@ async function resolverProfiles({ msg, quotedMsg, chatId, isGroup, items, cmd })
     };
     // @this: the chat you are in: in private, the other person; in a group, the group's own photo
     const thisChat = async () => isGroup
-        ? { id: chatId, name: await groupResolverName(chatId).catch(() => null) ?? undefined }
+        ? { id: chatId, name: await resolveGroupName(chatId).catch(() => null) ?? undefined }
         : { id: chatId };
 
     if (!items.length) {
@@ -181,4 +181,4 @@ function readProfileImplicit(textAlt) {
     return { items, text: [optionsAlt.trim(), rest.trim()].filter(Boolean).join(' ') };
 }
 
-module.exports = { imagesContext, textReadProfile, readProfileImplicit, restartNames, resolverProfiles };
+module.exports = { imagesContext, textReadProfile, readProfileImplicit, restartNames, resolveProfiles };

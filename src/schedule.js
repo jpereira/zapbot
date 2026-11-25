@@ -7,7 +7,7 @@ const { state: stateAlt } = require('./state');
 const { client } = require('./client');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const {
-    describeDestination, sendToDestinations, extractDestinations, resolverOrChoose
+    describeDestination, sendToDestinations, extractDestinations, resolveOrChoose
 } = require('./destinations');
 const { printError, printInfo } = require('./log');
 const { statusDestinations, statusText } = require('./status');
@@ -99,7 +99,7 @@ const itemDestinations = (s) => (s.recipients
     ? JSON.parse(s.recipients)
     : [{ id: s.chat_id, name: s.chat_name, group: Boolean(s.is_group) }]);
 
-// Where it goes: "👥 Grupo", "👤 Contato" or "seu ownerOnly"
+// Where it goes: "👥 Grupo", "👤 Contato" or "your private chat"
 const destinationWhere = (d) => (d.id === client.info.wid._serialized ? t('adm.agenda.myPrivate') : `${d.group ? '👥' : '👤'} ${d.name}`);
 const itemWhere = (s) => itemDestinations(s).map(destinationWhere).join(', ');
 
@@ -377,7 +377,7 @@ async function handleSchedule({ msg, args, chatId, chatName, isGroup, quotedMsg 
         destinations = [];
         for (const destinationText of destinationsText) {
             // Several contacts or groups with the name: waits for you to choose from the list
-            const destination = await resolverOrChoose(msg, destinationText, {
+            const destination = await resolveOrChoose(msg, destinationText, {
                 noEmail: t('adm.agenda.semEmail')
             });
             if (!destination) return;

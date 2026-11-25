@@ -8,7 +8,7 @@ const { chatCurrentIds, contactName } = require('../contacts');
 const { t } = require('../i18n');
 const { printError } = require('../log');
 const { ROLES } = require('../roles');
-const { formatData, paraMs, plural } = require('../util/format');
+const { formatData, toMillis, plural } = require('../util/format');
 
 /*
  * /search [-N] <text>
@@ -134,7 +134,7 @@ async function cmdSearch({ msg, opts, chatId, level }) {
         return;
     }
     const allAlt2 = inMyPrivate || inAll;
-    const paraOPrivate = inAll && !inMyPrivate;
+    const toPrivate = inAll && !inMyPrivate;
 
     let foundAlt3;
     try {
@@ -154,7 +154,7 @@ async function cmdSearch({ msg, opts, chatId, level }) {
         return;
     }
 
-    foundAlt3.sort((a, b) => paraMs(b.timestamp) - paraMs(a.timestamp));
+    foundAlt3.sort((a, b) => toMillis(b.timestamp) - toMillis(a.timestamp));
 
     const names = new Map();
     const chats = new Map();
@@ -172,7 +172,7 @@ async function cmdSearch({ msg, opts, chatId, level }) {
         (foundAlt3.length >= n ? '\n\n' + t('search.more') : '') +
         '\n\n' + t('search.readHint');
 
-    if (paraOPrivate) {
+    if (toPrivate) {
         // The -read <no.> in your private chat uses this list
         lastSearches.set(myId, lastSearches.get(chatId));
         await client.sendMessage(myId, reply, { linkPreview: false });

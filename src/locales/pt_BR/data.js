@@ -2,7 +2,7 @@
  * pt_BR: /get, /show, /stats, /watch e /cache (prefixos get., show., stats., watch. e cache.).
  */
 module.exports = {
-    // /get (src/comandos/get.js)
+    // /get (src/commands/get.js)
     'get.documentCaption': '📥 Aqui está a mídia para download.',
     'get.quotedNoMedia': '❌ A mensagem respondida não tem mídia nem link.',
     'get.busy': '⏳ Já existem {max} downloads em andamento. Tente de novo em instantes.',
@@ -166,7 +166,7 @@ module.exports = {
     'show.chatLabel': '\n💬 *Chat:* {name}',
     'show.resendFailed': '⚠️ Não consegui reenviar a mensagem {i}/{total}: {error}',
 
-    // /stats (src/comandos/stats.js)
+    // /stats (src/commands/stats.js)
     'stats.msgs': { one: '{count} msg', other: '{count} msgs' },
     'stats.days': { one: '{count} dia', other: '{count} dias' },
     'stats.chats': { one: '{count} chat', other: '{count} chats' },
@@ -214,7 +214,7 @@ module.exports = {
     'stats.footerMe': '\n💡 _/stats -me para as suas_',
     'stats.footerList': '\n💡 _/stats -l para os outros chats_',
 
-    // /watch (src/comandos/watch.js, src/watch/)
+    // /watch (src/commands/watch.js, src/watch/)
     'watch.yourPrivate': 'seu privado',
     'watch.rules': { one: '{count} regra', other: '{count} regras' },
     'watch.toOffAlone': '❌ O -to off volta ao seu privado: use-o sozinho, sem outros -to.',
@@ -292,7 +292,7 @@ module.exports = {
     'watch.err.invalidRegex': 'regex inválida: {error}',
     'watch.err.ruleLength': 'a regra precisa ter de 1 a {max} caracteres',
 
-    // /cache (src/comandos/cache.js)
+    // /cache (src/commands/cache.js)
     'cache.deletedCount': { one: '{count} apagada', other: '{count} apagadas' },
     'cache.messagesCount': { one: '{count} mensagem', other: '{count} mensagens' },
     'cache.editsCount': { one: '{count} edição', other: '{count} edições' },

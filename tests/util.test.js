@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { OTHERAlt } = bot;
-const { paraMs, plural, summarizeText, fmtInA, formatData } = bot.src('util/format');
+const { toMillis, plural, summarizeText, fmtInA, formatData } = bot.src('util/format');
 const contacts = bot.src('contacts');
 const { getBotUptime } = bot.src('log');
 const { formatErrorCommand } = bot.src('commands/base');
@@ -21,9 +21,9 @@ const {
 beforeEach(bot.restart);
 
 describe('formatação', () => {
-    test('paraMs aceita segundos (WhatsApp) e milissegundos', () => {
-        assert.equal(paraMs(1_790_000_000), 1_790_000_000_000);
-        assert.equal(paraMs(1_790_000_000_000), 1_790_000_000_000);
+    test('toMillis aceita segundos (WhatsApp) e milissegundos', () => {
+        assert.equal(toMillis(1_790_000_000), 1_790_000_000_000);
+        assert.equal(toMillis(1_790_000_000_000), 1_790_000_000_000);
     });
 
     test('formatarData no fuso de São Paulo', () => {
@@ -58,22 +58,22 @@ describe('formatação', () => {
 });
 
 describe('Markdown do ChatGPT para o WhatsApp', () => {
-    const { paraWhatsapp } = bot.src('util/whatsapp');
+    const { toWhatsapp } = bot.src('util/whatsapp');
 
     test('títulos, negrito duplo, tachado, listas, links e linhas viram a formatação do WhatsApp', () => {
-        assert.equal(paraWhatsapp('# 🧺 O que é um conjunto?\n\nUm **conjunto** é uma ~~lista~~ coleção.\n\n---\n\n## 1. Está dentro?'),
+        assert.equal(toWhatsapp('# 🧺 O que é um conjunto?\n\nUm **conjunto** é uma ~~lista~~ coleção.\n\n---\n\n## 1. Está dentro?'),
             '*🧺 O que é um conjunto?*\n\nUm *conjunto* é uma ~lista~ coleção.\n\n*1. Está dentro?*');
-        assert.equal(paraWhatsapp('* um\n+ dois\n  * aninhado\n- três\n1. primeiro'), '- um\n- dois\n  - aninhado\n- três\n1. primeiro');
-        assert.equal(paraWhatsapp('***forte***, __negrito__ e [o site](https://exemplo.com), [https://a.com](https://a.com)'),
+        assert.equal(toWhatsapp('* um\n+ dois\n  * aninhado\n- três\n1. primeiro'), '- um\n- dois\n  - aninhado\n- três\n1. primeiro');
+        assert.equal(toWhatsapp('***forte***, __negrito__ e [o site](https://exemplo.com), [https://a.com](https://a.com)'),
             '*_forte_*, *negrito* e o site (https://exemplo.com), https://a.com');
-        assert.equal(paraWhatsapp('![foto](https://x.com/a.png)'), 'https://x.com/a.png');
+        assert.equal(toWhatsapp('![foto](https://x.com/a.png)'), 'https://x.com/a.png');
         // Already in WhatsApp format: does not touch it
-        assert.equal(paraWhatsapp('*negrito* _itálico_ ~tachado~ `código`\n- item\n> citação'), '*negrito* _itálico_ ~tachado~ `código`\n- item\n> citação');
+        assert.equal(toWhatsapp('*negrito* _itálico_ ~tachado~ `código`\n- item\n> citação'), '*negrito* _itálico_ ~tachado~ `código`\n- item\n> citação');
     });
 
     test('tabela vira um bloco de código alinhado, sem a marcação dentro das células', () => {
         const table = '| Símbolo | Significado | Exemplo |\n|---|:-:|---|\n| **∈** | Pertence | 🍎 ∈ A |\n| **∉** | Não pertence | ⚽ ∉ A |';
-        assert.equal(paraWhatsapp(`Veja:\n\n${table}\n\nFim`), [
+        assert.equal(toWhatsapp(`Veja:\n\n${table}\n\nFim`), [
             'Veja:', '', '```',
             'Símbolo  Significado   Exemplo',
             '-------  ------------  -------',
@@ -84,10 +84,10 @@ describe('Markdown do ChatGPT para o WhatsApp', () => {
     });
 
     test('o bloco de código fica como está (sem o nome da linguagem) e as linhas em branco demais caem', () => {
-        assert.equal(paraWhatsapp('Veja:\n\n```text\n **x** # y\n| a | b |\n```\n\n\n\n\nFim'), 'Veja:\n\n```\n **x** # y\n| a | b |\n```\n\nFim');
-        assert.equal(paraWhatsapp('a  \nb'), 'a\nb');
-        assert.equal(paraWhatsapp(''), '');
-        assert.equal(paraWhatsapp(undefined), '');
+        assert.equal(toWhatsapp('Veja:\n\n```text\n **x** # y\n| a | b |\n```\n\n\n\n\nFim'), 'Veja:\n\n```\n **x** # y\n| a | b |\n```\n\nFim');
+        assert.equal(toWhatsapp('a  \nb'), 'a\nb');
+        assert.equal(toWhatsapp(''), '');
+        assert.equal(toWhatsapp(undefined), '');
     });
 });
 
@@ -169,17 +169,17 @@ describe('contatos', () => {
 
     test('nome do grupo pelo id; não-grupo é null', async () => {
         bot.createGroup('120363000000000009@g.us', 'Churrasco');
-        assert.equal(await contacts.groupResolverName('120363000000000009@g.us'), 'Churrasco');
-        assert.equal(await contacts.groupResolverName(OTHERAlt.jid), null);
-        assert.equal(await contacts.groupResolverName('120363000000000099@g.us'), null);
+        assert.equal(await contacts.resolveGroupName('120363000000000009@g.us'), 'Churrasco');
+        assert.equal(await contacts.resolveGroupName(OTHERAlt.jid), null);
+        assert.equal(await contacts.resolveGroupName('120363000000000099@g.us'), null);
     });
 
     test('menções cruas viram o nome do contato', async () => {
-        assert.equal(await contacts.resolverMentions(`oi @${OTHERAlt.user}`, [OTHERAlt.jid]), 'oi @Fulano');
+        assert.equal(await contacts.resolveMentions(`oi @${OTHERAlt.user}`, [OTHERAlt.jid]), 'oi @Fulano');
 
         bot.client.lids.set('4444444@lid', '5521933333333@c.us');
-        assert.equal(await contacts.resolverMentions('oi @4444444'), 'oi @+5521933333333', 'sem contato: o telefone');
-        assert.equal(await contacts.resolverMentions('oi @123', []), 'oi @123', 'curto demais: não é menção');
+        assert.equal(await contacts.resolveMentions('oi @4444444'), 'oi @+5521933333333', 'sem contato: o telefone');
+        assert.equal(await contacts.resolveMentions('oi @123', []), 'oi @123', 'curto demais: não é menção');
     });
 });
 

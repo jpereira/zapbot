@@ -28,7 +28,7 @@ const isLess = (s) => s === '-' || s === '−' || s === '–';
 /**
  * "1.234,56" → 1234.56. `pt`: the bot language is Portuguese (the dot is thousands and the comma, decimal).
  */
-function paraNumber(textAlt, pt) {
+function toNumber(textAlt, pt) {
     const commas = (textAlt.match(/,/g) ?? []).length;
     const points = (textAlt.match(/\./g) ?? []).length;
     let decimal = null;
@@ -55,7 +55,7 @@ function findNumbers(line, pt, { signOnLeft: signalALeft = false } = {}) {
     for (const m of clean.matchAll(NUMBER)) {
         const digits = m[4].replace(/\D/g, '');
         if (digits.length >= DIGITS_OTHERS) continue;
-        const valueAlt = paraNumber(m[4], pt);
+        const valueAlt = toNumber(m[4], pt);
         if (!Number.isFinite(valueAlt)) continue;
         let signalAlt = m[1] ?? m[3] ?? '';
         // A +/- at the start of the line, even loose ("- 144,93 Verdana"), is the sign of the first number
@@ -104,7 +104,7 @@ function evaluate(account, pt) {
             if (read() !== ')') throw new Error('bad');
             return v;
         }
-        if (/^\d/.test(tk)) return paraNumber(tk, pt);
+        if (/^\d/.test(tk)) return toNumber(tk, pt);
         throw new Error('bad');
     }
     function unary() {
@@ -219,4 +219,4 @@ function group(values) {
     return [...map.values()].sort((a, b) => Math.abs(b.total) - Math.abs(a.total));
 }
 
-module.exports = { findNumbers, group, round, evaluate, format, paraNumber, looksAccount, totalDeclared, valuesAlt };
+module.exports = { findNumbers, group, round, evaluate, format, toNumber, looksAccount, totalDeclared, valuesAlt };

@@ -1,5 +1,5 @@
 /*
- * /unblock: Desbloqueia people bloqueadas
+ * /unblock: Unblocks blocked people
  */
 
 const { ADMIN } = require('../../roles').ROLES;

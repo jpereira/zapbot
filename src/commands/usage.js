@@ -3,7 +3,7 @@
  */
 
 const { phoneAlt3, textPhones } = require('./whois');
-const { contactName, groupResolverName } = require('../contacts');
+const { contactName, resolveGroupName } = require('../contacts');
 const { client } = require('../client');
 const { t } = require('../i18n');
 const { allConsumption, itemsAlt, limitsWithUsage, usageLine, lastUses } = require('../usageLimit');
@@ -28,7 +28,7 @@ async function allShowConsumption(msg) {
     const linesAlt = [];
     for (const [i, p] of people.slice(0, TOP).entries()) {
         const nameAlt = p.group
-            ? `👥 ${await groupResolverName(p.key).catch(() => null) ?? p.key}`
+            ? `👥 ${await resolveGroupName(p.key).catch(() => null) ?? p.key}`
             : `👤 ${contactName(await client.getContactById(`${p.key}@c.us`).catch(() => null)) ?? `+${p.key}`}`;
         const cmds = [...p.byCmd].sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c} ${n}`).join(', ');
         linesAlt.push(`${i + 1}. ${nameAlt} — ${p.total} (${cmds})`);

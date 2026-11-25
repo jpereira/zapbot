@@ -114,7 +114,7 @@ module.exports = {
     'crypto.top': '🔥 *Top:* {icon} {symbol}',
     'crypto.failed': "❌ I couldn't check the cryptocurrency prices. Try again.",
 
-    // /stocks (src/comandos/stocks.js)
+    // /stocks (src/commands/stocks.js)
     'stocks.title': '📈 *MARKETS*',
     'stocks.open': 'Open',
     'stocks.sinceOpen': '{change} since the open',
@@ -202,7 +202,7 @@ module.exports = {
     'games.usage': '🎲 Pick a game: /games -8ball <question>, /games -truth, /games -dare or /games -trivia.',
     'games.ball': '🎱 *{question}*\n{answer}',
     'games.ballNeedsQuestion': '🎱 Ask a question: /games -8ball will I pass the exam?',
-    // /calc (src/comandos/calc.js)
+    // /calc (src/commands/calc.js)
     'calc.total': '🧮 *Total: {total}*',
     'calc.expr': '🧮 {expr} = *{total}*',
     'calc.stats': { one: '_{count} number_', other: '_{count} numbers · average {avg}_' },
@@ -455,7 +455,7 @@ module.exports = {
     'defi.notProtocol': '❌ "{word}" is not a protocol: use orca, prjx, liquidswap (liqswp), morpho or aave.',
     'defi.nothingRegistered': '🌊 Nothing registered for {of}.\n{examples}',
 
-    // /defi -a (src/defi/alertas.js)
+    // /defi -a (src/defi/alerts.js)
     'defi.alertTip': '💡 _Turn off with /defi -a -rm {n}._',
     'defi.backInRange': 'DeFi: {desc} is back in range',
     'defi.leftRange': 'DeFi: {desc} left the range',

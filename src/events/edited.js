@@ -4,15 +4,15 @@
 
 const { client, sentByBot } = require('../client');
 const { dbGet, dbReady, dbRun } = require('../db');
-const { resolverAuthorDeleted } = require('./deleted');
+const { resolveDeletedAuthor } = require('./deleted');
 const { printError, printInfo } = require('../log');
 const { t } = require('../i18n');
-const { ignoreNotice, registerNotice } = require('../mudo');
+const { ignoreNotice, registerNotice } = require('../mute');
 const { getSetting } = require('../settings');
 const { countStats } = require('../stats');
 const { formatData } = require('../util/format');
 const { headerOrigin, channelId } = require('../util/origin');
-const { appendMentions, messageResolverMentions } = require('../mentions');
+const { appendMentions, resolveMessageMentions } = require('../mentions');
 
 /*
  * Mensagens edited
@@ -30,8 +30,8 @@ async function sendMessageEdited(destination, row, info, { title = t('editadas.t
     }) +
         t('editadas.corpo', {
             sent: formatData(row.timestamp), editada: formatData(row.edited_at),
-            before: await messageResolverMentions(row.old_body, row.message_id) || t('editadas.vazio'),
-            after: await messageResolverMentions(row.new_body, row.message_id) || t('editadas.vazio')
+            before: await resolveMessageMentions(row.old_body, row.message_id) || t('editadas.vazio'),
+            after: await resolveMessageMentions(row.new_body, row.message_id) || t('editadas.vazio')
         });
 
     // Records where it came from (/mute replying to the notice)
@@ -84,7 +84,7 @@ client.on('message_edit', async (msg, newBody, prevBody) => {
             edited_at: Number(msg.latestEditSenderTimestampMs) || Date.now()
         };
 
-        const info = await resolverAuthorDeleted(row, { after: msg, before: msg });
+        const info = await resolveDeletedAuthor(row, { after: msg, before: msg });
         row.chat_name = info.chatName;
         row.sender_name = info.senderName;
         row.sender_number = info.senderNumber;

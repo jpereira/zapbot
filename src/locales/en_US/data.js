@@ -2,7 +2,7 @@
  * en_US: /get, /show, /stats, /watch and /cache (prefixes get., show., stats., watch. and cache.).
  */
 module.exports = {
-    // /get (src/comandos/get.js)
+    // /get (src/commands/get.js)
     'get.documentCaption': '📥 Here is the media to download.',
     'get.quotedNoMedia': '❌ The replied message has no media or link.',
     'get.busy': '⏳ There are already {max} downloads in progress. Try again in a moment.',
@@ -54,7 +54,7 @@ module.exports = {
     'get.downloadFailed': "Problems downloading with '{bin}'",
     'get.mediaFailed': "I couldn't download or process this media. Check that the post is public and try again.",
 
-    // /show (src/comandos/show.js): texts of each type (show.<type>.<field>)
+    // /show (src/commands/show.js): texts of each type (show.<type>.<field>)
     'show.apagadas.label': 'Deleted',
     'show.apagadas.summary': { one: '{count} deleted message', other: '{count} deleted messages' },
     'show.apagadas.count': { one: '{count} message', other: '{count} messages' },
@@ -166,7 +166,7 @@ module.exports = {
     'show.chatLabel': '\n💬 *Chat:* {name}',
     'show.resendFailed': '⚠️ Could not resend message {i}/{total}: {error}',
 
-    // /stats (src/comandos/stats.js)
+    // /stats (src/commands/stats.js)
     'stats.msgs': { one: '{count} msg', other: '{count} msgs' },
     'stats.days': { one: '{count} day', other: '{count} days' },
     'stats.chats': { one: '{count} chat', other: '{count} chats' },
@@ -214,7 +214,7 @@ module.exports = {
     'stats.footerMe': '\n💡 _/stats -me for yours_',
     'stats.footerList': '\n💡 _/stats -l for the other chats_',
 
-    // /watch (src/comandos/watch.js, src/watch/)
+    // /watch (src/commands/watch.js, src/watch/)
     'watch.yourPrivate': 'your private chat',
     'watch.rules': { one: '{count} rule', other: '{count} rules' },
     'watch.toOffAlone': '❌ -to off goes back to your private chat: use it alone, without other -to.',
@@ -292,7 +292,7 @@ module.exports = {
     'watch.err.invalidRegex': 'invalid regex: {error}',
     'watch.err.ruleLength': 'the rule must have from 1 to {max} characters',
 
-    // /cache (src/comandos/cache.js)
+    // /cache (src/commands/cache.js)
     'cache.deletedCount': { one: '{count} deleted', other: '{count} deleted' },
     'cache.messagesCount': { one: '{count} message', other: '{count} messages' },
     'cache.editsCount': { one: '{count} edit', other: '{count} edits' },

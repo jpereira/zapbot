@@ -213,7 +213,7 @@ test('texto depois dos destinatários: vai no começo, a mensagem respondida emb
 });
 
 test('o exemplo dos docs: lista + alias -q; "/nopt" respondendo manda a mensagem, e "/nopt Olha isso!" põe o texto antes', async () => {
-    // 1. a list; 2. o alias mudo
+    // 1. a list; 2. the quiet alias
     await bot.execute('/forward -add #nopt /Fulano/ /Maria/');
     assert.match((await bot.execute('/alias -q nopt /forward -q #nopt')).at(-1).text ?? '', /nopt/);
 

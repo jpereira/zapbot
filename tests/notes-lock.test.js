@@ -42,7 +42,7 @@ describe('/notes -lock', () => {
         const before = bot.client.sent.length;
         const first = bot.createMessage({ text: PASSWORD, chat: OWNER.jid, de: OWNER.jid });
         await bot.deliver(first);
-        assert.equal(first.deletedFor, 'todos');
+        assert.equal(first.deletedFor, 'everyone');
         assert.equal((await dbGet('SELECT body FROM messages WHERE id = ?', [first.id.id])).body, '🔑 ***');
         assert.deepEqual(bot.client.sent.slice(before).map(e => e.content), ['🔑 Repita a senha:']);
 
@@ -218,7 +218,7 @@ describe('/notes -lock', () => {
         const inline = bot.createMessage({ text: `/stash.view ${PASSWORD}`, chat: OWNER.jid, de: OWNER.jid });
         const mark = sent().length;
         await bot.deliver(inline);
-        assert.equal(inline.deletedFor, 'todos');
+        assert.equal(inline.deletedFor, 'everyone');
         const shown = sent().slice(mark).join('\n');
         assert.match(shown, /\*o PIN do banco é 1234\*/);
         assert.doesNotMatch(shown, new RegExp(PASSWORD));
@@ -266,11 +266,11 @@ describe('/notes -lock', () => {
         const msg = bot.createMessage({ text: '/notes -v -lock minhasenha', chat: OWNER.jid, de: OWNER.jid });
         const before = bot.client.sent.length;
         await bot.deliver(msg);
-        assert.equal(msg.deletedFor, 'todos');
+        assert.equal(msg.deletedFor, 'everyone');
         assert.match(bot.client.sent.slice(before).map(e => String(e.content)).join('\n'), /^❌ Com o -lock, diga uma tag protegida/);
         const bare = bot.createMessage({ text: '/notes -lock minhasenha', chat: OWNER.jid, de: OWNER.jid });
         await bot.deliver(bare);
-        assert.equal(bare.deletedFor, 'todos');
+        assert.equal(bare.deletedFor, 'everyone');
     });
 
     test('a senha no comando (/notes -v -lock <senha> #tag): libera e mostra; a mensagem é apagada; nada em log, histórico ou resposta', async () => {
@@ -284,7 +284,7 @@ describe('/notes -lock', () => {
         msg.reply = async (content) => { bot.client.sent.push({ content, chatId: OWNER.jid }); };
         await bot.deliver(msg);
 
-        assert.equal(msg.deletedFor, 'todos', 'o comando com a senha foi apagado');
+        assert.equal(msg.deletedFor, 'everyone', 'o comando com a senha foi apagado');
         const sent = bot.client.sent.slice(before).map(e => String(e.content)).join('\n--\n');
         assert.match(sent, /🔓 A tag #foo está liberada/);
         assert.match(sent, /\*segredo 123\*/);
@@ -297,7 +297,7 @@ describe('/notes -lock', () => {
         // Already unlocked: no password needed again, but the message with it still leaves
         const again = bot.createMessage({ text: `/notes -lock ${PASSWORD} #foo`, chat: OWNER.jid, de: OWNER.jid });
         await bot.deliver(again);
-        assert.equal(again.deletedFor, 'todos');
+        assert.equal(again.deletedFor, 'everyone');
         assert.match(bot.client.sent.at(-1).content, /^🔓 A tag #foo já está liberada/);
     });
 
@@ -314,7 +314,7 @@ describe('/notes -lock', () => {
 
         for (let i = 1; i <= 5; i++) {
             const r = await type(`/notes -v -lock errada${i}xx #foo`);
-            assert.equal(r.msg.deletedFor, 'todos', `tentativa ${i} apagada`);
+            assert.equal(r.msg.deletedFor, 'everyone', `tentativa ${i} apagada`);
             assert.match(r.sent, i < 5 ? /^❌ Senha incorreta/ : /^⛔ Muitas senhas erradas para a #foo/);
             assert.doesNotMatch(r.sent + r.logs, new RegExp(`errada${i}xx`), 'a senha errada também não aparece');
         }
@@ -324,16 +324,16 @@ describe('/notes -lock', () => {
         await bot.replyAlt('/notes #aberta oi', PRIVATE);
         const unprotected = await type('/notes -lock minhasenha #aberta');
         assert.match(unprotected.sent, /^❌ A tag #aberta não é protegida: a senha no comando só abre/);
-        assert.equal(unprotected.msg.deletedFor, 'todos');
+        assert.equal(unprotected.msg.deletedFor, 'everyone');
         assert.doesNotMatch(unprotected.sent + unprotected.logs, /minhasenha/);
 
         const withNow = await type('/notes -lock minhasenha -now #aberta');
         assert.match(withNow.sent, /^❌ O -now e o -clean não pedem senha/);
-        assert.equal(withNow.msg.deletedFor, 'todos');
+        assert.equal(withNow.msg.deletedFor, 'everyone');
 
         // In a group: it does not open anything, and the message still leaves
         const inGroup = await type('/notes -v -lock minhasenha #aberta', GROUP);
-        assert.equal(inGroup.msg.deletedFor, 'todos');
+        assert.equal(inGroup.msg.deletedFor, 'everyone');
         assert.match(inGroup.sent, /^🔒 A senha só é digitada no seu próprio privado/);
         assert.doesNotMatch(inGroup.sent + inGroup.logs, /minhasenha/);
     });
@@ -354,7 +354,7 @@ describe('/notes -lock', () => {
         assert.doesNotMatch(sent, new RegExp(PASSWORD));
         assert.doesNotMatch(bot.logs.slice(logs).join('\n'), new RegExp(PASSWORD));
         assert.equal((await dbGet('SELECT body FROM messages WHERE id = ?', [msg.id.id])).body, '/foo.lock ***');
-        assert.equal(msg.deletedFor, 'todos');
+        assert.equal(msg.deletedFor, 'everyone');
     });
 
     test('o dono salva texto e mídia por reply fora do privado com a tag liberada', async () => {

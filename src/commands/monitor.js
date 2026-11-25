@@ -1,5 +1,5 @@
 const { MessageMedia } = require('whatsapp-web.js');
-const { resolverOrChoose } = require('../destinations');
+const { resolveOrChoose } = require('../destinations');
 const { resolveLidToPhone } = require('../contacts');
 const { getSetting } = require('../settings');
 const { state: stateAlt } = require('../state');
@@ -16,8 +16,8 @@ const when = at => at ? new Date(at).toLocaleString(language() === 'pt_BR' ? 'pt
 const withoutDelimiters = textAlt => String(textAlt ?? '').trim()
     .replace(/^(?:\/([^/]*)\/|"([^"]*)"|'([^']*)')$/, '$1$2$3');
 
-async function resolverPerson(msg, textAlt) {
-    const contactAlt = await resolverOrChoose(msg, withoutDelimiters(textAlt), { type: 'contato' });
+async function resolvePerson(msg, textAlt) {
+    const contactAlt = await resolveOrChoose(msg, withoutDelimiters(textAlt), { type: 'contato' });
     if (contactAlt?.id.endsWith('@lid')) {
         contactAlt.id = await resolveLidToPhone(contactAlt.id) ?? contactAlt.id;
     }
@@ -32,7 +32,7 @@ async function searchMonitored(msg, valueAlt) {
         if (!contactAlt) await msg.reply(t('monitor.idNotFound', { id }));
         return contactAlt;
     }
-    const person = await resolverPerson(msg, valueAlt);
+    const person = await resolvePerson(msg, valueAlt);
     if (!person) return null;
     for (const c of contacts) {
         const phone = c.contact_id.endsWith('@lid')
@@ -140,7 +140,7 @@ async function cmdMonitor({ msg, args }) {
             await msg.reply(t('monitor.add.usage'));
             return;
         }
-        const contactAlt = await resolverPerson(msg, valueAlt);
+        const contactAlt = await resolvePerson(msg, valueAlt);
         if (!contactAlt) return;
         const r = await registerMonitored(contactAlt);
         const registered = r.contact ?? r.existing;

@@ -12,7 +12,7 @@
 const { textPeople, withoutDelimiters } = require('./commands/block');
 const { textItems } = require('./commands/set');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
-const { describeDestination, destinationsForSave, destinationsSaved, extractDestinations, resolverDestinations } = require('./destinations');
+const { describeDestination, destinationsForSave, destinationsSaved, extractDestinations, resolveDestinations } = require('./destinations');
 const { t } = require('./i18n');
 const { getSetting } = require('./settings');
 const { withoutAccents } = require('./util/format');
@@ -82,7 +82,7 @@ async function addAlt(msg, textAlt) {
     const texts = [...textPeople(withoutTo).map(withoutDelimiters), ...byTo];
     if (!texts.length) return msg.reply(t('forward.list.addUsage'));
 
-    const destinations = await resolverDestinations(msg, texts, { acceptsEmail: true });
+    const destinations = await resolveDestinations(msg, texts, { acceptsEmail: true });
     if (!destinations) return;
 
     const existing = await dbGet('SELECT * FROM forward_lists WHERE list = ?', [nameAlt]);
@@ -190,22 +190,22 @@ async function removeAlt2(msg, textAlt) {
 async function move(msg, textAlt) {
     const m = textAlt.trim().match(/^#(\S+)\s+#(\S+)$/);
     if (!m) return msg.reply(t('forward.list.moveUsage'));
-    const [de, para] = [readName(m[1]), readName(m[2])];
-    if (!NAME.test(para)) return msg.reply(t('forward.list.badName', { name: para }));
-    if (de === para) return msg.reply(t('forward.list.moveSame'));
+    const [fromName, toName] = [readName(m[1]), readName(m[2])];
+    if (!NAME.test(toName)) return msg.reply(t('forward.list.badName', { name: toName }));
+    if (fromName === toName) return msg.reply(t('forward.list.moveSame'));
 
-    const origin = await dbGet('SELECT * FROM forward_lists WHERE list = ?', [de]);
-    if (!origin) return msg.reply(t('forward.list.notFound', { name: de }));
+    const origin = await dbGet('SELECT * FROM forward_lists WHERE list = ?', [fromName]);
+    if (!origin) return msg.reply(t('forward.list.notFound', { name: fromName }));
 
-    const destination = await dbGet('SELECT * FROM forward_lists WHERE list = ?', [para]);
+    const destination = await dbGet('SELECT * FROM forward_lists WHERE list = ?', [toName]);
     const allAlt2 = join(destination ? membersAlt(destination) : [], membersAlt(origin));
     const max = getSetting('forward.maxRecipients');
-    if (allAlt2.length > max) return msg.reply(t('forward.list.tooMany', { name: para, n: allAlt2.length, max }));
+    if (allAlt2.length > max) return msg.reply(t('forward.list.tooMany', { name: toName, n: allAlt2.length, max }));
 
     // The description of the existing one stays; otherwise the origin's goes
-    await save(para, allAlt2, destination?.description ?? origin.description);
-    await dbRun('DELETE FROM forward_lists WHERE list = ?', [de]);
-    await msg.reply(destination ? t('forward.list.merged', { from: de, to: para, n: allAlt2.length }) : t('forward.list.moved', { from: de, to: para }));
+    await save(toName, allAlt2, destination?.description ?? origin.description);
+    await dbRun('DELETE FROM forward_lists WHERE list = ?', [fromName]);
+    await msg.reply(destination ? t('forward.list.merged', { from: fromName, to: toName, n: allAlt2.length }) : t('forward.list.moved', { from: fromName, to: toName }));
 }
 
 async function describe(msg, textAlt) {

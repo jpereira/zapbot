@@ -244,7 +244,7 @@ describe('/calendar', () => {
             assert.equal(item.chatId, OTHERAlt.jid);
             assert.equal(item.options.quotedMessageId, undefined);
         }
-        assert.equal(cmd.deletedFor, 'todos');
+        assert.equal(cmd.deletedFor, 'everyone');
         assert.equal(quoted.deletedFor, undefined);
     });
 

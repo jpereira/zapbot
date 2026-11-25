@@ -7,13 +7,13 @@ const fs = require('fs-extra');
 
 const { client, botConsumeSending, isNoStore, wasSentByBot, messageToSelf } = require('../client');
 const { getCommandSyntax, helpProtocol } = require('../commands/base');
-const { textRunAlias, resolverAlias } = require('../aliases');
+const { textRunAlias, resolveAlias } = require('../aliases');
 const { ttsRewrite } = require('../ttsOption');
 const { handlePassword: handlePasswordNotes } = require('../notesLock');
 const { extractPassword, maskSecret } = require('../util/lockPassword');
 const { handlerFor } = require('../commands/index');
 const {
-    scheduleName, contactName, removeDeviceSuffix, resolveLidToPhone, groupResolverName, privateResolverName
+    scheduleName, contactName, removeDeviceSuffix, resolveLidToPhone, resolveGroupName, resolvePrivateName
 } = require('../contacts');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { checkAntilink } = require('../antilink');
@@ -31,13 +31,13 @@ const { getSetting, isDebugMode, SETTINGS_SCHEMA } = require('../settings');
 const { countStats, myIdStats } = require('../stats');
 const { mediaIsPath, nameSafe, getFolderMedia } = require('../util/files');
 const { visibleBody } = require('../util/messageBody');
-const { joinContinuedLines, paraMs } = require('../util/format');
+const { joinContinuedLines, toMillis } = require('../util/format');
 const { checkWatch } = require('../watch/check');
 const { logIsCopy } = require('../debugCopy');
 const { withContextDebug, contextDebug } = require('../debugContext');
 const { printDebugLevel } = require('../log');
 const { instrumentObject } = require('../debugInstrumentation');
-const { channelResolverName } = require('../contacts');
+const { resolveChannelName } = require('../contacts');
 const { mentionsForRecord } = require('../mentions');
 const { isChannelAlt, channelId } = require('../util/origin');
 const { withLimit } = require('../usageLimit');
@@ -90,15 +90,15 @@ client.on('message_create', (msg) => (msg.fromMe && logIsCopy(msg.body)) ? undef
         const isChannel = isChannelAlt(chatId);
         const isBroadcast = !isChannel && (chatId.endsWith('@broadcast') || Boolean(msg.isStatus));
         const isStatus = chatId === 'status@broadcast' || Boolean(msg.isStatus);
-        const messageAt = isStatus ? (paraMs(msg.timestamp) || timestamp) : timestamp;
+        const messageAt = isStatus ? (toMillis(msg.timestamp) || timestamp) : timestamp;
 
         // Group: name looked up by chatId (_data.chat may carry the wrong name)
         let chatName = isChannel
-            ? (await channelResolverName(chatId)) || `Canal ${chatId.split('@')[0]}`
+            ? (await resolveChannelName(chatId)) || `Canal ${chatId.split('@')[0]}`
             : isBroadcast ? null :
-            (isGroup ? await groupResolverName(chatId) : null) ||
+            (isGroup ? await resolveGroupName(chatId) : null) ||
             // Private: the other participant's contact (the chatId), by the name in your address book
-            (isGroup ? null : await privateResolverName(chatId)) ||
+            (isGroup ? null : await resolvePrivateName(chatId)) ||
             msg?._data?.chat?.name ||
             msg?._data?.chat?.formattedTitle ||
             // notifyName is the name of who SENT: it only serves as the chat name when it was the other
@@ -246,7 +246,7 @@ client.on('message_create', (msg) => (msg.fromMe && logIsCopy(msg.body)) ? undef
                 chatId, chatName, isGroup,
                 senderId: msg.fromMe ? myIdStats() : (senderNumber || senderJid),
                 senderName: msg.fromMe ? (client.info?.pushname || t('core.voce')) : senderName,
-                when: paraMs(msg.timestamp) || timestamp,
+                when: toMillis(msg.timestamp) || timestamp,
                 fields: { msgs: 1, media: hasMedia }
             });
         }
@@ -320,13 +320,13 @@ client.on('message_create', (msg) => (msg.fromMe && logIsCopy(msg.body)) ? undef
         const caller = body.startsWith('/') && !sentByBot ? body.split(/\s+/, 1)[0] : null;
 
         if (sentByBot) printInfo(`Bot's own message starting with '/' ignored as a command: ${body.slice(0, 60)}`);
-        let resolved = caller ? await resolverAlias(body) : null;
+        let resolved = caller ? await resolveAlias(body) : null;
         // A private alias (/alias -private) is the owner's: for anyone else it is a command that does not exist
         if (resolved?.ownerOnly && !msg.fromMe) resolved = null;
         if (resolved?.candidates && !msg.fromMe) resolved = { ...resolved, candidates: resolved.candidates.filter(c => !c.ownerOnly) };
         // -tts (/crypto -tts BTC): it is /tts {/crypto -q BTC}; the log of the call keeps what was typed
         const spoken = ttsRewrite(resolved?.command, resolved?.args ?? '');
-        if (spoken) resolved = await resolverAlias(spoken);
+        if (spoken) resolved = await resolveAlias(spoken);
         const command = resolved?.command ?? null;
 
         /*
@@ -419,7 +419,7 @@ client.on('message_create', (msg) => (msg.fromMe && logIsCopy(msg.body)) ? undef
             printDebug(`Command '${command.cmd}' from ${senderName} ignored: outside bot.users`);
             if (!isGroup && permission.onlyInGroups.length) {
                 const groups = await Promise.all(permission.onlyInGroups.map(async (id) =>
-                    `👥 ${await groupResolverName(id).catch(() => null) || id}`));
+                    `👥 ${await resolveGroupName(id).catch(() => null) || id}`));
                 await msg.reply(t('mensagens.semPermissaoPrivado', { groups: groups.join(', ') }));
             } else {
                 await notifyWithoutPermission(msg, command.cmd, senderNumber || senderJid);

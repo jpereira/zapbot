@@ -15,7 +15,7 @@ function validate(commands) {
         if (!/^\/[a-z]+$/.test(c.cmd)) throw new Error(`commands.js: cmd inválido: ${c.cmd}`);
         if (!roleValid(c.role)) throw new Error(`commands.js: ${c.cmd} sem role válido (${c.role})`);
         for (const nameAlt of [c.cmd, ...(c.aliases ?? [])]) {
-            if (seen.has(nameAlt)) throw new Error(`commands.js: nome repetido: ${nameAlt}`);
+            if (seen.has(nameAlt)) throw new Error(`commands.js: duplicate name: ${nameAlt}`);
             seen.add(nameAlt);
         }
     }

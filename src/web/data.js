@@ -9,7 +9,7 @@ const path = require('path');
 const { client } = require('../client');
 const { CONTACTS_DIR, MEDIA_DIR } = require('../constants');
 const { contactPhoto } = require('../contactPhotos');
-const { contactName, groupResolverName, privateResolverName, resolveLidToPhone, resolverMentions } = require('../contacts');
+const { contactName, resolveGroupName, resolvePrivateName, resolveLidToPhone, resolveMentions } = require('../contacts');
 const { dbAll, dbGet } = require('../db');
 const { getSetting } = require('../settings');
 const { isJpegPreview, visibleBody } = require('../util/messageBody');
@@ -80,7 +80,7 @@ async function chatName(chat) {
     const stored = String(chat.chat_name ?? '').trim();
     if (chat.is_group || id.endsWith('@g.us')) {
         const live = client.pupPage && await withTimeout(
-            groupResolverName(id, { maxAge: GROUP_NAME_TTL_MS }).catch(() => null), NAME_TIMEOUT_MS);
+            resolveGroupName(id, { maxAge: GROUP_NAME_TTL_MS }).catch(() => null), NAME_TIMEOUT_MS);
         if (live) return live;
         const last = await dbGet(`SELECT chat_name FROM messages
             WHERE chat_id = ? AND TRIM(chat_name) <> ''
@@ -91,7 +91,7 @@ async function chatName(chat) {
     const cached = names.get(id);
     let live = cached && Date.now() - cached.at < NAME_TTL_MS ? cached.name : null;
     if (!live && !cached && client.pupPage) {
-        live = await withTimeout(privateResolverName(id).catch(() => null), NAME_TIMEOUT_MS);
+        live = await withTimeout(resolvePrivateName(id).catch(() => null), NAME_TIMEOUT_MS);
         names.set(id, { name: live, at: Date.now() });
     }
     const number = digits(id);
@@ -281,7 +281,7 @@ async function withMentions(body, mentions) {
     if (!/@\d{6,}/.test(body)) return body;
     const ids = (() => { try { return JSON.parse(mentions ?? '[]'); } catch { return []; } })();
     let text = body;
-    if (client.pupPage) text = await withTimeout(resolverMentions(body, ids).catch(() => body), NAME_TIMEOUT_MS) ?? body;
+    if (client.pupPage) text = await withTimeout(resolveMentions(body, ids).catch(() => body), NAME_TIMEOUT_MS) ?? body;
     for (const user of new Set([...text.matchAll(/@(\d{6,})/g)].map(m => m[1]))) {
         if (!mentionNames.has(user)) {
             const row = await dbGet('SELECT sender_name FROM messages WHERE sender_number = ? AND sender_name IS NOT NULL AND sender_name <> ? ORDER BY timestamp DESC LIMIT 1', [user, user]);

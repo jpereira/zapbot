@@ -170,7 +170,7 @@ function createMessage({ text: textAlt = '', chat = GROUP, de = OWNER.jid, id, t
             return client.contacts.get(de) ?? { id: { _serialized: de }, number: de.split('@')[0] };
         },
         async getQuotedMessage() { return quoted; },
-        async delete(paraAll) { this.deletedFor = paraAll ? 'todos' : 'mim'; },
+        async delete(forEveryone) { this.deletedFor = forEveryone ? 'everyone' : 'me'; },
         async react(emoji) { client.reacted.push({ id: this.id._serialized, emoji }); },
         async downloadMedia() { return mediaAlt; },
         ...extras

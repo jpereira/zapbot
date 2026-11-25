@@ -5,7 +5,7 @@
 const { client } = require('../client');
 const { t } = require('../i18n');
 const { commandUsage } = require('./base');
-const { resolverOrChoose } = require('../destinations');
+const { resolveOrChoose } = require('../destinations');
 const { printError, printInfo } = require('../log');
 const { textItems } = require('./set');
 
@@ -132,7 +132,7 @@ async function cmdLeave({ msg, opts }) {
                 continue;
             }
         } else {
-            target = await resolverOrChoose(msg, item, { type: 'grupo' });
+            target = await resolveOrChoose(msg, item, { type: 'grupo' });
             if (!target) continue;  // the error was already replied
         }
         if (!targets.some(a => a.id === target.id)) targets.push(target);

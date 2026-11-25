@@ -6,12 +6,12 @@ const { MessageMedia, Location } = require('whatsapp-web.js');
 const fs = require('fs-extra');
 
 const { client } = require('../client');
-const { contactName, resolveLidToPhone, channelResolverName } = require('../contacts');
-const { messageResolverMentions } = require('../mentions');
+const { contactName, resolveLidToPhone, resolveChannelName } = require('../contacts');
+const { resolveMessageMentions } = require('../mentions');
 const { dbGet, dbReady, dbRun } = require('../db');
 const { printDebug, printError } = require('../log');
 const { t } = require('../i18n');
-const { ignoreNotice, registerNotice } = require('../mudo');
+const { ignoreNotice, registerNotice } = require('../mute');
 const { getSetting } = require('../settings');
 const { countStats, myIdStats } = require('../stats');
 const { mediaIsPath } = require('../util/files');
@@ -34,9 +34,9 @@ const isStatus = (row) => row.chat_id === 'status@broadcast';
  * With the event objects (after/before) it gets more precise names;
  * without them (/show) uses what was stored in the database.
  */
-async function resolverAuthorDeleted(row, { after, before, protocolKey } = {}) {
+async function resolveDeletedAuthor(row, { after, before, protocolKey } = {}) {
     if (isChannelAlt(row.chat_id)) {
-        const nameAlt = (await channelResolverName(row.chat_id)) || row.chat_name ||
+        const nameAlt = (await resolveChannelName(row.chat_id)) || row.chat_name ||
             `Canal ${row.chat_id.split('@')[0]}`;
         return { chatName: nameAlt, senderName: nameAlt, senderNumber: null };
     }
@@ -152,7 +152,7 @@ async function sendMessageDeleted(destination, row, info, { title = t('apagadas.
     if (row.has_media && mediaIsPath(row.media_path) && fs.existsSync(row.media_path)) {
         const mediaAttachment = MessageMedia.fromFilePath(row.media_path);
         const mimetype = mediaAttachment.mimetype || '';
-        const captionAlt = await messageResolverMentions(row.body, row.id) || t('apagadas.semTexto');
+        const captionAlt = await resolveMessageMentions(row.body, row.id) || t('apagadas.semTexto');
 
         if (row.type === 'audio' || row.type === 'ptt' || mimetype.startsWith('audio/')) {
             alertText += t('apagadas.audio');
@@ -183,7 +183,7 @@ async function sendMessageDeleted(destination, row, info, { title = t('apagadas.
     }
 
     // Texto
-    alertText += t('apagadas.texto', { text: await messageResolverMentions(row.body, row.id) || t('apagadas.semConteudo') });
+    alertText += t('apagadas.texto', { text: await resolveMessageMentions(row.body, row.id) || t('apagadas.semConteudo') });
 
     await send(destination, alertText, { linkPreview: true });
 }
@@ -217,7 +217,7 @@ client.on('message_revoke_everyone', async (after, before) => {
     }
 
     try {
-        const info = await resolverAuthorDeleted(row, { after, before, protocolKey });
+        const info = await resolveDeletedAuthor(row, { after, before, protocolKey });
 
         // Marks as deleted BEFORE sending: even if the send fails, /show finds it.
         // Also stores the names resolved now, which are more precise than those from receiving.
@@ -259,5 +259,5 @@ client.on('message_revoke_everyone', async (after, before) => {
 module.exports = {
     sendMessageDeleted,
     isStatus,
-    resolverAuthorDeleted
+    resolveDeletedAuthor
 };

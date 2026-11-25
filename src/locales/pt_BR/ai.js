@@ -17,7 +17,7 @@ module.exports = {
     'openai.balance': ' · 🏦 saldo ~{remaining} de {total}',
     'openai.oldPrices': '⚠️ preços de {days} dias: /gpt -prices',
 
-    // src/comandos/openaiComum.js
+    // src/openaiChat.js
     'draw.imageBelow': '🖼️ Imagem gerada abaixo.',
     'draw.gifBelow': '🎞️ GIF gerado abaixo.',
     'engine.both': '❌ Use só um: -gpt (-g) ou -local (-l).',
@@ -80,7 +80,7 @@ module.exports = {
     'openai.photoType': '❌ A OpenAI não lê imagem {type}: só {types}.',
     'openai.photoSize': '❌ A imagem tem mais de {mb} MB: é grande demais para o {cmd}.',
 
-    // src/comandos/gpt.js
+    // src/commands/gpt.js
     'gpt.instructions': 'Você é um assistente no WhatsApp. Responda de forma direta, em português, salvo se pedirem outro idioma. ' +
         'Formate para o WhatsApp, que não é Markdown: *negrito* com um asterisco só, _itálico_, ~tachado~, ' +
         'listas com "- " ou "1. ", código entre crases (``` para blocos). Não use títulos com #, tabelas, ' +
@@ -151,7 +151,7 @@ module.exports = {
     'gpt.pricesFooter': '💡 _Dólares por 1M de tokens, entrada/saída (gpt.pricing)._',
     'gpt.pricesFail': '❌ Não consegui atualizar os preços: {error}',
 
-    // src/comandos/tldr.js
+    // src/commands/tldr.js
     'tldr.instructions': 'Você resume conversas de WhatsApp em português do Brasil. Escreva um resumo curto, em tópicos ' +
         'começados por "• ", com os assuntos principais, as decisões, os combinados e as pendências, ' +
         'citando quem disse quando for relevante. No máximo 15 tópicos. Não invente nada que não esteja ' +
@@ -179,7 +179,7 @@ module.exports = {
     'tldr.header': '🤖 *Resumo de {name}*\n_{messages} · {start} a {end}_',
     'tldr.sentPrivate': '🤖 Resumo enviado no seu privado.',
 
-    // src/comandos/draw.js
+    // src/commands/draw.js
     'draw.animatePrompt': 'Anime esta imagem em um GIF. {text}',
     'draw.animateDefault': 'Com um movimento sutil e natural.',
     'draw.gifDenied': '🔒 A sua conta/modelo não faz GIF animado: {message}\n' +
@@ -188,7 +188,7 @@ module.exports = {
     'draw.badSize': 'O tamanho "{value}" não existe. Use: {list}.',
     'draw.intRange': '{name} precisa ser um inteiro de {min} a {max}.',
 
-    // src/comandos/translate.js
+    // src/commands/translate.js
     'translate.timeout': '⏱️ O Google Translate não respondeu. Tente de novo.',
     'translate.limited': '💸 O Google Translate limitou os pedidos deste servidor (acesso gratuito, sem chave). Tente mais tarde.',
     'translate.refused': '⛔ O Google recusou o pedido deste servidor. Tente mais tarde.',
@@ -200,7 +200,7 @@ module.exports = {
     'translate.result': '🌐 *Tradução* _({origin} → {target})_\n\n{text}',
     'translate.sameLang': '\n\n💡 _O texto já estava em {target}. Para outro idioma: /translate -to en_',
 
-    // src/comandos/pixelart.js
+    // src/commands/pixelart.js
     'pixelart.invalidYear': '❌ Ano inválido. Ex.: /pixelart -y 1996',
     'pixelart.invalidPack': '❌ Nome de pack inválido. Ex.: /pixelart chuck-norris-lvl',
     'pixelart.noPack': '❌ Nenhum pack encontrado.',
@@ -211,22 +211,22 @@ module.exports = {
     'pixelart.partN': '🧩 Parte {i}/{total}',
     'pixelart.fail': '❌ Não consegui buscar a arte no 16colo.rs agora.',
 
-    // src/comandos/ascii.js
+    // src/commands/ascii.js
     'ascii.tooLong': '❌ O texto tem no máximo {max} caracteres.',
     'ascii.width': '❌ -width precisa de um número de {min} a {max}',
     'ascii.char': '❌ -char precisa de um único caractere, ex: -char @',
     'ascii.nothing': '❌ Nada para desenhar: use letras, números ou ! ? . , : - + _ /',
 
-    // src/comandos/meme.js
+    // src/commands/meme.js
     'meme.none': '❌ Nenhum meme com "{search}".',
     'meme.fail': '❌ Não consegui buscar um meme agora.',
 
-    // src/comandos/giphy.js
+    // src/commands/giphy.js
     'giphy.noKey': '⚠️ Chave do GIPHY não configurada: defina GIPHY_API_KEY no config/.env ou use /set giphy.api.key <chave>.',
     'giphy.none': '❌ Nenhum GIF encontrado.',
     'giphy.fail': '❌ Não consegui buscar esse GIF.',
 
-    // src/comandos/sticker.js
+    // src/commands/sticker.js
     'sticker.needText': 'Informe o texto: /sticker -txt "Bom dia!"',
     'sticker.tooLong': '❌ Texto longo demais: até {max} caracteres.',
     'sticker.badBg': '❌ -bg: "{color}" não é uma cor. Use #RRGGBB (ex.: #FFFFFF).',

@@ -13,11 +13,11 @@ const { state: stateAlt } = require('./state');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const {
     destinationColumns, describeDestinations, lineDestination, destinationsSaved, sendToDestinations, extractDestinations,
-    recipientsDe, resolverDestinations
+    recipientsDe, resolveDestinations
 } = require('./destinations');
 const { sendEmail } = require('./email');
 const { printError, printInfo } = require('./log');
-const { unescape, formatData, paraMs, summarizeText } = require('./util/format');
+const { unescape, formatData, toMillis, summarizeText } = require('./util/format');
 const { language, t } = require('./i18n');
 const { generatePdf } = require('./util/pdf');
 const lock = require('./notesLock');
@@ -85,7 +85,7 @@ function separateTag(textAlt) {
 
 // A partial tag works: #idei finds #ideias (the exact one wins; otherwise starts with; otherwise contains).
 // Only to read (list, search, PDF): removing and alerting ask for the whole tag
-function resolverTags(tags, notes) {
+function resolveTags(tags, notes) {
     const existingAlt = [...new Set(notes.map(n => n.tag).filter(Boolean))];
     const find = (t) => {
         if (existingAlt.includes(t)) return [t];
@@ -144,7 +144,7 @@ function dateShort(valueAlt) {
     const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', {
         timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
-    }).formatToParts(paraMs(valueAlt)).map(x => [x.type, x.value]));
+    }).formatToParts(toMillis(valueAlt)).map(x => [x.type, x.value]));
     const day = language() === 'pt_BR' ? `${p.day}/${p.month}/${p.year}` : `${p.month}/${p.day}/${p.year}`;
     return `${p.hour}:${p.minute} ${day}`;
 }
@@ -259,7 +259,7 @@ function alertReadData(textAlt) {
 
 async function commandDestinations(msg, destinationsText, withDestination) {
     if (!withDestination) return [];
-    return resolverDestinations(msg, destinationsText, { acceptsEmail: true });
+    return resolveDestinations(msg, destinationsText, { acceptsEmail: true });
 }
 
 const MARK_REPLY = '↩️';
@@ -467,7 +467,7 @@ async function alertAlt(msg, rest) {
             return;
         }
         const allNotes = await listNotes();
-        const tagsFound = resolverTags(tags, allNotes);
+        const tagsFound = resolveTags(tags, allNotes);
         const withAlert = allNotes.filter(n => n.alert_at && (!tags.length || tagsFound.includes(n.tag)));
         const label = tags.length ? ` ${tagsFound.map(t => `#${t}`).join(' ')}` : '';
         await msg.reply(withAlert.length
@@ -581,7 +581,7 @@ function groupPerTag(notes, descriptions = new Map(), { plain: plan = true, clea
 // The -to destinations of a list/export: undefined without -to, null if it did not resolve (already replied)
 async function sendingDestinations(msg, destinationsText, withDestination) {
     if (!withDestination) return undefined;
-    return resolverDestinations(msg, destinationsText, { acceptsEmail: true });
+    return resolveDestinations(msg, destinationsText, { acceptsEmail: true });
 }
 
 
@@ -650,7 +650,7 @@ async function listAlt(msg, filter = '', withSearch = false, compact = false) {
 
     // The search looks at the text and also the #tag (/notes -s casa finds those of #casa)
     const allAlt = await listNotes();
-    tags = resolverTags(tags, allAlt);
+    tags = resolveTags(tags, allAlt);
     const tagged = allAlt.filter(n => !tags.length || tags.includes(n.tag));
     const notes = test
         ? await matchingRows(test, tagged, n => n.tag ? [n.text, `#${n.tag}`] : [n.text])
@@ -686,27 +686,27 @@ async function moveTag(msg, textAlt) {
         return;
     }
 
-    const [de, para] = [readTag(m[1]), readTag(m[2])];
-    if (de === para) {
+    const [fromTag, toTag] = [readTag(m[1]), readTag(m[2])];
+    if (fromTag === toTag) {
         await msg.reply(t('notes.move.same'));
         return;
     }
     await lock.refresh();
-    if (lock.isProtected(de) || lock.isProtected(para)) {
-        await msg.reply(t('notes.lock.noMoveTag', { tag: lock.isProtected(de) ? de : para }));
+    if (lock.isProtected(fromTag) || lock.isProtected(toTag)) {
+        await msg.reply(t('notes.lock.noMoveTag', { tag: lock.isProtected(fromTag) ? fromTag : toTag }));
         return;
     }
 
-    const r = await dbRun('UPDATE notes SET tag = ? WHERE tag = ?', [para, de]);
+    const r = await dbRun('UPDATE notes SET tag = ? WHERE tag = ?', [toTag, fromTag]);
     if (!r.changes) {
-        await msg.reply(t('notes.move.notFound', { tag: de }));
+        await msg.reply(t('notes.move.notFound', { tag: fromTag }));
         return;
     }
     // The description goes along (if the new one already had one, its own stays)
-    await dbRun('INSERT OR IGNORE INTO note_tags (tag, description) SELECT ?, description FROM note_tags WHERE tag = ?', [para, de]);
-    await dbRun('DELETE FROM note_tags WHERE tag = ?', [de]);
+    await dbRun('INSERT OR IGNORE INTO note_tags (tag, description) SELECT ?, description FROM note_tags WHERE tag = ?', [toTag, fromTag]);
+    await dbRun('DELETE FROM note_tags WHERE tag = ?', [fromTag]);
 
-    await msg.reply(countAlt('notes.move.done', r.changes, { from: de, to: para }));
+    await msg.reply(countAlt('notes.move.done', r.changes, { from: fromTag, to: toTag }));
 }
 
 // -desc: tag description. "-d #tag text" saves, "-d #tag" shows, "-d #tag -rm" deletes
@@ -719,7 +719,7 @@ async function describeTag(msg, textAlt) {
 
     const notes = await listNotes();
     const requested = readTag(m[1]);
-    const foundAlt3 = resolverTags([requested], notes);
+    const foundAlt3 = resolveTags([requested], notes);
     const tag = foundAlt3.length === 1 ? foundAlt3[0] : requested; // partial only counts if it is a single tag
     const desc = (m[2] ?? '').trim();
     const current = (await dbGet('SELECT description FROM note_tags WHERE tag = ?', [tag]))?.description;
@@ -757,10 +757,10 @@ async function seeNotes(msg, filter) {
     const allAlt = await listNotes();
     const partsAlt = rest.toLowerCase().split(/[\s,]+/).filter(Boolean);
     const requestedAlt = partsAlt.filter(p => p.startsWith('#')).map(readTag);
-    const tags = resolverTags(requestedAlt, allAlt);
+    const tags = resolveTags(requestedAlt, allAlt);
     const ids = partsAlt.filter(p => !p.startsWith('#'));
     const missing = [...ids.filter(i => !/^\d+$/.test(i) || !allAlt.some(n => n.id === Number(i))),
-        ...requestedAlt.filter(t => !resolverTags([t], allAlt).some(x => allAlt.some(n => n.tag === x))).map(t => `#${t}`)];
+        ...requestedAlt.filter(t => !resolveTags([t], allAlt).some(x => allAlt.some(n => n.tag === x))).map(t => `#${t}`)];
     if (missing.length) {
         await msg.reply(t(missing.length > 1 ? 'notes.view.missingMany' : 'notes.view.missingOne', { list: missing.join(', ') }));
         return;
@@ -808,7 +808,7 @@ async function seeNotes(msg, filter) {
         const emails = [...new Set(destinations.filter(d => d.email).flatMap(d => d.email.split(/\s*,\s*/)))];
         if (emails.length) {
             await sendEmail({
-                para: emails, subject: t('notes.subject.note', { id: n.id }),
+                to: emails, subject: t('notes.subject.note', { id: n.id }),
                 text: [withoutMarks(header(n)), n.text && formatText(n.text, true)].filter(Boolean).join('\n'),
                 attachments: media ? [{ filename: nameOriginal(n.media_path), contentType: n.media_mime,
                     ...(withBorder ? { content: withBorder } : { path: n.media_path }) }] : []
@@ -964,7 +964,7 @@ async function exportNotes(msg, filter = '') {
     if (destinations === null) return;
 
     const allAlt = await listNotes();
-    tags = resolverTags(tags, allAlt);
+    tags = resolveTags(tags, allAlt);
     const notes = tags.length ? allAlt.filter(n => tags.includes(n.tag)) : allAlt;
     if (!notes.length) {
         await msg.reply(tags.length ? t('notes.list.none', { inTags: t('notes.inTags', { tags: ` ${tags.map(x => `#${x}`).join(' ')}` }), withSearch: '' })
@@ -989,7 +989,7 @@ async function exportNotes(msg, filter = '') {
 
     if (emails.length) {
         await sendEmail({
-            para: emails, subject: t('notes.subject.export', { tags: label }), text: caption.replace(/\*/g, ''),
+            to: emails, subject: t('notes.subject.export', { tags: label }), text: caption.replace(/\*/g, ''),
             attachments: [{ filename: nameAlt, content: pdf, contentType: 'application/pdf' }]
         }).then(() => sentAlt3.push(...destinations.filter(d => d.email)))
             .catch(err => failures.push(t('notes.failEmail', { error: err.message })));

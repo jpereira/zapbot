@@ -62,7 +62,7 @@ test('/antibadword -delete: apaga a palavra de quem não é admin; admin, dono e
     await bot.replyAlt('/antibadword -add idiota -delete');
 
     const m = await send('Você é um IDIOTA!');
-    assert.equal(m.deletedFor, 'todos');
+    assert.equal(m.deletedFor, 'everyone');
     assert.ok(notices().includes('🤬 Mensagem de Fulano apagada: palavra proibida.'), JSON.stringify(notices()));
 
     assert.equal((await send('bom dia, tudo bem?')).deletedFor, undefined);
@@ -81,7 +81,7 @@ test('/antibadword -remove: apaga e tira a pessoa; -warn soma um aviso', async (
     removed.length = 0;
     await bot.replyAlt('/antibadword -warn');
     const m = await send('idiota');
-    assert.equal(m.deletedFor, 'todos');
+    assert.equal(m.deletedFor, 'everyone');
     assert.deepEqual(removed, [], '1 aviso, abaixo do warn.max');
     assert.ok(notices().some(c => /⚠️|aviso/i.test(c)));
 });
@@ -98,7 +98,7 @@ test('/antitag: modo e mínimo; apaga quem marca gente demais', async () => {
     const five = await send('oi gente', { mentions: MEMBERS.slice(0, 5) });
     assert.equal(five.deletedFor, undefined, 'abaixo do mínimo (6)');
     const six = await send('oi gente', { mentions: MEMBERS.slice(0, 6) });
-    assert.equal(six.deletedFor, 'todos');
+    assert.equal(six.deletedFor, 'everyone');
     assert.ok(notices().includes('🏷️ Mensagem de Fulano apagada: marcou gente demais.'));
 
     group.participants.find(p => p.id._serialized === OTHERAlt.jid).isAdmin = true;

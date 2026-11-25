@@ -55,7 +55,7 @@ test('-delete: apaga o link de quem não é admin; texto comum, domínio liberad
     await bot.replyAlt('/antilink -delete -allow youtube.com');
 
     const { msg, answers: replies } = await send('olha isso https://golpe.xyz/promo');
-    assert.equal(msg.deletedFor, 'todos');
+    assert.equal(msg.deletedFor, 'everyone');
     assert.ok(bot.client.sent.some(e => e.content === '🔗 Link de Fulano apagado.'), JSON.stringify(replies));
 
     const ok = await send('bom dia, tudo bem?');
@@ -92,7 +92,7 @@ test('-warn: apaga e soma um aviso do /warn; no limite, remove a pessoa', async 
 test('-remove: apaga e remove na hora; -off volta ao normal', async () => {
     await bot.replyAlt('/antilink -remove');
     const { msg } = await send('https://golpe.xyz');
-    assert.equal(msg.deletedFor, 'todos');
+    assert.equal(msg.deletedFor, 'everyone');
     assert.deepEqual(removed, [[OTHERAlt.jid]]);
     assert.ok(bot.client.sent.some(e => e.content === '🚪 Fulano mandou link e foi removido do grupo.'));
 

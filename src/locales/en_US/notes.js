@@ -1,4 +1,4 @@
-// /notes (src/notas.js) and /monitor (src/comandos/monitor.js, src/monitor.js) texts
+// /notes (src/notes.js) and /monitor (src/commands/monitor.js, src/monitor.js) texts
 module.exports = {
     // ---- /notes: common
     'notes.yourPrivate': `your private chat`,

@@ -7,22 +7,22 @@ const { test, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { OTHERAlt } = bot;
-const { round, evaluate, format, paraNumber, looksAccount, totalDeclared, valuesAlt } = bot.src('calculator');
+const { round, evaluate, format, toNumber, looksAccount, totalDeclared, valuesAlt } = bot.src('calculator');
 
 beforeEach(bot.restart);
 
 const sum = (textAlt, o = {}) => valuesAlt(textAlt, { pt: true, ...o }).reduce((s, v) => s + v.value, 0);
 
 test('números: vírgula e ponto, milhar e decimal, nos dois idiomas', () => {
-    assert.equal(paraNumber('1.234,56', true), 1234.56);
-    assert.equal(paraNumber('1,234.56', false), 1234.56);
-    assert.equal(paraNumber('1.234', true), 1234, 'pt: o ponto com 3 dígitos é milhar');
-    assert.equal(paraNumber('1.234', false), 1.234, 'en: é decimal');
-    assert.equal(paraNumber('1,234', true), 1.234);
-    assert.equal(paraNumber('1,5', true), 1.5);
-    assert.equal(paraNumber('1.5', true), 1.5);
-    assert.equal(paraNumber('0.123', true), 0.123, 'começando em 0 nunca é milhar');
-    assert.equal(paraNumber('1.234.567', true), 1234567);
+    assert.equal(toNumber('1.234,56', true), 1234.56);
+    assert.equal(toNumber('1,234.56', false), 1234.56);
+    assert.equal(toNumber('1.234', true), 1234, 'pt: o ponto com 3 dígitos é milhar');
+    assert.equal(toNumber('1.234', false), 1.234, 'en: é decimal');
+    assert.equal(toNumber('1,234', true), 1.234);
+    assert.equal(toNumber('1,5', true), 1.5);
+    assert.equal(toNumber('1.5', true), 1.5);
+    assert.equal(toNumber('0.123', true), 0.123, 'começando em 0 nunca é milhar');
+    assert.equal(toNumber('1.234.567', true), 1234567);
 });
 
 test('lista: o primeiro número de cada linha, com sinais, moeda, datas e telefones ignorados', () => {

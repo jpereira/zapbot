@@ -174,7 +174,7 @@ describe('password and session', () => {
         const secret = 'a new private password';
         const command = bot.createMessage({ text: `/web -p "${secret}"`, chat: bot.OWNER.jid });
         const [reply] = await bot.deliver(command);
-        assert.equal(command.deletedFor, 'todos');
+        assert.equal(command.deletedFor, 'everyone');
         assert.equal(reply.options.quotedMessageId, undefined);
         const [saved] = await bot.dbAll('SELECT body FROM messages');
         assert.equal(saved.body, '/web ***');
@@ -1230,7 +1230,7 @@ describe('a password sent with /set', () => {
         const msg = bot.createMessage({ text: `/set zapbot.web.password ${PASSWORD}`, fromMe: true });
         await bot.deliver(msg);
 
-        assert.equal(msg.deletedFor, 'todos', 'the message with the password was deleted');
+        assert.equal(msg.deletedFor, 'everyone', 'the message with the password was deleted');
         assert.equal((await bot.dbGet('SELECT body FROM messages WHERE id = ?', [msg.id.id])).body, '/set zapbot.web.password ***');
         assert.doesNotMatch(JSON.stringify(await bot.dbAll('SELECT body, raw_json FROM messages')), new RegExp(PASSWORD));
         assert.doesNotMatch(bot.logs.slice(logsBefore).join('\n'), new RegExp(PASSWORD));
@@ -1785,7 +1785,7 @@ describe('2FA by the chat: /set zapbot.web.totp new, the code, qr', () => {
         assert.match(sentTexts(), /5 códigos errados|5 wrong codes/);
         assert.equal(bot.getSetting('zapbot.web.totp'), '');
 
-        assert.equal(msg.deletedFor, 'todos', 'the message with the code leaves the chat');
+        assert.equal(msg.deletedFor, 'everyone', 'the message with the code leaves the chat');
         assert.equal((await bot.dbGet('SELECT body FROM messages WHERE id = ?', [msg.id.id])).body, '/set zapbot.web.totp ***');
     });
 

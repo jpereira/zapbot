@@ -1,6 +1,6 @@
 /*
  * Removed or changed reactions: the 'message_reaction' event, the notice in your
- * ownerOnly, o /show -r e o /mute -r.
+ * private chat, /show -r and /mute -r.
  */
 const bot = require('./helpers/bot');
 

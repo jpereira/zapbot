@@ -12,7 +12,7 @@ const { findCommand } = require('./base');
 const { client } = require('../client');
 const { BACKUP_DIR, DB_PATH } = require('../constants');
 const {
-    describeDestinations, emailsOfSmtpTo, extractDestinations, resolverDestinations
+    describeDestinations, emailsOfSmtpTo, extractDestinations, resolveDestinations
 } = require('../destinations');
 const { printError } = require('../log');
 const { GetOptFromCommand } = require('../options');
@@ -208,7 +208,7 @@ async function cmdBackup({ msg, opts: commandOpts, args }) {
         if (withDestination) {
             // Email or chat (several -to: all); several contacts or groups with the name, waits for you
             // choose from the list
-            destinations = await resolverDestinations(msg, destinationsText, { acceptsEmail: true });
+            destinations = await resolveDestinations(msg, destinationsText, { acceptsEmail: true });
             if (!destinations) return;
         }
 

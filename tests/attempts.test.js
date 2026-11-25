@@ -1,5 +1,5 @@
 /*
- * util/attempts.js: o controle de tentativas (/bot -login, o login da web, o TOTP e as tags protegidas).
+ * util/attempts.js: login attempt tracking (/bot -login, the web login, the TOTP and the protected tags).
  */
 const bot = require('./helpers/bot');
 

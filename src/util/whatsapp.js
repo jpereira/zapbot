@@ -72,7 +72,7 @@ function prose(textAlt) {
  * @param {string} text  Markdown
  * @returns {string}  the same text in WhatsApp formatting
  */
-function paraWhatsapp(textAlt) {
+function toWhatsapp(textAlt) {
     // 1st the tables (they become code blocks); 2nd the rest, without touching inside the blocks
     const withTables = String(textAlt ?? '').split(ABOUT)
         .map((part, i) => (i % 2 ? part : tables(part))).join('');
@@ -85,5 +85,5 @@ function paraWhatsapp(textAlt) {
 }
 
 module.exports = {
-    paraWhatsapp
+    toWhatsapp
 };

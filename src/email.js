@@ -90,7 +90,7 @@ const escapeHtml = (t) => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;
 
 /**
  * @param {string} event    title (goes in the subject), e.g.: '🔴 Desconectado'
- * @param {string} detalhes  text free (reason, stack...)
+ * @param {string} details  free text (reason, stack...)
  * @param {object} [o]
  * @param {boolean} [o.force] ignores the minimum interval (crash, shutdown)
  */
@@ -144,27 +144,27 @@ const smtpForSend = () => ['QRCODE_EMAIL_SMTP_HOST', 'QRCODE_EMAIL_SMTP_USER'].e
  * Sends an email through the bot's SMTP (e.g.: the /defi alert), optionally with
  * attachments. Throws the SMTP error for whoever called to reply in the chat.
  * @param {object} o
- * @param {string[]} o.para
+ * @param {string[]} o.to
  * @param {Array<{filename: string, path: string}>} [o.attachments]
  */
-async function sendEmail({ para, subject, text: textAlt, attachments = [] }) {
+async function sendEmail({ to: recipients, subject, text: textAlt, attachments = [] }) {
     if (!smtpForSend()) throw new Error(t('email.naoConfigurado'));
 
     const antiPhishing = process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-';
     await transporter.sendMail({
         from: process.env.QRCODE_EMAIL_SMTP_FROM || process.env.QRCODE_EMAIL_SMTP_USER,
-        to: para.join(', '),
+        to: recipients.join(', '),
         subject: `[ZapBot] ${subject}`,
         text: `${textAlt}\n\n🛡️ ${t('email.antiPhishing')}: ${antiPhishing}`,
         ...(attachments.length ? { attachments: attachments } : {})
     });
 
-    printInfo(`E-mail '${subject}' sent to ${para.join(', ')}`);
+    printInfo(`E-mail '${subject}' sent to ${recipients.join(', ')}`);
 }
 
 // A file as an attachment (e.g.: /backup -send)
-const sendFilePerEmail = ({ para, subject, text: textAlt, file: fileAlt, fileName: nameFile }) =>
-    sendEmail({ para, subject, text: textAlt, attachments: [{ filename: nameFile, path: fileAlt }] });
+const sendFilePerEmail = ({ to, subject, text: textAlt, file: fileAlt, fileName: nameFile }) =>
+    sendEmail({ to, subject, text: textAlt, attachments: [{ filename: nameFile, path: fileAlt }] });
 
 // Waits for the email to go out, but does not block shutdown if SMTP does not respond
 async function leaveAlertBefore(event, details, ms) {

@@ -2,7 +2,7 @@
  * pt_BR catalog: the same keys as en_US.js.
  */
 module.exports = {
-    // -h|-help (src/comandos/base.js)
+    // -h|-help (src/commands/base.js)
     'help.usage': 'Usage: ',
     'help.options': 'Opções:',
     'help.arguments': 'Argumentos:',
@@ -12,7 +12,7 @@ module.exports = {
     'help.groupAll': 'Todos',
     'help.and': ' e ',
 
-    // /help (src/comandos/help.js)
+    // /help (src/commands/help.js)
     'help.groupActionTip': 'Use /g ação ou /g.ação. Para os detalhes: /g ação -h.',
     'help.category.groups': 'Grupos',
     'help.category.media': 'Mídia',

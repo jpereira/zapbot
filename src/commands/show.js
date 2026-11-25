@@ -9,9 +9,9 @@ const { commandUsage } = require('./base');
 const { DAY_MS, MEDIA_DIR } = require('../constants');
 const { chatCurrentIds } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
-const { resolverDestination } = require('../destinations');
+const { resolveDestination } = require('../destinations');
 const { waitChoice, authorAlt } = require('../choices');
-const { sendMessageDeleted, isStatus, resolverAuthorDeleted } = require('../events/deleted');
+const { sendMessageDeleted, isStatus, resolveDeletedAuthor } = require('../events/deleted');
 const { sendMessageEdited } = require('../events/edited');
 const { sendReactionUndone } = require('../events/reactions');
 const { t: tr } = require('../i18n');
@@ -19,7 +19,7 @@ const { printError, printInfo } = require('../log');
 const { getSetting } = require('../settings');
 const { humanSize, mediaIsPath } = require('../util/files');
 const { countAlt } = require('../util/count');
-const { wait, formatData, paraMs, withoutAccents } = require('../util/format');
+const { wait, formatData, toMillis, withoutAccents } = require('../util/format');
 const { isChannelAlt } = require('../util/origin');
 const { matchingRows, regexTest } = require('../util/regexRunner');
 const { regexDangerous } = require('../util/safeRegex');
@@ -170,7 +170,7 @@ const chatNameAlt = (c) => c.chat_name || c.chat_id.split('@')[0];
 const describeChat = (c) => `${isChannelAlt(c.chat_id) ? '📰' : c.is_group ? '👥' : '👤'} ${chatNameAlt(c)}`;
 // Like withoutAccents, but without touching case: \D and \d are very different things in a regex
 const removeAccents = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '');
-const paraTarget = async (c) => ({ ids: await chatCurrentIds(c.chat_id), name: chatNameAlt(c) });
+const toTarget = async (c) => ({ ids: await chatCurrentIds(c.chat_id), name: chatNameAlt(c) });
 
 /**
  * The cache chats that match the text: @mention, the no. from the last
@@ -180,7 +180,7 @@ const paraTarget = async (c) => ({ ids: await chatCurrentIds(c.chat_id), name: c
  */
 async function chatsThatMatch(msg, textAlt, chats, { number: numberAlt = true } = {}) {
     if (/^@\d+$/.test(textAlt)) {
-        const r = await resolverDestination(textAlt, { mentions: msg.mentionedIds ?? [] });
+        const r = await resolveDestination(textAlt, { mentions: msg.mentionedIds ?? [] });
         if (r.error) {
             await msg.reply(r.error);
             return null;
@@ -236,7 +236,7 @@ async function chatsThatMatch(msg, textAlt, chats, { number: numberAlt = true } 
  * `chats` swaps the list to search from (/tldr uses the chats with stored messages, without the -l no.).
  * @returns {Promise<{ ids: string[], name: string } | null>} null: already replied
  */
-async function resolverTarget(msg, textAlt, { chats: yourChats } = {}) {
+async function resolveTarget(msg, textAlt, { chats: yourChats } = {}) {
     // The mention counts even with nothing in the cache: the reply says there is nothing of theirs
     const chats = yourChats ?? await chatsDoCache();
     if (!chats.length && !/^@\d+$/.test(textAlt)) {
@@ -249,7 +249,7 @@ async function resolverTarget(msg, textAlt, { chats: yourChats } = {}) {
     if (r.mention) return r.mention;
 
     const { matches: match, exact } = r;
-    if (exact || match.length === 1) return paraTarget(exact ?? match[0]);
+    if (exact || match.length === 1) return toTarget(exact ?? match[0]);
 
     const optionsAlt = match.slice(0, 10);
     const question = await msg.reply(tr('show.multiMatch', { text: textAlt, count: match.length }) +
@@ -260,7 +260,7 @@ async function resolverTarget(msg, textAlt, { chats: yourChats } = {}) {
         author: authorAlt(msg),
         onExpire: () => completeNotice(msg, question, tr('show.choiceExpired', { text: textAlt }))
     });
-    return chosen ? paraTarget(chosen) : null;
+    return chosen ? toTarget(chosen) : null;
 }
 
 /*
@@ -311,7 +311,7 @@ async function listCache({ msg, chatId, filter }) {
         if (summary.with_media > 0) details.push(tr('show.withMedia', { count: summary.with_media }));
 
         if (summary.total > 0 && summary.oldest) {
-            const expiresIn = paraMs(summary.oldest) + getSetting(t.retention) * DAY_MS;
+            const expiresIn = toMillis(summary.oldest) + getSetting(t.retention) * DAY_MS;
             const daysAlt = Math.max(0, Math.ceil((expiresIn - Date.now()) / DAY_MS));
             details.push(tr('show.oldestExpires', { days: countAlt('show.days', daysAlt) }));
         }
@@ -446,7 +446,7 @@ async function cacheClean({ msg, types, target, ids, general, cmd }) {
 
 // Resend of an item, by type (the status is a deleted one with its own title)
 async function resendDeleted(destination, row, i, total) {
-    const info = await resolverAuthorDeleted(row);
+    const info = await resolveDeletedAuthor(row);
 
     await sendMessageDeleted(destination, row, info, {
         title: tr(isStatus(row) ? 'show.deletedStatusTitle' : 'show.deletedTitle', { i: i + 1, total }),
@@ -579,7 +579,7 @@ const marksOf = (ids) => ids.map(() => '?').join(', ');
 
 // The deleted messages come with their title; the others, with the plain one
 async function resendHistory(destination, row, i, total) {
-    const info = await resolverAuthorDeleted(row);
+    const info = await resolveDeletedAuthor(row);
     await sendMessageDeleted(destination, row, info, {
         title: tr(row.revoked ? 'show.history.msgTitleRevoked' : 'show.history.msgTitle', { i: i + 1, total }),
         extras: row.revoked ? [tr('show.deletedAt', { date: formatData(row.revoked_at) })] : []
@@ -634,7 +634,7 @@ async function showHistory({ msg, opts, chatId, chatName: currentName, words, n,
     // The chat: given (name, @mention, /regex/) or this one; in your private chat without a chat, all of them
     let target = null;
     if (rest.length) {
-        target = await resolverTarget(msg, rest.join(' '), { chats: await historyChats() });
+        target = await resolveTarget(msg, rest.join(' '), { chats: await historyChats() });
         if (!target) return;
     }
     const myId = client.info.wid._serialized;
@@ -656,7 +656,7 @@ async function showHistory({ msg, opts, chatId, chatName: currentName, words, n,
           ORDER BY timestamp, id`, params);
 
     const name = target?.name ?? (allChats ? tr('show.history.allChats') : null);
-    let items = rows.map(r => ({ ...r, ms: paraMs(r.timestamp), when: whenOf(paraMs(r.timestamp)) }));
+    let items = rows.map(r => ({ ...r, ms: toMillis(r.timestamp), when: whenOf(toMillis(r.timestamp)) }));
     if (home) items = await matchingRows(home, items, r => [r.body, r.transcription].filter(Boolean));
     const slice = items.filter(r => (!period.month || r.when.month === period.month) && (!period.day || r.when.day === period.day) &&
         (!period.hour || r.when.hour === period.hour));
@@ -847,7 +847,7 @@ async function cmdShow({ msg, opts, chatId, chatName, admin }) {
     // The requested chat (works in any chat)
     let target = null;
     if (words.length) {
-        target = await resolverTarget(msg, words.join(' '));
+        target = await resolveTarget(msg, words.join(' '));
         if (!target) return;
     }
 
@@ -895,7 +895,7 @@ async function cmdShow({ msg, opts, chatId, chatName, admin }) {
         rows.push(...(home ? await matchingRows(home, typeAlt, r => t.texts(r)) : typeAlt));
     }
 
-    rows.sort((a, b) => paraMs(b.when) - paraMs(a.when));
+    rows.sort((a, b) => toMillis(b.when) - toMillis(a.when));
     const foundAlt5 = rows.length;
     rows = rows.slice(0, n);
 
@@ -942,5 +942,5 @@ async function cmdShow({ msg, opts, chatId, chatName, admin }) {
 
 module.exports = {
     cmdShow,
-    resolverTarget
+    resolveTarget
 };

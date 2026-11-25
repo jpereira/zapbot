@@ -54,7 +54,7 @@ async function isCommandOrAlias(nameAlt) {
     return Boolean(await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [nameAlt]));
 }
 
-async function resolverAlias(textAlt) {
+async function resolveAlias(textAlt) {
     const grouped = resolveGroupInput(textAlt);
     if (grouped) return grouped;
     const [nameAlt] = textAlt.trim().split(/\s+/);
@@ -175,4 +175,4 @@ function aliasBlock(a, { marks = true } = {}) {
     ].filter(Boolean).join('\n');
 }
 
-module.exports = { applyParams, fixDash, aliasBlock, aliasesFor, textIsAlias, isCommandOrAlias, textRunAlias, listAliases, resolverAlias };
+module.exports = { applyParams, fixDash, aliasBlock, aliasesFor, textIsAlias, isCommandOrAlias, textRunAlias, listAliases, resolveAlias };

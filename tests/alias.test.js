@@ -5,7 +5,7 @@ const bot = require('./helpers/bot');
 const { test, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 const { HANDLERS } = bot.src('commands/index');
-const { resolverAlias } = bot.src('aliases');
+const { resolveAlias } = bot.src('aliases');
 
 beforeEach(async () => { await bot.restart(); });
 
@@ -45,7 +45,7 @@ test('execução preserva opções, aspas, destinos repetidos e argumentos adici
     });
     assert.deepEqual(await bot.replyAlt('/lua -list'), [`🔗 Alias /lua -> ${commandAlt} -list`, 'executado']);
     assert.equal(run.mock.callCount(), 1);
-    assert.equal((await resolverAlias('/lua')).args, commandAlt.slice('/crypto '.length));
+    assert.equal((await resolveAlias('/lua')).args, commandAlt.slice('/crypto '.length));
 });
 
 test('parâmetros $1, $N: pegam os argumentos digitados e as sobras vão para o fim', async t => {
@@ -54,7 +54,7 @@ test('parâmetros $1, $N: pegam os argumentos digitados e as sobras vão para o 
     assert.deepEqual(await bot.replyAlt('/rec 10 20 http://minhaurl/foo'),
         ['🔗 Alias /rec -> /sticker -ss 10 -es 20 http://minhaurl/foo', 'args: -ss 10 -es 20 http://minhaurl/foo']);
     assert.equal(run.mock.callCount(), 1);
-    assert.equal((await resolverAlias('/rec 5')).args, '-ss 5 -es', 'sem o $2, fica vazio');
+    assert.equal((await resolveAlias('/rec 5')).args, '-ss 5 -es', 'sem o $2, fica vazio');
 });
 
 test('/alias /nome mostra o que o alias faz; não sendo alias, o erro', async () => {
@@ -175,7 +175,7 @@ test('remoção de todos os aliases (-rm all) mantém os comandos do bot', async
     assert.match((await bot.replyAlt('/alias -rm all'))[0], /Todos os aliases removidos \(2\)/);
     assert.deepEqual(await aliases(), []);
     assert.match((await bot.replyAlt('/help alias'))[0], /Nenhum alias/);
-    assert.ok(await resolverAlias('/stocks USD'));
+    assert.ok(await resolveAlias('/stocks USD'));
     assert.match((await bot.replyAlt('/alias -rm all'))[0], /removidos \(0\)/);
 });
 
@@ -332,12 +332,12 @@ test('nome do alias aceita ponto e os parâmetros aceitam valor padrão ${N:-val
 test('o começo do nome de um alias salvo também completa (único roda, vários lista)', async () => {
     await bot.replyAlt('/alias -rm all');
     await bot.replyAlt('/alias zzuno /stocks USD');
-    const single = await resolverAlias('/zzu');
+    const single = await resolveAlias('/zzu');
     assert.equal(single.alias, '/zzuno');
     assert.equal(single.prefix, '/zzu');
 
     await bot.replyAlt('/alias zzdois /stocks EUR');
-    const several = await resolverAlias('/zz');
+    const several = await resolveAlias('/zz');
     assert.deepEqual(several.candidates.map(c => c.cmd), ['/zzdois', '/zzuno']);
     await bot.replyAlt('/alias -rm all');
 });

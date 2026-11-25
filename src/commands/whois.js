@@ -7,9 +7,9 @@ const { activeCommands } = require('./base');
 const { ROLES: LEVEL } = require('../roles');
 const { isOOwner, textItems } = require('./set');
 const { client } = require('../client');
-const { resolveLidToPhone, groupResolverName } = require('../contacts');
+const { resolveLidToPhone, resolveGroupName } = require('../contacts');
 const { describeRule, permissionHere } = require('../permissions');
-const { resolverOrChoose } = require('../destinations');
+const { resolveOrChoose } = require('../destinations');
 const { t } = require('../i18n');
 const { limitsWithUsage, usageLine } = require('../usageLimit');
 const { getSetting } = require('../settings');
@@ -38,7 +38,7 @@ async function levelAlt(numberAlt, { chatId, isGroup }) {
 
     // Only in other groups: says where
     if (soInGroups.length) {
-        const groups = await Promise.all(soInGroups.map(async g => `👥 ${await groupResolverName(g).catch(() => null) || g}`));
+        const groups = await Promise.all(soInGroups.map(async g => `👥 ${await resolveGroupName(g).catch(() => null) || g}`));
         return `${ROLES.none} ${t('whois.noneHere', { groups: groups.join(', ') })}`;
     }
     return `${ROLES.none} ${t('whois.none')}`;
@@ -64,7 +64,7 @@ async function textPhones(msg, textAlt) {
             continue;
         }
 
-        const person = await resolverOrChoose(msg, item, {
+        const person = await resolveOrChoose(msg, item, {
             noEmail: t('whois.noEmail')
         });
         if (!person) return null;

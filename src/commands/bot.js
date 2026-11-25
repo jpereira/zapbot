@@ -6,9 +6,9 @@ const { activeCommands, findCommand, getCommandSyntax } = require('./base');
 const { ROLES: LEVEL } = require('../roles');
 const { isOOwner, peopleItems } = require('./set');
 const { client, completeNotice } = require('../client');
-const { chatCurrentIds, contactName, resolveLidToPhone, groupResolverName } = require('../contacts');
+const { chatCurrentIds, contactName, resolveLidToPhone, resolveGroupName } = require('../contacts');
 const {
-    describeDestination, describeDestinations, sendToDestinations, extractDestinations, resolverDestinations
+    describeDestination, describeDestinations, sendToDestinations, extractDestinations, resolveDestinations
 } = require('../destinations');
 const { waitConfirmation, authorAlt } = require('../choices');
 const { GetOptFromCommand } = require('../options');
@@ -131,7 +131,7 @@ const numberVisible = (n, members) => contextDebug().maskPhones ? maskPhones(n)
 
 // A phone's or group's name: the group's, the contact's or, for you, your profile's
 async function itemName(item) {
-    if (item.endsWith('@g.us')) return groupResolverName(item).catch(() => null);
+    if (item.endsWith('@g.us')) return resolveGroupName(item).catch(() => null);
 
     // You are rarely in your own address book: your profile name counts
     const contactAlt = await client.getContactById(`${item}@c.us`).catch(() => null);
@@ -823,7 +823,7 @@ async function resetUser(msg, items, chat) {
  */
 async function handleStatus(msg, values, { destinationsText, withDestination, chat }) {
     const destinations = withDestination
-        ? await resolverDestinations(msg, destinationsText, { acceptsEmail: true })
+        ? await resolveDestinations(msg, destinationsText, { acceptsEmail: true })
         : undefined;
     if (destinations === null) return;
 

@@ -686,11 +686,11 @@ test('os ids das menções ficam na coluna mentions, e a exibição usa eles par
         return id === LID ? { id: { _serialized: LID }, name: 'Beltrano da Agenda', pushname: 'Beltrano' } : original.call(bot.client, id);
     };
     try {
-        const { messageResolverMentions, mentionsRecorded } = bot.src('mentions');
+        const { resolveMessageMentions, mentionsRecorded } = bot.src('mentions');
         assert.deepEqual(await mentionsRecorded(msg.id.id), [LID, OTHERAlt.jid]);
-        assert.match(await messageResolverMentions('oi @100000000000077', msg.id.id), /^oi @Beltrano/);
+        assert.match(await resolveMessageMentions('oi @100000000000077', msg.id.id), /^oi @Beltrano/);
         assert.ok(queried.includes(LID));
-        assert.equal(await messageResolverMentions('sem nada', 'nao-existe'), 'sem nada');
+        assert.equal(await resolveMessageMentions('sem nada', 'nao-existe'), 'sem nada');
     } finally {
         bot.client.getContactById = original;
     }

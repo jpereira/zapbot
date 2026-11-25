@@ -1242,14 +1242,14 @@ const SETTINGS_SCHEMA = {
 
 const settings = new Map();
 
-function atualizarUserAgentAxios() {
+function updateAxiosUserAgent() {
     axios.defaults ??= {};
     axios.defaults.headers ??= {};
     axios.defaults.headers.common ??= {};
     axios.defaults.headers.common['User-Agent'] = getSetting('zapbot.client.userAgent');
 }
 
-atualizarUserAgentAxios();
+updateAxiosUserAgent();
 
 const AUTO_UA_PREFIX = /^ZapBot\/\d+\.\d+\.\d+(?: \(devel\))?(?: \(git\+[0-9a-f]{7}\/(?:HEAD|v\d+\.\d+\.\d+)\))?/;
 
@@ -1394,7 +1394,7 @@ async function loadSettings() {
         }
     }
 
-    atualizarUserAgentAxios();
+    updateAxiosUserAgent();
 
     await limitHistoryMonitor(getSetting('monitor.maxRecords'));
 
@@ -1439,7 +1439,7 @@ async function setSetting(key, value) {
         [key, JSON.stringify(value)]
     );
     settings.set(key, value);
-    if (key === 'zapbot.client.userAgent') atualizarUserAgentAxios();
+    if (key === 'zapbot.client.userAgent') updateAxiosUserAgent();
     if (key === 'monitor.maxRecords') await limitHistoryMonitor(value);
 
     return value;

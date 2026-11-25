@@ -10,7 +10,7 @@ const { QUOTE_TIMEOUT_MS, searchQuote, fmtPriceCrypto, fmtReal, fmtChange } = re
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const {
     destinationColumns, describeDestinations, describeDestinationsBlock, lineDestination, destinationsSaved, sendToDestinations, extractDestinations,
-    recipientsDe, resolverDestinations
+    recipientsDe, resolveDestinations
 } = require('./destinations');
 const { printError, printInfo } = require('./log');
 const { quoteAction, fmtPrice, normalizeTicker } = require('./actions');
@@ -231,7 +231,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
     let destinations = [];
 
     if (withDestination) {
-        destinations = await resolverDestinations(msg, destinationsText, { acceptsEmail: true });
+        destinations = await resolveDestinations(msg, destinationsText, { acceptsEmail: true });
         if (!destinations) return;
     }
 

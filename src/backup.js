@@ -13,7 +13,7 @@ const { MessageMedia } = require('whatsapp-web.js');
 const { client } = require('./client');
 const { BACKUP_DIR, CONTACTS_DIR, NOTES_DIR, TMP_DIR } = require('./constants');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
-const { describeDestination, extractDestinations, resolverDestination } = require('./destinations');
+const { describeDestination, extractDestinations, resolveDestination } = require('./destinations');
 const { alertPerEmail, sendFilePerEmail } = require('./email');
 const { printError, printInfo } = require('./log');
 const { loadSettings, getSetting } = require('./settings');
@@ -32,7 +32,7 @@ const { t } = require('./i18n');
  * Media (cache/media) is not included.
  *
  * Reasons: 'automático' (the daily one, setting 'backup.hour'), 'manual' (/backup -now)
- * and 'before de restore'. The automatic ones and those from before a restore beyond the
+ * and 'antes de restaurar' (made before a restore). The automatic ones and those from before a restore beyond the
  * 'backup.keep' most recent ones are deleted; the manual ones stay until a /backup -rm.
  */
 const PREFIX = 'zapbot-';
@@ -64,7 +64,7 @@ async function sendBackupPerEmail(b, emails) {
         throw new Error(t('adm.backup.tooBigEmail'));
     }
     await sendFilePerEmail({
-        para: emails,
+        to: emails,
         subject: t('adm.backup.emailSubject', { when: fmtWhen(b.createdAt) }),
         text: t('adm.backup.emailBody', {
             when: fmtWhen(b.createdAt), reason: reasonText(b.reason), version: b.version, dir: BACKUP_DIR, name: b.name
@@ -90,7 +90,7 @@ async function sendBackupAutomatic(b, valueAlt) {
 
     for (const textAlt of texts) {
         try {
-            const d = await resolverDestination(textAlt, { acceptsEmail: true });
+            const d = await resolveDestination(textAlt, { acceptsEmail: true });
             if (d.error) throw new Error(d.error);
             // Without someone to pick a number: an ambiguous name does not win a coin toss.
             if (d.options) throw new Error(t('adm.backup.ambiguous'));
@@ -257,7 +257,7 @@ async function deleteAllBackups() {
 
 /**
  * Restores a backup over the current database. First, makes a backup of the state
- * current ('before de restore'). Copies table by table, only the columns that
+ * current ('antes de restaurar'). Copies table by table, only the columns that
  * exist in both databases (a backup from an earlier version works too), and
  * reloads the settings.
  * @returns {Promise<{ security: object, inputs: object }>}
@@ -265,7 +265,7 @@ async function deleteAllBackups() {
 async function restoreBackup(b) {
     await dbReady;
     const security = await createBackup(REASONS.restore);
-    const copy = path.join(TMP_DIR, `restaurar-${b.name}.db`);
+    const copy = path.join(TMP_DIR, `restore-${b.name}.db`);
 
     await pipeline(fs.createReadStream(b.file), zlib.createGunzip(), fs.createWriteStream(copy));
     await dbRun('ATTACH DATABASE ? AS bk', [copy]);

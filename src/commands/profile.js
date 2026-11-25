@@ -8,7 +8,7 @@ const { MessageMedia } = require('whatsapp-web.js');
 const { readPerson, textPeople, withoutDelimiters } = require('./block');
 const { isPhoto } = require('./openaiCommon');
 const { client } = require('../client');
-const { scheduleName, contactName, resolveLidToPhone, groupResolverName } = require('../contacts');
+const { scheduleName, contactName, resolveLidToPhone, resolveGroupName } = require('../contacts');
 const { t } = require('../i18n');
 const { printError } = require('../log');
 
@@ -105,7 +105,7 @@ async function showMessage(msg, person) {
 
 // -about in a group, with nobody: the group description
 async function groupShowDescription(msg, chatId) {
-    const nameAlt = await groupResolverName(chatId).catch(() => null) ?? chatId.split('@')[0];
+    const nameAlt = await resolveGroupName(chatId).catch(() => null) ?? chatId.split('@')[0];
     const group = await msg.getChat().catch(() => null);
     const description = String(group?.description ?? '').trim();
     await msg.reply(description
@@ -136,7 +136,7 @@ async function defineMessage(msg, textAlt) {
 
 // The group photo, with the caption Grupo: name
 async function showGroup(msg, chatId) {
-    const nameAlt = await groupResolverName(chatId).catch(() => null);
+    const nameAlt = await resolveGroupName(chatId).catch(() => null);
     const group = t('profile.group', { name: nameAlt ?? chatId.split('@')[0] });
 
     const photo = await photoAlt([chatId]);

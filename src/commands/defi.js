@@ -14,7 +14,7 @@ const { positionsMorpho } = require('../defi/morpho');
 const { positionDetails, validatePosition } = require('../defi/orca');
 const { walletPositions } = require('../defi/prjx');
 const { isAddressSolana } = require('../defi/solana');
-const { describeDestinations, destinationsSaved, extractDestinations, recipientsDe, resolverDestinations } = require('../destinations');
+const { describeDestinations, destinationsSaved, extractDestinations, recipientsDe, resolveDestinations } = require('../destinations');
 const { language, t } = require('../i18n');
 const { printError } = require('../log');
 const { GetOptFromCommand } = require('../options');
@@ -737,7 +737,7 @@ async function envShow(msg, protocol, end, optionsAlt) {
  * -alert
  */
 /**
- * Where the position notice goes: "seu ownerOnly", "👥 Grupo", "📧 a@b.com".
+ * Where the position notice goes: "your private chat", "👥 Grupo", "📧 a@b.com".
  */
 function alertDescribeDestination(p) {
     const destinations = alertDestinations(p);
@@ -837,7 +837,7 @@ async function handleAlert(msg, opts, positions, { withDestination, destinations
     // waits for you to choose from the list
     let destinations = [];
     if (withDestination) {
-        destinations = await resolverDestinations(msg, destinationsText, { acceptsEmail: true });
+        destinations = await resolveDestinations(msg, destinationsText, { acceptsEmail: true });
         if (!destinations) return;
     }
     const [destination = {}] = destinations;

@@ -114,7 +114,7 @@ module.exports = {
     'crypto.top': '🔥 *Top:* {icon} {symbol}',
     'crypto.failed': '❌ Não consegui consultar as cotações de criptomoedas. Tente de novo.',
 
-    // /stocks (src/comandos/stocks.js)
+    // /stocks (src/commands/stocks.js)
     'stocks.title': '📈 *MERCADOS*',
     'stocks.open': 'Abertura',
     'stocks.sinceOpen': '{change} desde a abertura',
@@ -202,7 +202,7 @@ module.exports = {
     'games.usage': '🎲 Escolha um jogo: /games -8ball <pergunta>, /games -truth, /games -dare ou /games -trivia.',
     'games.ball': '🎱 *{question}*\n{answer}',
     'games.ballNeedsQuestion': '🎱 Faça uma pergunta: /games -8ball vou passar na prova?',
-    // /calc (src/comandos/calc.js)
+    // /calc (src/commands/calc.js)
     'calc.total': '🧮 *Total: {total}*',
     'calc.expr': '🧮 {expr} = *{total}*',
     'calc.stats': { one: '_{count} número_', other: '_{count} números · média {avg}_' },
@@ -455,7 +455,7 @@ module.exports = {
     'defi.notProtocol': '❌ "{word}" não é um protocolo: use orca, prjx, liquidswap (liqswp), morpho ou aave.',
     'defi.nothingRegistered': '🌊 Nada cadastrado {of}.\n{examples}',
 
-    // /defi -a (src/defi/alertas.js)
+    // /defi -a (src/defi/alerts.js)
     'defi.alertTip': '💡 _Desligue com /defi -a -rm {n}._',
     'defi.backInRange': 'DeFi: {desc} voltou para a faixa',
     'defi.leftRange': 'DeFi: {desc} saiu da faixa',

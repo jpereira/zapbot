@@ -4,9 +4,9 @@
 
 const { client } = require('../client');
 const { totpConfirm, totpSetup } = require('../webTotp');
-const { chatCurrentIds, contactName, resolveLidToPhone, groupResolverName } = require('../contacts');
+const { chatCurrentIds, contactName, resolveLidToPhone, resolveGroupName } = require('../contacts');
 const { dbReady } = require('../db');
-const { resolverOrChoose } = require('../destinations');
+const { resolveOrChoose } = require('../destinations');
 const { printInfo } = require('../log');
 const { SETTINGS_SCHEMA, getSetting, setSetting, validateSetting } = require('../settings');
 const { matchingRows, regexTest } = require('../util/regexRunner');
@@ -150,7 +150,7 @@ async function peopleItems(msg, key, textAlt) {
             continue;
         }
 
-        const person = await resolverOrChoose(msg, item, {
+        const person = await resolveOrChoose(msg, item, {
             noEmail: t(withGroups ? 'adm.set.semEmailPeopleGroups' : 'adm.set.semEmailPeople', { key })
         });
         if (!person) return null;
@@ -189,7 +189,7 @@ async function withName(numberAlt) {
     const soInGroup = numberAlt.match(/^(\d+):(.+@g\.us)$/);
     if (soInGroup) return `${await withName(soInGroup[1])}${t('adm.set.onlyIn')}${await withName(soInGroup[2])}`;
     if (numberAlt.endsWith('@g.us')) {
-        return `👥 ${await groupResolverName(numberAlt).catch(() => null) || numberAlt}`;
+        return `👥 ${await resolveGroupName(numberAlt).catch(() => null) || numberAlt}`;
     }
 
     // You are rarely in your own address book: your profile name counts

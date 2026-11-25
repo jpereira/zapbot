@@ -137,7 +137,7 @@ src/
   choices.js           the numbered list to choose from (several contacts/groups) and the yes/no confirmation (only from whoever gave the command)
   flood.js              flood protection (the same command beyond the limit: one notice and then silence)
   permissions.js         who uses the commands (user, delegated admin), and which ones (bot.users, +cmd|-cmd)
-  mudo.js               /mute: who is muted, the suppressed notices and the origin of each notice
+  mute.js               /mute: who is muted, the suppressed notices and the origin of each notice
   defi/                 Solana, HyperEVM, Aptos and EVM (RPC, indexer, Multicall3), Orca, Project X, Liquidswap, Morpho and Aave V3 (/defi) and the out-of-range -alert
   watch/                /watch rules and checking
   events/              message_create, deleted, edited, reactions

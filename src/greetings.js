@@ -5,7 +5,7 @@
  */
 
 const { client } = require('./client');
-const { scheduleName, contactName, groupResolverName } = require('./contacts');
+const { scheduleName, contactName, resolveGroupName } = require('./contacts');
 const { dbGet, dbReady, dbRun } = require('./db');
 const { t } = require('./i18n');
 const { printError, printInfo } = require('./log');
@@ -66,7 +66,7 @@ async function greet(type, notification) {
         const people = (notification.recipientIds ?? []).filter(id => id !== souEu);
         if (!people.length) return;
 
-        const group = (await groupResolverName(chatId).catch(() => null)) ?? chatId.split('@')[0];
+        const group = (await resolveGroupName(chatId).catch(() => null)) ?? chatId.split('@')[0];
         for (const id of people) {
             const textAlt = assembleText(type, greeting, { name: await nameAltAlt(id, type === 'welcome'), group });
             await client.sendMessage(chatId, textAlt, type === 'welcome' ? { mentions: [id] } : {});

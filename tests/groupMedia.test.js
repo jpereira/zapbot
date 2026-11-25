@@ -1,6 +1,6 @@
 /*
  * Group and media commands: /everybody, /bills, /members, /walissu,
- * /poll e /sticker.
+ * /poll and /sticker.
  */
 const bot = require('./helpers/bot');
 

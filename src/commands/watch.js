@@ -3,11 +3,11 @@
  */
 
 const { commandUsage } = require('./base');
-const { resolverMentions, channelResolverName, groupResolverName } = require('../contacts');
+const { resolveMentions, resolveChannelName, resolveGroupName } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
 const {
     destinationColumns, describeDestinations, describeDestinationsBlock, lineDestination, destinationsSaved, recipientsDe,
-    resolverDestinations, resolverOrChoose
+    resolveDestinations, resolveOrChoose
 } = require('../destinations');
 const { printInfo } = require('../log');
 const { t } = require('../i18n');
@@ -59,7 +59,7 @@ async function rulesLocked() {
 const whereWarn = (destinations) => (destinations.length ? describeDestinations(destinations) : t('watch.yourPrivate'));
 
 /**
- * The -to destinations: "off" (or "ownerOnly") goes back to your private chat; otherwise, each one
+ * The -to destinations: "off" (or "private"/"privado") goes back to your private chat; otherwise, each one
  * is a contact, group, number or email (several with the name: you choose from the list).
  * @returns {Promise<{ destinations: object[] } | null>}  null: already replied the error
  */
@@ -71,7 +71,7 @@ async function toReadDestinations(msg, texts) {
         }
         return { destinations: [] };
     }
-    const destinations = await resolverDestinations(msg, texts, { acceptsEmail: true });
+    const destinations = await resolveDestinations(msg, texts, { acceptsEmail: true });
     return destinations ? { destinations } : null;
 }
 
@@ -149,14 +149,14 @@ async function listOccurrences(rule, rules, limitAlt, complete = false, search =
         textAlt += search === null ? t('watch.noneYet') : t('watch.noneWith', { query: search });
     }
     for (const [i, h] of rows.entries()) {
-        const group = h.is_group ? (await groupResolverName(h.chat_id)) || h.chat_name : null;
+        const group = h.is_group ? (await resolveGroupName(h.chat_id)) || h.chat_name : null;
         const channel = isChannelAlt(h.chat_id)
-            ? (await channelResolverName(h.chat_id)) || h.chat_name : null;
+            ? (await resolveChannelName(h.chat_id)) || h.chat_name : null;
         const whereAlt = channel ? `📰 ${channel}`
             : h.is_group ? `👥 ${group} · 👤 ${h.sender_name}` : `👤 ${h.sender_name}`;
         const n = rules.indexOf(h.rule) + 1;
         const which = rule === null ? ` · 🔎 ${n ? `#${n}` : t('watch.removed')}` : '';
-        const resolved = await resolverMentions(h.body);
+        const resolved = await resolveMentions(h.body);
         const body = locked.has(h.rule) ? maskPhones(resolved) : resolved;
         textAlt += t('watch.hitLine', { i: i + 1, date: formatData(h.timestamp), which: which, where: whereAlt,
             body: complete ? body : summarizeText(body) });
@@ -205,7 +205,7 @@ async function cmdWatch({ msg, args }) {
         }
         let origin;
         if (o.origin !== null) {
-            origin = await resolverOrChoose(msg, o.origin, { acceptsChannel: true,
+            origin = await resolveOrChoose(msg, o.origin, { acceptsChannel: true,
                 noEmail: t('watch.inNoEmail') });
             if (!origin) return;
         }

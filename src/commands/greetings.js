@@ -13,7 +13,7 @@ const {
 const { client } = require('../client');
 const { t } = require('../i18n');
 const { unescape } = require('../util/format');
-const { groupResolverName } = require('../contacts');
+const { resolveGroupName } = require('../contacts');
 
 // The command text without the options (preserves the line breaks of what was typed)
 const withoutOptions = (args) => args.replace(/(^|\s)-(?:on|off|test|t)(?=\s|$)/g, ' ').trim();
@@ -35,7 +35,7 @@ async function cmdGreeting(type, cmd, { msg, args, opts, chatId, isGroup, sender
 
     if (opts.given.has('test')) {
         const current = textAlt ? { text: textAlt } : (await readGreeting(chatId, type)) ?? { text: null };
-        const group = (await groupResolverName(chatId).catch(() => null)) ?? chatId.split('@')[0];
+        const group = (await resolveGroupName(chatId).catch(() => null)) ?? chatId.split('@')[0];
         const who = msg.author || client.info.wid._serialized;
         const nameAlt = type === 'welcome' ? `@${who.split('@')[0]}` : senderName;
         await msg.reply(assembleText(type, current, { name: nameAlt, group }), null, type === 'welcome' ? { mentions: [who] } : {});

@@ -30,7 +30,7 @@ const { maskPhones } = require('./util/phone');
  * email            → (acceptsEmail) the QRCODE_EMAIL_SMTP_TO, through the bot's SMTP
  * voce@example.com → (acceptsEmail) one or more emails, comma-separated
  * The same name (whole) beats one that only contains the words. If still
- * more than one fits, the command lists and you reply with the no. (resolverOrChoose).
+ * more than one fits, the command lists and you reply with the no. (resolveOrChoose).
  */
 const DESTINATION = /(^|\s)-to(?=\s|$)(?:\s+("([^"]*)"|'([^']*)'|\/([^/]*)\/|(\S+)))?/;
 const example = () => t('grp.dest.examples');
@@ -255,9 +255,9 @@ function readEmails(textAlt) {
  *   | { email: string, name: string, group: false }
  *   | { error: string }
  * | { options: Array<{ id, name, group }>, search: string, more: number }>}
- * options: more than one fit; the caller offers the choice (resolverOrChoose)
+ * options: more than one fit; the caller offers the choice (resolveOrChoose)
  */
-async function resolverDestination(valueAlt, {
+async function resolveDestination(valueAlt, {
     acceptsEmail = false, acceptsChannel = false, type,
     noEmail: withoutEmail = t('grp.dest.noEmail'), mentions = []
 } = {}) {
@@ -346,11 +346,11 @@ async function resolverDestination(valueAlt, {
  * answered in the chat.
  * @param {object} msg  the command message
  * @param {string} value
- * @param {object} [o]  the same as resolverDestination
+ * @param {object} [o]  the same as resolveDestination
  * @returns {Promise<{ id: string, name: string, group: boolean } | null>}
  */
-async function resolverOrChoose(msg, valueAlt, o = {}) {
-    const r = await resolverDestination(valueAlt, { mentions: msg.mentionedIds ?? [], ...o });
+async function resolveOrChoose(msg, valueAlt, o = {}) {
+    const r = await resolveDestination(valueAlt, { mentions: msg.mentionedIds ?? [], ...o });
 
     if (r.error) {
         await msg.reply(r.error);
@@ -379,13 +379,13 @@ const destinationKey = (d) => (d.email ? `email:${d.email}` : d.id);
  * list). A repeat counts once.
  * @param {object} msg  the command message
  * @param {Array<string|null>} texts  those from extractDestinations
- * @param {object} [o]  the same as resolverDestination
+ * @param {object} [o]  the same as resolveDestination
  * @returns {Promise<Array<object>|null>}  null: one failed (the error was already replied)
  */
-async function resolverDestinations(msg, texts, o = {}) {
+async function resolveDestinations(msg, texts, o = {}) {
     const destinations = [];
     for (const textAlt of texts) {
-        const d = await resolverOrChoose(msg, textAlt, o);
+        const d = await resolveOrChoose(msg, textAlt, o);
         if (!d) return null;
         if (!destinations.some(x => destinationKey(x) === destinationKey(d))) destinations.push(d);
     }
@@ -396,7 +396,7 @@ async function resolverDestinations(msg, texts, o = {}) {
  * Sends a bot text to the destination: the chat (without a destination: your private chat) or,
  * by email, without WhatsApp formatting (*bold*, _italic_).
  * Throws the send error for whoever called.
- * @param {object|null} destination  the one from resolverDestination (or null)
+ * @param {object|null} destination  the one from resolveDestination (or null)
  * @param {string} text
  * @param {object} [o]
  * @param {string} [o.subject]  of the email
@@ -405,7 +405,7 @@ async function resolverDestinations(msg, texts, o = {}) {
 async function sendOnDestination(destination, textAlt, { subject = t('grp.dest.subject'), options: optionsAlt = {} } = {}) {
     if (destination?.email) {
         const withoutFormatting = textAlt.replace(/[*_]/g, '');
-        await sendEmail({ para: destination.email.split(/\s*,\s*/), subject,
+        await sendEmail({ to: destination.email.split(/\s*,\s*/), subject,
             text: contextDebug().maskPhones
                 ? maskPhones(withoutFormatting) : withoutFormatting });
         return;
@@ -537,8 +537,8 @@ module.exports = {
     extractDestination,
     extractDestinations,
     recipientsDe,
-    resolverDestination,
-    resolverDestinations,
-    resolverOrChoose,
+    resolveDestination,
+    resolveDestinations,
+    resolveOrChoose,
     searchPeople
 };

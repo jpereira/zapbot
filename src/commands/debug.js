@@ -6,7 +6,7 @@ const { client } = require('../client');
 const { cleanCopiesDebug } = require('../debugCopy');
 const { withContextDebug } = require('../debugContext');
 const { compileFilterDebug, readOptionsDebug } = require('../debugOptions');
-const { describeDestination, resolverOrChoose } = require('../destinations');
+const { describeDestination, resolveOrChoose } = require('../destinations');
 const { getSetting, isDebugMode, setSetting } = require('../settings');
 const { t } = require('../i18n');
 
@@ -33,7 +33,7 @@ async function cmdDebug({ msg, args, chatId, chatName }) {
     }
     let destination;
     if (Object.hasOwn(o, 'copyTo')) {
-        destination = o.copyTo ? await resolverOrChoose(msg, o.copyTo, {
+        destination = o.copyTo ? await resolveOrChoose(msg, o.copyTo, {
             noEmail: t('adm.debug.copyNoEmail')
         }) : { id: chatId, name: chatName, group: chatId.endsWith('@g.us') };
         if (!destination) return;

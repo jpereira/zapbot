@@ -17,7 +17,7 @@ module.exports = {
     'openai.balance': ' · 🏦 balance ~{remaining} of {total}',
     'openai.oldPrices': '⚠️ prices are {days} days old: /gpt -prices',
 
-    // src/comandos/openaiComum.js
+    // src/openaiChat.js
     'draw.imageBelow': '🖼️ Image generated below.',
     'draw.gifBelow': '🎞️ GIF generated below.',
     'engine.both': '❌ Use only one of -gpt (-g) and -local (-l).',
@@ -80,7 +80,7 @@ module.exports = {
     'openai.photoType': '❌ OpenAI cannot read {type} images: only {types}.',
     'openai.photoSize': '❌ The image is larger than {mb} MB: too big for {cmd}.',
 
-    // src/comandos/gpt.js
+    // src/commands/gpt.js
     'gpt.instructions': 'You are an assistant on WhatsApp. Answer directly, in English, unless asked for another language. ' +
         'Format for WhatsApp, which is not Markdown: *bold* with a single asterisk, _italic_, ~strikethrough~, ' +
         'lists with "- " or "1. ", code between backticks (``` for blocks). Do not use # headings, tables, ' +
@@ -151,7 +151,7 @@ module.exports = {
     'gpt.pricesFooter': '💡 _Dollars per 1M tokens, input/output (gpt.pricing)._',
     'gpt.pricesFail': '❌ Could not update the prices: {error}',
 
-    // src/comandos/tldr.js
+    // src/commands/tldr.js
     'tldr.instructions': 'You summarize WhatsApp conversations in English. Write a short summary, in topics ' +
         'starting with "• ", with the main subjects, decisions, agreements and pending items, ' +
         'quoting who said what when relevant. At most 15 topics. Do not invent anything that is not in ' +
@@ -179,7 +179,7 @@ module.exports = {
     'tldr.header': '🤖 *Summary of {name}*\n_{messages} · {start} to {end}_',
     'tldr.sentPrivate': '🤖 Summary sent to your private chat.',
 
-    // src/comandos/draw.js
+    // src/commands/draw.js
     'draw.animatePrompt': 'Animate this image into a GIF. {text}',
     'draw.animateDefault': 'With subtle, natural movement.',
     'draw.gifDenied': '🔒 Your account/model cannot make animated GIFs: {message}\n' +
@@ -188,7 +188,7 @@ module.exports = {
     'draw.badSize': 'The size "{value}" does not exist. Use: {list}.',
     'draw.intRange': '{name} must be an integer from {min} to {max}.',
 
-    // src/comandos/translate.js
+    // src/commands/translate.js
     'translate.timeout': '⏱️ Google Translate did not answer. Try again.',
     'translate.limited': '💸 Google Translate rate-limited this server (free access, no key). Try again later.',
     'translate.refused': '⛔ Google refused this server\'s request. Try again later.',
@@ -200,7 +200,7 @@ module.exports = {
     'translate.result': '🌐 *Translation* _({origin} → {target})_\n\n{text}',
     'translate.sameLang': '\n\n💡 _The text was already in {target}. For another language: /translate -to en_',
 
-    // src/comandos/pixelart.js
+    // src/commands/pixelart.js
     'pixelart.invalidYear': '❌ Invalid year. E.g.: /pixelart -y 1996',
     'pixelart.invalidPack': '❌ Invalid pack name. E.g.: /pixelart chuck-norris-lvl',
     'pixelart.noPack': '❌ No pack found.',
@@ -211,22 +211,22 @@ module.exports = {
     'pixelart.partN': '🧩 Part {i}/{total}',
     'pixelart.fail': '❌ Could not fetch the art from 16colo.rs right now.',
 
-    // src/comandos/ascii.js
+    // src/commands/ascii.js
     'ascii.tooLong': '❌ The text has at most {max} characters.',
     'ascii.width': '❌ -width needs a number from {min} to {max}',
     'ascii.char': '❌ -char needs a single character, e.g.: -char @',
     'ascii.nothing': '❌ Nothing to draw: use letters, numbers or ! ? . , : - + _ /',
 
-    // src/comandos/meme.js
+    // src/commands/meme.js
     'meme.none': '❌ No meme with "{search}".',
     'meme.fail': '❌ Could not fetch a meme right now.',
 
-    // src/comandos/giphy.js
+    // src/commands/giphy.js
     'giphy.noKey': '⚠️ GIPHY key not set: define GIPHY_API_KEY in config/.env or use /set giphy.api.key <key>.',
     'giphy.none': '❌ No GIF found.',
     'giphy.fail': '❌ Could not fetch that GIF.',
 
-    // src/comandos/sticker.js
+    // src/commands/sticker.js
     'sticker.needText': 'Provide the text: /sticker -txt "Good morning!"',
     'sticker.tooLong': '❌ Text too long: up to {max} characters.',
     'sticker.badBg': '❌ -bg: "{color}" is not a color. Use #RRGGBB (e.g.: #FFFFFF).',

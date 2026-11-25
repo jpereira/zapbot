@@ -16,7 +16,7 @@
 const { commandUsage } = require('./base');
 const { textPeople, withoutDelimiters } = require('./block');
 const { client, completeNotice, sentByBot } = require('../client');
-const { describeDestination, extractDestinations, resolverDestinations } = require('../destinations');
+const { describeDestination, extractDestinations, resolveDestinations } = require('../destinations');
 const { sendEmail } = require('../email');
 const { t } = require('../i18n');
 const { printError, printInfo } = require('../log');
@@ -65,7 +65,7 @@ async function sendPerEmail(email, contents, header) {
         return { filename: mediaAlt.filename || `anexo${i ? `-${i + 1}` : ''}.${extension}`, content: Buffer.from(mediaAlt.data, 'base64'), contentType: mediaAlt.mimetype };
     });
     await sendEmail({
-        para: email.split(/\s*,\s*/),
+        to: email.split(/\s*,\s*/),
         subject: t('forward.subject'),
         text: [header, ...contents.map(c => c.text)].filter(Boolean).join('\n\n') || t('forward.noText'),
         attachments
@@ -83,8 +83,8 @@ function readPositions(textAlt) {
     if (!m) return { positions: [], rest: textAlt };
 
     const positions = new Set();
-    for (const [, de, until] of m[0].matchAll(/-(\d+)(?:\.\.-?(\d+))?/g)) {
-        const [a, b] = [Number(de), Number(until ?? de)];
+    for (const [, start, until] of m[0].matchAll(/-(\d+)(?:\.\.-?(\d+))?/g)) {
+        const [a, b] = [Number(start), Number(until ?? start)];
         for (let p = Math.min(a, b); p <= Math.max(a, b); p++) positions.add(p);
     }
     return { positions: [...positions].sort((x, y) => x - y), rest: textAlt.slice(m[0].length).trim() };
@@ -129,7 +129,7 @@ async function messagesAbove(msg, positions) {
 // Whoever in a #list is the command's own chat (the conversation the message came from) stays out:
 // .ignored says who. The loose ones you typed always count.
 async function recipients(msg, texts, listsAlt) {
-    const standalone = texts.length ? await resolverDestinations(msg, texts, { acceptsEmail: true }) : [];
+    const standalone = texts.length ? await resolveDestinations(msg, texts, { acceptsEmail: true }) : [];
     if (!standalone) return null;
 
     const chatCurrent = String(msg.id?.remote ?? msg.from ?? '').split('@')[0];

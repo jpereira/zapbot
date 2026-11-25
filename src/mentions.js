@@ -7,7 +7,7 @@
 const { dbAll, dbGet, dbRun } = require('./db');
 const { client } = require('./client');
 const { printInfo } = require('./log');
-const { resolverMentions } = require('./contacts');
+const { resolveMentions } = require('./contacts');
 
 /**
  * The mention ids of the message, as stored (string[]); empty if none.
@@ -25,9 +25,9 @@ async function mentionsRecorded(messageId) {
 }
 
 /** Swaps a text's raw mentions for the name, using the message's stored ids. */
-async function messageResolverMentions(textAlt, messageId) {
+async function resolveMessageMentions(textAlt, messageId) {
     if (!/@\d{6,}/.test(String(textAlt ?? ''))) return String(textAlt ?? '');
-    return resolverMentions(textAlt, await mentionsRecorded(messageId));
+    return resolveMentions(textAlt, await mentionsRecorded(messageId));
 }
 
 // The mention ids of a WhatsApp message, as JSON for the column (null: none)
@@ -94,4 +94,4 @@ async function fillMentionsOld({ limit: limitAlt = 5000 } = {}) {
     return { read, filled };
 }
 
-module.exports = { appendMentions, fillMentionsOld, mentionsRecorded, mentionsForRecord, messageResolverMentions };
+module.exports = { appendMentions, fillMentionsOld, mentionsRecorded, mentionsForRecord, resolveMessageMentions };

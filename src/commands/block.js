@@ -4,7 +4,7 @@
 
 const { client, completeNotice } = require('../client');
 const { scheduleName, contactName, resolveLidToPhone } = require('../contacts');
-const { resolverOrChoose } = require('../destinations');
+const { resolveOrChoose } = require('../destinations');
 const { t } = require('../i18n');
 const { printError, printInfo } = require('../log');
 const { textItems } = require('./set');
@@ -91,7 +91,7 @@ async function listAlt(msg) {
  */
 async function readPerson(msg, textAlt, quotedMsg, cmd) {
     if (textAlt) {
-        const d = await resolverOrChoose(msg, textAlt, {
+        const d = await resolveOrChoose(msg, textAlt, {
             type: 'contato',
             noEmail: t('grp.block.noEmail', { cmd })
         });

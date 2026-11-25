@@ -170,7 +170,7 @@ const hasTimeNegative = (opts) => ['startSec', 'endSec'].some(nameAlt => Number(
  * Swaps negative times (counted from the end) for video points, given the
  * duration: -ss -10 is duration-10 (at least 0) and -es -10 is duration-10.
  */
-function resolverTimes(opts, duration) {
+function resolveTimes(opts, duration) {
     const opt = { ...opts.opt };
     const round = (n) => String(Math.round(n * 1000) / 1000);
     if (Number(opt.startSec) < 0) opt.startSec = round(Math.max(0, duration + Number(opt.startSec)));
@@ -399,11 +399,11 @@ async function converterAndSend({ msg, opts, senderName, url, media, preview }) 
         let optsFfmpeg = opts; // with the snippet downloaded, ffmpeg's cut starts at 0
         if (media) {
             fs.writeFileSync(originalFile, Buffer.from(media.data, 'base64'));
-            if (hasTimeNegative(opts)) opts = optsFfmpeg = resolverTimes(opts, await fileDuration(originalFile));
+            if (hasTimeNegative(opts)) opts = optsFfmpeg = resolveTimes(opts, await fileDuration(originalFile));
         } else {
             if (hasTimeNegative(opts)) {
                 const duration = await linkDuration(url);
-                if (duration) opts = optsFfmpeg = resolverTimes(opts, duration);
+                if (duration) opts = optsFfmpeg = resolveTimes(opts, duration);
             }
             const snippet = downloadSnippet(opts);
             const useCache = getSetting('get.cache.tmp');
@@ -445,7 +445,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, preview }) 
             }
 
             // The site did not report the duration: measures the whole file that came
-            if (hasTimeNegative(opts)) opts = optsFfmpeg = resolverTimes(opts, await fileDuration(originalFile));
+            if (hasTimeNegative(opts)) opts = optsFfmpeg = resolveTimes(opts, await fileDuration(originalFile));
         }
 
         // Convert. The sticker lowers quality and fps until it fits WhatsApp's limit
@@ -608,7 +608,7 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
 
         // The cut (-ss/-es), with the time counted from the end resolved by the audio duration
         let cuts = opts;
-        if (hasTimeNegative(opts)) cuts = resolverTimes(opts, await fileDuration(fileAlt));
+        if (hasTimeNegative(opts)) cuts = resolveTimes(opts, await fileDuration(fileAlt));
         const { startSec, endSec } = cuts.opt;
         const ffmpegArgs = [
             '-y',

@@ -4,11 +4,11 @@
 
 const { client } = require('../client');
 const { commandUsage } = require('./base');
-const { contactName, resolveLidToPhone, groupResolverName } = require('../contacts');
+const { contactName, resolveLidToPhone, resolveGroupName } = require('../contacts');
 const { dbAll, dbGet, dbReady, dbRun } = require('../db');
 const { t } = require('../i18n');
-const { describeDestination, resolverOrChoose } = require('../destinations');
-const { TYPES, idKey, cleanExpired, noticeOrigin } = require('../mudo');
+const { describeDestination, resolveOrChoose } = require('../destinations');
+const { TYPES, idKey, cleanExpired, noticeOrigin } = require('../mute');
 const { fmtWhen, readDuration } = require('../util/when');
 
 /*
@@ -112,7 +112,7 @@ async function person(sender) {
 async function group(chatId) {
     const chat = await client.getChatById(chatId).catch(() => null);
     const meta = chat?.groupMetadata ?? {};
-    const nameAlt = await groupResolverName(chatId).catch(() => null) || chat?.name || chatId;
+    const nameAlt = await resolveGroupName(chatId).catch(() => null) || chat?.name || chatId;
     const community = Boolean(meta.isParentGroup || meta.defaultSubgroup);
     return { id: chatId, name: nameAlt, group: true, community };
 }
@@ -139,13 +139,13 @@ async function replyTarget(msg, quotedMsg) {
         )[0];
         const nameGroup = header.match(/^👥\s+\*?(?:Grupo|Group):\*?\s*(.+)$/m)?.[1]?.trim();
         if (nameGroup) {
-            const target = await resolverOrChoose(msg, nameGroup, { type: 'grupo' });
+            const target = await resolveOrChoose(msg, nameGroup, { type: 'grupo' });
             return target ? group(target.id) : null;
         }
         const numberAlt = header.match(/^📱\s+\*?(?:Número|Number):\*?\s*\+(\d{10,15})\s*$/m)?.[1];
         if (numberAlt) return person(numberAlt);
         const nameAlt = header.match(/^👤\s+\*?(?:Nome|Name):\*?\s*(.+)$/m)?.[1]?.trim();
-        if (nameAlt) return resolverOrChoose(msg, nameAlt, { type: 'contato' });
+        if (nameAlt) return resolveOrChoose(msg, nameAlt, { type: 'contato' });
     }
 
     if (!quotedMsg.fromMe) {
@@ -162,7 +162,7 @@ async function replyTarget(msg, quotedMsg) {
  */
 async function readTarget(msg, textAlt, quotedMsg, commandAlt) {
     if (textAlt) {
-        return resolverOrChoose(msg, textAlt, {
+        return resolveOrChoose(msg, textAlt, {
             noEmail: t(commandAlt === '/mute' ? 'grp.mute.noEmailMute' : 'grp.mute.noEmailUnmute', { cmd: commandAlt })
         });
     }

@@ -6,7 +6,7 @@
  * (e.g. /etc/hosts) remains block text. Each block goes through the same
  * path of a normal message (alias, $1, options) and the reply is a single summary.
  */
-const { isCommandOrAlias, textRunAlias, resolverAlias } = require('../aliases');
+const { isCommandOrAlias, textRunAlias, resolveAlias } = require('../aliases');
 const { readOptions: commandReadOptions } = require('../execute');
 const { printError, printInfo } = require('../log');
 const { summarizeText } = require('../util/format');
@@ -63,7 +63,7 @@ function blockMsg(msg, line, replies) {
 async function runBlock(line, context) {
     const { handlerFor } = require('./index'); // in here: index imports this file
     const replies = [];
-    const resolved = await resolverAlias(line);
+    const resolved = await resolveAlias(line);
     const command = resolved?.command;
 
     if (!command) return { ok: false, answers: [t('adm.batch.unknown')] };

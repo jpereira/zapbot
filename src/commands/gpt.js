@@ -11,7 +11,7 @@ const { MessageMedia } = require('whatsapp-web.js');
 const { completeNotice } = require('../client');
 const { commandUsage } = require('./base');
 const { drawAlt } = require('./draw');
-const { imagesContext, textReadProfile, readProfileImplicit, resolverProfiles } = require('./profileInAi');
+const { imagesContext, textReadProfile, readProfileImplicit, resolveProfiles } = require('./profileInAi');
 const {
     AUDIO_MODEL, VOICE_MODEL, SO_OWNER_GENERATE, GPT_USES, QUESTION_USAGE, notifyProcessing, isPhoto,
     modelError, messageImage, replyConsumption, withoutOption, swapModel
@@ -30,7 +30,7 @@ const {
 } = require('../openaiChat');
 const { getSetting } = require('../settings');
 const { captureOutput } = require('../util/processes');
-const { resolverMentions } = require('../contacts');
+const { resolveMentions } = require('../contacts');
 
 /*
  * /gpt: asks ChatGPT (the call and the errors live in openaiChat.js).
@@ -468,7 +468,7 @@ async function showPrices(msg) {
 async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
     // -status and -quiet are read by the options: they do not go in the question
     if (opts?.given.has('status') || opts?.given.has('quiet')) args = withoutOption(args, 'status|s|quiet|q');
-    args = await resolverMentions(args, msg.mentionedIds ?? []);
+    args = await resolveMentions(args, msg.mentionedIds ?? []);
     if (opts?.given.has('usage')) {
         await showUsage(msg, opts.opt.usage);
         return;
@@ -495,7 +495,7 @@ async function ask({ msg, args, opts, quotedMsg, admin, chatId, isGroup }) {
     const prepareProfiles = async () => {
         if (!profileText) return [];
         args = profileText.text;
-        return resolverProfiles({ msg, quotedMsg, chatId, isGroup, items: profileText.items, cmd: '/gpt' });
+        return resolveProfiles({ msg, quotedMsg, chatId, isGroup, items: profileText.items, cmd: '/gpt' });
     };
 
     // -img: creates (or, replying to a photo, edits) an image; -gif: a GIF (replying to a photo, animates it).

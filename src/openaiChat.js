@@ -9,7 +9,7 @@ const axios = require('axios');
 const { t } = require('./i18n');
 const { printError, printInfo } = require('./log');
 const { envOuSetting, getSetting, setSetting } = require('./settings');
-const { paraWhatsapp } = require('./util/whatsapp');
+const { toWhatsapp } = require('./util/whatsapp');
 
 /*
  * Key, model and timeout come from config/.env (OPENAI_API_KEY, OPENAI_MODEL,
@@ -295,7 +295,7 @@ async function askOnChat({ cmd, system, text: textAlt, image = null, images = []
         countAlt(body, data, data?.usage, body.model);
 
         // ChatGPT writes in Markdown; WhatsApp has another formatting (see util/whatsapp.js)
-        return paraWhatsapp(data.choices?.[0]?.message?.content) || '(resposta vazia)';
+        return toWhatsapp(data.choices?.[0]?.message?.content) || '(resposta vazia)';
     } catch (err) {
         // On a 401 OpenAI's message carries a piece of the key: it does not go to the log
         const status = err.response?.status;

@@ -91,7 +91,7 @@ async function resolveLidToPhone(lidJid) {
 const GROUP_NAME_TTL_MS = 10 * 60 * 1000;
 const groupNameCache = new Map();
 
-async function groupResolverName(chatId, { maxAge = GROUP_NAME_TTL_MS } = {}) {
+async function resolveGroupName(chatId, { maxAge = GROUP_NAME_TTL_MS } = {}) {
     if (!chatId?.endsWith('@g.us')) return null;
 
     const cache = groupNameCache.get(chatId);
@@ -122,7 +122,7 @@ async function groupResolverName(chatId, { maxAge = GROUP_NAME_TTL_MS } = {}) {
  */
 const privateNameCache = new Map();
 
-async function privateResolverName(chatId) {
+async function resolvePrivateName(chatId) {
     if (!chatId || chatId.endsWith('@g.us') || chatId.endsWith('@broadcast') || isChannelAlt(chatId)) {
         return null;
     }
@@ -142,7 +142,7 @@ async function privateResolverName(chatId) {
     return name;
 }
 
-async function channelResolverName(chatId) {
+async function resolveChannelName(chatId) {
     if (!isChannelAlt(chatId)) return null;
     const channel = await client.getChatById(chatId).catch(() => null);
     return channel?.name || null;
@@ -200,7 +200,7 @@ async function mentionName(user, mentionedIds = []) {
     return nameAlt;
 }
 
-async function resolverMentions(textAlt, mentionedIds = []) {
+async function resolveMentions(textAlt, mentionedIds = []) {
     textAlt = String(textAlt ?? '');
     const users = [...new Set([...textAlt.matchAll(/@(\d{6,})/g)].map(m => m[1]))];
 
@@ -233,8 +233,8 @@ module.exports = {
     normalizerPhoneNumber,
     removeDeviceSuffix,
     resolveLidToPhone,
-    resolverMentions,
-    channelResolverName,
-    groupResolverName,
-    privateResolverName
+    resolveMentions,
+    resolveChannelName,
+    resolveGroupName,
+    resolvePrivateName
 };

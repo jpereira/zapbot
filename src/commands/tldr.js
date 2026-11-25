@@ -7,7 +7,7 @@ const path = require('path');
 
 const { client, completeNotice } = require('../client');
 const { commandUsage } = require('./base');
-const { resolverTarget } = require('./show');
+const { resolveTarget } = require('./show');
 const { HOUR_MS } = require('../constants');
 const { chatCurrentIds } = require('../contacts');
 const { CHATGPT, engineProcessing, withEngineTip } = require('../engines');
@@ -144,7 +144,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
             `SELECT chat_id, MAX(chat_name) AS chat_name, MAX(is_group) AS is_group
                FROM messages GROUP BY chat_id ORDER BY MAX(timestamp) DESC`
         );
-        const target = await resolverTarget(msg, String(opts.opt.chat).trim(), { chats });
+        const target = await resolveTarget(msg, String(opts.opt.chat).trim(), { chats });
         if (!target) return;
         ids = target.ids;
         nameAlt = target.name;

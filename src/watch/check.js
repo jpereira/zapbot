@@ -4,11 +4,11 @@
  */
 
 const { findCommand } = require('../commands/base');
-const { resolverMentions } = require('../contacts');
+const { resolveMentions } = require('../contacts');
 const { dbAll, dbRun } = require('../db');
 const { lineDestination, destinationsSaved, sendOnDestination } = require('../destinations');
 const { printError, printInfo } = require('../log');
-const { ignoreNotice } = require('../mudo');
+const { ignoreNotice } = require('../mute');
 const { t } = require('../i18n');
 const { getSetting } = require('../settings');
 const { formatData } = require('../util/format');
@@ -70,7 +70,7 @@ async function checkWatch({
     const details =
         headerOrigin({ chatId, chatName, isGroup, senderName, senderNumber }) +
         t('watch.sentAt', { date: formatData(timestamp) }) +
-        t('watch.text', { text: await resolverMentions(body, msg.mentionedIds) });
+        t('watch.text', { text: await resolveMentions(body, msg.mentionedIds) });
 
     /*
      * One notice per destination, with only its rules (without -to: your private chat). A

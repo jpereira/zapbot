@@ -96,7 +96,7 @@ const sendingsLimit = (nowAlt = Date.now()) => {
  * the @c.us itself. Outside zapbot.api.sendTo (and your chat), it refuses.
  * @returns {Promise<string>}
  */
-async function resolverDestination(to) {
+async function resolveDestination(to) {
     const target = String(to ?? '').trim();
     let id;
     if (/^\+?\d{8,15}$/.test(target)) {
@@ -128,7 +128,7 @@ async function send({ to, text }) {
     pendingSends++;
     let id;
     try {
-        id = await resolverDestination(to);
+        id = await resolveDestination(to);
         sendings.push(Date.now());
     } finally {
         pendingSends--;

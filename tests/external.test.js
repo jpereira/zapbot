@@ -1,6 +1,6 @@
 /*
  * Commands that query external services (all simulated):
- * /cve, /weather, /news, /gpt, /tldr, /translate, /giphy, /meme, /joke, /kernel e /pixelart.
+ * /cve, /weather, /news, /gpt, /tldr, /translate, /giphy, /meme, /joke, /kernel and /pixelart.
  */
 const bot = require('./helpers/bot');
 

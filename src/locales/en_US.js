@@ -2,7 +2,7 @@
  * en_US catalog (the default): key → text, with {placeholders}. pt_BR.js has the same keys.
  */
 module.exports = {
-    // -h|-help (src/comandos/base.js)
+    // -h|-help (src/commands/base.js)
     'help.usage': 'Usage: ',
     'help.options': 'Options:',
     'help.arguments': 'Arguments:',
@@ -12,7 +12,7 @@ module.exports = {
     'help.groupAll': 'All',
     'help.and': ' and ',
 
-    // /help (src/comandos/help.js)
+    // /help (src/commands/help.js)
     'help.groupActionTip': 'Use /g action or /g.action. For details: /g action -h.',
     'help.category.groups': 'Groups',
     'help.category.media': 'Media',
