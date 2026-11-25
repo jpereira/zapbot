@@ -25,6 +25,7 @@ destinatários forem encontrados**: se algum não casar, não manda nada e o bot
 | `-list`, `-l` | `[#lista...]` | Sem nome, todas as listas com o tamanho; com nomes, os destinatários delas (o nome pode ser parcial) |
 | `-rm`, `-r` | `<#lista...\|all>` · `#lista <destinatário>...` | Remove a lista inteira, ou só os destinatários indicados dela. Se algum não existir, nada é removido |
 | `-move`, `-m` | `#lista #nova` | Renomeia a lista (se o nome novo já existe, junta as duas) |
+| `-copy`, `-c` | `#lista #nova` | Copia a lista e mantém a original: uma cópia fiel (com a descrição) ou, se o nome novo já existe, os membros entram nela sem repetir |
 | `-desc` | `#lista [<descrição>\|-rm]` | Descrição da lista, mostrada no `-list`. Sem texto, mostra; com `-rm`, apaga |
 
 ```text
@@ -65,6 +66,7 @@ tudo toda vez (uma mala direta).
 /forward -r #amigos 2                                                       ...ou pelo número mostrado no -l
 /forward -r #amigos                                                         apaga a lista
 /forward -m #amigos #time                                                 renomeia (junta se #time existe)
+/forward -c #amigos #time                                                 copia (junta na #time se ela existe); a #amigos continua
 /forward -desc #amigos A turma de sempre                                     descrição
 
 /forward #amigos                        envia para a lista toda (resposta, ou -1 ...)

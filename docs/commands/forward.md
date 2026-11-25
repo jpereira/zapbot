@@ -26,6 +26,7 @@ with the result (below).
 | `-list`, `-l` | `[#list...]` | Without a name, all the lists with their size; with names, their recipients (the name can be partial) |
 | `-rm`, `-r` | `<#list...\|all>` · `#list <recipient>...` | Removes the whole list, or only the given recipients from it. If any does not exist, nothing is removed |
 | `-move`, `-m` | `#list #newlist` | Renames the list (if the new name exists, the two merge) |
+| `-copy`, `-c` | `#list #newlist` | Copies the list and keeps it: a faithful copy (description included) or, if the new name exists, its members join it without repeats |
 | `-desc` | `#list [<description>\|-rm]` | List description, shown in `-list`. Without text, shows it; with `-rm`, deletes it |
 
 ```text
@@ -66,6 +67,7 @@ type them every time (a mailing list).
 /forward -r #friends 2                                                      ...or by the number shown in -l
 /forward -r #friends                                                        deletes the list
 /forward -m #friends #team                                                renames (merges if #team exists)
+/forward -c #friends #team                                                copies (merges into #team if it exists); #friends stays
 /forward -desc #friends The usual crowd                                      description
 
 /forward #friends                       sends to the whole list (reply, or -1 ...)

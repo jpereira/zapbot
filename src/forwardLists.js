@@ -5,6 +5,7 @@
  * -rm | -r #list...|all                         → deletes the list(s) (the whole thing, all or nothing)
  * -rm | -r #list <member>...                    → removes members (all or nothing); the last one deletes the list
  * -move | -m #list #new                        → renames (if #new exists, merges)
+ * -copy | -c #list #new                        → the same, keeping #list (a faithful copy, or merged into #new)
  * -desc #list [<text>|-rm]                     → description (without text, shows it)
  * /forward #list ...                            → sends to the members (whole name; see expandLists)
  */
@@ -187,9 +188,10 @@ async function removeAlt2(msg, textAlt) {
     await msg.reply(t('forward.list.memberRemoved', { name: nameAlt, who: who }));
 }
 
-async function move(msg, textAlt) {
+// -move renames #list to #new (merges if #new exists); -copy does the same and keeps #list
+async function transfer(msg, textAlt, { copy = false } = {}) {
     const m = textAlt.trim().match(/^#(\S+)\s+#(\S+)$/);
-    if (!m) return msg.reply(t('forward.list.moveUsage'));
+    if (!m) return msg.reply(t(copy ? 'forward.list.copyUsage' : 'forward.list.moveUsage'));
     const [fromName, toName] = [readName(m[1]), readName(m[2])];
     if (!NAME.test(toName)) return msg.reply(t('forward.list.badName', { name: toName }));
     if (fromName === toName) return msg.reply(t('forward.list.moveSame'));
@@ -204,6 +206,11 @@ async function move(msg, textAlt) {
 
     // The description of the existing one stays; otherwise the origin's goes
     await save(toName, allAlt2, destination?.description ?? origin.description);
+    if (copy) {
+        return msg.reply(destination
+            ? t('forward.list.copyMerged', { from: fromName, to: toName, added: allAlt2.length - membersAlt(destination).length, n: allAlt2.length })
+            : t('forward.list.copied', { from: fromName, to: toName, n: allAlt2.length }));
+    }
     await dbRun('DELETE FROM forward_lists WHERE list = ?', [fromName]);
     await msg.reply(destination ? t('forward.list.merged', { from: fromName, to: toName, n: allAlt2.length }) : t('forward.list.moved', { from: fromName, to: toName }));
 }
@@ -268,7 +275,8 @@ async function manage(msg, textAlt) {
         '-add': () => addAlt(msg, rest), '-a': () => addAlt(msg, rest),
         '-list': () => listAlt(msg, rest), '-l': () => listAlt(msg, rest),
         '-rm': () => removeAlt2(msg, words.join(' ')), '-r': () => removeAlt2(msg, words.join(' ')),
-        '-move': () => move(msg, rest), '-m': () => move(msg, rest),
+        '-move': () => transfer(msg, rest), '-m': () => transfer(msg, rest),
+        '-copy': () => transfer(msg, rest, { copy: true }), '-c': () => transfer(msg, rest, { copy: true }),
         '-desc': () => describe(msg, rest)
     };
     if (!Object.hasOwn(handlers, nameAlt)) return false;

@@ -512,6 +512,27 @@ describe('listas de destinatários (#lista)', () => {
         assert.match(list(await bot.execute('/forward -desc #b -rm')), /Descrição de #b removida/);
     });
 
+    test('-copy: nome novo é uma cópia fiel; nome que já existe recebe os membros sem repetir; a origem continua', async () => {
+        await bot.execute('/forward -add #a /Fulano/ -to a@b.com');
+        await bot.execute('/forward -desc #a A turma');
+        await bot.execute('/forward -add #b /Fulano/ /Maria/');
+        await bot.execute('/forward -desc #b Os de casa');
+
+        assert.match(list(await bot.execute('/forward -copy #a #c')), /#a copiada para #c \(2 destinatários\)\. A #a continua/);
+        const copied = list(await bot.execute('/forward -l #c'));
+        assert.match(copied, /#c\* · 2\/30/);
+        assert.match(copied, /Fulano[\s\S]*a@b\.com/);
+        assert.match(list(await bot.execute('/forward -desc #c')), /#c\*: A turma/, 'the description comes along');
+
+        assert.match(list(await bot.execute('/forward -c #a #b')), /#a copiada para dentro da #b: \+1 \(agora 3\)\. A #a continua/);
+        assert.match(list(await bot.execute('/forward -desc #b')), /#b\*: Os de casa/, 'the existing description stays');
+        assert.match(list(await bot.execute('/forward -l')), /• #a \(2\) — A turma[\s\S]*• #b \(3\)/);
+
+        assert.match(list(await bot.execute('/forward -c #a')), /Usage: \/forward -c #lista #nova/);
+        assert.match(list(await bot.execute('/forward -c #a #a')), /Os dois nomes são iguais/);
+        assert.match(list(await bot.execute('/forward -c #zz #b')), /A lista #zz não existe/);
+    });
+
     test('nome inválido e o limite forward.maxRecipients', async () => {
         assert.match(list(await bot.execute('/forward -a #a.b /Fulano/')), /Nome de lista inválido: #a\.b/);
 
