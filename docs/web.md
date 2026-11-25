@@ -493,12 +493,54 @@ Without it, `http://<server-ip>:3200` does not answer: the port is only on the s
 
 After changing one of them, run the deploy again: the variables are read when the bot starts.
 
+## From the phone, over the internet (Tailscale)
+
+You're out, on 4G, and you really want to see who deleted a message in the family group 👀. But
+ZapBot is sitting in Docker on the server at home, and its web only listens on `127.0.0.1` (on
+purpose: nobody from outside gets in). Opening a port on the router to the whole internet? No way.
+
+The neat way out is [Tailscale](https://tailscale.com/download): a VPN that links your devices as if they were all on your
+home network. It's free for personal use, needs no open port, works even behind your carrier's CGNAT
+and only the devices logged in to **your** account see the bot. About 10 minutes and you're done:
+
+1. **Install it on the server** (where Docker or `npm start` runs). It runs everywhere:
+   - 🐧 **Linux:** `curl -fsSL https://tailscale.com/install.sh | sh` and `sudo tailscale up` (it
+     gives you a link to sign in).
+   - 🍎 **macOS:** `brew install --cask tailscale-app` (or the App Store) and sign in from the menu
+     bar icon.
+   - 🪟 **Windows:** `winget install Tailscale.Tailscale` (or the installer at
+     [tailscale.com/download](https://tailscale.com/download)) and sign in from the tray icon.
+2. **Publish the web only to the VPN, with HTTPS already:**
+
+   ```bash
+   sudo tailscale serve --bg 3200    # on Windows, without sudo, in an administrator terminal
+   tailscale serve status            # shows the address: https://<machine>.<your-tailnet>.ts.net
+   ```
+
+   `serve` forwards to the server's own `127.0.0.1:3200`, so no touching `ZAPBOT_WEB_BIND` or the
+   compose. The first time it asks you to turn HTTPS on in the account: open the link and confirm.
+   On macOS, if the `tailscale` command doesn't exist, install the CLI from the app's settings.
+3. **Install it on the phone:** the Tailscale app on [iPhone](https://tailscale.com/docs/install/ios) or [Android](https://tailscale.com/docs/install/android), sign in
+   with the same account and turn the VPN on. If you'd rather watch someone do it, the official
+   video [How to get started with Tailscale](https://www.youtube.com/watch?v=sPdvyR7bLqI) (about 10 minutes) shows it all.
+4. **Open** the `https://...ts.net` address in the phone's browser and sign in with the web login.
+   For the startup message to show that address: `/set zapbot.web.url https://<machine>.<your-tailnet>.ts.net`.
+
+Done: the bot in your pocket, with nothing exposed. A few cautions:
+
+- **Don't use `tailscale funnel`**: it opens the web to the whole internet, exactly what we're
+  avoiding.
+- The web's login, password and 2FA still apply: Tailscale only decides who reaches the door.
+- Through `serve`, every access comes from the server's own address, and that's what shows in the
+  notices and in the block after 5 wrong passwords (see *Behind a proxy* in [Security](#security)).
+- Had enough? `sudo tailscale serve --https=443 off` (or `tailscale serve reset`) turns it off.
+
 ## Questions and problems
 
 | The problem | What to check |
 |---|---|
 | The page does not open | `zapbot.web.enabled`, the login and the password have to be set (`/set`), and the bot restarted. The log tells which one is missing |
-| It opens on the server but not from another machine | By default it only listens on `127.0.0.1`; see Docker above (`ZAPBOT_WEB_BIND`, a tunnel or a proxy) |
+| It opens on the server but not from another machine | By default it only listens on `127.0.0.1`; see Docker above (`ZAPBOT_WEB_BIND`, a tunnel or a proxy); from the phone, [Tailscale](#from-the-phone-over-the-internet-tailscale) |
 | `ZAPBOT_WEB_ENABLED=true` did nothing | The variable has to reach the container (`config/.env` is read by the compose) and the bot has to be redeployed; the Settings page shows 🔧 when it is being used |
 | *Blocked for 15 minutes* | 5 wrong passwords from that address. Wait, or restart the bot (the blocks are in memory) |
 | The history of a chat is short | Only what is in the database is shown; see the retention settings in [`/cache`](commands/cache.md) |

@@ -495,12 +495,56 @@ git). Sem isso, `http://<ip-do-servidor>:3200` não responde: a porta está só 
 
 Depois de mudar uma delas, rode o deploy de novo: as variáveis são lidas quando o bot inicia.
 
+## Do celular, pela internet (Tailscale)
+
+Você tá na rua, no 4G, e bateu aquela vontade de ver quem apagou mensagem no grupo da família 👀.
+Só que o ZapBot tá lá no Docker do servidor de casa, e o web dele só escuta no `127.0.0.1` (de
+propósito: ninguém de fora chega nele). E abrir porta no roteador pra internet inteira? Nem pensar.
+
+A saída bacana é o [Tailscale](https://tailscale.com/download): uma VPN que liga os seus aparelhos como se estivessem todos
+na mesma rede de casa. É grátis pra uso pessoal, não precisa abrir porta nenhuma, funciona até com
+CGNAT da operadora e só os aparelhos logados na **sua** conta enxergam o bot. Em uns 10 minutos tá
+pronto:
+
+1. **Instale no servidor** (onde roda o Docker ou o `npm start`). Roda em tudo:
+   - 🐧 **Linux:** `curl -fsSL https://tailscale.com/install.sh | sh` e `sudo tailscale up` (ele
+     te dá um link pra logar).
+   - 🍎 **macOS:** `brew install --cask tailscale-app` (ou pela App Store) e loga pelo ícone da
+     barra de menu.
+   - 🪟 **Windows:** `winget install Tailscale.Tailscale` (ou o instalador de
+     [tailscale.com/download](https://tailscale.com/download)) e loga pelo ícone perto do relógio.
+2. **Publique o web só pra VPN, já com HTTPS:**
+
+   ```bash
+   sudo tailscale serve --bg 3200    # no Windows, sem sudo, num terminal de administrador
+   tailscale serve status            # mostra o endereço: https://<máquina>.<sua-rede>.ts.net
+   ```
+
+   O `serve` repassa pro `127.0.0.1:3200` do próprio servidor, então nada de mexer no
+   `ZAPBOT_WEB_BIND` nem no compose. Na primeira vez ele pede pra ligar o HTTPS na conta: abre o
+   link e confirma. No macOS, se o comando `tailscale` não existir, instale o CLI pelas
+   configurações do app.
+3. **Instale no celular:** app Tailscale no [iPhone](https://tailscale.com/docs/install/ios) ou no [Android](https://tailscale.com/docs/install/android), loga com a
+   mesma conta e liga a VPN. Se preferir ver alguém fazendo, o vídeo oficial
+   [How to get started with Tailscale](https://www.youtube.com/watch?v=sPdvyR7bLqI) (em inglês, uns 10 minutos) mostra tudo.
+4. **Abra** o `https://...ts.net` no navegador do celular e entre com o login do web. Pra mensagem
+   de início já mostrar esse endereço: `/set zapbot.web.url https://<máquina>.<sua-rede>.ts.net`.
+
+Pronto: o bot no bolso, sem expor nada. Uns cuidados:
+
+- **Não use o `tailscale funnel`**: ele abre o web pra internet inteira, justamente o que a gente
+  quer evitar.
+- O login, a senha e o 2FA do web continuam valendo: o Tailscale só decide quem chega na porta.
+- Pelo `serve`, todo acesso chega do endereço do próprio servidor, e é ele que aparece nos avisos e
+  no bloqueio de 5 senhas erradas (veja *Atrás de um proxy* em [Segurança](#segurança)).
+- Cansou? `sudo tailscale serve --https=443 off` (ou `tailscale serve reset`) desliga.
+
 ## Dúvidas e problemas
 
 | O problema | O que conferir |
 |---|---|
 | A página não abre | O `zapbot.web.enabled`, o login e a senha precisam estar definidos (`/set`) e o bot reiniciado. O log diz o que falta |
-| Abre no servidor, mas não de outra máquina | Por padrão ela só escuta em `127.0.0.1`; veja o Docker acima (`ZAPBOT_WEB_BIND`, um túnel ou um proxy) |
+| Abre no servidor, mas não de outra máquina | Por padrão ela só escuta em `127.0.0.1`; veja o Docker acima (`ZAPBOT_WEB_BIND`, um túnel ou um proxy); do celular, [Tailscale](#do-celular-pela-internet-tailscale) |
 | `ZAPBOT_WEB_ENABLED=true` não fez nada | A variável precisa chegar ao container (o compose lê o `config/.env`) e o bot precisa ser reimplantado; a página de Settings mostra 🔧 quando ela está sendo usada |
 | *Bloqueado por 15 minutos* | 5 senhas erradas daquele endereço. Espere, ou reinicie o bot (os bloqueios ficam na memória) |
 | O histórico de uma conversa é curto | Só aparece o que está no banco; veja os settings de retenção no [`/cache`](commands/cache.md) |
