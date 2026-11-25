@@ -67,6 +67,19 @@ describe('password and session', () => {
         assert.equal((await get('/../package.json')).status, 404);
     });
 
+    test('app.js and style.css: gzipped, revalidated by ETag (304 when unchanged); the page itself is never cached', async () => {
+        const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'web', 'public', 'app.js'), 'utf8');
+        const first = await fetch(base + '/app.js', { headers: { 'accept-encoding': 'gzip' } });
+        assert.equal(first.status, 200);
+        assert.equal(first.headers.get('content-encoding'), 'gzip');
+        assert.equal(first.headers.get('cache-control'), 'no-cache');
+        assert.equal(await first.text(), source, 'fetch inflates it back to the same file');
+        const again = await fetch(base + '/app.js', { headers: { 'if-none-match': first.headers.get('etag') } });
+        assert.equal(again.status, 304);
+        assert.equal((await fetch(base + '/style.css', { headers: { 'if-none-match': '"other"' } })).status, 200);
+        assert.equal((await get('/')).headers.get('cache-control'), 'no-store');
+    });
+
     test('the right password sets an HttpOnly SameSite=Strict cookie that opens the API; logout closes it', async () => {
         const { r, cookie } = await login();
         assert.equal(r.status, 200);

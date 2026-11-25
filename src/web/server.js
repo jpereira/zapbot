@@ -19,6 +19,7 @@ const os = require('os');
 const path = require('path');
 const { isIP } = require('net');
 const { pipeline } = require('stream/promises');
+const zlib = require('zlib');
 
 const { dbReady } = require('../db');
 const { printError, printInfo } = require('../log');
@@ -463,10 +464,33 @@ async function handle(req, res) {
         const agent = String(req.headers['user-agent'] ?? '').replace(/[^\P{C}]/gu, '').slice(0, 100);
         notifyWeb('access', { address: clientAddress(req), agent }).catch(() => {});
     }
-    let body = await fs.readFile(path.join(PUBLIC_DIR, file[0]));
+    if (file[0] !== 'index.html') return sendAsset(req, res, file);
+    const page = await fs.readFile(path.join(PUBLIC_DIR, file[0]), 'utf8');
     // The title of the tab tells which version is running: "ZapBot 1.0.25 (devel) (git+454e038/HEAD)"
-    if (file[0] === 'index.html') body = Buffer.from(body.toString('utf8').replace('<title>ZapBot</title>', `<title>ZapBot ${escapeHtml(versionWithCommit())}</title>`));
+    const body = Buffer.from(page.replace('<title>ZapBot</title>', `<title>ZapBot ${escapeHtml(versionWithCommit())}</title>`));
     res.writeHead(200, { 'Content-Type': file[1], 'Content-Length': body.length });
+    return res.end(req.method === 'HEAD' ? undefined : body);
+}
+
+// app.js and style.css: read once (they only change with a new deploy, which restarts the process), gzipped when the
+// browser takes it, and revalidated by ETag (no-cache: a 304 instead of ~130 KB on every load, a deploy still shows at once)
+const assets = new Map();
+async function sendAsset(req, res, [name, type]) {
+    if (!assets.has(name)) {
+        const raw = await fs.readFile(path.join(PUBLIC_DIR, name));
+        assets.set(name, { raw, gzip: zlib.gzipSync(raw), etag: `"${crypto.createHash('sha1').update(raw).digest('base64url')}"` });
+    }
+    const { raw, gzip, etag } = assets.get(name);
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('ETag', etag);
+    res.setHeader('Vary', 'Accept-Encoding');
+    if (req.headers['if-none-match'] === etag) {
+        res.writeHead(304);
+        return res.end();
+    }
+    const zipped = /\bgzip\b/.test(String(req.headers['accept-encoding'] ?? ''));
+    const body = zipped ? gzip : raw;
+    res.writeHead(200, { 'Content-Type': type, 'Content-Length': body.length, ...(zipped ? { 'Content-Encoding': 'gzip' } : {}) });
     return res.end(req.method === 'HEAD' ? undefined : body);
 }
 
