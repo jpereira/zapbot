@@ -410,6 +410,13 @@ test('-dry|-d: só valida os destinatários, sem enviar e sem precisar de respos
 describe('listas de destinatários (#lista)', () => {
     const list = (sendings) => sendings.map(e => e.text).join('\n');
 
+    test('-add com um nome por linha e o WORD JOINER (U+2060) que o WhatsApp coloca depois da "/"', async () => {
+        // The exact bytes WhatsApp sent in production: "/" + U+2060 + the name
+        const r = list(await bot.execute('/forward -a #amigos\n/⁠Fulano/\n/⁠Ciclano/'));
+        assert.match(r, /Lista #amigos criada com 2 destinatários/);
+        assert.doesNotMatch(r, /Nenhum contato/);
+    });
+
     test('-add cria a lista, -l mostra e acrescentar não repete ninguém', async () => {
         let r = list(await bot.execute('/forward -add #amigos /Fulano/ +5521922222222'));
         assert.match(r, /Lista #amigos criada com 2 destinatários/);

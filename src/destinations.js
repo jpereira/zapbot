@@ -13,6 +13,7 @@ const { t } = require('./i18n');
 const { printDebug, printError } = require('./log');
 const { isDebugMode } = require('./settings');
 const { withoutAccents } = require('./util/format');
+const { withoutInvisible } = require('./util/messageBody');
 const { isChannelAlt } = require('./util/origin');
 const { contextDebug } = require('./debugContext');
 const { maskPhones } = require('./util/phone');
@@ -80,7 +81,7 @@ function extractDestinations(textAlt) {
     return { destinations, given: destinations.length > 0, rest };
 }
 
-const normalize = (s) => withoutAccents(s).trim();
+const normalize = (s) => withoutAccents(withoutInvisible(s)).trim();
 
 // "+5521999999999", "5521 99999-9999" → only the digits; null if it is not a number
 function readNumber(textAlt) {

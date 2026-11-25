@@ -257,7 +257,7 @@ describe('versão com o commit (version.js)', () => {
             c(HASH, 'v2.0.0'));
 
         // Annotated loose, without the object (the Docker image): the last checkout in the reflog, if it went to this commit
-        const reflog = (para) => `${'0'.repeat(40)} ${para} Fulano <f@x> 1790000000 -0300\tcheckout: moving from main to v2.0.0\n`;
+        const reflog = (target) => `${'0'.repeat(40)} ${target} Fulano <f@x> 1790000000 -0300\tcheckout: moving from main to v2.0.0\n`;
         assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n`, 'refs/tags/v2.0.0': `${TAG}\n`, 'logs/HEAD': reflog(HASH) })), c(HASH, 'v2.0.0'));
         assert.deepEqual(readCommit(project({ HEAD: `${HASH}\n`, 'refs/tags/v2.0.0': `${TAG}\n`, 'logs/HEAD': reflog('f'.repeat(40)) })), c(HASH, 'HEAD'),
             'o reflog foi para outro commit');
@@ -276,5 +276,15 @@ describe('versão com o commit (version.js)', () => {
         } finally {
             delete process.env.ZAPBOT_COMMIT;
         }
+    });
+});
+
+describe('caracteres invisíveis (util/messageBody.js)', () => {
+    test('saem o WORD JOINER, o espaço de largura zero, as marcas de direção e o BOM; ficam o ZWJ dos emojis e as inversões', () => {
+        const { withoutInvisible } = bot.src('util/messageBody');
+        assert.equal(withoutInvisible('/⁠Fulano de Tal/'), '/Fulano de Tal/');
+        assert.equal(withoutInvisible('﻿Maria​ Souza‎'), 'Maria Souza');
+        const runner = '🏃🏽‍♂️ Corrida';
+        assert.equal(withoutInvisible(runner), runner);
     });
 });

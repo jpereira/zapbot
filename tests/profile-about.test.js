@@ -52,13 +52,14 @@ test('-set <texto>, sem imagem: troca o SEU recado', async () => {
     assert.deepEqual(messages, ['Ocupado até segunda 😴']);
 });
 
-test('-set <texto>: 139 caracteres passa (emoji conta um), 140 não; invisíveis e direção não', async () => {
+test('-set <texto>: 139 caracteres passa (emoji conta um), 140 não; um invisível sai do texto, uma inversão de direção é recusada', async () => {
     assert.match((await bot.replyAlt('/profile -s ' + 'a'.repeat(139)))[0], /^✅/);
     assert.match((await bot.replyAlt('/profile -s ' + '😀'.repeat(139)))[0], /^✅/);
     assert.match((await bot.replyAlt('/profile -s ' + 'a'.repeat(140)))[0], /140 caracteres.*até 139/);
-    assert.match((await bot.replyAlt('/profile -s com​invisível'))[0], /não pode ter quebra de linha/);
-    assert.match((await bot.replyAlt('/profile -s com‮direção'))[0], /não pode ter quebra de linha/);
-    assert.equal(messages.length, 2, 'só os dois válidos foram para o WhatsApp');
+    assert.match((await bot.replyAlt('/profile -s com\u200Binvisível'))[0], /^✅/);
+    assert.equal(messages.at(-1), 'cominvisível', 'the zero-width space nobody sees is dropped');
+    assert.match((await bot.replyAlt('/profile -s com\u202Edireção'))[0], /não pode ter quebra de linha/);
+    assert.equal(messages.length, 3, 'only the three valid ones went to WhatsApp');
 });
 
 test('-set <texto>: com uma imagem junto continua trocando a foto', async () => {
