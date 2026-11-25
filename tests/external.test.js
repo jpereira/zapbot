@@ -1337,7 +1337,7 @@ describe('/tldr', () => {
         assert.equal(await notice('/tldr 2h'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 2 horas com ChatGPT, aguarde.');
         assert.equal(await notice('/tldr 1d'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 1 dia com ChatGPT, aguarde.');
         assert.equal(await notice('/tldr 1h30m'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 1 hora e 30 minutos com ChatGPT, aguarde.');
-        assert.equal(await notice('/tldr 30d'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 2 dias e 20 horas com ChatGPT, aguarde.');
+        assert.equal(await notice('/tldr 30d'), '⏳ Processando o /tldr das 4 mensagens de Família do período de 3 dias com ChatGPT, aguarde.');
     });
 
     test('opção desconhecida na 1ª palavra (/tldr -price): erro com a dica do -h, sem chamar a OpenAI; -2h continua valendo', async () => {
@@ -1395,29 +1395,29 @@ describe('/tldr', () => {
         assert.match(textAlt, /velha 3[\s\S]*nova 3/);
     });
 
-    test('limites: tldr.maxMsgs e a janela de 68 h', async () => {
+    test('limites: tldr.maxMsgs e a janela de 3 dias', async () => {
         await chat([['a'], ['b'], ['c']]);
         await bot.setSetting('tldr.maxMsgs', 10);
         assert.match((await bot.replyAlt('/tldr 50'))[0], /_\(limitado a 10 mensagens \(setting tldr\.maxMsgs\)\)_/);
-        assert.match((await bot.replyAlt('/tldr 100h'))[0], /_\(as mensagens comuns ficam só 2 dias e 20 horas \(68 h\) no banco \(setting cache\.messageRetentionHours\)\)_/);
+        assert.match((await bot.replyAlt('/tldr 100h'))[0], /_\(as mensagens comuns ficam só 3 dias no banco \(setting cache\.messageRetentionDays\)\)_/);
     });
 
-    test('cache.messageRetentionHours maior: o /tldr alcança mais dias, até o novo limite', async () => {
+    test('cache.messageRetentionDays maior: o /tldr alcança mais dias, até o novo limite', async () => {
         await chat([['de ontem 1'], ['de ontem 2'], ['de ontem 3']], 30 * 60);
         await chat([['agora 1'], ['agora 2'], ['agora 3']], 10);
 
-        // Default (68 h): 30 h ago fits, but the 30d is cut
-        assert.match((await bot.replyAlt('/tldr 30d'))[0], /ficam só 2 dias e 20 horas \(68 h\)/);
+        // Default (3 days): 30 h ago fits, but the 30d is cut
+        assert.match((await bot.replyAlt('/tldr 30d'))[0], /ficam só 3 dias no banco/);
 
-        await bot.setSetting('cache.messageRetentionHours', 720);
+        await bot.setSetting('cache.messageRetentionDays', 30);
         const [r] = await bot.replyAlt('/tldr 30d');
         assert.doesNotMatch(r, /ficam só/);
         assert.match(network.calls.at(-1).cfg.body.messages[1].content, /de ontem 1[\s\S]*agora 3/);
 
         // And the new limit cuts what goes over it
-        assert.match((await bot.replyAlt('/tldr 40d'))[0], /ficam só 30 dias \(720 h\)/);
-        await assert.rejects(bot.setSetting('cache.messageRetentionHours', 12), /68/);
-        await assert.rejects(bot.setSetting('cache.messageRetentionHours', 3000), /2160/);
+        assert.match((await bot.replyAlt('/tldr 40d'))[0], /ficam só 30 dias no banco/);
+        await assert.rejects(bot.setSetting('cache.messageRetentionDays', 2), /entre 3 e 90/);
+        await assert.rejects(bot.setSetting('cache.messageRetentionDays', 91), /entre 3 e 90/);
     });
 
     test('-c pelo nome e -private', async () => {

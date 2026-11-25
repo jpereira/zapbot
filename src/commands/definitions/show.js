@@ -29,7 +29,7 @@ module.exports = {
         {
             opts: ['all', 'a'],
             values: [],
-            desc: 'The general history of the chat, not just the deleted ones: the bot keeps every message (and its media) even if you delete it on the phone or on WhatsApp Web, for cache.messageRetentionHours. It never dumps the whole chat: with more messages than show.max it gives the total by month, and you go down with the period: 2026-05 (the days), 2026-05-05 (the hours; or the messages, if few), 2026-05-05 14h (the messages; p2, p3 for the next parts). Also 05/05/2026, 05/05, today and yesterday. -N shows the last N; -q searches the history; -f -a -yes deletes it. In your private chat without a chat, lists the chats with history.',
+            desc: 'The general history of the chat, not just the deleted ones: the bot keeps every message (and its media) even if you delete it on the phone or on WhatsApp Web, for cache.messageRetentionDays. It never dumps the whole chat: with more messages than show.max it gives the total by month, and you go down with the period: 2026-05 (the days), 2026-05-05 (the hours; or the messages, if few), 2026-05-05 14h (the messages; p2, p3 for the next parts). Also 05/05/2026, 05/05, today and yesterday. -N shows the last N; -q searches the history; -f -a -yes deletes it. In your private chat without a chat, lists the chats with history.',
             ex: ['/show -a /Fulano/', '/show -a /Fulano/ 2026-05', '/show -a /Fulano/ 2026-05-05 14h', '/show -a -5 /Fulano/', '/show -a -q boleto /Fulano/', '/show -a yesterday']
         },
         {

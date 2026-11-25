@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs-extra');
 
 const { deleteAllBackups } = require('./backup');
-const { CACHE_DIR, DAY_MS, HOUR_MS, MAX_DELETE_WINDOW, MEDIA_DIR, TMP_DIR } = require('./constants');
+const { CACHE_DIR, DAY_MS, MAX_DELETE_WINDOW, MEDIA_DIR, TMP_DIR } = require('./constants');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
 const { printError, printInfo } = require('./log');
 const { getSetting } = require('./settings');
@@ -15,8 +15,8 @@ const { getDirSize, mediaIsPath, cleanContentDirectory } = require('./util/files
 
 /*
  * Database + media cleanup:
- * - normal messages: the text leaves the database after 'cache.messageRetentionHours' and the media, after
- * 'cache.messageMediaRetentionHours' (default 68 h, the "delete for everyone" window: after it not even
+ * - normal messages: the text leaves the database after 'cache.messageRetentionDays' and the media, after
+ * 'cache.messageMediaRetentionDays' (default 3 days, over the "delete for everyone" window: after it not even
  * can no longer be deleted); the media never goes past the text;
  * - DELETED messages (revoked=1): kept for 'cache.revokedRetentionDays' (default 30),
  * so /show keeps working.
@@ -24,8 +24,8 @@ const { getDirSize, mediaIsPath, cleanContentDirectory } = require('./util/files
 async function cleanCacheOld(
     maxDeleteWin = MAX_DELETE_WINDOW,
     retentionDeleted = getSetting('cache.revokedRetentionDays') * DAY_MS,
-    retentionMessages = getSetting('cache.messageRetentionHours') * HOUR_MS,
-    retentionMedia = getSetting('cache.messageMediaRetentionHours') * HOUR_MS
+    retentionMessages = getSetting('cache.messageRetentionDays') * DAY_MS,
+    retentionMedia = getSetting('cache.messageMediaRetentionDays') * DAY_MS
 ) {
     await dbReady;
 

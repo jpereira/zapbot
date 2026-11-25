@@ -23,7 +23,7 @@ WhatsApp formatting conversion as `/gpt` (see
 ```text
 /tldr                → the last 100 messages of this chat
 /tldr 2h             → the ones from the last 2 hours
-/tldr 1d             → the ones from the last day (1h30m, 2d4h... work; the database keeps 68 h, or `cache.messageRetentionHours`)
+/tldr 1d             → the ones from the last day (1h30m, 2d4h... work; the database keeps 3 days, or `cache.messageRetentionDays`)
 /tldr 30             → the last 30 messages (without the letter, it's a count)
 /tldr 300 -private        → the last 300, in your private chat
 /tldr -c family 3h -private
@@ -33,8 +33,8 @@ WhatsApp formatting conversion as `/gpt` (see
 
 Replying to a message, `/tldr` summarizes the conversation **starting from it** (inclusive) until
 now, like a "where I stopped reading". If you type a period (`2h`, `300`) or use `-chat`, the
-replied message is ignored. The messages are still the ones in the database (68 h, or
-`cache.messageRetentionHours`) and the `tldr.maxMsgs` limit applies: above it, the summary takes the
+replied message is ignored. The messages are still the ones in the database (3 days, or
+`cache.messageRetentionDays`) and the `tldr.maxMsgs` limit applies: above it, the summary takes the
 most recent ones and warns.
 
 ```text
@@ -49,12 +49,12 @@ most recent ones and warns.
 ## Fuller summaries
 
 !!! tip "Want a fuller `/tldr`?"
-    By default the database keeps only 68 h of conversation, so `/tldr 7d` is cut to 2 days and 20
-    hours. To summarize longer periods, set these keys (see the [settings](../settings.md)):
+    By default the database keeps only 3 days of conversation, so `/tldr 7d` is cut to 3 days. To
+    summarize longer periods, set these keys (see the [settings](../settings.md)):
 
     ```text
-    /set cache.messageRetentionHours 720        → message text for 30 days (up to 2160 h = 90 days)
-    /set cache.messageMediaRetentionHours 720   → media for 30 days (audio goes into the summary, transcribed)
+    /set cache.messageRetentionDays 30          → message text for 30 days (up to 90)
+    /set cache.messageMediaRetentionDays 30     → media for 30 days (audio goes into the summary, transcribed)
     /set tldr.maxMsgs 2000                      → how many messages a summary reads at most (default 500)
     ```
 
@@ -63,7 +63,7 @@ most recent ones and warns.
     your chats are, and groups with lots of photos and videos fill the disk fast). Before increasing,
     check the free space and keep an eye on the size with [`/cache`](cache.md); `/cache -media` frees
     only the media, and `/cache -clean` applies the retention right away.
-    If the goal is just reading more days of text, increase only `cache.messageRetentionHours` and
+    If the goal is just reading more days of text, increase only `cache.messageRetentionDays` and
     leave the media at the default: the summary only loses the old audio that hadn't been transcribed.
 
     A longer period also spends more OpenAI credits: each summary reads up to 60 thousand characters.
@@ -72,11 +72,11 @@ Details:
 
 - It needs at least three eligible messages in the period; without them, the bot warns in the chat.
 
-- The summary uses the text already saved in the database. Regular messages stay for 68 h (the
-  window in which WhatsApp lets you delete), so longer periods are cut and the bot warns. To reach
-  more days, increase `cache.messageRetentionHours` (up to 2160 h = 90 days):
-  `/set cache.messageRetentionHours 720` keeps 30 days of messages. Media has its own period,
-  `cache.messageMediaRetentionHours` (default 68 h): an audio without a file and without a
+- The summary uses the text already saved in the database. Regular messages stay for 3 days (it
+  covers the window in which WhatsApp lets you delete), so longer periods are cut and the bot warns.
+  To reach more days, increase `cache.messageRetentionDays` (up to 90):
+  `/set cache.messageRetentionDays 30` keeps 30 days of messages. Media has its own period,
+  `cache.messageMediaRetentionDays` (default 3 days): an audio without a file and without a
   transcription stops going into the summary.
 - While it processes, the notice says what it's summarizing: `⏳ Processing /tldr for the 87
   messages in Family over the last 2 hours, hold on.` (or `for the latest 100 messages in ...`, or

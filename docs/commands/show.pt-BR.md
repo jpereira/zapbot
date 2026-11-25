@@ -168,8 +168,8 @@ o privado e os status da pessoa:
 ## Histórico geral (`-all`)
 
 **Mesmo apagando mensagens no celular ou no WhatsApp Web, o bot guarda tudo.** Ele salva cada mensagem que
-chega (o texto, e a mídia em `cache/media`) na hora, por `cache.messageRetentionHours` (90 dias nesta
-instalação; a mídia, `cache.messageMediaRetentionHours`). Apagar no celular não avisa nada ao bot, então a
+chega (o texto, e a mídia em `cache/media`) na hora, por `cache.messageRetentionDays` (90 dias nesta
+instalação; a mídia, `cache.messageMediaRetentionDays`). Apagar no celular não avisa nada ao bot, então a
 mensagem continua no histórico e o `/show -a` traz de volta, com a foto, o áudio ou o arquivo. (Quando a *outra
 pessoa* apaga para todos, o bot também percebe e marca `🗑️`: isso é o `-d`.) O que o bot nunca viu (ele estava
 desligado ou desconectado) não está lá.
@@ -190,7 +190,7 @@ resposta termina com o comando do próximo nível.
 💡 Para ler, repita com o período: /show -a /Fulano/ 2026-11
    Dia: 2026-05-05 (ou 05/05/2026, hoje, ontem) · mês: 2026-05 · hora: 14h
 💡 Mesmo apagando mensagens no celular ou no WhatsApp Web, o bot continua com o histórico
-(e as mídias) por 90 dias (setting cache.messageRetentionHours): daqui dá para recuperar tudo.
+(e as mídias) por 90 dias (setting cache.messageRetentionDays): daqui dá para recuperar tudo.
 
 /show -a /Fulano/ 2026-11
 🗄️ Fulano · 2026-11

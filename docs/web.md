@@ -160,7 +160,7 @@ locations, emojis and reactions. The transcriptions the bot made of audio show b
   **Mentions** (`@5521...`) show the contact name. A message whose **reaction** was changed or removed shows each
   change under it.
 - **Media**: images, videos and audio play on the page, each one with a **Download** link; a document is always a
-  download. A media that already left the cache (`cache.messageMediaRetentionHours`) is flagged.
+  download. A media that already left the cache (`cache.messageMediaRetentionDays`) is flagged.
 - **New messages** come by themselves every `zapbot.web.refreshSeconds` (15 s) when you are at the end of the chat, and
   the messages load `zapbot.web.pageSize` at a time.
 
@@ -217,7 +217,7 @@ The same page fits a narrow screen: the left bar becomes a bar at the bottom, th
 ![On a phone: a chat](assets/web/mobile-chat.png)
 
 Only what the bot has in the database is shown: the text of the common messages stays for
-`cache.messageRetentionHours` (68 h by default; up to 90 days), and the deleted, edited and reacted ones for their own
+`cache.messageRetentionDays` (3 days by default; up to 90), and the deleted, edited and reacted ones for their own
 retention ([`/cache`](commands/cache.md), [`/show`](commands/show.md)). To keep more history, raise those settings.
 
 ## Notes

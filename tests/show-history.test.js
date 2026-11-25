@@ -40,7 +40,7 @@ const titles = () => sent().filter(c => c.startsWith('💬 *MENSAGEM*')).map(c =
 
 describe('/show -a: o resumo e a descida por mês, dia e hora', () => {
     test('muitas mensagens: o total, os meses (com mídia), a dica do próximo nível e que o histórico fica mesmo apagando no celular', async () => {
-        await bot.setSetting('cache.messageRetentionHours', 2160);
+        await bot.setSetting('cache.messageRetentionDays', 90);
         await day('2026-09-10', 12);
         await day('2026-10-05', 20);
         await add('2026-10-06 10:00', 'foto', { media: '/cache/media/x.jpg' });

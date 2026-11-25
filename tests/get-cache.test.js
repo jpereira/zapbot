@@ -664,14 +664,14 @@ describe('/cache', () => {
     });
 
     test('-c: limpa só o que passou das janelas de retenção', async () => {
-        const oldAlt2 = Date.now() - 69 * 60 * 60 * 1000;
+        const oldAlt2 = Date.now() - 73 * 60 * 60 * 1000;
         await bot.dbRun("INSERT INTO messages (id, timestamp, revoked) VALUES ('velha', ?, 0), ('nova', ?, 0)", [oldAlt2, Date.now()]);
         await bot.dbRun("INSERT INTO messages (id, timestamp, revoked, revoked_at) VALUES ('apagada', ?, 1, ?)", [oldAlt2, oldAlt2]);
 
         assert.deepEqual(await bot.replyAlt('/cache -c'), ['🧹 Cache limpo (itens fora da janela de retenção).']);
         // (the own message "/cache -c" is also in the database: we only check the test's)
         const ids = (await bot.dbAll("SELECT id FROM messages WHERE id IN ('velha', 'nova', 'apagada') ORDER BY id")).map(r => r.id);
-        assert.deepEqual(ids, ['apagada', 'nova'], 'a apagada fica 30 dias; a comum sai em 68 h');
+        assert.deepEqual(ids, ['apagada', 'nova'], 'a apagada fica 30 dias; a comum sai em 3 dias');
     });
 
     test('-a: apaga tudo (mensagens, edições, mídias, temporários e backups)', async () => {
@@ -744,7 +744,7 @@ describe('limpeza periódica', () => {
     });
 
     test('mensagem comum antiga sai com a mídia; a apagada fica com a dela', async () => {
-        const oldAlt2 = Date.now() - 69 * 60 * 60 * 1000;
+        const oldAlt2 = Date.now() - 73 * 60 * 60 * 1000;
         const old = path.join(MEDIA_DIR, 'velha.jpg');
         const saved = path.join(MEDIA_DIR, 'guardada.jpg');
         fs.mkdirSync(MEDIA_DIR, { recursive: true });
@@ -759,7 +759,7 @@ describe('limpeza periódica', () => {
         fs.unlinkSync(saved);
     });
 
-    test('cache.messageRetentionHours guarda o texto; a mídia tem o seu prazo (cache.messageMediaRetentionHours)', async () => {
+    test('cache.messageRetentionDays guarda o texto; a mídia tem o seu prazo (cache.messageMediaRetentionDays)', async () => {
         const hour = 60 * 60 * 1000;
         const create = (nameAlt) => {
             const fileAlt = path.join(MEDIA_DIR, nameAlt);
@@ -769,32 +769,32 @@ describe('limpeza periódica', () => {
         };
         const middle = create('meio.jpg');
         const longe = create('longe.jpg');
-        await bot.setSetting('cache.messageRetentionHours', 240);
+        await bot.setSetting('cache.messageRetentionDays', 10);
         await bot.dbRun('INSERT INTO messages (id, timestamp, revoked, media_path) VALUES (?, ?, 0, ?), (?, ?, 0, ?)',
             ['meio', Date.now() - 100 * hour, middle, 'longe', Date.now() - 300 * hour, longe]);
 
-        // Media at the default (68 h): the 100 h one goes, but the text stays; the 300 h one goes with everything
+        // Media at the default (3 days): the 100 h one goes, but the text (10 days) stays; the 300 h one goes with everything
         await cleanup.cleanCacheOld();
         assert.ok(!fs.existsSync(middle));
         assert.ok(!fs.existsSync(longe));
         assert.deepEqual(await bot.dbAll("SELECT id, media_path FROM messages WHERE id IN ('meio', 'longe') ORDER BY id"),
             [{ id: 'meio', media_path: null }]);
 
-        // 200 h media: the 100 h one keeps the text
+        // 5 days of media: the 100 h one stays
         const fica = create('fica.jpg');
-        await bot.setSetting('cache.messageMediaRetentionHours', 200);
+        await bot.setSetting('cache.messageMediaRetentionDays', 5);
         await bot.dbRun("UPDATE messages SET media_path = ? WHERE id = 'meio'", [fica]);
         await cleanup.cleanCacheOld();
-        assert.ok(fs.existsSync(fica), 'com 100 h (de 200), a mídia fica');
+        assert.ok(fs.existsSync(fica), 'com 100 h (de 120), a mídia fica');
         fs.unlinkSync(fica);
 
-        // Never goes past the text: with media at 2160 h and text at 240 h, it goes out with the text
+        // Never goes past the text: with media at 90 days and text at 10, it goes out with the text
         const lost = create('perdida.jpg');
-        await bot.setSetting('cache.messageMediaRetentionHours', 2160);
+        await bot.setSetting('cache.messageMediaRetentionDays', 90);
         await bot.dbRun('INSERT INTO messages (id, timestamp, revoked, media_path) VALUES (?, ?, 0, ?)', ['perdida', Date.now() - 300 * hour, lost]);
         await cleanup.cleanCacheOld();
         assert.ok(!fs.existsSync(lost));
-        await assert.rejects(bot.setSetting('cache.messageMediaRetentionHours', 10), /68/);
+        await assert.rejects(bot.setSetting('cache.messageMediaRetentionDays', 2), /entre 3 e 90/);
     });
 
     test('a limpeza periódica roda 1 minuto depois do boot e a cada 10', async (t) => {

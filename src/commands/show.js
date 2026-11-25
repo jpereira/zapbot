@@ -486,7 +486,7 @@ function itemsSummary(types, rows) {
 /*
  * /show -all (-a): the general history of a chat, kept in the messages table (not just the deleted ones) and in
  * cache/media: even deleting messages on the phone or on WhatsApp Web, the bot keeps them (for
- * cache.messageRetentionHours). It never dumps a whole chat: with more messages than show.max, it summarizes by
+ * cache.messageRetentionDays). It never dumps a whole chat: with more messages than show.max, it summarizes by
  * month, then by day, then by hour, and says how to go down a level:
  *   /show -a /Fulano/                   → the months (total, with media)
  *   /show -a /Fulano/ 2026-11           → the days of the month
@@ -725,7 +725,7 @@ async function showHistory({ msg, opts, chatId, chatName: currentName, words, n,
     textAlt += tr('show.history.hintDown', { cmd: `${cmdBase} ${example}` });
     textAlt += tr('show.history.hintFormats');
     if (level === 'month') {
-        textAlt += tr('show.history.keeps', { days: Math.round(getSetting('cache.messageRetentionHours') / 24) });
+        textAlt += tr('show.history.keeps', { days: getSetting('cache.messageRetentionDays') });
     }
     await msg.reply(textAlt);
 }
@@ -745,7 +745,7 @@ async function listHistoryChats(msg) {
         textAlt += tr('show.history.chatsLine', { n: i + 1, chat: describeChat(c), msgs: msgsAlt(c.total), media: mediaAlt(c.with_media ?? 0), date: formatData(c.last) });
     });
     if (chats.length > LIMIT) textAlt += tr('show.history.chatsMore', { count: chats.length - LIMIT });
-    textAlt += tr('show.history.chatsHint') + tr('show.history.keeps', { days: Math.round(getSetting('cache.messageRetentionHours') / 24) });
+    textAlt += tr('show.history.chatsHint') + tr('show.history.keeps', { days: getSetting('cache.messageRetentionDays') });
     await msg.reply(textAlt);
 }
 

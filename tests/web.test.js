@@ -573,7 +573,7 @@ describe('home, notes and the locked tags', () => {
         assert.equal(data.storage.media.files, 1);
         assert.equal(data.storage.media.bytes, 5);
         assert.ok(data.storage.database >= 0 && data.storage.total >= 5);
-        assert.deepEqual(Object.keys(data.retention).sort(), ['deletedDays', 'editedDays', 'mediaHours', 'messageHours', 'reactionDays']);
+        assert.deepEqual(Object.keys(data.retention).sort(), ['deletedDays', 'editedDays', 'mediaDays', 'messageDays', 'reactionDays']);
         assert.equal(data.topChats, undefined, 'the home shows the statistics now, not a list of chats');
         assert.equal((await get('/api/overview')).status, 401);
     });

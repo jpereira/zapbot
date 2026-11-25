@@ -41,7 +41,7 @@
         "a"
       ],
       "values": [],
-      "desc": "O histórico geral do chat, não só as apagadas: o bot guarda toda mensagem (e a mídia) mesmo que você apague no celular ou no WhatsApp Web, por cache.messageRetentionHours. Ele nunca despeja o chat inteiro: com mais mensagens que o show.max, dá o total por mês, e você desce com o período: 2026-05 (os dias), 2026-05-05 (as horas; ou as mensagens, se forem poucas), 2026-05-05 14h (as mensagens; p2, p3 para as próximas partes). Vale também 05/05/2026, 05/05, hoje e ontem. O -N mostra as últimas N; o -q busca no histórico; o -f -a -yes apaga. No seu privado, sem chat, lista os chats com histórico.",
+      "desc": "O histórico geral do chat, não só as apagadas: o bot guarda toda mensagem (e a mídia) mesmo que você apague no celular ou no WhatsApp Web, por cache.messageRetentionDays. Ele nunca despeja o chat inteiro: com mais mensagens que o show.max, dá o total por mês, e você desce com o período: 2026-05 (os dias), 2026-05-05 (as horas; ou as mensagens, se forem poucas), 2026-05-05 14h (as mensagens; p2, p3 para as próximas partes). Vale também 05/05/2026, 05/05, hoje e ontem. O -N mostra as últimas N; o -q busca no histórico; o -f -a -yes apaga. No seu privado, sem chat, lista os chats com histórico.",
       "ex": [
         "/show -a /Fulano/",
         "/show -a /Fulano/ 2026-05",

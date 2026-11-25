@@ -224,15 +224,15 @@ const SETTINGS_SCHEMA = {
         type: 'number', min: 1, max: 365,
         desc: 'Dias que as mensagens editadas ficam guardadas para o /show -e.'
     },
-    'cache.messageMediaRetentionHours': {
-        default: 68,
-        type: 'number', min: 68, max: 2160,
-        desc: 'Horas que as mídias das mensagens comuns (fotos, vídeos, áudios, documentos) ficam no disco (68, o padrão; até 2160 = 90 dias). Nunca passam do cache.messageRetentionHours: a mídia sai junto com a mensagem. Ocupa espaço em cache/media; /cache -media libera só elas.'
+    'cache.messageMediaRetentionDays': {
+        default: 3,
+        type: 'number', min: 3, max: 90,
+        desc: 'Dias que as mídias das mensagens comuns (fotos, vídeos, áudios, documentos) ficam no disco (3, o padrão; até 90). Nunca passam do cache.messageRetentionDays: a mídia sai junto com a mensagem. Ocupa espaço em cache/media; /cache -media libera só elas.'
     },
-    'cache.messageRetentionHours': {
-        default: 68,
-        type: 'number', min: 68, max: 2160,
-        desc: 'Horas que o texto das mensagens comuns fica no banco (68, o padrão, é a janela de apagar para todos; até 2160 = 90 dias): quanto mais, mais o /tldr alcança. As mídias têm o seu prazo, o cache.messageMediaRetentionHours.'
+    'cache.messageRetentionDays': {
+        default: 3,
+        type: 'number', min: 3, max: 90,
+        desc: 'Dias que o texto das mensagens comuns fica no banco (3, o padrão, cobre a janela de apagar para todos; até 90): quanto mais, mais o /tldr alcança. As mídias têm o seu prazo, o cache.messageMediaRetentionDays.'
     },
     'cache.reactionRetentionDays': {
         default: 30,
@@ -1253,13 +1253,13 @@ updateAxiosUserAgent();
 
 const AUTO_UA_PREFIX = /^ZapBot\/\d+\.\d+\.\d+(?: \(devel\))?(?: \(git\+[0-9a-f]{7}\/(?:HEAD|v\d+\.\d+\.\d+)\))?/;
 
-function sufixoDeUserAgentAutomatico(value) {
+function automaticUserAgentSuffix(value) {
     const match = String(value ?? '').match(AUTO_UA_PREFIX);
     if (!match || match[0].length !== String(value).length && !/^\s/.test(String(value).slice(match[0].length))) return null;
     return String(value).slice(match[0].length);
 }
 
-async function migrarUserAgentCliente() {
+async function migrateClientUserAgent() {
     const rows = await dbAll(`SELECT key, value FROM settings
         WHERE key IN ('zapbot.client.userAgent', 'weather.userAgent', 'screenshot.userAgent')`);
     const saved = new Map(rows.flatMap(row => {
@@ -1274,13 +1274,13 @@ async function migrarUserAgentCliente() {
     const currentText = String(current ?? '');
     const suffix = currentText === zapbotUserAgentTemplate || currentText.startsWith(`${zapbotUserAgentTemplate} `)
         ? currentText.slice(zapbotUserAgentTemplate.length).trim()
-        : sufixoDeUserAgentAutomatico(current);
+        : automaticUserAgentSuffix(current);
 
     if (suffix !== null) {
         const legacy = [saved.get('weather.userAgent'), saved.get('screenshot.userAgent')]
             .filter(value => typeof value === 'string' && value.trim() &&
                 !['auto', 'weather-bot/1.0'].includes(value.trim()) &&
-                sufixoDeUserAgentAutomatico(value) === null);
+                automaticUserAgentSuffix(value) === null);
         const combined = [suffix.trim(), ...legacy.map(value => value.trim())].filter(Boolean).join(' ');
         const next = `${zapbotUserAgentTemplate}${combined ? ` ${combined}` : ''}`;
         await dbRun('UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?',
@@ -1371,7 +1371,7 @@ async function loadSettings() {
         await dbRun('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', [key, JSON.stringify(schema.default)]);
     }
 
-    await migrarUserAgentCliente();
+    await migrateClientUserAgent();
 
     for (const row of await dbAll('SELECT key, value FROM settings')) {
         if (!SETTINGS_SCHEMA[row.key]) {

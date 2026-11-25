@@ -389,8 +389,8 @@ Where to start:
   alert, it mutes where it came from. Someone who is muted also doesn't generate a `/watch` alert in
   your private chat. [`/unmute`](commands/unmute.md) undoes it.
 - **Automatic cleanup**: every 10 minutes the bot removes from the database/disk regular messages
-  older than 68 h (the maximum window WhatsApp allows for deleting; the text is kept longer with
-  `cache.messageRetentionHours` and the media with `cache.messageMediaRetentionHours`), deleted and
+  older than 3 days (it covers the window WhatsApp allows for deleting; the text is kept longer with
+  `cache.messageRetentionDays` and the media with `cache.messageMediaRetentionDays`), deleted and
   edited ones, and reactions older than 30 days, `/watch` hits older than 30 days (setting
   `watch.hitsRetentionDays`), `/stats` counters older than 90 days (setting `stats.retentionDays`),
   polls older than 90 days (setting `poll.retentionDays`) and alerts skipped by `/mute` older

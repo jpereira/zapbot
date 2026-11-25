@@ -10,7 +10,7 @@ const ROOT_DIR = path.join(__dirname, '..');
 const BOT_START_TIME = Date.now();
 
 // Maximum time WhatsApp allows deleting for everyone: 68 hours in milliseconds (the retention minimum
-// of regular messages and media: 'cache.messageRetentionHours' and 'cache.messageMediaRetentionHours')
+// of regular messages and media: 'cache.messageRetentionDays' and 'cache.messageMediaRetentionDays')
 const MAX_DELETE_WINDOW = 68 * 60 * 60 * 1000;
 
 // 1 day in milliseconds (retention of deleted ones: setting 'cache.revokedRetentionDays')

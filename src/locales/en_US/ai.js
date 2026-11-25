@@ -166,10 +166,10 @@ module.exports = {
     'tldr.messages': { one: '{n} message', other: '{n} messages' },
     'tldr.sinceReply': 'from the replied message',
     'tldr.limited': 'limited to {max} messages (setting tldr.maxMsgs)',
-    'tldr.retention': 'regular messages are kept only {time} ({hours} h) in the database (setting cache.messageRetentionHours)',
+    'tldr.retention': 'regular messages are kept only {time} in the database (setting cache.messageRetentionDays)',
     'tldr.latest': 'only the {max} most recent (setting tldr.maxMsgs)',
     'tldr.few': '📝 Too few messages to summarize ({total}) in {name}.\n' +
-        '💡 _The summary uses the text stored in the database: regular messages are kept for {hours} h (setting cache.messageRetentionHours), and commands and media without a caption are not included._',
+        '💡 _The summary uses the text stored in the database: regular messages are kept for {days} days (setting cache.messageRetentionDays), and commands and media without a caption are not included._',
     'tldr.me': 'You',
     'tldr.unknown': 'Unknown',
     'tldr.scopeReply': 'for the {messages} in {name} since the replied message ({time} ago)',

@@ -161,7 +161,7 @@ localizações, emojis e reações. As transcrições que o bot fez dos áudios 
   têm). **Menções** (`@5521...`) mostram o nome do contato. Uma mensagem cuja **reação** foi trocada ou tirada mostra
   cada mudança embaixo.
 - **Mídia**: imagens, vídeos e áudios tocam na página, cada um com um link **Baixar**; um documento é sempre um download.
-  Uma mídia que já saiu do cache (`cache.messageMediaRetentionHours`) vem marcada.
+  Uma mídia que já saiu do cache (`cache.messageMediaRetentionDays`) vem marcada.
 - **Mensagens novas** chegam sozinhas a cada `zapbot.web.refreshSeconds` (15 s) quando você está no fim da conversa, e as
   mensagens carregam `zapbot.web.pageSize` por vez.
 
@@ -217,8 +217,8 @@ se revezam (o botão *Voltar* volta para a lista) e a barra de ferramentas quebr
 
 ![No celular: uma conversa](assets/web/pt-BR/mobile-chat.png)
 
-Só aparece o que o bot tem no banco: o texto das mensagens comuns fica por `cache.messageRetentionHours` (68 h por
-padrão; até 90 dias), e as apagadas, editadas e com reação pela retenção própria de cada uma
+Só aparece o que o bot tem no banco: o texto das mensagens comuns fica por `cache.messageRetentionDays` (3 dias por
+padrão; até 90), e as apagadas, editadas e com reação pela retenção própria de cada uma
 ([`/cache`](commands/cache.md), [`/show`](commands/show.md)). Para guardar mais histórico, aumente esses settings.
 
 ## Notas

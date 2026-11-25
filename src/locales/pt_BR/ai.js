@@ -166,10 +166,10 @@ module.exports = {
     'tldr.messages': { one: '{n} mensagem', other: '{n} mensagens' },
     'tldr.sinceReply': 'a partir da mensagem respondida',
     'tldr.limited': 'limitado a {max} mensagens (setting tldr.maxMsgs)',
-    'tldr.retention': 'as mensagens comuns ficam só {time} ({hours} h) no banco (setting cache.messageRetentionHours)',
+    'tldr.retention': 'as mensagens comuns ficam só {time} no banco (setting cache.messageRetentionDays)',
     'tldr.latest': 'só as {max} mais recentes (setting tldr.maxMsgs)',
     'tldr.few': '📝 Poucas mensagens para resumir ({total}) em {name}.\n' +
-        '💡 _O resumo usa o texto guardado no banco: as mensagens comuns ficam {hours} h (setting cache.messageRetentionHours), e comandos e mídias sem legenda não entram._',
+        '💡 _O resumo usa o texto guardado no banco: as mensagens comuns ficam {days} dias (setting cache.messageRetentionDays), e comandos e mídias sem legenda não entram._',
     'tldr.me': 'Você',
     'tldr.unknown': 'Desconhecido',
     'tldr.scopeReply': 'das {messages} de {name} desde a mensagem respondida (há {time})',

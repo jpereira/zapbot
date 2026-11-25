@@ -172,7 +172,7 @@ typed. With `@mention`, the person's private chat and statuses are included:
 
 **Even if you delete messages on your phone or on WhatsApp Web, the bot keeps everything.** It saves each
 message that arrives (text, and the media in `cache/media`) as soon as it comes, for
-`cache.messageRetentionHours` (90 days in this setup; the media, `cache.messageMediaRetentionHours`).
+`cache.messageRetentionDays` (90 days in this setup; the media, `cache.messageMediaRetentionDays`).
 Deleting on your phone doesn't tell the bot anything, so the message stays in the history and `/show -a`
 brings it back, with the photo, the voice note or the file. (When the *other person* deletes for everyone,
 the bot also notices and marks it `🗑️`: that is `-d`.) What the bot never saw (it was off or disconnected) isn't there.
@@ -193,7 +193,7 @@ Every answer ends with the command for the next level.
 💡 To read, repeat with the period: /show -a /Fulano/ 2026-11
    Day: 2026-05-05 (or 05/05/2026, today, yesterday) · month: 2026-05 · hour: 14h
 💡 Even if you delete messages on the phone or on WhatsApp Web, the bot keeps the history
-(and the media) for 90 days (setting cache.messageRetentionHours): you can recover everything from here.
+(and the media) for 90 days (setting cache.messageRetentionDays): you can recover everything from here.
 
 /show -a /Fulano/ 2026-11
 🗄️ Fulano · 2026-11

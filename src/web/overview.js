@@ -64,8 +64,8 @@ async function overview() {
             temporary: { ...tmp }
         },
         retention: {
-            messageHours: getSetting('cache.messageRetentionHours'),
-            mediaHours: getSetting('cache.messageMediaRetentionHours'),
+            messageDays: getSetting('cache.messageRetentionDays'),
+            mediaDays: getSetting('cache.messageMediaRetentionDays'),
             deletedDays: getSetting('cache.revokedRetentionDays'),
             editedDays: getSetting('cache.editedRetentionDays'),
             reactionDays: getSetting('cache.reactionRetentionDays')

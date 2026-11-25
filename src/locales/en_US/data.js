@@ -120,7 +120,7 @@ module.exports = {
     'show.history.titleOf': '🗄️ *{name} · {period}*\n{msgs}{media}',
     'show.history.query': ' with "{query}"',
     'show.history.allChats': 'all chats',
-    'show.history.keeps': '\n💡 _Even if you delete messages on the phone or on WhatsApp Web, the bot keeps the history (and the media) for {days} days (setting cache.messageRetentionHours): you can recover everything from here._',
+    'show.history.keeps': '\n💡 _Even if you delete messages on the phone or on WhatsApp Web, the bot keeps the history (and the media) for {days} days (setting cache.messageRetentionDays): you can recover everything from here._',
     'show.history.hintDown': '\n💡 _To read, repeat with the period: {cmd}_',
     'show.history.hintFormats': '\n   _Day: 2026-05-05 (or 05/05/2026, today, yesterday) · month: 2026-05 · hour: 14h_',
     'show.history.leaf': '💬 *{msgs}* · {name} · {period}{page}',

@@ -8,7 +8,7 @@ const path = require('path');
 const { client, completeNotice } = require('../client');
 const { commandUsage } = require('./base');
 const { resolveTarget } = require('./show');
-const { HOUR_MS } = require('../constants');
+const { DAY_MS } = require('../constants');
 const { chatCurrentIds } = require('../contacts');
 const { CHATGPT, engineProcessing, withEngineTip } = require('../engines');
 const { dbAll, dbReady, dbRun } = require('../db');
@@ -26,7 +26,7 @@ const { readDuration } = require('../util/when');
  * /tldr -c família   → from another chat: name, /regex/ or @contact
  * /tldr -private          → in your private chat instead of exposing it in the current chat
  * (replying)      → from the replied message until now (the typed period or -c win)
- * Uses the text already stored in the database: regular messages stay cache.messageRetentionHours (68 h). They stay
+ * Uses the text already stored in the database: regular messages stay cache.messageRetentionDays (3 days). They stay
  * except the commands, the deleted ones and the media without a caption.
  */
 const SUMMARY_DEFAULT = 100;
@@ -124,11 +124,10 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
         period.n = max;
     }
 
-    // The database stores the text of regular messages for cache.messageRetentionHours
-    const hoursSaved = getSetting('cache.messageRetentionHours');
-    const saved = hoursSaved * HOUR_MS;
+    // The database stores the text of regular messages for cache.messageRetentionDays
+    const saved = getSetting('cache.messageRetentionDays') * DAY_MS;
     if (period.ms > saved) {
-        notices.push(t('tldr.retention', { time: byLong(saved), hours: hoursSaved }));
+        notices.push(t('tldr.retention', { time: byLong(saved) }));
         period.ms = saved;
     }
 
@@ -184,7 +183,7 @@ async function summarize({ msg, opts, chatId, chatName, quotedMsg }) {
     }
 
     if (rows.length < SUMMARY_MIN) {
-        await msg.reply(t('tldr.few', { total: rows.length, name: nameAlt, hours: getSetting('cache.messageRetentionHours') }));
+        await msg.reply(t('tldr.few', { total: rows.length, name: nameAlt, days: getSetting('cache.messageRetentionDays') }));
         return;
     }
 
