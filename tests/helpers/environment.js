@@ -205,25 +205,38 @@ class DbFake {
         if (cb) setImmediate(() => cb(null));
     }
 
+    // The statement runs at once, in the order it came (sqlite3 has one queue per connection), but the callback is
+    // later, like sqlite3's (a worker thread): a fake that answers in the same tick hides the races between awaits
     run(sql, params, cb) {
+        let result;
         try {
             const r = this.db.prepare(sql).run(...params);
-            cb.call({ changes: Number(r.changes), lastID: Number(r.lastInsertRowid) }, null);
+            result = [{ changes: Number(r.changes), lastID: Number(r.lastInsertRowid) }, null];
         } catch (e) {
-            cb(e);
+            result = [undefined, e];
         }
+        setImmediate(() => cb.call(result[0], result[1]));
     }
 
     exec(sql, cb) {
-        try { this.db.exec(sql); cb(null); } catch (e) { cb(e); }
+        let error = null;
+        try { this.db.exec(sql); } catch (e) { error = e; }
+        setImmediate(() => cb(error));
     }
 
     get(sql, params, cb) {
-        try { cb(null, this.normalize(this.db.prepare(sql).get(...params))); } catch (e) { cb(e); }
+        this.answer(cb, () => this.normalize(this.db.prepare(sql).get(...params)));
     }
 
     all(sql, params, cb) {
-        try { cb(null, this.db.prepare(sql).all(...params).map(r => this.normalize(r))); } catch (e) { cb(e); }
+        this.answer(cb, () => this.db.prepare(sql).all(...params).map(r => this.normalize(r)));
+    }
+
+    answer(cb, query) {
+        let rows;
+        let error = null;
+        try { rows = query(); } catch (e) { error = e; }
+        setImmediate(() => cb(error, rows));
     }
 
     // node:sqlite returns objects without a prototype; sqlite3 returns plain objects
