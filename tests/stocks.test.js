@@ -139,6 +139,21 @@ test('/stocks MSTR -alert < 90: cria, lista e dispara uma vez quando o preço ca
     assert.match((await bot.replyAlt('/stocks PETR4.SA -alert > 40'))[0], /PETR4\.SA acima de/);
 });
 
+test('/stocks -alert: pausado enquanto os preços chegam não dispara (nem some)', async () => {
+    await bot.replyAlt('/stocks MSTR -alert < 90');
+    market.MSTR = 88;
+    // The pause lands after the check read the list, while it waits for the price
+    const quote = yahoo('MSTR', 88);
+    network.responder('get', 'query1.finance.yahoo.com', async () => {
+        await bot.dbRun('UPDATE price_alerts SET paused = 1');
+        return quote;
+    });
+    const before = bot.client.sent.length;
+    await priceCheckAlerts({ force: true });
+    assert.equal(bot.client.sent.length, before);
+    assert.equal((await bot.dbGet('SELECT paused FROM price_alerts')).paused, 1);
+});
+
 test('XAUT (ouro tokenizado) é suportado no /crypto, com o ícone 🥇', async () => {
     assert.equal(CRYPTO_SUPPORTED.XAUT, '🥇');
     network.responder('get', 'api.binance.com/api/v3/ticker/24hr', (url, cfg) =>

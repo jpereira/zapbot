@@ -341,8 +341,11 @@ async function priceCheckAlerts({ force = false } = {}) {
                 const price = prices[a.symbol];
                 if (!Number.isFinite(price) || !OPERATORS[a.op].test(price, a.target)) continue;
 
-                // Removes BEFORE notifying: if the send fails, the notice does not repeat on every check
-                await dbRun('DELETE FROM price_alerts WHERE id = ?', [a.id]);
+                // Removes BEFORE notifying: if the send fails, the notice does not repeat on every check.
+                // The list was read before the prices came (seconds): an alert paused, removed or edited
+                // (the web makes it again with a new id) in that window is not deleted, so it does not fire
+                const claimed = await dbRun('DELETE FROM price_alerts WHERE id = ? AND COALESCE(paused, 0) = 0', [a.id]);
+                if (!claimed.changes) continue;
 
                 const changeAlt = fmtChange(price, a.price_at_creation);
                 const destinations = alertDestinations(a);
