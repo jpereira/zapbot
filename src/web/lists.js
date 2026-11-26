@@ -54,7 +54,7 @@ const priceText = (n) => {
     return value.toFixed(Math.max(2, decimals));
 };
 
-// A row that can be turned on and off (a /watch notice, a monitored contact, a scheduled message) has the same kind of
+// A row that can be turned on and off (a /watch notice, a price alert, a scheduled message) has the same kind of
 // cell in the "alert" column; clicking it toggles (manage: op 'toggle')
 // (a notice: 🔔 / 🔕; a scheduled message, which runs or is paused: ▶️ / ⏸️)
 const bell = (on, icons = ['🔔', '🔕']) => ({ bell: Boolean(on), text: on ? 'on' : 'off', icon: on ? icons[0] : icons[1], play: icons[0] === '▶️' });
@@ -65,14 +65,13 @@ const area = (name, label, extra = {}) => ({ name, label, type: 'textarea', ...e
 const people = (name, label, extra = {}) => ({ name, label, type: 'people', ...extra });
 const select = (name, label, options, extra = {}) => ({ name, label, type: 'select', options, ...extra });
 
-/** The price alerts (/stocks, /crypto -alert), the /watch rules with how many hits each has, and the /monitor contacts */
+/** The price alerts (/stocks, /crypto -alert) and the /watch rules with how many hits each has (/monitor: ./monitor.js) */
 async function alerts() {
     const price = await dbAll('SELECT * FROM price_alerts ORDER BY id');
     const hits = new Map((await dbAll('SELECT rule, COUNT(*) AS n, MAX(timestamp) AS lastAt FROM watch_hits GROUP BY rule')).map(r => [r.rule, r]));
     const rules = getSetting('watch.rules');
     const watchMuted = new Set((await dbAll('SELECT rule FROM watch_muted')).map(r => r.rule));
     const watchPeople = new Map((await dbAll('SELECT * FROM watch_destinations')).map(r => [r.rule, peopleOf(r)]));
-    const monitor = await dbAll('SELECT id, contact_name, last_status, last_seen, last_checked_at, alert_enabled, last_error FROM monitor_contacts ORDER BY contact_name');
     return {
         sections: [
             {
@@ -96,15 +95,6 @@ async function alerts() {
                 manage: {
                     kind: 'watch', canAdd: true, canEdit: true, canDelete: true, idField: 'oldRule', history: 'watch',
                     fields: [text('rule', 'rule', { placeholder: 'text  or  /regex/i', required: true }), people('recipients', 'notifies')]
-                }
-            },
-            {
-                title: 'monitor', columns: ['contact', 'status', 'last seen', 'last checked', 'alert', 'error'],
-                rows: monitor.map(m => [m.contact_name, m.last_status ?? '—', m.last_seen ? { date: m.last_seen * 1000 } : '—', m.last_checked_at ? { date: m.last_checked_at } : '—', bell(m.alert_enabled), m.last_error ?? '']),
-                ids: monitor.map(m => m.id), values: monitor.map(m => ({ name: m.contact_name, alert: Boolean(m.alert_enabled) })),
-                manage: {
-                    kind: 'monitor', canAdd: true, canEdit: true, canDelete: true, history: 'monitor',
-                    fields: [people('contact', 'contact', { single: true, addOnly: true }), text('name', 'name'), { name: 'alert', label: '🔔 alert when it comes online', type: 'checkbox' }]
                 }
             }
         ]

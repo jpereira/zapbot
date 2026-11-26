@@ -13,6 +13,7 @@ const { cleanAll, cleanMedia, cleanRetention, cleanTemporary } = require('../cle
 const contactPhotos = require('../contactPhotos');
 const { CACHE_DIR, MEDIA_DIR } = require('../constants');
 const { chatInfo } = require('./data');
+const webPush = require('../webPush');
 const { registerMonitored } = require('../monitor');
 const { resolveLidToPhone } = require('../contacts');
 const { cmdAlias } = require('../commands/alias');
@@ -263,6 +264,15 @@ async function toggleMonitor(body) {
     return { ok: true };
 }
 
+// "Check now": the contact goes to the next round of the loop (every 10 s), past the monitor.pool wait; the loop
+// still waits 1 to 15 s between contacts
+async function checkMonitorNow(body) {
+    const row = await dbGet('SELECT id FROM monitor_contacts WHERE id = ?', [Number(body.id)]);
+    if (!row) throw new ManageError('contact: not found');
+    await dbRun('UPDATE monitor_contacts SET last_attempt_at = 0 WHERE id = ?', [row.id]);
+    return { ok: true };
+}
+
 /* the history of a chat */
 // What stays when a chat is cleared: the deleted messages, the edited ones (with the text before) and the ones with reactions
 const KEPT = `(revoked = 1 OR id IN (SELECT message_id FROM message_edits) OR id IN (SELECT message_id FROM reactions)
@@ -449,21 +459,46 @@ const HANDLERS = {
     chat: { preview: previewChat, clear: clearChat, previewAll, clearAll },
     cache: { clean: cleanCachePicked },
     show: { delete: async (body) => noteResult(await webShow.deleteShowItem(body)), mute: async (body) => noteResult(await webShow.toggleMute(body)) },
-    monitor: { add: addMonitor, edit: editMonitor, delete: deleteMonitor, toggle: toggleMonitor },
+    monitor: { add: addMonitor, edit: editMonitor, delete: deleteMonitor, toggle: toggleMonitor, check: checkMonitorNow },
     monitorReading: { delete: deleteMonitorReading },
     schedule: { add: saveSchedule, edit: saveSchedule, delete: deleteSchedule, toggle: pauseSchedule },
-    setting: { edit: editSetting, delete: resetSetting }
+    setting: { edit: editSetting, delete: resetSetting },
+    // The tries of the forms (nothing is saved): a shortcut's command checked or run with its replies kept, a /watch
+    // rule against the last messages
+    try: {
+        command: async (body) => require('./tryCommand').tryLine(body.command),
+        check: async (body) => ({ ...(await require('./tryCommand').checkLine(body.command)), parts: undefined }),
+        watch: async (body) => require('./watchTest').tryWatchRule(body.rule)
+    },
+    gallery: { delete: async (body) => noteResult(await require('./gallery').deleteMedia(body)) },
+    push: {
+        subscribe: async (body, token, req) => pushResult(() => webPush.subscribe({ ...body, agent: req?.agent })),
+        unsubscribe: async (body) => pushResult(() => webPush.unsubscribe(body.endpoint)),
+        test: async (body) => {
+            const sent = await webPush.pushTo(String(body.endpoint ?? ''), { title: body.title || '🔔 ZapBot', body: body.text || 'ok', url: '/' });
+            if (!sent) throw new ManageError('endpoint: this browser is not subscribed');
+            return { ok: sent >= 200 && sent < 300, status: sent };
+        }
+    }
 };
+
+async function pushResult(run) {
+    try {
+        return await run();
+    } catch (err) {
+        throw new ManageError(err.message);
+    }
+}
 
 /**
  * @param {{ section: string, op: string }} body  what to change (see HANDLERS) and its fields
  * @returns {Promise<{ ok: boolean, message?: string }>}
  * @throws {ManageError} with the message for the user
  */
-async function manage(body, address = '?', token = null) {
+async function manage(body, address = '?', token = null, agent = '') {
     const handler = HANDLERS[body?.section]?.[body?.op];
     if (!handler) throw new ManageError('not allowed');
-    const result = await handler(body, token);
+    const result = await handler(body, token, { agent });
     printInfo(`Web: ${body.section}.${body.op}${body.id != null ? ` ${String(body.id).slice(0, 40)}` : ''} from ${address}`);
     return result;
 }

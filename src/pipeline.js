@@ -244,4 +244,4 @@ async function runSources(sources, { msg, quotedMsg, run, last }) {
     return { quoted };
 }
 
-module.exports = { MAX_STAGES, mediaKind, outputAsQuoted, pipeInputs, plainOutput, readPipeline, runSources, splitPipeline };
+module.exports = { MAX_STAGES, captureMessage, mediaKind, outputAsQuoted, pipeInputs, plainOutput, readPipeline, runSources, splitPipeline };

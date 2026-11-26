@@ -174,7 +174,7 @@ async function noteMedia(token, id) {
 
     const name = path.basename(row.media_path).replace(/\.enc$/, '').replace(/^\d+_[a-z0-9]+_/, '');
     const mime = row.media_mime || 'application/octet-stream';
-    if (!(await protectedTags()).has(row.tag)) return { buffer: await fs.readFile(real), mime, name };
+    if (!(await protectedTags()).has(row.tag)) return { buffer: await fs.readFile(real), mime, name, open: true };
     const key = keyOf(token, row.tag);
     if (!key) return { locked: true };
     try {

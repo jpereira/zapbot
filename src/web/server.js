@@ -40,6 +40,10 @@ const { ManageError, manage } = require('./manage');
 const webNotes = require('./notes');
 const { overview } = require('./overview');
 const { showItems, showSummary } = require('./show');
+const { monitorOverview } = require('./monitor');
+const { health } = require('./health');
+const { gallery } = require('./gallery');
+const webPush = require('../webPush');
 
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const MAX_BODY = 32 * 1024; // the login is tiny; what is saved (a shortcut, a setting, the ids to export) is not
@@ -52,7 +56,13 @@ const escapeHtml = (text) => String(text).replace(/[&<>"']/g, c => ({ '&': '&amp
 const STATIC = {
     '/': ['index.html', 'text/html; charset=utf-8'],
     '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
-    '/style.css': ['style.css', 'text/css; charset=utf-8']
+    '/style.css': ['style.css', 'text/css; charset=utf-8'],
+    // The installable app (PWA): the service worker (the push notices and the page offline), its manifest and icons
+    '/sw.js': ['sw.js', 'text/javascript; charset=utf-8'],
+    '/manifest.webmanifest': ['manifest.webmanifest', 'application/manifest+json; charset=utf-8'],
+    '/icon.svg': ['icon.svg', 'image/svg+xml'],
+    '/icon-192.png': ['icon-192.png', 'image/png'],
+    '/icon-512.png': ['icon-512.png', 'image/png']
 };
 
 // token → expiry (ms); address → { errors, until }
@@ -133,8 +143,8 @@ function securityHeaders(res) {
     res.setHeader('Referrer-Policy', 'no-referrer');
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Security-Policy',
-        "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; " +
-        "connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'");
+        "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; " +
+        "connect-src 'self'; worker-src 'self'; manifest-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'");
 }
 
 function sendJson(res, status, body) {
@@ -329,7 +339,7 @@ async function api(req, res, url) {
     }
     if (req.method === 'POST' && route === '/api/manage') {
         try {
-            return sendJson(res, 200, await manage(await readJson(req), clientAddress(req), token));
+            return sendJson(res, 200, await manage(await readJson(req), clientAddress(req), token, String(req.headers['user-agent'] ?? '').replace(/[^\P{C}]/gu, '').slice(0, 120)));
         } catch (err) {
             if (!(err instanceof ManageError)) throw err;
             return sendJson(res, 400, { ok: false, error: err.message });
@@ -410,6 +420,19 @@ async function api(req, res, url) {
             return sendJson(res, 200, await lists.alerts());
         case '/api/history/watch':
             return sendJson(res, 200, await lists.watchHits(url.searchParams.get('rule')));
+        case '/api/health':
+            return sendJson(res, 200, health());
+        case '/api/gallery':
+            return sendJson(res, 200, await gallery({
+                chat, kind: url.searchParams.get('kind') ?? '', before: url.searchParams.get('before') ?? '',
+                from: toSeconds(url.searchParams.get('from')), to: toSeconds(url.searchParams.get('to'))
+            }));
+        case '/api/push': {
+            const endpoint = url.searchParams.get('endpoint');
+            return sendJson(res, 200, { publicKey: (await webPush.vapidKeys()).publicKey, kinds: webPush.KINDS, devices: await webPush.devices(), subscription: endpoint ? await webPush.subscription(endpoint) : null });
+        }
+        case '/api/monitor':
+            return sendJson(res, 200, await monitorOverview());
         case '/api/history/monitor': {
             const history = await lists.monitorHistory(url.searchParams.get('id'));
             return history ? sendJson(res, 200, history) : sendJson(res, 404, { error: 'not found' });
@@ -424,10 +447,15 @@ async function api(req, res, url) {
             return sendJson(res, 200, await statsData(toSeconds(url.searchParams.get('days'))));
         case '/api/lists/settings':
             return sendJson(res, 200, lists.settings());
+        // X-Offline: 1 → the service worker may keep it for the page offline (never a note of a protected tag)
         case '/api/notes/tags':
+            res.setHeader('X-Offline', '1');
             return sendJson(res, 200, { tags: await webNotes.listTags(token) });
-        case '/api/notes':
-            return sendJson(res, 200, { notes: await webNotes.listNotes(token, url.searchParams.get('tag') ?? '', url.searchParams.get('q') ?? '') });
+        case '/api/notes': {
+            const notes = await webNotes.listNotes(token, url.searchParams.get('tag') ?? '', url.searchParams.get('q') ?? '');
+            if (!notes.some(n => n.protected && !n.locked)) res.setHeader('X-Offline', '1');
+            return sendJson(res, 200, { notes });
+        }
         case '/api/notes/media': {
             const media = await webNotes.noteMedia(token, toSeconds(url.searchParams.get('id')));
             if (!media) return sendJson(res, 404, { error: 'no media' });
@@ -437,7 +465,8 @@ async function api(req, res, url) {
             const headers = {
                 'Content-Type': inline ? media.mime : 'application/octet-stream', 'Accept-Ranges': 'bytes',
                 'Content-Security-Policy': 'sandbox', 'Cache-Control': 'private, no-store',
-                'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(media.name)}`
+                'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(media.name)}`,
+                ...(media.open ? { 'X-Offline': '1' } : {})
             };
             const range = parseRange(req.headers.range, media.buffer.length);
             if (req.headers.range && !range) {

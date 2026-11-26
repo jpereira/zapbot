@@ -688,12 +688,13 @@ describe('alerts, shortcuts, schedule, stats and settings', () => {
         for (const name of ['alerts', 'aliases', 'schedule', 'settings']) assert.equal((await get(`/api/lists/${name}`)).status, 401, name);
     });
 
-    test('alerts: the price alerts, the /watch rules with their hits and the monitored contacts', async () => {
+    test('alerts: the price alerts and the /watch rules with their hits (the monitor has its own tab)', async () => {
         await bot.dbRun("INSERT INTO price_alerts (kind, symbol, op, target, created_at, dest_name, message) VALUES ('crypto', 'BTC', '>', 96000, 1700000000000, 'Fulano', 'vender!')");
         await bot.setSetting('watch.rules', ['boleto', '/pix/i']);
         await bot.dbRun("INSERT INTO watch_hits (rule, message_id, timestamp) VALUES ('boleto', 'm1', 1700000000), ('boleto', 'm2', 1700000500)");
-        await bot.dbRun("INSERT INTO monitor_contacts (contact_id, contact_name, created_at, last_status, alert_enabled) VALUES ('5521@c.us', 'Ciclano', 1, 'online', 1)");
-        const [price, watch, monitor] = await list('alerts');
+        const sections = await list('alerts');
+        assert.deepEqual(sections.map(x => x.title), ['price', 'watch']);
+        const [price, watch] = sections;
         assert.deepEqual(price.rows[0].slice(1, 4), ['crypto', 'BTC', '> 96000']);
         assert.equal(price.rows[0][6], '🔔 vender!');
         assert.equal(price.values[0].message, 'vender!', 'editing keeps the stored message without the display prefix');
@@ -703,7 +704,6 @@ describe('alerts, shortcuts, schedule, stats and settings', () => {
         assert.equal(targets.values[1].rule, 'USD > 6.20');
         assert.deepEqual(price.rows[0][5], { text: 'Fulano', title: 'Fulano' }, 'the text, and the hover with the resolved name');
         assert.deepEqual(watch.rows.map(r => [r[0], r[3]]), [['boleto', 2], ['/pix/i', 0]]);
-        assert.deepEqual([monitor.rows[0][0], monitor.rows[0][1], monitor.rows[0][4]], ['Ciclano', 'online', { bell: true, text: 'on', icon: '🔔', play: false }]);
     });
 
     test('shortcuts and schedule', async () => {
@@ -1542,11 +1542,48 @@ describe('alerts: contacts to notify, the history of /watch and of /monitor', ()
         const history = await json(`/api/history/monitor?id=${row.id}`);
         assert.equal(history.title, 'Fulano de Tal');
         assert.deepEqual(history.rows.map(r => r[0].date), [1700001000_000, 1700000000_000], 'in ms, the latest first');
-        const alerts = (await json('/api/lists/alerts')).sections[2];
-        assert.equal(alerts.rows[0][2].date, 1700001000_000, 'the last seen of the table is in ms too');
+        const [card] = (await json('/api/monitor')).contacts;
+        assert.equal(card.lastSeen, 1700001000_000, 'the last seen of the card is in ms too');
         assert.equal((await manage({ section: 'monitorReading', op: 'delete', id: history.ids[0] })).status, 200);
         assert.equal((await json(`/api/history/monitor?id=${row.id}`)).total, 1);
         assert.equal((await get('/api/history/monitor?id=99999', cookie)).status, 404);
+    });
+
+    test('the Monitor tab: the loop, each contact with its presence, the next check and when it is usually seen', async () => {
+        assert.equal((await get('/api/monitor')).status, 401);
+        await bot.setSetting('monitor.pool', 300);
+        await bot.dbRun(`INSERT INTO monitor_contacts (contact_id, contact_name, created_at, last_attempt_at, last_checked_at, last_status, last_seen, alert_enabled, online_state, last_error)
+            VALUES ('5521999999999@c.us', 'Ciclano', 1, 1700000000000, 1700000001000, 'offline', 1700000000, 1, 0, 'falhou'), ('123@lid', 'Beltrano', 2, 0, NULL, NULL, NULL, 0, NULL, NULL)`);
+        const ciclano = await bot.dbGet("SELECT id FROM monitor_contacts WHERE contact_name = 'Ciclano'");
+        // 3 readings on Tuesday 14/11/2023 at 19h (São Paulo, UTC-3) and one on Wednesday at 08h
+        await bot.dbRun(`INSERT INTO monitor_history (contact_id, last_seen, observed_at) VALUES
+            (?, ${Date.UTC(2023, 10, 14, 22, 5) / 1000}, 1), (?, ${Date.UTC(2023, 10, 14, 22, 40) / 1000}, 1), (?, ${Date.UTC(2023, 10, 21, 22, 10) / 1000}, 1), (?, ${Date.UTC(2023, 10, 15, 11, 0) / 1000}, 1)`,
+        [ciclano.id, ciclano.id, ciclano.id, ciclano.id]);
+        await bot.dbRun("INSERT INTO messages (id, chat_id, timestamp) VALUES ('m-mon', '5521999999999@c.us', 1)");
+
+        const data = await json('/api/monitor');
+        assert.deepEqual([data.pool, data.enabled, typeof data.max], [300, Boolean(bot.src('settings').getSetting('monitor.enabled')), 'number']);
+        const [beltrano, c] = data.contacts;
+        assert.deepEqual([c.name, c.number, c.online, c.alert, c.error, c.hasChat], ['Ciclano', '5521999999999', 0, true, 'falhou', true]);
+        assert.equal(c.nextAt, 1700000000000 + 300_000, 'the last try plus monitor.pool');
+        assert.equal(c.readings, 4);
+        assert.equal(c.heatmap[2][19], 3, 'Tuesday 19h, in the bot timezone');
+        assert.equal(c.heatmap[3][8], 1);
+        assert.deepEqual(c.peaks, [19], 'the 08h reading is only one: not a habit');
+        assert.deepEqual([beltrano.number, beltrano.nextAt, beltrano.peaks, beltrano.hasChat, beltrano.online], [null, null, [], false, null], 'a @lid has no number; never tried is the next round');
+
+        await bot.setSetting('monitor.enabled', false);
+        assert.equal((await json('/api/monitor')).state, 'paused');
+        await bot.setSetting('commands.disabled', ['/monitor']);
+        assert.equal((await json('/api/monitor')).state, 'disabled');
+    });
+
+    test('check now: the contact goes to the next round of the loop', async () => {
+        await bot.dbRun("INSERT INTO monitor_contacts (contact_id, contact_name, created_at, last_attempt_at) VALUES ('1@c.us', 'Ciclano', 1, 1700000000000)");
+        const { id } = await bot.dbGet('SELECT id FROM monitor_contacts');
+        assert.equal((await manage({ section: 'monitor', op: 'check', id })).status, 200);
+        assert.equal((await bot.dbGet('SELECT last_attempt_at AS at FROM monitor_contacts')).at, 0);
+        assert.equal((await manage({ section: 'monitor', op: 'check', id: 999 })).status, 400);
     });
 });
 
