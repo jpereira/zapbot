@@ -1,0 +1,96 @@
+diff --git a/node_modules/whatsapp-web.js/src/Client.js b/node_modules/whatsapp-web.js/src/Client.js
+index 62de539..fe72dc0 100644
+--- a/node_modules/whatsapp-web.js/src/Client.js
++++ b/node_modules/whatsapp-web.js/src/Client.js
+@@ -138,8 +138,10 @@ class Client extends EventEmitter {
+ 
+             const needAuthHandle = await this.pupPage.waitForFunction(
+                 () => {
++                    // zapbot patch: the /login/ page of WhatsApp Web (Nov 2026) has no WAWebSocketModel
+                     const state =
+-                        window.require?.('WAWebSocketModel')?.Socket?.state;
++                        window.require?.('WAWebSocketModel')?.Socket?.state ??
++                        window.require?.('WAWebBackendEventBus')?.BackendEventBus?.socketState;
+                     if (
+                         !state ||
+                         state === 'OPENING' ||
+@@ -259,13 +261,18 @@ class Client extends EventEmitter {
+                             .Conn.on('change:ref', onRefChange); // future QR changes
+ 
+                         // Remove QR listener once authentication succeeds
+-                        window
+-                            .require('WAWebSocketModel')
+-                            .Socket.on('change:hasSynced', () => {
+-                                window
+-                                    .require('WAWebConnModel')
+-                                    .Conn.off('change:ref', onRefChange);
+-                            });
++                        // (zapbot patch: on the /login/ page, the BackendEventBus opening the stream)
++                        const SocketModel = window.require('WAWebSocketModel')?.Socket;
++                        const removeQr = () => {
++                            window
++                                .require('WAWebConnModel')
++                                .Conn.off('change:ref', onRefChange);
++                        };
++                        if (SocketModel) SocketModel.on('change:hasSynced', removeQr);
++                        else
++                            window
++                                .require('WAWebBackendEventBus')
++                                .BackendEventBus.on('open_socket_stream', removeQr);
+                     });
+                 }
+             }
+@@ -388,24 +395,28 @@ class Client extends EventEmitter {
+                 },
+             );
+             await this.pupPage.evaluate(() => {
+-                const Socket = window.require('WAWebSocketModel').Socket;
+                 const Cmd = window.require('WAWebCmd').Cmd;
++                // zapbot patch: the /login/ page has no WAWebSocketModel; the BackendEventBus has the state
++                // (set_socket_state) and the stream (open_socket_stream), as whatsapp-web.js main does
++                const SocketModel = window.require('WAWebSocketModel')?.Socket;
++                let Socket = SocketModel;
++                const socketListeners = [];
++                if (SocketModel) {
++                    socketListeners.push(
++                        [SocketModel, 'change:state', (_AppState, state) => { window.onAuthAppStateChangedEvent(state); }],
++                        [SocketModel, 'change:hasSynced', () => { window.onAppStateHasSyncedEvent(); }],
++                    );
++                } else {
++                    Socket = window.require('WAWebBackendEventBus').BackendEventBus;
++                    Socket.hasSynced = Socket.isMainStreamReadyMd;
++                    socketListeners.push(
++                        [Socket, 'set_socket_state', (state) => { window.onAuthAppStateChangedEvent(state); }],
++                        [Socket, 'open_socket_stream', () => { window.onAppStateHasSyncedEvent(); }],
++                    );
++                }
+ 
+                 const listeners = [
+-                    [
+-                        Socket,
+-                        'change:state',
+-                        (_AppState, state) => {
+-                            window.onAuthAppStateChangedEvent(state);
+-                        },
+-                    ],
+-                    [
+-                        Socket,
+-                        'change:hasSynced',
+-                        () => {
+-                            window.onAppStateHasSyncedEvent();
+-                        },
+-                    ],
++                    ...socketListeners,
+                     [
+                         Cmd,
+                         'offline_progress_update_from_bridge',
+@@ -603,7 +614,8 @@ class Client extends EventEmitter {
+                 }
+                 window.codeInterval = setInterval(async () => {
+                     const state =
+-                        window.require('WAWebSocketModel').Socket.state;
++                        window.require('WAWebSocketModel')?.Socket?.state ??
++                        window.require('WAWebBackendEventBus')?.BackendEventBus?.socketState;
+                     if (state != 'UNPAIRED' && state != 'UNPAIRED_IDLE') {
+                         clearInterval(window.codeInterval);
+                         return;
