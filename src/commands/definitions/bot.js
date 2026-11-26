@@ -47,7 +47,7 @@ module.exports = {
             cron: false
         },
         {
-            opts: ['limit'],
+            opts: ['limit', 'lim'],
             signs: ['+', '-'],
             values: ['<N[/period]|commands>'],
             desc: 'Usage limit of a user per command, together with +cmd: +cmd /gpt +limit 5/day (5 per day), +limit 20/month, +limit 5 (5 in total, no renewal). -limit /gpt (or all) removes it. Only successful calls count: help, usage and errors do not. The owner and admins have no limit. See /usage.',

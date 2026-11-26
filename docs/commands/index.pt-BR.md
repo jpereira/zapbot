@@ -93,7 +93,10 @@ As mesmas formas, num comando só:
 
 1
 🔇 Silenciado: 👤 Jorge Pereira — apagadas, editadas, status, reações
-💡 Só o aviso some: as mensagens continuam guardadas para o /show. Veja a lista com /mute; desfaça com /unmute.
+Só o aviso some: as mensagens continuam guardadas para o /show.
+💡 Dicas
+/mute mostra a lista
+/unmute desfaz
 ```
 
 Para desistir sem esperar, responda `0` (ou `cancelar`):

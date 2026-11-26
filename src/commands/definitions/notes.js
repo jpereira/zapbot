@@ -112,7 +112,7 @@ module.exports = {
             cron: false
         },
         {
-            opts: ['clean'],
+            opts: ['clean', 'cl'],
             values: [],
             desc: 'With -lock #tag: deletes from the history the old commands you typed for that tag (with -yes; without it, only counts).',
             ex: ['/notes -lock #foo -clean -yes'],
@@ -140,7 +140,7 @@ module.exports = {
             cron: false
         },
         {
-            opts: ['alert'],
+            opts: ['alert', 'al'],
             values: ['<when>'],
             desc: 'Reminds you of the note at a date/time. With -add: /notes -a text -alert tomorrow 9h. With ID: /notes -alert 3 +2h. With #tag: reminds of all the tag\'s notes (/notes -alert #home 18h -to /Family/). Alone, shows each note with an alert in its own message (1/N), with when and where (with #tag, only the tag\'s); with -rm <id...|#tag...|all>, removes the alert. The when accepts +2h, 30m, 18h, tomorrow 9h, sexta 18:30, 25/12 10h.',
             cron: false

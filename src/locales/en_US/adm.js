@@ -57,7 +57,7 @@ module.exports = {
     'adm.agenda.onlyMedia': '_(media only)_',
     'adm.agenda.statusSubject': '📊 ZapBot status',
     'adm.alias.examplesNone': '📂 No example files (examples/*.zb).',
-    'adm.alias.examplesList': '📂 *Example files* (examples/*.zb)\n\n{list}\n\n✅ loaded · ⬜ not loaded\n💡 _/alias -examples <name> shows the aliases a file creates, without loading;\n/alias -yes -examples <name> loads it (it replaces the ones that already exist)_',
+    'adm.alias.examplesList': '📂 *Example files* (examples/*.zb)\n\n{list}\n\n✅ loaded · ⬜ not loaded\n💡 _/alias -examples <name> shows the aliases a file creates, without loading\n/alias -yes -examples <name> loads it (it replaces the ones that already exist)_',
     'adm.alias.examplesManual': ' (only by hand)',
     'adm.alias.examplesMissing': '❌ No example file "{name}". Available: {list}.',
     'adm.alias.previewTitle': '👀 *{name}.zb*: {n} alias(es) to create ({added} new, {existing} already exist). Nothing was loaded yet.',

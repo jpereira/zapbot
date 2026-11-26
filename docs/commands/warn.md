@@ -48,7 +48,9 @@ an admin of the group**; otherwise the bot warns and says it could not remove.
 1. Fulano de Tal — 2/3
 2. Ciclano — 1/3
 
-💡 See the reasons with /warn -l @person; zero them with /warn -c @person.
+💡 Tips
+-l @person shows the reasons
+-c @person zeroes them
 
 /warn -l @Fulano
 ⚠️ Warnings of Fulano de Tal (2/3)

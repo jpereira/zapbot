@@ -31,7 +31,9 @@ among contacts only: groups can't be blocked.
 ```text
 /block /Fulano/
 🚫 Blocked: 👤 Fulano
-💡 Undo with /unblock; see the list with /block.
+💡 Tips
+/unblock undoes it
+/block shows the list
 
 /block
 🚫 Blocked (2)
@@ -59,7 +61,9 @@ others carry on. At the end, a single summary:
 ℹ️ Already blocked (1):
 👤 Beltrano
 
-💡 Undo with /unblock; see the list with /block.
+💡 Tips
+/unblock undoes it
+/block shows the list
 ```
 
 The same person repeated counts once.

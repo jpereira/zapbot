@@ -2,6 +2,7 @@
   "summary": "Exibe o espaço ocupado pelo cache e limpa",
   "usage": "/cache [OPÇÃO]",
   "help": "Exibe o espaço ocupado em ${CACHE_DIR} e limpa o cache.",
+  "ex": ["/cache", "/cache -c"],
   "cmd_opts": [
     {
       "opts": [

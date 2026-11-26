@@ -10,6 +10,7 @@ module.exports = {
     aliases: [],
     summary: 'Random ANSI/ASCII art from 16colo.rs',
     help: 'Random ANSI/ASCII art from 16colo.rs, with title and artist. Default packs in the pixelart.packs setting.',
+    ex: ['/pixelart', '/pixelart -y 1996'],
     cmd_opts: [
         { opts: ['random', 'r'], values: [], desc: 'Picks from any pack in the archive.' },
         { opts: ['year', 'y'], values: ['<year>'], desc: 'Picks from a pack of the year (e.g.: 1996).' },

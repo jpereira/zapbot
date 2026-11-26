@@ -9,6 +9,7 @@ module.exports = {
     role: OWNER,
     typing: false,
     strict: true,
+    ex: ['/web -l', '/web -d 2'],
     cmd_opts: [
         { opts: ['list', 'l'], values: [], desc: 'List active sessions and their expiration.', cron: false },
         { opts: ['destroy', 'd'], values: ['[number]'], desc: 'Revoke a session by its number in the last list, or all without a number.', cron: false },

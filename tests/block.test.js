@@ -23,7 +23,7 @@ const blockedByLid = (lid) => Object.assign(bot.createContact(lid, null),
 describe('/block e /unblock', () => {
     test('bloqueia pelo nome; de novo: já está; a lista; desbloqueia pelo nº', async () => {
         assert.equal((await bot.replyAlt('/block /Fulano/'))[0],
-            '🚫 *Bloqueado:* 👤 Fulano\n💡 _Desfaça com /unblock; veja a lista com /block._');
+            '🚫 *Bloqueado:* 👤 Fulano\n💡 *Dicas*\n/unblock desfaz\n/block mostra a lista');
         assert.equal(contactAlt(OTHERAlt.jid).isBlocked, true);
         assert.match((await bot.replyAlt('/block /Fulano/'))[0], /^ℹ️ 👤 Fulano já está bloqueado\./);
 
@@ -62,14 +62,14 @@ describe('/block e /unblock', () => {
         assert.deepEqual(r, ['🚫 *Bloqueados (2):*\n👤 Fulano\n👤 Ciclano Souza\n\n' +
             'ℹ️ *Já estavam bloqueados (1):*\n👤 Beltrano\n\n' +
             '❌ *Não bloqueados (1):*\n👤 Dono: é a conta do próprio bot\n\n' +
-            '💡 _Desfaça com /unblock; veja a lista com /block._']);
+            '💡 *Dicas*\n/unblock desfaz\n/block mostra a lista']);
         assert.deepEqual([contactAlt(OTHERAlt.jid).isBlocked, CICLANO.isBlocked], [true, true]);
     });
 
     test('várias: quem não é achado tem o erro dele, e os outros seguem', async () => {
         const r = await bot.replyAlt('/block +5521977777777 +5521922222222');
         assert.deepEqual(r, ['❌ O número +5521977777777 não está no WhatsApp.',
-            '🚫 *Bloqueados (1):*\n👤 Beltrano\n\n💡 _Desfaça com /unblock; veja a lista com /block._']);
+            '🚫 *Bloqueados (1):*\n👤 Beltrano\n\n💡 *Dicas*\n/unblock desfaz\n/block mostra a lista']);
     });
 
     test('pelo @lid, quando o WhatsApp informa: o bloqueio e o "já está" são dele', async () => {
@@ -88,7 +88,7 @@ describe('/block e /unblock', () => {
         const r = await bot.replyAlt('/block +5521911111111 +5521922222222', { expectedError: true });
         assert.deepEqual(r, ['🚫 *Bloqueados (1):*\n👤 Beltrano\n\n' +
             '❌ *Não bloqueados (1):*\n👤 Fulano: o WhatsApp recusou o bloqueio (erro "t")\n\n' +
-            '💡 _Desfaça com /unblock; veja a lista com /block._']);
+            '💡 *Dicas*\n/unblock desfaz\n/block mostra a lista']);
 
         assert.deepEqual(await bot.replyAlt('/block +5521911111111', { expectedError: true }),
             ['⚠️ Não consegui bloquear 👤 Fulano: o WhatsApp recusou o bloqueio (erro "t").']);
@@ -105,7 +105,7 @@ describe('/block e /unblock', () => {
     test('palavras soltas são um nome só (não várias pessoas)', async () => {
         const CICLANO = bot.createContact('5521933333333@c.us', 'Ciclano Souza');
         assert.equal((await bot.replyAlt('/block Ciclano Souza'))[0], '🚫 *Bloqueado:* 👤 Ciclano Souza\n' +
-            '💡 _Desfaça com /unblock; veja a lista com /block._');
+            '💡 *Dicas*\n/unblock desfaz\n/block mostra a lista');
         assert.equal(CICLANO.isBlocked, true);
         assert.equal(contactAlt(OTHERAlt.jid).isBlocked, false);
     });

@@ -39,12 +39,12 @@ Notes saved in the database, valid for any chat (group or private). Each one has
 | `-export`, `-e` | `[#tag...]` | Sends the notes in a PDF, with the images and the text as the caption (header, footer with version, host, date and time, and pagination). With tags, only theirs. See [Export](#export) |
 | `-lock`, `-lo` | `[password] #tag` | Protects a tag with a password (text and files encrypted) or unlocks it; the password can come in the command. See [Protected tags](#protected-tags--lock) and [Password in the command](#password-in-the-command) |
 | `-now`, `-n`, `-no` | | Locks the tag right now, alone or with `-lock` in any order (`-n #foo`, `-lock #foo -now`, `-n -lock #foo`) |
-| `-clean` | | With `-lock #tag`: deletes from the history the old commands you typed for that tag (needs `-yes`) |
+| `-clean`, `-cl` | | With `-lock #tag`: deletes from the history the old commands you typed for that tag (needs `-yes`) |
 | `#tag <text>` | | With no option in front, it becomes a new note, same as `-add`: `/notes #home do not forget to remove that option`. The `#tag` is required: `/notes meu texto` gives an error. Just `/notes #home`, with no text, lists the tag's notes |
 | `-add`, `-a` | `#tag <text>` | Adds a note; the `#tag` is required and comes at the start of the text. The text goes up to the `-alert`, if there is one, and accepts multiple lines |
 | `-rm`, `-r` | `<id...\|#tag...\|all>` | Removes the notes with those IDs (`-r 2`, `-r 1 2 3` or `-r 1,2,3`), of a tag (`-r #home`) or all (`all`). With a `#tag`, the numbers are the **positions in that tag's list** (`-r #home 1` is the 1st of `#home`), not IDs. A whole tag or `all` asks for `-yes`. If any ID, position or tag doesn't exist, none is removed. Together with `-alert`, removes only the alert, keeping the notes |
 | `-yes`, `-y` | | With `-rm`: confirms removing a whole tag or all the notes (without it, the bot only says how many would go) |
-| `-alert` | `<when>` | Notifies you about the note (or all notes of a `#tag`) at a date/time. Alone, shows each note with an alert in its own message (`1/N`). See [Alerts](#alerts) |
+| `-alert`, `-al` | `<when>` | Notifies you about the note (or all notes of a `#tag`) at a date/time. Alone, shows each note with an alert in its own message (`1/N`). See [Alerts](#alerts) |
 | `-to` | `<destination>` | With `-alert`: notifies a contact, group, number or email instead of your private chat. With the list (`-l`, `#tag`) or `-export`: sends the list or the PDF there, instead of replying in the chat. Repeat it for several |
 
 ```text

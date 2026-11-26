@@ -11,6 +11,7 @@ module.exports = {
     aliases: [],
     summary: 'Shows the space used by the cache and cleans it',
     help: `Shows the space used in ${CACHE_DIR} and cleans the cache.`,
+    ex: ['/cache', '/cache -c'],
     cmd_opts: [
         {
             opts: ['all', 'a'],

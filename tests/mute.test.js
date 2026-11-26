@@ -46,7 +46,7 @@ describe('/mute', () => {
 
     test('-d num grupo: as apagadas dali não avisam, mas ficam guardadas; as de outros grupos avisam', async () => {
         assert.deepEqual(await bot.replyAlt('/mute -d /Grupo L200/'), [
-            '🔇 *Silenciado:* 👥 Grupo sobre L200 — apagadas\n💡 _Só o aviso some: as mensagens continuam guardadas para o /show. Veja a lista com /mute; desfaça com /unmute._'
+            '🔇 *Silenciado:* 👥 Grupo sobre L200 — apagadas\n_Só o aviso some: as mensagens continuam guardadas para o /show._\n💡 *Dicas*\n/mute mostra a lista\n/unmute desfaz'
         ]);
 
         assert.deepEqual(await deleted('psiu', { chat: L200 }), []);
@@ -154,7 +154,7 @@ describe('/mute', () => {
                 '💡 _Responda só com o nº (em até 2 minutos; 0 cancela), ou repita o comando com mais palavras do nome._',
             '❌ Escolha um nº de 1 a 2.',
             '🔇 *Silenciado:* 👤 Jorge Silva — apagadas, editadas, status, reações\n' +
-                '💡 _Só o aviso some: as mensagens continuam guardadas para o /show. Veja a lista com /mute; desfaça com /unmute._'
+                '_Só o aviso some: as mensagens continuam guardadas para o /show._\n💡 *Dicas*\n/mute mostra a lista\n/unmute desfaz'
         ]);
         assert.deepEqual((await bot.dbAll('SELECT target_id FROM mutes')).map(m => m.target_id), ['5511944444444@c.us']);
 

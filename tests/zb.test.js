@@ -119,7 +119,7 @@ describe('carga dos exemplos', () => {
         write('um', '/alias /ex1 /ping\n/alias /ex2 /uptime');
         const [list] = await bot.replyAlt('/alias -examples');
         assert.match(list, /⬜ um/);
-        assert.match(list, /💡 _\/alias -examples <nome> mostra os aliases que um arquivo cria, sem carregar;\n\/alias -yes -examples <nome> carrega \(substitui os que já existem\)_$/);
+        assert.match(list, /💡 _\/alias -examples <nome> mostra os aliases que um arquivo cria, sem carregar\n\/alias -yes -examples <nome> carrega \(substitui os que já existem\)_$/);
         assert.match((await bot.replyAlt('/alias -examples um'))[0], /👀 \*um\.zb\*: 2 alias\(es\) a criar \(2 novo\(s\), 0 já existe\(m\)\)/);
         assert.match((await bot.replyAlt('/alias -ex'))[0], /⬜ um/, 'ver não marca como carregado');
         const [loaded] = await bot.replyAlt('/alias -yes -examples um');

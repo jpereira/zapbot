@@ -48,7 +48,9 @@ avisa e diz que não conseguiu remover.
 1. Fulano de Tal — 2/3
 2. Ciclano — 1/3
 
-💡 Veja os motivos com /warn -l @pessoa; zere com /warn -c @pessoa.
+💡 Dicas
+-l @pessoa mostra os motivos
+-c @pessoa zera
 
 /warn -l @Fulano
 ⚠️ Avisos de Fulano de Tal (2/3)

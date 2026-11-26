@@ -39,12 +39,12 @@ Anotações salvas no banco, que valem para qualquer chat (grupo ou privado). Ca
 | `-export`, `-e` | `[#tag...]` | Manda as anotações num PDF, com as imagens e o texto como legenda (cabeçalho, rodapé com versão, host, data e hora, e paginação). Com tags, só as delas. Veja [Exportar](#exportar) |
 | `-lock`, `-lo` | `[senha] #tag` | Protege uma tag com senha (texto e arquivos cifrados) ou libera; a senha pode vir no comando. Veja [Tags protegidas](#tags-protegidas--lock) e [Senha no comando](#senha-no-comando) |
 | `-now`, `-n`, `-no` | | Trava a tag agora, sozinha ou com `-lock` em qualquer ordem (`-n #foo`, `-lock #foo -now`, `-n -lock #foo`) |
-| `-clean` | | Com `-lock #tag`: apaga do histórico os comandos antigos que você digitou para a tag (precisa de `-yes`) |
+| `-clean`, `-cl` | | Com `-lock #tag`: apaga do histórico os comandos antigos que você digitou para a tag (precisa de `-yes`) |
 | `#tag <texto>` | | Sem opção na frente, vira uma anotação nova, igual ao `-add`: `/notes #casa não esquecer de remover a opção tal`. A `#tag` é obrigatória: `/notes meu texto` dá erro. Só `/notes #casa`, sem texto, lista as da tag |
 | `-add`, `-a` | `#tag <texto>` | Adiciona uma anotação; a `#tag` é obrigatória e vem no começo do texto. O texto vai até o `-alert`, se houver, e aceita várias linhas |
 | `-rm`, `-r` | `<id...\|#tag...\|all>` | Remove as anotações com esses IDs (`-r 2`, `-r 1 2 3` ou `-r 1,2,3`), de uma tag (`-r #casa`) ou todas (`all`). Com uma `#tag`, os números são as **posições na lista dela** (`-r #casa 1` é a 1ª da `#casa`), não IDs. Uma tag inteira ou `all` pede o `-yes`. Se algum ID, posição ou tag não existe, nenhuma sai. Junto com `-alert`, tira só o alerta, mantendo as anotações |
 | `-yes`, `-y` | | Com `-rm`: confirma a remoção de uma tag inteira ou de todas as anotações (sem ele, o bot só diz quantas sairiam) |
-| `-alert` | `<quando>` | Avisa da anotação (ou de todas as de uma `#tag`) numa data/hora. Sozinho, mostra cada anotação com alerta numa mensagem (`1/N`). Veja [Alertas](#alertas) |
+| `-alert`, `-al` | `<quando>` | Avisa da anotação (ou de todas as de uma `#tag`) numa data/hora. Sozinho, mostra cada anotação com alerta numa mensagem (`1/N`). Veja [Alertas](#alertas) |
 | `-to` | `<destino>` | Com `-alert`: avisa num contato, grupo, número ou e-mail em vez do seu privado. Com a lista (`-l`, `#tag`) ou o `-export`: manda a lista ou o PDF lá, em vez de responder no chat. Repita para vários |
 
 ```text

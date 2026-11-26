@@ -2,6 +2,7 @@
   "summary": "Gerencia a interface web e suas sessões",
   "usage": "/web [OPÇÃO]",
   "help": "No seu privado, gerencia o acesso web, encerra sessões e configura o login em duas etapas.",
+  "ex": ["/web -l", "/web -d 2"],
   "cmd_opts": [
     { "opts": ["list", "l"], "desc": "Lista as sessões ativas e seus vencimentos." },
     { "opts": ["destroy", "d"], "values": ["[número]"], "desc": "Encerra uma sessão pelo número da última lista ou todas sem número." },

@@ -192,7 +192,8 @@
     },
     {
       "opts": [
-        "clean"
+        "clean",
+        "cl"
       ],
       "values": [],
       "desc": "Com -lock #tag: apaga do histórico os comandos antigos que você digitou para a tag (com -yes; sem ele, só conta).",
@@ -231,7 +232,8 @@
     },
     {
       "opts": [
-        "alert"
+        "alert",
+        "al"
       ],
       "values": [
         "<quando>"

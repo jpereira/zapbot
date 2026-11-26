@@ -2,6 +2,7 @@
   "summary": "Cria uma enquete no chat ou mostra o resultado",
   "usage": "/poll [-m] <pergunta> | <opção 1> | <opção 2> [| ...]  ou  /poll -r",
   "help": "Cria uma enquete no chat (separe pergunta e opções, de 2 a 12, com | ou uma por linha) ou mostra o resultado com -r.",
+  "ex": ["/poll Pizza ou hambúrguer? | Pizza | Hambúrguer", "/poll -r"],
   "cmd_opts": [
     {
       "opts": [

@@ -2,6 +2,7 @@
   "summary": "Arte ANSI/ASCII aleatória do 16colo.rs",
   "usage": "/pixelart [OPÇÃO] [pack]",
   "help": "Arte ANSI/ASCII aleatória do 16colo.rs, com título e artista. Packs padrão no setting pixelart.packs.",
+  "ex": ["/pixelart", "/pixelart -y 1996"],
   "cmd_opts": [
     {
       "opts": [

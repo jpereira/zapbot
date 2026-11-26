@@ -93,7 +93,10 @@ The same forms, in a single command:
 
 1
 🔇 Muted: 👤 Jorge Pereira — deleted, edited, status, reactions
-💡 Only the alert goes away: the messages are still stored for /show. See the list with /mute; undo with /unmute.
+Only the alert goes away: the messages are still stored for /show.
+💡 Tips
+/mute shows the list
+/unmute undoes it
 ```
 
 To give up without waiting, reply `0` (or `cancel`):

@@ -10,6 +10,7 @@ module.exports = {
     aliases: [],
     summary: 'Creates a poll in the chat or shows the result',
     help: 'Creates a poll in the chat (separate the question and options, 2 to 12, with | or one per line) or shows the result with -r.',
+    ex: ['/poll Pizza or burger? | Pizza | Burger', '/poll -r'],
     cmd_opts: [
         {
             opts: ['multi', 'm'],

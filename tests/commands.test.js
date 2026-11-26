@@ -219,7 +219,7 @@ describe('/bot', () => {
         const [r] = await bot.replyAlt('/bot -h');
         const linesAlt = r.split('\n').filter(l => /^`[+-]/.test(l)).map(l => l.match(/^`([^`]+)`/)[1]);
         assert.deepEqual(linesAlt, ['-on', '-off', '+a, -a [pessoa...]', '+u, -u [pessoa|grupo...]', '+cmd, -cmd <comandos>',
-            '+limit, -limit <N[/período]|comandos>', '-lu [all]', '-lc', '-r [force]', '-y', '-s [<hora>|off]', '-to <destino>',
+            '+lim, -lim <N[/período]|comandos>', '-lu [all]', '-lc', '-r [force]', '-y', '-s [<hora>|off]', '-to <destino>',
             '-i', '-t', '-d [on|off|reset|<texto>]', '-f [off|on|<N>[/<segundos>]]', '-pw <senha|off>', '-lo <senha>', '-fe', '-m']);
         assert.match(r, /\n`-on` · liga o bot\n/);
         assert.match(r, /\n🔗 https:\/\/jpereira\.github\.io\/zapbot\/pt-BR\/commands\/bot\/$/);

@@ -171,7 +171,7 @@ module.exports = {
     'monitor.add.usage': `Give a contact: /monitor -a /Jorge Pereira/`,
     'monitor.add.exists': `👀 {name} is already registered: #{id}.`,
     'monitor.add.limit': `❌ Limit of {max} contacts reached. Remove one with /monitor -rm <id>.`,
-    'monitor.add.done': `👀 #{id} · {name} registered.\n⏱️ Checked every {interval}, one contact at a time.\n💡 /monitor -l shows the history; /monitor -rm {id} removes it.\n{risk}`,
+    'monitor.add.done': `👀 #{id} · {name} registered.\n⏱️ Checked every {interval}, one contact at a time.\n💡 *Tips*\n-l shows the history\n-rm {id} removes it\n{risk}`,
     'monitor.add.paused': `⏸️ Monitor paused. Resume with /set monitor.enabled true.`,
     'monitor.rm.usage': `Give the list id or a contact: /monitor -rm 1 or /monitor -r /Jorge Pereira/`,
     'monitor.rm.all': `🗑️ Monitor cleared: {count} contact(s) and their histories removed.`,

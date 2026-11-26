@@ -30,7 +30,9 @@ só entre os contatos: grupos não se bloqueiam.
 ```text
 /block /Fulano/
 🚫 Bloqueado: 👤 Fulano
-💡 Desfaça com /unblock; veja a lista com /block.
+💡 Dicas
+/unblock desfaz
+/block mostra a lista
 
 /block
 🚫 Bloqueados (2)
@@ -58,7 +60,9 @@ No fim, um resumo só:
 ℹ️ Já estavam bloqueados (1):
 👤 Beltrano
 
-💡 Desfaça com /unblock; veja a lista com /block.
+💡 Dicas
+/unblock desfaz
+/block mostra a lista
 ```
 
 A mesma pessoa repetida conta uma vez.

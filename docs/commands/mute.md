@@ -76,7 +76,10 @@ message from the bot itself that isn't an alert, it doesn't know whose it is and
 
 /mute                       (replying to the alert)
 🔇 Muted: 👥 About L200 — deleted, edited, status, reactions
-💡 Only the alert goes away: the messages are still stored for /show. See the list with /mute; undo with /unmute.
+Only the alert goes away: the messages are still stored for /show.
+💡 Tips
+/mute shows the list
+/unmute undoes it
 ```
 
 ## Temporary mute (`-for`)

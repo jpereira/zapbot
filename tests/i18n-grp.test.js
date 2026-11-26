@@ -21,7 +21,7 @@ describe('en_US: grp', () => {
     test('/mute: a lista vazia, silenciar e a lista', async () => {
         assert.match((await bot.replyAlt('/mute'))[0], /^🔇 Nobody muted\./);
         assert.deepEqual(await bot.replyAlt('/mute -d /Grupo L200/'), [
-            '🔇 *Muted:* 👥 Grupo sobre L200 — deleted\n💡 _Only the alert goes away: the messages are still stored for /show. See the list with /mute; undo with /unmute._'
+            '🔇 *Muted:* 👥 Grupo sobre L200 — deleted\n_Only the alert goes away: the messages are still stored for /show._\n💡 *Tips*\n/mute shows the list\n/unmute undoes it'
         ]);
         assert.match((await bot.replyAlt('/mute'))[0], /^🔇 \*Muted\* \(1\)\n\n1\. 👥 Grupo sobre L200 — deleted/);
     });

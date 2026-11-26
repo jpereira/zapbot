@@ -59,7 +59,8 @@
     },
     {
       "opts": [
-        "limit"
+        "limit",
+        "lim"
       ],
       "values": [
         "<N[/período]|comandos>"
