@@ -2,6 +2,7 @@
  * /notes: notes (notes table) and -alert, which reminds of a note at a date/time.
  */
 
+const { loopGuard } = require('./util/loopGuard');
 const os = require('os');
 const path = require('path');
 const fs = require('fs-extra');
@@ -1253,11 +1254,11 @@ async function cmdNoteRun({ msg, args, quotedMsg, chatId }) {
  * Check: one tick per minute notifies the notes whose alert expired. Clears the alert
  * BEFORE notifying: if the send fails, it does not repeat on every tick.
  */
-let checking = false;
+const guard = loopGuard('/notes alerts');
 
 async function checkNotes() {
-    if (checking || !stateAlt.ready) return;
-    checking = true;
+    if (guard.busy() || !stateAlt.ready) return;
+    guard.start();
 
     try {
         await dbReady;
@@ -1284,7 +1285,7 @@ async function checkNotes() {
     } catch (err) {
         printError('Error checking the /notes alerts:', err.message);
     } finally {
-        checking = false;
+        guard.end();
     }
 }
 

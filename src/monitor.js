@@ -2,6 +2,7 @@
  * /monitor: persisted contacts and distinct presence times observed.
  * Does not try to rebuild online intervals or fill in missing times.
  */
+const { loopGuard } = require('./util/loopGuard');
 const crypto = require('node:crypto');
 const { messageToSelf } = require('./client');
 const { dbAll, dbGet, dbReady, dbRun } = require('./db');
@@ -12,7 +13,7 @@ const { limitHistoryMonitor } = require('./monitorHistory');
 const { queryPresence } = require('./presence');
 const { printError } = require('./log');
 
-let checking = false;
+const guard = loopGuard('/monitor');
 let timer = null;
 let wait = null;
 let generation = 0;
@@ -103,8 +104,8 @@ function presenceData(dataAlt) {
 }
 
 async function checkMonitor() {
-    if (checking || !active()) return;
-    checking = true;
+    if (guard.busy() || !active()) return;
+    guard.start();
     const current = generation;
     try {
         const contacts = shuffle((await listMonitored()).filter(c =>
@@ -173,7 +174,7 @@ async function checkMonitor() {
     } catch (err) {
         printError('Monitor: check failed:', err.message);
     } finally {
-        checking = false;
+        guard.end();
     }
 }
 

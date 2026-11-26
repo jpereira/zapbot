@@ -28,3 +28,21 @@ test('a catastrophic regex is cut by the deadline, and the next batch works', as
     assert.equal(slow, undefined);
     assert.deepEqual(await matchBatch(/b/, ['ab']), [{ start: 1, end: 2 }]);
 });
+
+test('loopGuard: a check never overlaps itself, and one stuck for too long is told once in the log', () => {
+    const { loopGuard } = bot.src('util/loopGuard');
+    let clock = 0;
+    const guard = loopGuard('/teste', { stuckMs: 1000, now: () => clock });
+    assert.equal(guard.busy(), false);
+    guard.start();
+    clock = 500;
+    assert.equal(guard.busy(), true);
+    const before = bot.logs.length;
+    clock = 2000;
+    assert.equal(guard.busy(), true);
+    assert.equal(guard.busy(), true);
+    const told = bot.logs.slice(before).filter(l => /\/teste: the previous check has been running/.test(l));
+    assert.equal(told.length, 1);
+    guard.end();
+    assert.equal(guard.busy(), false);
+});

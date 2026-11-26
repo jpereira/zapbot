@@ -3,6 +3,7 @@
  * when the fees to collect go over a value.
  */
 
+const { loopGuard } = require('../util/loopGuard');
 const { state: stateAlt } = require('../state');
 const { describe, alertDescribeDestination, alertDestinations, addressAlt2, fmtUsd, readRegistration } = require('../commands/defi');
 const { dbAll, dbReady, dbRun } = require('../db');
@@ -51,13 +52,13 @@ async function checkRates(p, n, wasRead) {
 }
 
 let lastCheck = 0;
-let checking = false;
+const guard = loopGuard('/defi alerts');
 
 async function checkAlertsDefi({ force = false } = {}) {
-    if (checking || !stateAlt.ready) return;
+    if (guard.busy() || !stateAlt.ready) return;
     if (!force && Date.now() - lastCheck < getSetting('defi.alert.intervalMin') * 60 * 1000) return;
 
-    checking = true;
+    guard.start();
     lastCheck = Date.now();
 
     try {
@@ -82,7 +83,7 @@ async function checkAlertsDefi({ force = false } = {}) {
     } catch (err) {
         printError('Error checking the /defi alerts:', err.message);
     } finally {
-        checking = false;
+        guard.end();
     }
 }
 

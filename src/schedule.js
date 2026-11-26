@@ -2,6 +2,7 @@
  * Schedule: the reminders (/cron -reminder) and the scheduled messages (/cron), with the periodic check.
  */
 
+const { loopGuard } = require('./util/loopGuard');
 const { sendMedia, commandsError, assembleText, breakLines } = require('./textCommands');
 const { state: stateAlt } = require('./state');
 const { client } = require('./client');
@@ -509,11 +510,11 @@ async function itemSendOnDestination(s, d, late) {
  * Periodic check (every 30 s): sends what expired. Disconnected, waits;
  * on return, sends what expired in the meantime (reminders warn about the delay).
  */
-let checking = false;
+const guard = loopGuard('/cron');
 
 async function checkSchedule() {
-    if (checking || !stateAlt.ready) return;
-    checking = true;
+    if (guard.busy() || !stateAlt.ready) return;
+    guard.start();
 
     try {
         await dbReady;
@@ -526,7 +527,7 @@ async function checkSchedule() {
     } catch (err) {
         printError('Error checking the schedule:', err.message);
     } finally {
-        checking = false;
+        guard.end();
     }
 }
 

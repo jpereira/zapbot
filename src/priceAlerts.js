@@ -2,6 +2,7 @@
  * Price alerts from /stocks -alert and /crypto -alert.
  */
 
+const { loopGuard } = require('./util/loopGuard');
 const axios = require('axios');
 
 const { state: stateAlt } = require('./state');
@@ -310,16 +311,16 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
  * currency, even with several alerts on it.
  */
 const lastCheckAlerts = {};
-let checkingAlerts = false;
+const guard = loopGuard('price alerts');
 
 async function priceCheckAlerts({ force = false } = {}) {
-    if (checkingAlerts || !stateAlt.ready) return;
+    if (guard.busy() || !stateAlt.ready) return;
     const now = Date.now();
     const due = Object.entries(ALERT_TYPES).filter(([kind, type]) =>
         force || now - (lastCheckAlerts[kind] ?? 0) >= alertSetting(type, 'intervalMin') * 60 * 1000);
     if (!due.length) return;
 
-    checkingAlerts = true;
+    guard.start();
     for (const [kind] of due) lastCheckAlerts[kind] = now;
 
     try {
@@ -375,7 +376,7 @@ async function priceCheckAlerts({ force = false } = {}) {
     } catch (err) {
         printError('Error checking price alerts:', err.message);
     } finally {
-        checkingAlerts = false;
+        guard.end();
     }
 }
 
