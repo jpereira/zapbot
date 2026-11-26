@@ -59,6 +59,7 @@ const STATIC = {
 const sessions = new Map();
 let sessionEpoch = 0;
 const attempts = new Map();
+let lastTotpStep = -1;
 
 function trustsPeer(req) {
     if (!getSetting('zapbot.web.trustProxy')) return false;
@@ -197,7 +198,10 @@ async function login(req, res) {
     }
     if (epoch !== sessionEpoch) return sendJson(res, 401, { error: 'retry login' });
     if (passwordOk === null) return sendJson(res, 429, { error: 'busy' });
-    const valid = userOk && passwordOk && (!secret || totp.verify(secret, code));
+    // A code works once: the same 6 digits (seen on the screen, or in a recorded request) do not log in again
+    // within the 90 s they are valid. The step of the last login with a code is kept
+    const step = secret ? totp.verifyStep(secret, code) : null;
+    const valid = userOk && passwordOk && (!secret || (step !== null && step > lastTotpStep));
     if (!valid) {
         entry.errors += 1;
         const vars = { address, attempt: entry.errors, max: MAX_ERRORS, minutes: BLOCK_MS / 60000 };
@@ -215,6 +219,7 @@ async function login(req, res) {
         return;
     }
     attempts.delete(address);
+    if (secret) lastTotpStep = step;
     const token = crypto.randomBytes(32).toString('hex');
     const hours = getSetting('zapbot.web.sessionHours');
     activeSessions();
@@ -565,7 +570,7 @@ async function startWeb() {
 }
 
 // Forgets the sessions and the blocks (the tests)
-const resetWeb = () => { destroySessions(); attempts.clear(); webNotes.reset(); require('./alert').reset(); require('./data').resetNames(); };
+const resetWeb = () => { destroySessions(); attempts.clear(); lastTotpStep = -1; webNotes.reset(); require('./alert').reset(); require('./data').resetNames(); };
 
 async function stopWeb() {
     destroySessions();

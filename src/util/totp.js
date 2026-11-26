@@ -32,14 +32,18 @@ function code(secret, now = Date.now()) {
     return String(value % 1_000_000).padStart(6, '0');
 }
 
-/** Is `typed` the code of now, of the previous 30 s or of the next (clocks that differ a little)? */
-function verify(secret, typed, now = Date.now()) {
+/** The 30 s step whose code `typed` is (now, the previous or the next: clocks that differ a little), or null */
+function verifyStep(secret, typed, now = Date.now()) {
     const wanted = String(typed ?? '').replace(/\s/g, '');
-    if (!/^\d{6}$/.test(wanted)) return false;
-    return [-1, 0, 1].some((step) => {
+    if (!/^\d{6}$/.test(wanted)) return null;
+    for (const step of [-1, 0, 1]) {
         const a = Buffer.from(code(secret, now + step * 30_000));
-        return crypto.timingSafeEqual(a, Buffer.from(wanted));
-    });
+        if (crypto.timingSafeEqual(a, Buffer.from(wanted))) return Math.floor(now / 30_000) + step;
+    }
+    return null;
 }
 
-module.exports = { code, decodeBase32, newSecret, verify };
+/** Is `typed` the code of now, of the previous 30 s or of the next? */
+const verify = (secret, typed, now = Date.now()) => verifyStep(secret, typed, now) !== null;
+
+module.exports = { code, decodeBase32, newSecret, verify, verifyStep };

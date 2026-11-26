@@ -872,6 +872,9 @@ describe('replies, mentions, reaction changes, search, export and the code (TOTP
         assert.equal((await post({ password: PASSWORD, code: '000000' })).status, 401);
         assert.equal((await post({ password: 'errada-errada', code: totp.code(rfc) })).status, 401);
         assert.equal((await post({ password: PASSWORD, code: totp.code(rfc) })).status, 200);
+        // the same code does not log in twice (replay), though it is still in its 90 s
+        assert.equal((await post({ password: PASSWORD, code: totp.code(rfc) })).status, 401);
+        assert.equal(totp.verifyStep(rfc, '287082', 59_000), 1);
 
         await assert.rejects(bot.setSetting('zapbot.web.totp', 'curto'), /base32/);
         await bot.setSetting('zapbot.web.totp', 'gezd gnbv gy3t qojq gezd gnbv gy3t qojq');
