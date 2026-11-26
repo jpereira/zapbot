@@ -148,10 +148,12 @@ async function editPrice(body) {
     const rule = str(body.rule, 'rule', { max: 80 });
     const message = str(body.message, 'message', { max: 300, required: false }).replace(/\s+/g, ' ');
     const columns = ['id', 'kind', 'symbol', 'op', 'target', 'price_at_creation', 'created_at', 'dest_id', 'dest_name', 'dest_is_group', 'dest_email', 'recipients', 'message', 'paused'];
+    // Only a row newer than every one before the edit is the new rule: the newest of the kind may be another alert
+    const { last } = await dbGet('SELECT COALESCE(MAX(id), 0) AS last FROM price_alerts');
     await dbRun('DELETE FROM price_alerts WHERE id = ?', [old.id]);
     const replies = [];
     await priceHandleAlert(kindKey, { msg: silentMsg(replies), args: `-alert ${rule}${message ? ` -msg ${message}` : ''}`, admin: true });
-    const fresh = await dbGet('SELECT id FROM price_alerts WHERE kind = ? ORDER BY id DESC LIMIT 1', [kindKey]);
+    const fresh = await dbGet('SELECT id FROM price_alerts WHERE kind = ? AND id > ? ORDER BY id DESC LIMIT 1', [kindKey, last]);
     if (fresh) {
         // a paused alert stays paused after the edit
         await dbRun('UPDATE price_alerts SET created_at = ?, dest_id = ?, dest_name = ?, dest_is_group = ?, dest_email = ?, recipients = ?, paused = ? WHERE id = ?',

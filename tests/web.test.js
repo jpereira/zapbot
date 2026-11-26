@@ -1098,6 +1098,17 @@ describe('alerts and notes: editing, deleting and playing', () => {
         yahoo(5.2);
     });
 
+    test('a refused edit of a price alert does not touch another alert of the same kind', async () => {
+        assert.equal((await manage({ section: 'price', op: 'add', kind: 'stocks', rule: 'USD > 5.30', message: 'primeiro' })).status, 200);
+        assert.equal((await manage({ section: 'price', op: 'add', kind: 'stocks', rule: 'USD > 6.00', message: 'segundo' })).status, 200);
+        const [first, second] = await bot.dbAll('SELECT * FROM price_alerts ORDER BY id');
+        await bot.dbRun("UPDATE price_alerts SET dest_name = 'Fulano', paused = 1 WHERE id = ?", [first.id]);
+        // already met (5.20 < 5.50): refused
+        assert.equal((await manage({ section: 'price', op: 'edit', id: first.id, rule: 'USD < 5.50', message: 'x' })).status, 400);
+        const rows = await bot.dbAll('SELECT id, target, message, dest_name, paused FROM price_alerts ORDER BY id');
+        assert.deepEqual(rows.map(r => [r.target, r.message, r.dest_name, r.paused]), [[5.3, 'primeiro', 'Fulano', 1], [6, 'segundo', second.dest_name, 0]]);
+    });
+
     test('a price alert: add, edit the rule and the message (it keeps where it notifies and when it was created), and a refused edit keeps the old one', async () => {
         const added = await manage({ section: 'price', op: 'add', kind: 'stocks', rule: 'USD > 5.30', message: 'olha o dólar' });
         assert.equal(added.status, 200, JSON.stringify(added.body));
