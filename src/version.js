@@ -174,7 +174,6 @@ const botVersion = (origin = ORIGIN) => `${packageJson.version}${inDevelopment(o
 const versionWithCommit = (origin = ORIGIN) =>
     (origin ? `${botVersion(origin)} (git+${origin.commit}/${origin.ref})` : packageJson.version);
 
-const zapbotUserAgent = (origin = ORIGIN) => `ZapBot/${versionWithCommit(origin)}`;
 const zapbotUserAgentTemplate = 'ZapBot/$version ($build) ($revision)';
 
 function expandUserAgent(template, origin = ORIGIN) {
@@ -185,6 +184,9 @@ function expandUserAgent(template, origin = ORIGIN) {
     };
     return String(template).replace(/\$(version|build|revision)\b/g, (_, name) => values[name]);
 }
+
+// The default User-Agent, the same text the zapbot.client.userAgent setting expands to (in a release too)
+const zapbotUserAgent = (origin = ORIGIN) => expandUserAgent(zapbotUserAgentTemplate, origin);
 
 module.exports = {
     ORIGIN,
