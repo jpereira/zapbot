@@ -90,6 +90,26 @@ describe('eventos de conexão', () => {
         assert.equal(bot.state.lastOutage, null);
     });
 
+    test('o aviso para o seu privado tenta de novo quando o WhatsApp ainda não envia (o "t" logo depois do ready)', async (t) => {
+        t.mock.timers.enable({ apis: ['setTimeout'] });
+        const { messageToSelf } = bot.src('client');
+        bot.state.ready = true;
+        const send = bot.client.sendMessage;
+        let calls = 0;
+        bot.client.sendMessage = async (...args) => {
+            if (++calls < 3) throw new Error('t');
+            return send.apply(bot.client, args);
+        };
+        try {
+            await bot.waitWithClock(t, messageToSelf('oi'));
+            assert.equal(calls, 3);
+            assert.equal(bot.client.sent.at(-1).content, 'oi');
+            assert.ok(!bot.logs.some(l => /messageToSelf failed/.test(l)));
+        } finally {
+            bot.client.sendMessage = send;
+        }
+    });
+
     test('um aviso para o seu privado antes do WhatsApp ficar pronto espera e sai depois da mensagem de início', async () => {
         const { messageToSelf } = bot.src('client');
         bot.state.ready = false;
@@ -109,15 +129,34 @@ describe('eventos de conexão', () => {
         assert.ok(Date.now() - bot.state.authenticatedAt < 1000);
     });
 
-    test('disconnected por LOGOUT: não reinicia e avisa que precisa de ação manual', async () => {
+    test('disconnected por LOGOUT (no celular): reinicia para um QR Code novo, com o aviso certo', async (t) => {
+        t.mock.timers.enable({ apis: ['setTimeout'] });
         const initializations = bot.client.initialized;
-        await emit('disconnected', 'LOGOUT');
+        await bot.waitWithClock(t, emit('disconnected', 'LOGOUT'));
 
-        assert.equal(bot.state.ready, false);
         assert.equal(bot.state.authenticatedAt, 0);
         assert.equal(bot.state.lastOutage, 'LOGOUT');
+        assert.equal(bot.client.initialized, initializations + 1, 'restarted: the new QR Code comes');
+        assert.match(emails[0].subject, /📲 WhatsApp desconectado: novo QR Code/);
+    });
+
+    test('disconnected por CONFLICT (outra instância): não reinicia e avisa que precisa de ação manual', async () => {
+        const initializations = bot.client.initialized;
+        await emit('disconnected', 'CONFLICT');
         assert.equal(bot.client.initialized, initializations);
         assert.match(emails[0].subject, /🔴 Desconectado \(ação manual\)/);
+    });
+
+    test('o timeout do whatsapp-web.js recarregando a página depois do logout não derruba o processo', () => {
+        const { isWhatsAppReloadTimeout } = bot.src('connection');
+        const timeout = Object.assign(new Error('Waiting failed: 30000ms exceeded'), {
+            name: 'TimeoutError', stack: 'TimeoutError: Waiting failed\n    at Client.inject (/app/node_modules/whatsapp-web.js/src/Client.js:139:55)'
+        });
+        bot.state.ready = false;
+        assert.equal(isWhatsAppReloadTimeout(timeout), true);
+        assert.equal(isWhatsAppReloadTimeout(new Error('other')), false, 'any other error is still a crash');
+        bot.state.ready = true;
+        assert.equal(isWhatsAppReloadTimeout(timeout), false, 'connected: it is not the reload after a logout');
     });
 
     test('disconnected por outro motivo: avisa e reinicia o cliente', async (t) => {
@@ -160,6 +199,45 @@ describe('eventos de conexão', () => {
         assert.match(emails[0].subject, /🔑 Sessão perdida: novo QR Code/);
     });
 
+    test('qr com a web ligada: no terminal e na web, com o endereço direto; QRCODE_WEB_ONLY=true deixa só a web', async () => {
+        const web = bot.src('web/server');
+        const [running, url] = [web.isWebRunning, web.webUrl];
+        Object.assign(bot.state, { authenticatedAt: 0, lastOutage: null, waitingQr: false, qr: null });
+        web.isWebRunning = () => true;
+        web.webUrl = () => 'https://zap.exemplo.com';
+        try {
+            // the default: the terminal draws it and says it is on the web too
+            await emit('qr', 'qr-1');
+            assert.ok(bot.logs.some(l => /QR Code received at .*scan it please/.test(l)));
+            assert.ok(bot.logs.some(l => /QR Code #1: also on the web: https:\/\/zap\.exemplo\.com\/qr$/.test(l)));
+            assert.deepEqual([bot.state.qr.code, bot.state.qr.count], ['qr-1', 1]);
+
+            // only the web: the terminal only says where it is, once per code (the same one keeps its number)
+            process.env.QRCODE_WEB_ONLY = 'true';
+            bot.logs.length = 0;
+            await emit('qr', 'qr-2');
+            await emit('qr', 'qr-2');
+            assert.equal(bot.logs.filter(l => /QR Code #2: sent only to the web \(QRCODE_WEB_ONLY\): https:\/\/zap\.exemplo\.com\/qr$/.test(l)).length, 1);
+            assert.ok(!bot.logs.some(l => /scan it please/.test(l)), 'not drawn in the terminal');
+
+            // only the web, but the web is off: it goes to the terminal anyway, with an error that says why
+            web.isWebRunning = () => false;
+            Object.assign(bot.state, { waitingQr: false });
+            bot.logs.length = 0;
+            await emit('qr', 'qr-3');
+            assert.ok(bot.logs.some(l => /QRCODE_WEB_ONLY is true, but the web interface is off/.test(l)));
+            assert.ok(bot.logs.some(l => /scan it please/.test(l)));
+            assert.ok(!bot.logs.some(l => /also on the web/.test(l)));
+
+            // read: the code is gone
+            await emit('authenticated');
+            assert.deepEqual([bot.state.qr, bot.state.waitingQr], [null, false]);
+        } finally {
+            Object.assign(web, { isWebRunning: running, webUrl: url });
+            delete process.env.QRCODE_WEB_ONLY;
+        }
+    });
+
     test('qr por e-mail (QRCODE_EMAIL_ENABLE=true): imagem anexada, sem repetir o mesmo QR', async () => {
         process.env.QRCODE_EMAIL_ENABLE = 'true';
         try {
@@ -175,6 +253,24 @@ describe('eventos de conexão', () => {
             assert.equal(qrs[1].attachments[0].filename, 'qrcode-2.png');
             assert.ok(Buffer.isBuffer(qrs[1].attachments[0].content));
         } finally {
+            delete process.env.QRCODE_EMAIL_ENABLE;
+        }
+    });
+
+    test('qr por e-mail com a web ligada: o e-mail e o terminal dizem que também está na web, com o endereço', async () => {
+        const web = bot.src('web/server');
+        const [running, url] = [web.isWebRunning, web.webUrl];
+        Object.assign(bot.state, { authenticatedAt: 0, lastOutage: null, waitingQr: false, qr: null });
+        process.env.QRCODE_EMAIL_ENABLE = 'true';
+        web.isWebRunning = () => true;
+        web.webUrl = () => 'https://zap.exemplo.com';
+        try {
+            await emit('qr', 'qr-mail');
+            const [mail] = emails.filter(e => /Autenticação do QR Code/.test(e.subject));
+            assert.match(mail.html, /Também na web[\s\S]*<a href="https:\/\/zap\.exemplo\.com\/qr">https:\/\/zap\.exemplo\.com\/qr<\/a>/);
+            assert.ok(bot.logs.some(l => /QR Code #1: also on the web: https:\/\/zap\.exemplo\.com\/qr$/.test(l)));
+        } finally {
+            Object.assign(web, { isWebRunning: running, webUrl: url });
             delete process.env.QRCODE_EMAIL_ENABLE;
         }
     });

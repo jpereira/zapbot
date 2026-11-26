@@ -19,7 +19,7 @@ const { resolveLidToPhone } = require('../contacts');
 const { cmdAlias } = require('../commands/alias');
 const { destinationColumns, recipientsDe } = require('../destinations');
 const { dbAll, dbGet, dbRun } = require('../db');
-const { printInfo } = require('../log');
+const { printError, printInfo } = require('../log');
 const { priceHandleAlert } = require('../priceAlerts');
 const webNotes = require('./notes');
 const webShow = require('./show');
@@ -498,6 +498,15 @@ const HANDLERS = {
         watch: async (body) => require('./watchTest').tryWatchRule(body.rule),
         schedule: trySchedule
     },
+    // Health: "Disconnect" (the bot leaves the linked devices; a new QR Code comes). Typed confirmation
+    whatsapp: {
+        logout: async (body, token, req) => {
+            if (body.confirm !== 'logout') throw new ManageError('confirm: "logout"');
+            const { logoutWhatsApp } = require('../connection');
+            logoutWhatsApp(`the web (${req?.address ?? '?'})`).catch(err => printError('WhatsApp: logout from the web:', err.message));
+            return { ok: true };
+        }
+    },
     gallery: { delete: async (body) => noteResult(await require('./gallery').deleteMedia(body)), join: async (body) => noteResult(await require('./gallery').joinCopies(body)) },
     push: {
         subscribe: async (body, token, req) => pushResult(() => webPush.subscribe({ ...body, agent: req?.agent })),
@@ -526,7 +535,7 @@ async function pushResult(run) {
 async function manage(body, address = '?', token = null, agent = '') {
     const handler = HANDLERS[body?.section]?.[body?.op];
     if (!handler) throw new ManageError('not allowed');
-    const result = await handler(body, token, { agent });
+    const result = await handler(body, token, { agent, address });
     printInfo(`Web: ${body.section}.${body.op}${body.id != null ? ` ${String(body.id).slice(0, 40)}` : ''} from ${address}`);
     return result;
 }

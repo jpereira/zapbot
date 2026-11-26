@@ -86,13 +86,46 @@ tag).
 
 ## Autenticação: QR Code no terminal ou por e-mail
 
-Na primeira execução (ou se a sessão expirar) o WhatsApp exige a leitura de um QR Code. O ZapBot
-oferece dois modos, escolhidos por `QRCODE_EMAIL_ENABLE`:
+Na primeira execução (ou se a sessão expirar) o WhatsApp exige a leitura de um QR Code. Ele pode
+aparecer em três lugares:
 
-| Modo | `QRCODE_EMAIL_ENABLE` | Onde aparece o QR |
+| Lugar | Ligado por | Onde aparece o QR |
 |------|------|------|
-| Terminal | `false` | Desenhado em ASCII nos logs do container (`docker logs -f zapbot`) |
-| E-mail   | `true`  | Enviado como imagem PNG para `QRCODE_EMAIL_SMTP_TO` (se o envio falhar, cai no terminal também, a menos que `QRCODE_EMAIL_FALLBACK_TERMINAL` seja `false`) |
+| Terminal | o padrão (`QRCODE_EMAIL_ENABLE="false"`) | Desenhado em ASCII nos logs do container (`docker logs -f zapbot`) |
+| E-mail   | `QRCODE_EMAIL_ENABLE="true"`  | Enviado como imagem PNG para `QRCODE_EMAIL_SMTP_TO` (se o envio falhar, cai no terminal também, a menos que `QRCODE_EMAIL_FALLBACK_TERMINAL` seja `false`) |
+| Web | a [interface web](web.md) ligada | Na **🩺 Saúde**, atrás do login da web, com uma faixa nas outras páginas; sempre, e o terminal e o e-mail dão o endereço direto, `<web>/qr` |
+
+Com a web ligada, como eles se combinam:
+
+| `config/.env` | O QR vai para | O terminal diz |
+|---|---|---|
+| nada (o padrão) | o terminal e a web | o QR, e `QR Code #1: also on the web: https://zap.exemplo.com/qr` |
+| `QRCODE_EMAIL_ENABLE="true"` | o e-mail e a web (o e-mail também traz o endereço) | `... sent to 'voce@...'` e `QR Code #1: also on the web: https://zap.exemplo.com/qr` |
+| `QRCODE_WEB_ONLY="true"` | só a web (nem o terminal, nem o e-mail) | `QR Code #1: sent only to the web (QRCODE_WEB_ONLY): https://zap.exemplo.com/qr` |
+
+Com a web desligada, a web simplesmente não entra: o terminal ou o e-mail, como sempre. O `QRCODE_WEB_ONLY="true"`
+com a web desligada é ignorado, com um erro no log (`QRCODE_WEB_ONLY is true, but the web interface is off`): um QR
+que não chega a lugar nenhum deixaria o bot esperando um pareamento que ninguém consegue fazer.
+
+Por exemplo, um homelab em que você sempre abre a web pelo celular e nunca olha os logs:
+
+```bash
+# config/.env
+QRCODE_WEB_ONLY="true"
+ZAPBOT_WEB_ENABLED="true"
+```
+
+e, nos logs, uma linha por código (o WhatsApp troca a cada ~20 s):
+
+```text
+[2026-11-26 15:28:41] [!] QR Code #1: sent only to the web (QRCODE_WEB_ONLY): https://zap.exemplo.com/qr
+[2026-11-26 15:29:01] [!] QR Code #2: sent only to the web (QRCODE_WEB_ONLY): https://zap.exemplo.com/qr
+```
+
+O endereço é o `zapbot.web.url` (ou `ZAPBOT_WEB_URL`) com `/qr`: ele abre a Saúde, passando pelo login. Quando a
+sessão cai, a web mostra **📲 O WhatsApp precisa ser pareado** no topo de todas as páginas, e os celulares com os
+[avisos push](web.md#o-app-instalável-e-os-avisos-no-aparelho) da conexão ligados recebem uma notificação que abre
+ela. Veja [Parear pela web](web.md#parear-pela-web).
 
 O modo e-mail é o **recomendado**, principalmente quando o bot roda num servidor remoto/homelab e
 você não quer ficar olhando logs: o QR chega na sua caixa de entrada, você abre no computador e lê

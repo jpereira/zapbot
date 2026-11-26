@@ -111,7 +111,7 @@ describe('push notices', () => {
         const ok = await manage({ section: 'push', op: 'subscribe', endpoint: PUSH, keys: b.keys, kinds: ['watch', 'nonsense'] });
         assert.deepEqual(ok.body.kinds, ['watch']);
         const info = await json(`/api/push?endpoint=${encodeURIComponent(PUSH)}`);
-        assert.deepEqual([info.devices, info.subscription.kinds, info.kinds], [1, ['watch'], ['monitor', 'watch', 'price', 'web']]);
+        assert.deepEqual([info.devices, info.subscription.kinds, info.kinds], [1, ['watch'], ['monitor', 'watch', 'price', 'web', 'connection']]);
 
         network.responder('post', 'push.example.net', network.http({ status: 201, data: '' }));
         const sent = await manage({ section: 'push', op: 'test', endpoint: PUSH, title: '🔔', text: 'oi' });
@@ -193,6 +193,68 @@ describe('the monitor: online sessions and who was online together', () => {
         assert.deepEqual([pair.a, pair.b, pair.total, pair.times], [1, 2, 17 * min, 2], '15 min + 2 min together');
         assert.equal(pair.ongoing, true);
         assert.equal(data.together.length, 1, 'Caio was never online with anyone');
+    });
+});
+
+describe('pairing WhatsApp from the web (the QR Code)', () => {
+    afterEach(() => Object.assign(bot.state, { waitingQr: false, qr: null }));
+
+    test('Health shows it while WhatsApp waits; the picture only with the login, never cached, each code logged once', async () => {
+        assert.deepEqual(await json('/api/whatsapp'), { pairing: false, qr: null });
+        assert.equal((await get('/api/whatsapp/qr')).status, 404, 'not waiting: no code');
+        Object.assign(bot.state, { ready: false, restarting: false, waitingQr: true, qr: { code: '2@abcdef,ghij==,klmn==', at: 1700000000000, count: 3 } });
+
+        assert.deepEqual(await json('/api/whatsapp'), { pairing: true, qr: { count: 3, at: 1700000000000 } });
+        const h = await json('/api/health');
+        assert.deepEqual([h.whatsapp.status, h.whatsapp.qr, h.problems.includes('whatsapp')], ['pairing', { count: 3, at: 1700000000000 }, true]);
+        assert.ok(!JSON.stringify(h).includes('abcdef'), 'the code itself never goes in the JSON');
+
+        assert.equal((await get('/api/whatsapp/qr', null)).status, 401);
+        const png = await get('/api/whatsapp/qr');
+        assert.deepEqual([png.status, png.headers.get('content-type'), png.headers.get('cache-control')], [200, 'image/png', 'no-store']);
+        const bytes = Buffer.from(await png.arrayBuffer());
+        assert.equal(bytes.subarray(1, 4).toString(), 'PNG');
+        await get('/api/whatsapp/qr');
+        assert.equal(bot.logs.filter(l => /the WhatsApp QR Code #3 was shown to 127\.0\.0\.1/.test(l)).length, 1, 'once per code');
+        // <web>/qr: the short address the terminal and the email give, to Health (through the login)
+        const short = await fetch(`${base}/qr`, { redirect: 'manual' });
+        assert.deepEqual([short.status, short.headers.get('location')], [302, '/?view=health']);
+    });
+
+    test('🔌 Disconnect: only with "logout" typed; then the bot logs out and restarts for a new QR Code', async () => {
+        assert.equal((await manage({ section: 'whatsapp', op: 'logout' })).status, 400);
+        assert.equal((await manage({ section: 'whatsapp', op: 'logout', confirm: 'sim' })).status, 400);
+        const connection = bot.src('connection');
+        const original = connection.logoutWhatsApp;
+        let asked = null;
+        connection.logoutWhatsApp = async (who) => { asked = who; };
+        try {
+            assert.equal((await manage({ section: 'whatsapp', op: 'logout', confirm: 'logout' })).status, 200);
+            assert.match(asked, /^the web \(127\.0\.0\.1\)$/, 'who asked, in the log and the email');
+        } finally {
+            connection.logoutWhatsApp = original;
+        }
+    });
+
+    test('the first QR of a wait goes as a push notice to the phones that want it (a click opens Health)', async () => {
+        const web = bot.src('web/server');
+        const running = web.isWebRunning;
+        const b = browser();
+        await manage({ section: 'push', op: 'subscribe', endpoint: PUSH, keys: b.keys, kinds: ['connection'] });
+        network.responder('post', 'push.example.net', network.http({ status: 201, data: '' }));
+        web.isWebRunning = () => true;
+        try {
+            for (const h of bot.client.listeners('qr')) await h('qr-a');
+            for (const h of bot.client.listeners('qr')) await h('qr-b');
+            await settle(() => pushCalls().length);
+            await new Promise(r => setTimeout(r, 30));
+            assert.equal(pushCalls().length, 1, 'once per wait, not on every renewed code');
+            const notice = decrypt(pushCalls()[0].cfg.body, b);
+            assert.deepEqual([notice.kind, notice.url], ['connection', '/?view=health']);
+            assert.match(notice.title, /pareado|paired/);
+        } finally {
+            web.isWebRunning = running;
+        }
     });
 });
 

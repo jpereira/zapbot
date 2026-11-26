@@ -1,6 +1,7 @@
 /*
  * Web Push: the notices of the bot (an online contact of /monitor, a /watch match, a price alert, an access to the web
- * page) also go to the browsers that turned them on in the web interface, even with the page closed.
+ * page, WhatsApp asking to be paired again) also go to the browsers that turned them on in the web interface, even
+ * with the page closed.
  *
  * No library: VAPID (RFC 8292, a JWT signed with ES256) and the encryption of the message (RFC 8291, aes128gcm) are
  * done with node:crypto. The keys of the server are made once and kept in the database (web_push_keys); each browser
@@ -14,7 +15,7 @@ const crypto = require('crypto');
 const { dbAll, dbGet, dbRun } = require('./db');
 const { printError, printInfo } = require('./log');
 
-const KINDS = ['monitor', 'watch', 'price', 'web'];
+const KINDS = ['monitor', 'watch', 'price', 'web', 'connection'];
 const TTL_SECONDS = 24 * 60 * 60;
 // The "sub" of the VAPID token: a contact of whoever runs the server, required by some push services
 const VAPID_SUBJECT = 'mailto:zapbot@example.com';

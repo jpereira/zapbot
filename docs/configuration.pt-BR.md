@@ -144,7 +144,8 @@ possível limite por IP.
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `QRCODE_EMAIL_ENABLE` | `"true"` / `"false"` | Liga o envio do QR Code por e-mail. Com `false`, ele aparece só no terminal. Os [alertas por e-mail](emails.md#alertas-por-e-mail) não dependem dele. |
+| `QRCODE_WEB_ONLY` | `"true"` / `"false"` | Com a [interface web](web.md#parear-pela-web) ligada, o QR Code vai só para ela (a Saúde): nem o terminal, nem o e-mail; o terminal diz `QR Code #1: sent only to the web (QRCODE_WEB_ONLY): <web>/qr`. Com a web desligada, é ignorado. Padrão: `"false"`. Veja [onde o QR aparece](installation.md#autenticação-qr-code-no-terminal-ou-por-e-mail). |
+| `QRCODE_EMAIL_ENABLE` | `"true"` / `"false"` | Liga o envio do QR Code por e-mail. Com `false`, ele aparece no terminal (e na web, quando ela está ligada, com o endereço dela no terminal e no e-mail). Os [alertas por e-mail](emails.md#alertas-por-e-mail) não dependem dele. |
 | `QRCODE_EMAIL_FALLBACK_TERMINAL` | `"true"` / `"false"` | Se o envio do QR por e-mail falhar, mostra o QR no terminal. Padrão: `"true"`. |
 | `QRCODE_EMAIL_SMTP_HOST` | `smtp.mail.yahoo.com` | Servidor SMTP. |
 | `QRCODE_EMAIL_SMTP_PORT` | `465` | Porta SMTP. **Use uma porta SSL/TLS implícita (465)**: o bot conecta com `secure: true`, portas STARTTLS como 587 não funcionam. O certificado do servidor é validado: servidores com certificado autoassinado/inválido são recusados, porque um MITM capturaria a senha e o QR Code (que dá acesso à conta). |

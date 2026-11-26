@@ -181,6 +181,7 @@ async function leaveAlertBefore(event, details, ms) {
 }
 
 module.exports = {
+    escapeHtml,
     leaveAlertBefore,
     alertPerEmail,
     sendFilePerEmail,

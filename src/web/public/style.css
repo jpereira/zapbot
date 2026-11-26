@@ -684,3 +684,16 @@ dialog.modal { color: var(--text); }
 .loadbar-fill { position: absolute; top: 0; bottom: 0; width: 35%; border-radius: 3px; background: var(--accent); animation: loadbar 1.2s ease-in-out infinite; }
 @keyframes loadbar { 0% { left: -35%; } 100% { left: 100%; } }
 @media (prefers-reduced-motion: reduce) { .loadbar-fill { animation-duration: 3s; } }
+/* WhatsApp waiting to be paired: the QR Code in Health, and a bar on the other pages */
+.pair-card { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; background: var(--panel); border: 2px solid var(--accent); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.pair-qr { width: 280px; height: 280px; border-radius: 8px; background: #fff; padding: 6px; image-rendering: pixelated; }
+.pair-body { flex: 1; min-width: 240px; display: grid; gap: 8px; align-content: start; }
+.pair-body h3 { margin: 0; font-size: 18px; color: var(--text); text-transform: none; letter-spacing: 0; }
+.pair-body ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.pair-warning { font-size: 13px; }
+.pair-bar { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 60; background: var(--accent); color: #fff; font-weight: 600;
+    padding: 8px 16px; border-radius: 10px; box-shadow: 0 4px 16px rgba(0, 0, 0, .35); max-width: calc(100vw - 32px); cursor: pointer; }
+.pair-bar[hidden] { display: none; }
+@media (max-width: 760px) { .pair-qr { width: 100%; height: auto; max-width: 320px; } }
+.danger-btn { margin-top: 8px; border: 1px solid var(--deleted); color: var(--deleted); background: transparent; }
+.danger-btn:hover { background: color-mix(in srgb, var(--deleted) 15%, transparent); }

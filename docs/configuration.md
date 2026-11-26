@@ -145,7 +145,8 @@ rate limit by IP.
 
 | Variable | Example | Description |
 |---|---|---|
-| `QRCODE_EMAIL_ENABLE` | `"true"` / `"false"` | Turns on sending the QR Code by email. With `false`, it shows up only in the terminal. [Email alerts](emails.md#email-alerts) don't depend on it. |
+| `QRCODE_WEB_ONLY` | `"true"` / `"false"` | With the [web interface](web.md#pairing-from-the-web) on, the QR Code goes only to it (Health): neither the terminal nor the email; the terminal says `QR Code #1: sent only to the web (QRCODE_WEB_ONLY): <web>/qr`. With the web off, it is ignored. Default: `"false"`. See [where the QR shows up](installation.md#authentication-qr-code-in-the-terminal-or-by-email). |
+| `QRCODE_EMAIL_ENABLE` | `"true"` / `"false"` | Turns on sending the QR Code by email. With `false`, it shows up in the terminal (and on the web, when it is on, with its address in the terminal and in the email). [Email alerts](emails.md#email-alerts) don't depend on it. |
 | `QRCODE_EMAIL_FALLBACK_TERMINAL` | `"true"` / `"false"` | If sending the QR by email fails, shows the QR in the terminal. Default: `"true"`. |
 | `QRCODE_EMAIL_SMTP_HOST` | `smtp.mail.yahoo.com` | SMTP server. |
 | `QRCODE_EMAIL_SMTP_PORT` | `465` | SMTP port. **Use an implicit SSL/TLS port (465)**: the bot connects with `secure: true`, STARTTLS ports like 587 don't work. The server certificate is validated: servers with a self-signed/invalid certificate are refused, because a MITM would capture the password and the QR Code (which gives access to the account). |

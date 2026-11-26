@@ -518,6 +518,34 @@ Como o bot está **agora**, atualizada a cada 10 segundos, com um veredito no to
 
 ![Saúde: WhatsApp, o processo, as checagens, a fila de regex e os últimos erros](assets/web/pt-BR/health.png)
 
+### Parear pela web
+
+Quando o WhatsApp perde a sessão e pede um QR Code, a web mostra ele, **qualquer que seja o outro lugar** (o terminal,
+o e-mail): uma faixa **📲 O WhatsApp precisa ser pareado** no topo de todas as páginas leva à Saúde, onde o card do
+WhatsApp vira o **QR Code**, com os passos no celular (*Configurações › Aparelhos conectados › Conectar um aparelho*),
+o número e a hora dele. O WhatsApp troca o código a cada ~20 segundos: a página acompanha (confere a cada 3 s
+enquanto espera) e, depois de lido, o card vira 🟢 Conectado. Os celulares com o aviso **📲 o WhatsApp precisa ser
+pareado** ligado (Settings › 📲 Este aparelho) recebem uma notificação no primeiro código de cada espera, que abre a
+Saúde.
+
+O QR Code **conecta um aparelho à conta**: ele só vem atrás do login da web, como uma imagem que nunca fica em cache
+(o código nunca vai no JSON da página), e cada um exibido vai para o log com o endereço que abriu
+(`Web: the WhatsApp QR Code #2 was shown to 192.168.1.10`). O terminal e o e-mail dão o **endereço direto** dele,
+`<web>/qr` (`QR Code #2: also on the web: https://zap.exemplo.com/qr`), que abre a Saúde passando pelo login. Para ter
+ele **só na web**, use `QRCODE_WEB_ONLY="true"` (veja [onde o QR aparece](installation.md#autenticação-qr-code-no-terminal-ou-por-e-mail)).
+
+![Pareando o WhatsApp pela Saúde: o QR Code e os passos no celular](assets/web/pt-BR/health-qr.png)
+
+**🔌 Desconectar (logout)**, no card do WhatsApp enquanto ele está conectado, desvincula o bot da conta (o mesmo que
+*Aparelhos conectados › Desconectar* no celular) e o QR Code novo aparece ali mesmo, para parear de novo: o mesmo
+número ou outro. Ele pede para você digitar `logout` antes; até o código ser lido, o bot não responde, nem manda a
+agenda, os alertas ou o monitor. O log e o e-mail dizem quem pediu (`WhatsApp: logout asked by the web
+(192.168.1.10)`).
+
+Um logout feito **no celular** faz o mesmo: o bot reinicia sozinho e mostra um QR Code novo (no terminal, no e-mail e
+aqui), com o e-mail **📲 WhatsApp desconectado: novo QR Code**. Só outra instância abrindo a mesma sessão
+(`CONFLICT`) continua esperando por você, para as duas não ficarem tomando a sessão uma da outra.
+
 ## O app instalável e os avisos no aparelho
 
 A página pode ser **instalada como app** (Chrome, Edge, Android: **⬇️ Instalar o app** em Settings → 📲 Este aparelho;

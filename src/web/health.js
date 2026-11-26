@@ -21,8 +21,10 @@ delay.enable();
 const ms = (ns) => Math.round(ns / 1e6);
 
 function whatsapp() {
-    const status = state.restarting ? 'restarting' : state.ready ? 'ready' : state.outSince ? 'down' : 'connecting';
+    const status = state.restarting ? 'restarting' : state.ready ? 'ready' : state.waitingQr && state.qr ? 'pairing' : state.outSince ? 'down' : 'connecting';
     return {
+        // waiting for the QR Code to be read: its number and when it came (the image is /api/whatsapp/qr)
+        qr: status === 'pairing' ? { count: state.qr.count, at: state.qr.at } : null,
         status, paused: Boolean(getSetting('bot.paused')),
         since: state.ready ? state.authenticatedAt || null : state.outSince ?? null,
         lastOutage: state.lastOutage ?? null, attempts: state.attempts ?? 0

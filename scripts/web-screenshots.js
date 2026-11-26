@@ -503,6 +503,14 @@ async function main() {
     await view('health');
     await page.waitForSelector('.health-verdict');
     await shot('health', 1100);
+    // WhatsApp waiting to be paired: the QR Code in Health (a made-up code), and the bar on the other pages
+    Object.assign(bot.state, { ready: false, waitingQr: true, qr: { code: '2@ZapBotDemoQrCodeNotARealSession,AbCdEfGhIjKl==,MnOpQrStUv==', at: Date.now() - 4000, count: 2 } });
+    await view('home');
+    await view('health');
+    await page.waitForSelector('.pair-card img');
+    await page.waitForFunction(() => document.querySelector('.pair-card img').complete);
+    await shot('health-qr', 900);
+    Object.assign(bot.state, { ready: true, waitingQr: false, qr: null });
 
     /* settings: the panel of the web interface on top, then the rest */
     await view('settings');

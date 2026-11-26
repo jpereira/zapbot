@@ -45,6 +45,8 @@ const { health } = require('./health');
 const { duplicates, gallery, mimeOf: mimeOfFile } = require('./gallery');
 const { thumbnail } = require('./thumbs');
 const webPush = require('../webPush');
+const qrcode = require('qrcode');
+const { state } = require('../state');
 
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const MAX_BODY = 32 * 1024; // the login is tiny; what is saved (a shortcut, a setting, the ids to export) is not
@@ -71,6 +73,7 @@ const sessions = new Map();
 let sessionEpoch = 0;
 const attempts = new Map();
 let lastTotpStep = -1;
+let lastQrLogged = null; // the QR Code shown: logged once per code, not on every refresh
 
 function trustsPeer(req) {
     if (!getSetting('zapbot.web.trustProxy')) return false;
@@ -434,6 +437,21 @@ async function api(req, res, url) {
             return sendJson(res, 200, await lists.watchHits(url.searchParams.get('rule')));
         case '/api/health':
             return sendJson(res, 200, health());
+        // The bar on top of every page: WhatsApp waiting for the QR Code to be read
+        case '/api/whatsapp':
+            return sendJson(res, 200, { pairing: Boolean(state.waitingQr && state.qr), qr: state.waitingQr && state.qr ? { count: state.qr.count, at: state.qr.at } : null });
+        // The QR Code itself, as a picture: it links a device to the account, so only behind the login, never cached,
+        // and each look is logged (who opened it, from where)
+        case '/api/whatsapp/qr': {
+            if (!state.waitingQr || !state.qr) return sendJson(res, 404, { error: 'WhatsApp is not waiting for a QR Code' });
+            const png = await qrcode.toBuffer(state.qr.code, { type: 'png', width: 360, margin: 2, errorCorrectionLevel: 'M' });
+            if (lastQrLogged !== state.qr.count) {
+                lastQrLogged = state.qr.count;
+                printInfo(`Web: the WhatsApp QR Code #${state.qr.count} was shown to ${clientAddress(req)}`);
+            }
+            res.writeHead(200, { 'Content-Type': 'image/png', 'Content-Length': png.length, 'Cache-Control': 'no-store' });
+            return res.end(png);
+        }
         case '/api/gallery':
         case '/api/gallery/duplicates': {
             const filter = {
@@ -519,6 +537,11 @@ async function handle(req, res) {
     const url = new URL(req.url, 'http://localhost');
     if (url.pathname.startsWith('/api/')) return api(req, res, url);
 
+    // <web>/qr: the direct address the terminal and the email give for the WhatsApp QR Code (Health, after the login)
+    if (url.pathname === '/qr' && ['GET', 'HEAD'].includes(req.method)) {
+        res.writeHead(302, { Location: '/?view=health' });
+        return res.end();
+    }
     const file = STATIC[url.pathname];
     if (!file || !['GET', 'HEAD'].includes(req.method)) return sendJson(res, 404, { error: 'not found' });
     // Someone opened the page and is not logged in: a ⚠️ in your private chat (with the flood limits of notifyWeb)

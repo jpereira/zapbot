@@ -12,6 +12,11 @@ const { printError, printInfo } = require('./log');
 let closing = false;
 
 async function closePerCrash(type, err) {
+    // whatsapp-web.js reloading its page after a logout, past its 30 s: the restart of the client takes over
+    if (type === 'unhandledRejection' && require('./connection').isWhatsAppReloadTimeout(err)) {
+        printError('WhatsApp: the page did not reload in 30 s after the logout; the restart of the client takes over:', err.message);
+        return;
+    }
     printError(`💥 ${type}:`, err);
     if (closing) return;
     closing = true;

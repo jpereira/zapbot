@@ -15,7 +15,8 @@ const stateAlt = {
     lastOutage: null,      // reason of the last 'disconnected' (null after 'ready')
     attempts: 0,          // consecutive failures when connecting (initialize); 0 after 'ready'
     outSince: null,        // since when it cannot connect (null after 'ready')
-    waitingQr: false     // WhatsApp showed the QR Code and nobody has read it yet
+    waitingQr: false,    // WhatsApp showed the QR Code and nobody has read it yet
+    qr: null             // the current QR Code while waiting: { code, at, count } (the web shows it in Health)
 };
 
 module.exports = {

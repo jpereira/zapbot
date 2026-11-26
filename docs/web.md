@@ -515,6 +515,33 @@ How the bot is doing **right now**, updated every 10 seconds, with a verdict on 
 
 ![Health: WhatsApp, the process, the checks, the regex queue and the last errors](assets/web/health.png)
 
+### Pairing from the web
+
+When WhatsApp loses the session and asks for a QR Code, the web shows it, **wherever else it goes** (the terminal,
+the email): a bar **📲 WhatsApp needs to be paired** on top of every page leads to Health, where the WhatsApp card
+becomes the **QR Code**, with the steps on the phone (*Settings › Linked devices › Link a device*), its number and
+time. WhatsApp renews it about every 20 seconds: the page follows (it checks every 3 s while waiting) and, once read,
+the card turns into 🟢 Connected. The phones with the **📲 WhatsApp needs to be paired** notice on (Settings › 📲 This
+device) get a notification at the first code of each wait, which opens Health.
+
+The QR Code **links a device to the account**: it only comes behind the web login, as an image that is never
+cached (the code is never in the JSON of the page), and each one shown goes to the log with the address that opened
+it (`Web: the WhatsApp QR Code #2 was shown to 192.168.1.10`). The terminal and the email give its **direct address**,
+`<web>/qr` (`QR Code #2: also on the web: https://zap.example.com/qr`), which opens Health through the login. To have
+it **only on the web**, set `QRCODE_WEB_ONLY="true"` (see [where the QR shows up](installation.md#authentication-qr-code-in-the-terminal-or-by-email)).
+
+![Pairing WhatsApp from Health: the QR Code and the steps on the phone](assets/web/health-qr.png)
+
+**🔌 Disconnect (logout)**, in the WhatsApp card while it is connected, unlinks the bot from the account (the same as
+*Linked devices › Log out* on the phone) and the new QR Code shows up right there, to pair again: the same number or
+another one. It asks you to type `logout` first; until the code is read, the bot does not answer, nor sends the
+schedule, the alerts or the monitor. The log and the email say who asked (`WhatsApp: logout asked by the web
+(192.168.1.10)`).
+
+A logout made **on the phone** does the same: the bot restarts by itself and shows a new QR Code (in the terminal,
+the email and here), with the email **📲 WhatsApp logged out: new QR Code**. Only another instance opening the same
+session (`CONFLICT`) still waits for you, so the two do not keep taking it from each other.
+
 ## The installable app and the notices on the device
 
 The page can be **installed as an app** (Chrome, Edge, Android: **⬇️ Install the app** in Settings → 📲 This device;

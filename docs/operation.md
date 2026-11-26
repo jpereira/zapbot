@@ -99,7 +99,7 @@ bot and add the label `autoheal=true` to the `zapbot` service:
 | Symptom | Likely cause / fix |
 |---|---|
 | `env file .../config/.env not found` | Create the file from the example: `cp config/.env.example config/.env`. |
-| QR doesn't show up in the logs | `QRCODE_EMAIL_ENABLE` is `"true"`: the QR goes by email and only lands in the logs if sending fails (`QRCODE_EMAIL_FALLBACK_TERMINAL`, default `"true"`). Check your email or set it to `"false"`. |
+| QR doesn't show up in the logs | `QRCODE_EMAIL_ENABLE` is `"true"`: the QR goes by email and only lands in the logs if sending fails (`QRCODE_EMAIL_FALLBACK_TERMINAL`, default `"true"`). Check your email or set it to `"false"`. Or `QRCODE_WEB_ONLY` is `"true"`: it is in the web, in Health (the log gives the address, `<web>/qr`). |
 | `Error sending QR by e-mail` | Wrong SMTP host/port/user/password. Use port 465 and an app password. With `QRCODE_EMAIL_FALLBACK_TERMINAL="true"` (default), the QR shows up in the logs anyway. |
 | `Too many bad auth attempts` (`535 5.7.0`, `EAUTH`) or `SMTP paused` | The provider blocked the login because of wrong attempts (wrong or revoked app password). The bot stops trying for 30 minutes so it doesn't make things worse. Check the password, wait for the block to pass and test with `/bot -test`. See [Pause after a login failure](emails.md#pause-after-a-login-failure). |
 | `Error sending QR by e-mail: ... self-signed certificate` / `unable to verify` | The SMTP certificate isn't valid. Use the provider's official host (the name has to match the certificate). |
