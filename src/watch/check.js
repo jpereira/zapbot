@@ -7,6 +7,7 @@ const { findCommand } = require('../commands/base');
 const { resolveMentions } = require('../contacts');
 const { dbAll, dbRun } = require('../db');
 const { lineDestination, destinationsSaved, sendOnDestination } = require('../destinations');
+const { pushNotice } = require('../webPush');
 const { printError, printInfo } = require('../log');
 const { ignoreNotice } = require('../mute');
 const { t } = require('../i18n');
@@ -99,6 +100,18 @@ async function checkWatch({
 
     // 🔒 (-mask N): if any rule of the notice has the padlock, the whole notice goes out with obfuscated phones
     const locked = new Set((await dbAll('SELECT rule FROM watch_masks')).map(r => r.rule));
+
+    // The notice of your private chat also goes to the browsers with the web notices on; a click opens the message
+    const mine = byDestination.get('privado');
+    if (mine) {
+        const obfuscate = mine.rules.some(c => locked.has(c.rule));
+        const mask = (s) => obfuscate ? maskPhones(s) : s;
+        pushNotice('watch', {
+            title: mask(`👀 ${mine.rules.map(c => c.rule).join(', ')}`),
+            body: mask(`${chatName}${isGroup ? ` · ${senderName}` : ''}: ${String(body ?? '').slice(0, 300)}`),
+            url: `/?chat=${encodeURIComponent(chatId)}&msg=${encodeURIComponent(msgIdPure)}&at=${timestamp}`, tag: `watch:${msgIdPure}`
+        });
+    }
 
     for (const { destination, rules } of byDestination.values()) {
         const obfuscate = rules.some(c => locked.has(c.rule));

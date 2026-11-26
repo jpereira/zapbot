@@ -8,6 +8,7 @@
  * flood of requests does not flood your WhatsApp.
  */
 
+const { pushNotice } = require('../webPush');
 const { messageToSelf } = require('../client');
 const { printInfo } = require('../log');
 const { t } = require('../i18n');
@@ -41,6 +42,7 @@ async function notifyWeb(kind, vars) {
     remember(key, now);
     const text = `${t(`web.alert.${kind}`, vars)}${more}`;
     printInfo(`Web: ${text.replace(/\n/g, ' ')}`);
+    pushNotice('web', { title: '🌐 ZapBot web', body: text.replace(/[*_~`]/g, ''), url: '/', urgent: true });
     await messageToSelf(text);
     return true;
 }
@@ -68,6 +70,7 @@ async function notifyAccess(key, entry, now, vars) {
     remember(key, now);
     const text = `${t('web.alert.access', { address: vars.address, agent: vars.agent ? `\n🖥️ ${vars.agent}` : '' })}${more}`;
     printInfo(`Web: ${text.replace(/\n/g, ' ')}`);
+    pushNotice('web', { title: '🌐 ZapBot web', body: text.replace(/[*_~`]/g, ''), url: '/', urgent: true });
     await messageToSelf(text);
     return true;
 }

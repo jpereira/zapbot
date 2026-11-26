@@ -148,6 +148,22 @@ async function initializeDb() {
         AFTER DELETE ON monitor_contacts BEGIN
             DELETE FROM monitor_sessions WHERE contact_id = OLD.id;
         END`);
+    // Web Push (src/webPush.js): the browsers that get the notices, and the VAPID keys of the server
+    await dbRun(`CREATE TABLE IF NOT EXISTS web_push (
+        endpoint TEXT PRIMARY KEY,
+        p256dh TEXT NOT NULL,
+        auth TEXT NOT NULL,
+        kinds TEXT NOT NULL DEFAULT '[]',
+        agent TEXT,
+        created_at INTEGER NOT NULL,
+        last_ok INTEGER,
+        failures INTEGER NOT NULL DEFAULT 0
+    )`);
+    await dbRun(`CREATE TABLE IF NOT EXISTS web_push_keys (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        public_key TEXT NOT NULL,
+        private_jwk TEXT NOT NULL
+    )`);
     await dbRun(`CREATE TABLE IF NOT EXISTS command_aliases (
         name TEXT PRIMARY KEY,
         description TEXT NOT NULL DEFAULT '',

@@ -13,6 +13,7 @@ const {
     destinationColumns, describeDestinations, describeDestinationsBlock, lineDestination, destinationsSaved, sendToDestinations, extractDestinations,
     recipientsDe, resolveDestinations
 } = require('./destinations');
+const { pushNotice } = require('./webPush');
 const { printError, printInfo } = require('./log');
 const { quoteAction, fmtPrice, normalizeTicker } = require('./actions');
 const { QUOTE_SUPPORTED, CRYPTO_SUPPORTED } = require('./currencies');
@@ -354,8 +355,7 @@ async function priceCheckAlerts({ force = false } = {}) {
                 const destinations = alertDestinations(a);
                 // The -msg message comes before everything
                 const prepend = alertSetting(type, 'msgPrepend');
-                await sendToDestinations(destinations,
-                    `${prepend}${a.message ? `${a.message}\n\n` : ''}` +
+                const firedText = `${prepend}${a.message ? `${a.message}\n\n` : ''}` +
                     t('alerts.fired', {
                         opIcon: OPERATORS[a.op].icon,
                         icon: type.icon(a.symbol),
@@ -365,9 +365,10 @@ async function priceCheckAlerts({ force = false } = {}) {
                         price: type.fmt(price, a.symbol),
                         change: changeAlt ? t('alerts.sinceCreation', { change: changeAlt }) : '',
                         date: formatData(a.created_at)
-                    }),
-                    { subject: t('alerts.subject', { pair: type.pair(a.symbol), op: OPERATORS[a.op].text, target: type.fmt(a.target, a.symbol) }) }
-                ).catch(err => printError('Price alert: failed to notify:', err.message));
+                    });
+                const subject = t('alerts.subject', { pair: type.pair(a.symbol), op: OPERATORS[a.op].text, target: type.fmt(a.target, a.symbol) });
+                pushNotice('price', { title: subject, body: firedText.replace(/[*_~`]/g, ''), url: '/?view=alerts', tag: `price:${a.id}`, urgent: true });
+                await sendToDestinations(destinations, firedText, { subject }).catch(err => printError('Price alert: failed to notify:', err.message));
 
                 printInfo(`Price alert triggered: ${a.symbol} ${a.op} ${a.target} (now ${price})` +
                     (destinations.length ? ` → ${destinations.map(d => d.email ?? d.id).join(', ')}` : ''));

@@ -12,6 +12,7 @@ const { language, t } = require('./i18n');
 const { limitHistoryMonitor } = require('./monitorHistory');
 const { queryPresence } = require('./presence');
 const { printError } = require('./log');
+const { pushNotice } = require('./webPush');
 
 const guard = loopGuard('/monitor');
 let timer = null;
@@ -191,6 +192,8 @@ async function checkMonitor() {
                     const when = new Date(at).toLocaleString(language() === 'pt_BR' ? 'pt-BR' : 'en-US',
                         { timeZone: 'America/Sao_Paulo' });
                     await messageToSelf(t('monitor.alert.fired', { name: saved.contact_name, when: when }));
+                    pushNotice('monitor', { title: `🟢 ${saved.contact_name}`, body: t('monitor.alert.fired', { name: saved.contact_name, when: when }).replace(/[*_~]/g, ''),
+                        url: '/?view=monitor', tag: `monitor:${saved.id}`, urgent: true });
                 }
                 await dbRun(`UPDATE monitor_contacts SET last_checked_at = ?, last_status = ?,
                     last_seen = CASE WHEN ? IS NULL THEN last_seen
