@@ -8,9 +8,14 @@ const { printError } = require('../log');
 
 const STUCK_MS = 10 * 60 * 1000;
 
+// Every loop, for the health page of the web: name → { running since, stuck, runs, last end, last duration }
+const loops = new Map();
+
 function loopGuard(name, { stuckMs = STUCK_MS, now = () => Date.now() } = {}) {
     let since = null;
     let warned = false;
+    const stats = { runs: 0, lastEnd: null, lastMs: null };
+    loops.set(name, () => ({ name, since, stuck: since !== null && now() - since >= stuckMs, ...stats }));
     return {
         // The previous check still runs: this tick is skipped (and, stuck for too long, the log says it once)
         busy() {
@@ -26,9 +31,12 @@ function loopGuard(name, { stuckMs = STUCK_MS, now = () => Date.now() } = {}) {
             warned = false;
         },
         end() {
+            if (since !== null) Object.assign(stats, { runs: stats.runs + 1, lastEnd: now(), lastMs: now() - since });
             since = null;
         }
     };
 }
 
-module.exports = { loopGuard };
+const loopStates = () => [...loops.values()].map(state => state());
+
+module.exports = { loopGuard, loopStates };

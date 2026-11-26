@@ -101,10 +101,17 @@ function printSuccess(...args) {
     emitLog(`[${getTimestamp()}] [+] ${util.format(...args.map(a => dataDebug(a)))}`, colors.green);
 }
 
+// The last errors (the health page of the web), already masked as the log shows them
+const RECENT_ERRORS = 50;
+const recent = [];
 function printError(...args) {
-    emitLog(`[${getTimestamp()}] [*] [${getCaller()}] ` +
-        util.format(...args.map(a => dataDebug(a))), colors.red);
+    const where = getCaller();
+    const text = util.format(...args.map(a => dataDebug(a)));
+    recent.push({ at: Date.now(), where, text: cleanTextDebug(maskLockPassword(text)).slice(0, 2000) });
+    if (recent.length > RECENT_ERRORS) recent.shift();
+    emitLog(`[${getTimestamp()}] [*] [${where}] ` + text, colors.red);
 }
+const recentErrors = () => recent.slice().reverse();
 
 // Who ran a command, and where: [+] 'Fulano' executed '/help' in 'Família'
 function printCall(who, call, chat) {
@@ -134,6 +141,7 @@ function printCommandUnknown(who, call, { ofOwner: owner }) {
 }
 
 module.exports = {
+    recentErrors,
     getBotUptime,
     printCall,
     printCommandUnknown,

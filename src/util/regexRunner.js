@@ -17,8 +17,11 @@ let current;
 const MAX_QUEUE = 64;
 const MAX_QUEUE_URGENT = 1024;
 const missed = { full: 0, slow: 0, since: 0 };
+// Since the start (the health page of the web): batches run, refused and past the deadline
+const totals = { run: 0, full: 0, slow: 0 };
 function noteMiss(kind) {
     missed[kind]++;
+    totals[kind]++;
     if (Date.now() - missed.since < 60_000) return;
     printError(`Regex: ${missed.full} batch(es) refused (queue full) and ${missed.slow} past the deadline answered "no match"`);
     Object.assign(missed, { full: 0, slow: 0, since: Date.now() });
@@ -27,6 +30,7 @@ function noteMiss(kind) {
 function next() {
     if (current || !queue.length) return;
     current = queue.shift();
+    totals.run++;
     if (!worker) {
         const instance = new Worker(path.join(__dirname, 'regexWorker.js'));
         worker = instance;
@@ -103,4 +107,7 @@ async function matchingRows(test, rows, texts) {
 
 const regexTest = (regex, options) => Object.assign(async text => Boolean((await matchBatch(regex, [text], options))[0]), { regex });
 
-module.exports = { matchBatch, matchingRows, regexTest };
+const regexStats = () => ({ queued: queue.length, urgent: queue.filter(task => task.urgent).length, busy: Boolean(current),
+    maxQueue: MAX_QUEUE, ...totals });
+
+module.exports = { matchBatch, matchingRows, regexStats, regexTest };
