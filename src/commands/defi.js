@@ -1039,8 +1039,9 @@ async function removeAlt2(msg, o, argv, positions, end) {
         return;
     }
 
-    const numbers = [...new Set(partsAlt.map(Number))].sort((a, b) => a - b);
-    const missing = numbers.filter(n => !positions[n - 1]);
+    // "x" is not a number: it is reported as typed (Number("x") showed "Nº NaN")
+    const numbers = [...new Set(partsAlt)].sort((a, b) => a - b);
+    const missing = numbers.filter(n => !/^\d+$/.test(n) || !positions[Number(n) - 1]);
     if (!numbers.length || missing.length) {
         await msg.reply(t(missing.length > 1 ? 'defi.numbersNotFoundMany' : 'defi.numbersNotFoundOne', { list: missing.join(', ') || '?' }));
         return;

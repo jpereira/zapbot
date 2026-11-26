@@ -157,8 +157,9 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
         const partsAlt = [pausing ? opts.opt.pause : opts.opt.resume, ...opts.argv].join(' ').toLowerCase()
             .split(/[\s,]+/).filter(Boolean);
         const numbers = partsAlt.includes('all') ? alerts.map((_, i) => String(i + 1)) : [...new Set(partsAlt)].sort((a, b) => a - b);
+        if (!numbers.length) return msg.reply(t('alerts.whichOnes', { cmd: type.cmd, opt: pausing ? 'pause' : 'resume' }));
         const missing = numbers.filter(n => !/^\d+$/.test(n) || !alerts[Number(n) - 1]);
-        if (!numbers.length || missing.length) {
+        if (missing.length) {
             await msg.reply(missing.length > 1
                 ? t('alerts.notFoundManyKept', { list: missing.join(', '), cmd: type.cmd })
                 : t('alerts.notFoundOne', { n: missing[0] ?? '?', cmd: type.cmd }));
@@ -188,9 +189,10 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
         }
 
         const numbers = [...new Set(partsAlt)].sort((a, b) => a - b);
+        if (!numbers.length) return msg.reply(t('alerts.whichOnes', { cmd: type.cmd, opt: 'rm' }));
         const missing = numbers.filter(n => !/^\d+$/.test(n) || !alerts[Number(n) - 1]);
 
-        if (!numbers.length || missing.length) {
+        if (missing.length) {
             await msg.reply(missing.length > 1
                 ? t('alerts.notFoundMany', { list: missing.join(', '), cmd: type.cmd })
                 : t('alerts.notFoundOne', { n: missing[0] ?? '?', cmd: type.cmd }));

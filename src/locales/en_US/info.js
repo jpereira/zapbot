@@ -83,6 +83,7 @@ module.exports = {
     'alerts.allPaused': 'they are all paused already',
     'alerts.noneToResume': 'none was paused',
     'alerts.notFoundManyKept': "❌ Alerts #{list} don't exist. Nothing changed; see the list with {cmd} -alert",
+    'alerts.whichOnes': '❌ Say which ones: {cmd} -alert -{opt} <num...|all>',
     'alerts.listItem': '{n}. {alert}{details}\n   🗓️ {date}',
     'alerts.list': '🔔 *PRICE ALERTS* _({cmd} · every {every})_\n\n{items}\n\n💡 *Tips*\n-alert -rm <num...|all> removes\n-alert -pause <num...|all> pauses\n-alert -resume <num...|all> resumes',
     'alerts.invalidRule': '❌ Invalid rule: "{rule}"\n💡 _Format: {cmd} -alert {example} (use > or <; no thousands separator)_',

@@ -78,9 +78,29 @@ async function withTyping(msg, command, run, { each = 3000 } = {}) {
 // -mask of whoever declares "mask: true" in commands.js (the /defi one is different: it hides the wallets)
 const askedMask = (command, opts) => Boolean(command.mask && opts.opt.mask);
 
-// "❌ Opção desconhecida: -x" with the syntax, or null (only in commands with "strict: true")
+/*
+ * How the options combine, two marks in cmd_opts (canonical names), checked before the handler:
+ * requires: ['alert']        the option only works together with one of these;
+ * conflicts: ['rm', ...]     the option does not go with these (one action at a time).
+ * Without them, the handler took one and silently ignored the other (-pause 1 -rm 2 only paused).
+ */
+function comboError(command, opts) {
+    for (const o of command.cmd_opts ?? []) {
+        const name = o.opts?.[0];
+        if (!name || !opts.given.has(name)) continue;
+        if (o.requires && !o.requires.some(other => opts.given.has(other))) {
+            return t('executar.opcaoRequer', { opt: `-${name}`, needs: o.requires.map(other => `-${other}`).join(' | '), cmd: command.cmd });
+        }
+        const clash = o.conflicts?.find(other => opts.given.has(other));
+        if (clash) return t('executar.opcaoConflito', { a: `-${name}`, b: `-${clash}` });
+    }
+    return null;
+}
+
+// "❌ Opção desconhecida: -x" with the syntax (only in commands with "strict: true"), a combination that does not
+// work (comboError), or null
 function optionsError(command, opts) {
-    if (!opts.unknown.length) return null;
+    if (!opts.unknown.length) return comboError(command, opts);
     const list = opts.unknown.join(' ');
     // /gpt and /tldr (strict: 'primeira') only suggest the help; the others show the syntax
     if (command.strict === 'primeira') return t('executar.opcaoDesconhecidaAjuda', { list, cmd: command.cmd });

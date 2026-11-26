@@ -5,6 +5,7 @@
 
 const OPTION_ALERT_MSG = {
     opts: ['msg', 'm'],
+    requires: ['alert'],
     values: ['<text>'],
     desc: 'The text goes at the start of the notice (with -alert). It runs to the end of the command (may have spaces).',
     ex: ['-msg Time to sell!'],
@@ -13,12 +14,16 @@ const OPTION_ALERT_MSG = {
 
 const OPTION_ALERT_RM = {
     opts: ['rm'],
+    requires: ['alert'],
+    conflicts: ['pause', 'resume'],
     values: ['<#...|all>'],
     desc: 'Removes alert #N from the list, several at once (-rm 1 2 3 or -rm 1,2,3), or all (with -alert). If any # does not exist, none is removed.'
 };
 
 const OPTION_ALERT_PAUSE = {
     opts: ['pause', 'pa'],
+    requires: ['alert'],
+    conflicts: ['rm', 'resume'],
     values: ['<#...|all>'],
     desc: 'Pauses alert #N, several (-pause 1 3 or 1,3) or all (with -alert): it stays in the list, but is not checked until -resume. If any # does not exist, none is paused.',
     ex: ['-alert -pause 2'],
@@ -27,6 +32,8 @@ const OPTION_ALERT_PAUSE = {
 
 const OPTION_ALERT_RESUME = {
     opts: ['resume', 're'],
+    requires: ['alert'],
+    conflicts: ['rm', 'pause'],
     values: ['<#...|all>'],
     desc: 'Resumes paused alerts (one, several or all, with -alert). If the price already crossed the value while paused, it notifies on the next check.',
     ex: ['-alert -resume all'],
@@ -35,6 +42,7 @@ const OPTION_ALERT_RESUME = {
 
 const OPTION_ALERT_TO = {
     opts: ['to'],
+    requires: ['alert'],
     values: ['<destination>'],
     desc: 'Notifies somewhere else instead of your private chat. A contact, a group, a number, or an email (several with the name: you pick from the list) (with -alert). Repeat for several: a single alert that notifies all of them.',
     ex: [

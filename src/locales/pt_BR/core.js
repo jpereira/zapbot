@@ -11,6 +11,8 @@ module.exports = {
     'core.voce': 'Você',
     'core.desconhecido': 'Desconhecido',
     'executar.opcaoDesconhecidaAjuda': '❌ Opção desconhecida: {list}\n💡 _Veja as opções com {cmd} -h|-help_',
+    'executar.opcaoRequer': '❌ {opt} só funciona junto com {needs}\n💡 _Veja as opções com {cmd} -h_',
+    'executar.opcaoConflito': '❌ {a} e {b} não combinam: use uma de cada vez.',
     'executar.opcaoDesconhecidaSintaxe': '❌ Opção desconhecida: {list}\n\n{syntax}',
     'executar.soDonoOpcao': '⛔ Apenas o dono do bot pode usar o -{opt} do {cmd}.',
     'executar.soAdminOpcao': '⛔ Apenas o dono do bot (ou um admin) pode usar o -{opt} do {cmd}.',

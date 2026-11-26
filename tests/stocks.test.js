@@ -154,6 +154,19 @@ test('/stocks -alert: pausado enquanto os preços chegam não dispara (nem some)
     assert.equal((await bot.dbGet('SELECT paused FROM price_alerts')).paused, 1);
 });
 
+test('/stocks -alert: ações que não combinam são recusadas, e as que exigem -alert dizem isso', async () => {
+    await bot.replyAlt('/stocks MSTR -alert < 90');
+    await bot.replyAlt('/stocks MSTR -alert < 80');
+    assert.deepEqual(await bot.replyAlt('/stocks -alert -pause 1 -rm 2'), ['❌ -rm e -pause não combinam: use uma de cada vez.']);
+    assert.deepEqual(await bot.replyAlt('/stocks -alert -resume 1 -pause 2'), ['❌ -pause e -resume não combinam: use uma de cada vez.']);
+    assert.match((await bot.replyAlt('/stocks -pause 1'))[0], /^❌ -pause só funciona junto com -alert\n/);
+    assert.match((await bot.replyAlt('/stocks MSTR -msg oi'))[0], /^❌ -msg só funciona junto com -alert/);
+    assert.deepEqual(await bot.replyAlt('/stocks -alert -pause'), ['❌ Diga quais: /stocks -alert -pause <nº...|all>']);
+    assert.deepEqual(await bot.replyAlt('/stocks -alert -rm'), ['❌ Diga quais: /stocks -alert -rm <nº...|all>']);
+    // nothing changed
+    assert.deepEqual((await bot.dbAll('SELECT paused FROM price_alerts')).map(r => r.paused), [0, 0]);
+});
+
 test('XAUT (ouro tokenizado) é suportado no /crypto, com o ícone 🥇', async () => {
     assert.equal(CRYPTO_SUPPORTED.XAUT, '🥇');
     network.responder('get', 'api.binance.com/api/v3/ticker/24hr', (url, cfg) =>
