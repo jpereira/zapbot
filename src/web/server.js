@@ -42,7 +42,8 @@ const { overview } = require('./overview');
 const { showItems, showSummary } = require('./show');
 const { monitorOverview } = require('./monitor');
 const { health } = require('./health');
-const { gallery } = require('./gallery');
+const { duplicates, gallery, mimeOf: mimeOfFile } = require('./gallery');
+const { thumbnail } = require('./thumbs');
 const webPush = require('../webPush');
 
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -407,6 +408,17 @@ async function api(req, res, url) {
         }
         case '/api/media':
             return sendMedia(req, res, url);
+        // A frame of a video or a small copy of a picture (the gallery); 404: the page shows the icon (or the file)
+        case '/api/media/thumb': {
+            const thumb = await thumbnail(url.searchParams.get('id'));
+            if (!thumb) return sendJson(res, 404, { error: 'no thumbnail' });
+            const body = await fs.promises.readFile(thumb.file);
+            res.writeHead(200, {
+                'Content-Type': thumb.mime ?? mimeOfFile(thumb.file), 'Content-Length': body.length,
+                'Content-Security-Policy': 'sandbox', 'Cache-Control': 'private, max-age=86400'
+            });
+            return res.end(body);
+        }
         case '/api/show':
             return sendJson(res, 200, await showSummary());
         case '/api/show/items': {
@@ -423,10 +435,17 @@ async function api(req, res, url) {
         case '/api/health':
             return sendJson(res, 200, health());
         case '/api/gallery':
-            return sendJson(res, 200, await gallery({
-                chat, kind: url.searchParams.get('kind') ?? '', before: url.searchParams.get('before') ?? '',
+        case '/api/gallery/duplicates': {
+            const filter = {
+                chat, kind: url.searchParams.get('kind') ?? '', q: url.searchParams.get('q') ?? '',
                 from: toSeconds(url.searchParams.get('from')), to: toSeconds(url.searchParams.get('to'))
+            };
+            if (route.endsWith('/duplicates')) return sendJson(res, 200, await duplicates(filter));
+            return sendJson(res, 200, await gallery({
+                ...filter, sort: url.searchParams.get('sort') ?? 'date', desc: url.searchParams.get('desc') !== '0',
+                offset: toSeconds(url.searchParams.get('offset')) ?? 0
             }));
+        }
         case '/api/push': {
             const endpoint = url.searchParams.get('endpoint');
             return sendJson(res, 200, { publicKey: (await webPush.vapidKeys()).publicKey, kinds: webPush.KINDS, devices: await webPush.devices(), subscription: endpoint ? await webPush.subscription(endpoint) : null });

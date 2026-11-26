@@ -31,7 +31,7 @@ const TEXTS = {
         cannotShow: 'this message could not be shown', phTag: 'travel', phTagDesc: 'places to visit', phNoteTag: 'ideas', envForced: (env) => `Decided by the ${env} variable (config/.env), which has priority over this setting`, noticeOn: 'Off: click to turn it on', noticeOff: 'On: click to turn it off', flag: { quiet: ['Quiet (-q): click to answer normally', 'Answers normally: click to make it quiet (-q)'], ownerOnly: ['Only you (-p): click to open it to everyone', 'Everyone can use it: click to make it only yours (-p)'] }, runOn: 'Running: click to pause', runOff: 'Paused: click to resume', clearHistory: 'Clear the history of this chat', clearBtn: 'Clear', clearTitle: (name) => `Clear the history · ${name}`, clearInfo: (r) => `${r.removed} messages will be deleted (with their media). ${r.kept} stay: the deleted, the edited and the ones with reactions, with what they had before.`, clearNothing: 'Nothing to delete: every message here is a deleted, edited or reacted one.', clearEmpty: 'This chat has no messages in the database.', cacheBtn: 'Clean', deleteNote: 'Delete the note', notice: 'Notice', spy: { nav: 'Show', subtitle: 'What /show keeps: the deleted, the edited, the reactions, the statuses and the channels', kinds: { deleted: 'Deleted', edited: 'Edited', reactions: 'Reactions', status: 'Statuses', channels: 'Channels' }, alerts: 'Notices in your private chat', alertOn: 'On: click to turn it off', alertOff: 'Off: click to turn it on', people: 'Who deletes, edits and reacts the most', nobody: 'Nobody yet.', search: 'Search the text, the chat or the person', empty: 'Nothing here.', mute: 'Mute this person (/mute)', unmute: 'Unmute (/unmute)', muted: 'muted', removeTitle: 'Take it out of the cache', removeText: 'The bot forgets this item (and its media); WhatsApp is not touched.', removed: 'removed', media: 'Open the media', openChat: 'Open the chat at this message', mutedCount: (n) => `${n} muted`, selectAll: 'All', selectOne: 'Select', selectHint: 'Click the items to select them (Shift+click: a range)', selected: (n) => `${n} selected`, removeSelected: (n) => `Take ${n} item${n === 1 ? '' : 's'} out of the cache` }, cacheClean: 'Clean the cache (/cache)', cacheRetention: 'What is past the retention windows (/cache -clean)', cachePick: 'Pick at least one.', cacheAll: 'Everything (/cache -all): every message (deleted, edited and reacted included), media, temporary files and backups', cacheAllWarning: '⚠️ Everything takes the whole history of every chat and the backups too: there is no undo. The notes always stay.', flushAll: 'Clear the history of every chat', flushBtn: 'Clear every chat', flushEmpty: 'There are no messages in the database.', flushWarning: (n) => `⚠️ This clears the history of all the ${n} chats at once, not only this one. There is no undo (only a /backup).`, clearAll: (n) => `Delete everything (${n}), including the deleted, the edited and the reacted ones, with their media`, webPanel: 'Web interface', webAt: 'Open at', webAccess: 'Access', webLogin: 'Login and session', webScreen: 'Screen', webAlerts: 'Warnings', notSet: 'not set', needsRestart: 'Takes effect when the bot restarts', restSettings: 'All the other settings', protectedHere: 'Change it with /set in WhatsApp',  meBtn: 'Me (my private chat)', watchedBy: '/watch', openInHistory: 'Open in the history, at this message', presenceSource: 'WhatsApp presence · time not confirmed', newTag: 'New tag', newNote: 'New note', editTagBtn: 'Edit the tag', copyTag: 'Duplicate the tag', copyTagInfo: (n) => `Its ${n} note${n === 1 ? '' : 's'} (and files) go as copies to the new tag, without the alerts.`, moveNote: 'Move to another tag', copyNote: 'Copy to another tag', duplicateNote: 'Duplicate the note', moveTag: 'Move every note to another tag', moveTagInfo: (n) => `The ${n} note${n === 1 ? '' : 's'} go to the tag you pick (if it has notes, the two merge).`, copyNoteInfo: 'The copy keeps the text and the file, without the alert.', pickTag: 'Tag', orNewTag: 'or a new tag', removeTag: 'Remove the tag', confirmRemoveTag: 'Remove this tag (it has no notes)?', removeTagWithNotes: 'Remove the tag and everything in it', removeTagInfo: (n) => `${n} note${n === 1 ? '' : 's'} (and their media) will be deleted, along with the tag's description and lock, if any.`, historyBtn: 'History', loadingHistory: 'Loading the history…', searchContact: 'Search a contact or group (name or number) or type an email', pickContact: 'Search the contact (name or number)', noMatches: 'No contact found', privateChat: 'Empty: it goes to your private chat', useEmail: (email) => `✉️ Use ${email}`, updatedAt: (time) => `updated at ${time}`, noHistory: 'Nothing recorded yet.', removeReading: 'Remove this reading', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 ${who ? `${who}'s` : 'a participant\'s'} security code changed`, systemNotice: (text) => `ℹ️ ${text ?? 'WhatsApp notice'}`, loadMore: 'Load more', noMore: 'No more messages.', loadingFor: (name) => `Loading ${name}…`, loadingStats: 'Loading the statistics…', loadingHome: 'Loading…', statsOverview: 'Statistics', last30: 'last 30 days', seeAllStats: 'See all the statistics',
         code: '6-digit code', quotedGone: 'message not in the database', searchAll: 'Search all the messages', searchResults: (n) => `${n} results`, exportChat: 'Export PDF', reacted: 'reaction', removedReaction: 'removed', reactionHistory: 'Reaction history',
         reactionChanged: 'Changed reaction', reactionRemoved: 'Removed reaction', autoRefresh: 'New messages',
-        gal: { nav: 'Media', subtitle: 'Every picture, video, audio, sticker and document the bot kept', kinds: { image: 'Photos', video: 'Videos', audio: 'Audios', sticker: 'Stickers', document: 'Documents' }, all: 'All', allChats: 'Every chat', period: { 7: '7 days', 30: '30 days', 90: '90 days', 0: 'Always' }, total: (n, size) => `${n} files · ${size}`, chats: 'The chats that take the most space', empty: 'No media here.', open: 'Open in the chat', download: 'Download', remove: 'Free this file', removeText: 'The file leaves the disk; the message stays in the history, with its media missing.', removeSelected: (n) => `Free ${n} file${n === 1 ? '' : 's'}`, freed: (size) => `${size} freed`, select: 'Select', selected: (n) => `${n} selected`, deleted: 'deleted', prev: 'Previous (←)', next: 'Next (→)', fromMe: 'you' },
+        gal: { nav: 'Media', subtitle: 'Every picture, video, audio, sticker and document the bot kept', kinds: { image: 'Photos', video: 'Videos', audio: 'Audios', sticker: 'Stickers', document: 'Documents' }, all: 'All', allChats: 'Every chat', period: { 7: '7 days', 30: '30 days', 90: '90 days', 0: 'Always' }, total: (n, size) => `${n} files · ${size}`, chats: 'The chats that take the most space', empty: 'No media here.', open: 'Open in the chat', download: 'Download', remove: 'Free this file', removeText: 'The file leaves the disk; the message stays in the history, with its media missing.', removeSelected: (n) => `Free ${n} file${n === 1 ? '' : 's'}`, freed: (size) => `${size} freed`, select: 'Select', selected: (n) => `${n} selected`, deleted: 'deleted', prev: 'Previous (←)', next: 'Next (→)', fromMe: 'you', grid: 'Grid', list: 'List', search: 'Search the name, the caption or the chat', same: '🧬 The same', sameTitle: 'Group the files that are the same (same content)', cols: { name: 'Name', size: 'Size', mime: 'Type', date: 'Date', chat: 'Chat', expires: 'Leaves' }, sortHint: 'Click to sort', expiresIn: (ago) => `leaves ${ago}`, expiresNext: 'in the next cleanup', expiresTitle: (when) => `The cleanup takes it on ${when} (cache.messageMediaRetentionDays; a deleted one: cache.revokedRetentionDays)`, linked: 'A joined copy: the same file as others (hard link)', dupes: (n, copies, size) => `${n} file${n === 1 ? '' : 's'} with copies · ${copies} messages · ${size} to free`, noDupes: 'No two files are the same here. 🎉', join: (size) => `🔗 Join the copies (frees ${size})`, joinAll: (size) => `🔗 Join them all (frees ${size})`, joinText: 'Each copy becomes a hard link of the oldest one: the space is freed and every message keeps its media (the cleanup still takes each one on its own date).', joined: (n, size) => `${n} copies joined, ${size} freed.`, alreadyJoined: '✅ already one file', copies: (n) => `× ${n}`, disk: (size) => `${size} on disk (the joined copies count once)`, shown: (n, total) => `${n} of ${total}`, mime: 'Type' },
         health: { nav: 'Health', subtitle: 'How the bot is doing right now', verdict: { ok: '✅ All good', warn: '⚠️ Worth a look', bad: '🚨 Something is wrong' }, problems: { whatsapp: 'WhatsApp is not connected', loops: 'a periodic check is stuck', eventLoop: 'the bot is slow to answer (event loop)', errors: 'errors in the last 15 minutes' }, whatsapp: 'WhatsApp', wa: { ready: '🟢 Connected', connecting: '⏳ Connecting', down: '🔴 Down', restarting: '🔄 Restarting' }, since: (ago) => `since ${ago}`, outage: 'Last drop', attempts: 'Failed attempts', paused: '⏸️ the bot is paused (/bot -pause)', process: 'Process', uptime: 'Up since', memory: 'Memory (RSS)', heap: 'JS heap', load: 'Load (1, 5, 15 min)', host: 'Free memory of the host', eventLoop: 'Event loop delay', mean: 'mean', p99: 'p99', max: 'max', loops: 'Periodic checks', loopIdle: 'idle', loopRunning: (ago) => `running ${ago}`, loopStuck: (ago) => `🚨 stuck, running ${ago}`, runs: (n) => `${n} round${n === 1 ? '' : 's'}`, lastRound: (ms, ago) => `last: ${ms} ms, ${ago}`, never: 'not run yet', regex: 'Regex worker (/watch, searches)', queueLabel: 'Waiting', missedLabel: 'Answered "no match"', queue: (n, max) => `${n} waiting (limit ${max})`, urgent: (n) => `${n} urgent`, regexRun: (n) => `${n} batches run`, regexMissed: (full, slow) => `${full} refused (queue full) · ${slow} past the deadline`, errors: 'Last errors of the log', noErrors: 'No error since the start. 🎉', auto: 'Updates every 10 s', version: 'Version' },
         push: { title: '📲 This device', install: '⬇️ Install the app', installed: 'Installed as an app', installHint: 'In Safari: Share → Add to Home Screen', on: '🔔 Notify me here', off: '🔕 Stop notifying here', test: 'Send a test', enabled: '✅ Done: the notices of the bot come to this device too (Settings → 📲 picks which).', testSent: 'Sent: it shows up in a few seconds.', kinds: { monitor: '👀 a monitored contact came online', watch: '🔎 a /watch match', price: '📈 a price alert', web: '🌐 an access to this page' }, devices: (n) => `${n} device${n === 1 ? '' : 's'} get the notices`, needsHttps: 'The notices need the page on https (Tailscale serve, a proxy with a certificate) or on localhost.', unsupported: 'This browser has no push notices.', denied: 'The notices are blocked for this site in the browser: allow them in its settings.', offline: '📴 Offline: the notes you opened are here; the rest comes back with the network.', offlineReady: 'The notes you open stay available offline (never a protected tag).' },
         tryCmd: { check: 'Check', run: '▶️ Test', running: 'Running…', ok: 'ok', unknown: 'does not exist', options: 'options', noInput: 'does not read a pipe', option: (o) => `${o} is not tested here (it changes something)`, command: 'is not tested here (it may change something)', text: 'A text shortcut: its {/commands} run when it is used.', result: (ms) => `What it would answer (${ms} ms), nothing was sent`, nothing: 'It answered nothing.', notRunnable: 'Checked: it is not run here.', voice: 'voice', sticker: 'sticker' },
@@ -80,7 +80,7 @@ const TEXTS = {
         cannotShow: 'não foi possível mostrar esta mensagem', phTag: 'viagens', phTagDesc: 'lugares para conhecer', phNoteTag: 'ideias', envForced: (env) => `Decidido pela variável ${env} (config/.env), que tem prioridade sobre este setting`, noticeOn: 'Desligado: clique para ligar', noticeOff: 'Ligado: clique para desligar', flag: { quiet: ['Silencioso (-q): clique para responder normalmente', 'Responde normalmente: clique para silenciar (-q)'], ownerOnly: ['Só você (-p): clique para liberar a todos', 'Todos podem usar: clique para deixar só para você (-p)'] }, runOn: 'Ativo: clique para pausar', runOff: 'Pausado: clique para retomar', clearHistory: 'Limpar o histórico desta conversa', clearBtn: 'Limpar', clearTitle: (name) => `Limpar o histórico · ${name}`, clearInfo: (r) => `${r.removed} mensagens serão apagadas (com a mídia). ${r.kept} ficam: as apagadas, as editadas e as com reações, com o que tinham antes.`, clearNothing: 'Nada a apagar: toda mensagem daqui é apagada, editada ou tem reação.', clearEmpty: 'Esta conversa não tem mensagens no banco.', cacheBtn: 'Limpar', deleteNote: 'Apagar a nota', notice: 'Aviso', spy: { nav: 'Show', subtitle: 'O que o /show guarda: as apagadas, as editadas, as reações, os status e os canais', kinds: { deleted: 'Apagadas', edited: 'Editadas', reactions: 'Reações', status: 'Status', channels: 'Canais' }, alerts: 'Avisos no seu privado', alertOn: 'Ligado: clique para desligar', alertOff: 'Desligado: clique para ligar', people: 'Quem mais apaga, edita e reage', nobody: 'Ninguém ainda.', search: 'Busque no texto, na conversa ou na pessoa', empty: 'Nada aqui.', mute: 'Silenciar esta pessoa (/mute)', unmute: 'Tirar o silêncio (/unmute)', muted: 'silenciada', removeTitle: 'Tirar do cache', removeText: 'O bot esquece este item (e a mídia dele); o WhatsApp não é tocado.', removed: 'tirou', media: 'Abrir a mídia', openChat: 'Abrir a conversa nesta mensagem', mutedCount: (n) => `${n} silenciadas`, selectAll: 'Todas', selectOne: 'Selecionar', selectHint: 'Clique nos itens para selecioná-los (Shift+clique: um intervalo)', selected: (n) => `${n} selecionado${n === 1 ? '' : 's'}`, removeSelected: (n) => `Tirar ${n} ${n === 1 ? 'item' : 'itens'} do cache` }, cacheClean: 'Limpar o cache (/cache)', cacheRetention: 'O que passou da retenção (/cache -clean)', cachePick: 'Marque pelo menos um.', cacheAll: 'Tudo (/cache -all): todas as mensagens (inclusive apagadas, editadas e com reações), mídias, temporários e backups', cacheAllWarning: '⚠️ Tudo leva o histórico inteiro de todas as conversas e os backups também: não tem como desfazer. As notas ficam sempre.', flushAll: 'Limpar o histórico de todas as conversas', flushBtn: 'Limpar todas as conversas', flushEmpty: 'Não há mensagens no banco.', flushWarning: (n) => `⚠️ Isto limpa o histórico de todas as ${n} conversas de uma vez, não só de uma. Não tem como desfazer (só por um /backup).`, clearAll: (n) => `Apagar tudo (${n}), inclusive as apagadas, as editadas e as com reações, com a mídia delas`, webPanel: 'Interface web', webAt: 'Abra em', webAccess: 'Acesso', webLogin: 'Login e sessão', webScreen: 'Tela', webAlerts: 'Avisos', notSet: 'não definido', needsRestart: 'Vale quando o bot reiniciar', restSettings: 'Todos os outros settings', protectedHere: 'Mude com o /set no WhatsApp',  meBtn: 'Eu (meu privado)', watchedBy: '/watch', openInHistory: 'Abrir no histórico, nesta mensagem', presenceSource: 'presença do WhatsApp · horário não confirmado', newTag: 'Nova tag', newNote: 'Nova nota', editTagBtn: 'Editar a tag', copyTag: 'Duplicar a tag', copyTagInfo: (n) => `As ${n} nota${n === 1 ? '' : 's'} (e os arquivos) vão como cópia para a nova tag, sem os alertas.`, moveNote: 'Mover para outra tag', copyNote: 'Copiar para outra tag', duplicateNote: 'Duplicar a nota', moveTag: 'Mover todas as notas para outra tag', moveTagInfo: (n) => `As ${n} nota${n === 1 ? '' : 's'} vão para a tag que você escolher (se ela já tem notas, as duas se juntam).`, copyNoteInfo: 'A cópia leva o texto e o arquivo, sem o alerta.', pickTag: 'Tag', orNewTag: 'ou uma tag nova', removeTag: 'Remover a tag', confirmRemoveTag: 'Remover esta tag (ela não tem notas)?', removeTagWithNotes: 'Remover a tag e tudo dentro dela', removeTagInfo: (n) => `${n} nota${n === 1 ? '' : 's'} (e a mídia delas) serão apagadas, junto com a descrição e o cadeado da tag, se houver.`, historyBtn: 'Histórico', loadingHistory: 'Carregando o histórico…', searchContact: 'Busque um contato ou grupo (nome ou número) ou digite um e-mail', pickContact: 'Busque o contato (nome ou número)', noMatches: 'Nenhum contato encontrado', privateChat: 'Vazio: vai para o seu privado', useEmail: (email) => `✉️ Usar ${email}`, updatedAt: (time) => `atualizado às ${time}`, noHistory: 'Nada registrado ainda.', removeReading: 'Remover esta leitura', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 o código de segurança de ${who ?? 'um participante'} mudou`, systemNotice: (text) => `ℹ️ ${text ?? 'aviso do WhatsApp'}`, loadMore: 'Carregar mais', noMore: 'Não há mais mensagens.', loadingFor: (name) => `Carregando ${name}…`, loadingStats: 'Carregando as estatísticas…', loadingHome: 'Carregando…', statsOverview: 'Estatísticas', last30: 'últimos 30 dias', seeAllStats: 'Ver todas as estatísticas',
         code: 'Código de 6 dígitos', quotedGone: 'mensagem fora do banco', searchAll: 'Buscar em todas as mensagens', searchResults: (n) => `${n} resultados`, exportChat: 'Exportar PDF', reacted: 'reação', removedReaction: 'removida', reactionHistory: 'Histórico de reações',
         reactionChanged: 'Alterou a reação', reactionRemoved: 'Removeu a reação', autoRefresh: 'Mensagens novas',
-        gal: { nav: 'Mídias', subtitle: 'Toda foto, vídeo, áudio, figurinha e documento que o bot guardou', kinds: { image: 'Fotos', video: 'Vídeos', audio: 'Áudios', sticker: 'Figurinhas', document: 'Documentos' }, all: 'Tudo', allChats: 'Todas as conversas', period: { 7: '7 dias', 30: '30 dias', 90: '90 dias', 0: 'Sempre' }, total: (n, size) => `${n} arquivos · ${size}`, chats: 'As conversas que mais ocupam espaço', empty: 'Nenhuma mídia aqui.', open: 'Abrir na conversa', download: 'Baixar', remove: 'Liberar este arquivo', removeText: 'O arquivo sai do disco; a mensagem fica no histórico, com a mídia faltando.', removeSelected: (n) => `Liberar ${n} arquivo${n === 1 ? '' : 's'}`, freed: (size) => `${size} liberados`, select: 'Selecionar', selected: (n) => `${n} selecionado${n === 1 ? '' : 's'}`, deleted: 'apagada', prev: 'Anterior (←)', next: 'Próxima (→)', fromMe: 'você' },
+        gal: { nav: 'Mídias', subtitle: 'Toda foto, vídeo, áudio, figurinha e documento que o bot guardou', kinds: { image: 'Fotos', video: 'Vídeos', audio: 'Áudios', sticker: 'Figurinhas', document: 'Documentos' }, all: 'Tudo', allChats: 'Todas as conversas', period: { 7: '7 dias', 30: '30 dias', 90: '90 dias', 0: 'Sempre' }, total: (n, size) => `${n} arquivos · ${size}`, chats: 'As conversas que mais ocupam espaço', empty: 'Nenhuma mídia aqui.', open: 'Abrir na conversa', download: 'Baixar', remove: 'Liberar este arquivo', removeText: 'O arquivo sai do disco; a mensagem fica no histórico, com a mídia faltando.', removeSelected: (n) => `Liberar ${n} arquivo${n === 1 ? '' : 's'}`, freed: (size) => `${size} liberados`, select: 'Selecionar', selected: (n) => `${n} selecionado${n === 1 ? '' : 's'}`, deleted: 'apagada', prev: 'Anterior (←)', next: 'Próxima (→)', fromMe: 'você', grid: 'Grade', list: 'Lista', search: 'Busque no nome, na legenda ou na conversa', same: '🧬 Iguais', sameTitle: 'Agrupar os arquivos iguais (mesmo conteúdo)', cols: { name: 'Nome', size: 'Tamanho', mime: 'Tipo', date: 'Data', chat: 'Conversa', expires: 'Sai' }, sortHint: 'Clique para ordenar', expiresIn: (ago) => `sai ${ago}`, expiresNext: 'na próxima limpeza', expiresTitle: (when) => `A limpeza tira em ${when} (cache.messageMediaRetentionDays; uma apagada: cache.revokedRetentionDays)`, linked: 'Uma cópia unida: o mesmo arquivo que outras (hard link)', dupes: (n, copies, size) => `${n} arquivo${n === 1 ? '' : 's'} com cópias · ${copies} mensagens · ${size} para liberar`, noDupes: 'Nenhum arquivo igual a outro aqui. 🎉', join: (size) => `🔗 Unir as cópias (libera ${size})`, joinAll: (size) => `🔗 Unir todas (libera ${size})`, joinText: 'Cada cópia vira um hard link da mais antiga: o espaço é liberado e toda mensagem continua com a mídia (a limpeza ainda tira cada uma na sua data).', joined: (n, size) => `${n} cópias unidas, ${size} liberados.`, alreadyJoined: '✅ já são um arquivo só', copies: (n) => `× ${n}`, disk: (size) => `${size} no disco (as cópias unidas contam uma vez)`, shown: (n, total) => `${n} de ${total}`, mime: 'Tipo' },
         health: { nav: 'Saúde', subtitle: 'Como o bot está agora', verdict: { ok: '✅ Tudo certo', warn: '⚠️ Vale uma olhada', bad: '🚨 Algo está errado' }, problems: { whatsapp: 'o WhatsApp não está conectado', loops: 'uma checagem periódica travou', eventLoop: 'o bot está lento para responder (event loop)', errors: 'erros nos últimos 15 minutos' }, whatsapp: 'WhatsApp', wa: { ready: '🟢 Conectado', connecting: '⏳ Conectando', down: '🔴 Fora do ar', restarting: '🔄 Reiniciando' }, since: (ago) => `desde ${ago}`, outage: 'Última queda', attempts: 'Tentativas falhas', paused: '⏸️ o bot está pausado (/bot -pause)', process: 'Processo', uptime: 'No ar desde', memory: 'Memória (RSS)', heap: 'Heap do JS', load: 'Carga (1, 5, 15 min)', host: 'Memória livre do servidor', eventLoop: 'Atraso do event loop', mean: 'média', p99: 'p99', max: 'máx', loops: 'Checagens periódicas', loopIdle: 'parada', loopRunning: (ago) => `rodando ${ago}`, loopStuck: (ago) => `🚨 travada, rodando ${ago}`, runs: (n) => `${n} rodada${n === 1 ? '' : 's'}`, lastRound: (ms, ago) => `última: ${ms} ms, ${ago}`, never: 'ainda não rodou', regex: 'Worker de regex (/watch, buscas)', queueLabel: 'Na fila', missedLabel: 'Respondidos "sem match"', queue: (n, max) => `${n} na fila (limite ${max})`, urgent: (n) => `${n} urgentes`, regexRun: (n) => `${n} lotes rodados`, regexMissed: (full, slow) => `${full} recusados (fila cheia) · ${slow} passaram do prazo`, errors: 'Últimos erros do log', noErrors: 'Nenhum erro desde o início. 🎉', auto: 'Atualiza a cada 10 s', version: 'Versão' },
         push: { title: '📲 Este aparelho', install: '⬇️ Instalar o app', installed: 'Instalado como app', installHint: 'No Safari: Compartilhar → Adicionar à Tela de Início', on: '🔔 Me avisar aqui', off: '🔕 Parar de avisar aqui', test: 'Mandar um teste', enabled: '✅ Pronto: os avisos do bot chegam também neste aparelho (Settings → 📲 escolhe quais).', testSent: 'Enviado: aparece em alguns segundos.', kinds: { monitor: '👀 um contato monitorado ficou online', watch: '🔎 uma ocorrência do /watch', price: '📈 um alerta de preço', web: '🌐 um acesso a esta página' }, devices: (n) => `${n} aparelho${n === 1 ? '' : 's'} recebe${n === 1 ? '' : 'm'} os avisos`, needsHttps: 'Os avisos precisam da página em https (Tailscale serve, um proxy com certificado) ou em localhost.', unsupported: 'Este navegador não tem avisos push.', denied: 'Os avisos estão bloqueados para este site no navegador: libere nas configurações dele.', offline: '📴 Sem rede: as notas que você abriu estão aqui; o resto volta com a rede.', offlineReady: 'As notas que você abre ficam disponíveis sem rede (nunca as de tag protegida).' },
         tryCmd: { check: 'Checagem', run: '▶️ Testar', running: 'Rodando…', ok: 'ok', unknown: 'não existe', options: 'opções', noInput: 'não lê um pipe', option: (o) => `o ${o} não é testado aqui (muda alguma coisa)`, command: 'não é testado aqui (pode mudar alguma coisa)', text: 'Um atalho de texto: os {/comandos} dele rodam quando ele é usado.', result: (ms) => `O que ele responderia (${ms} ms), nada foi enviado`, nothing: 'Não respondeu nada.', notRunnable: 'Checado: não roda aqui.', voice: 'voz', sticker: 'figurinha' },
@@ -1530,18 +1530,50 @@ async function showHealth(content, data = null) {
 }
 
 /* the media gallery */
+// A document by its extension: a sheet with a folded corner and the extension on a colored band (PDF red, DOC blue...)
+const FILE_FAMILIES = {
+    pdf: ['pdf'], doc: ['doc', 'docx', 'odt', 'rtf', 'pages'], sheet: ['xls', 'xlsx', 'ods', 'csv', 'numbers'], slide: ['ppt', 'pptx', 'odp', 'key'],
+    archive: ['zip', 'rar', '7z', 'gz', 'tar', 'bz2', 'xz'], text: ['txt', 'md', 'log'], code: ['json', 'xml', 'html', 'js', 'py', 'sql', 'yml', 'yaml'],
+    apk: ['apk'], contact: ['vcf'], calendar: ['ics'], book: ['epub', 'mobi'],
+    audio: ['ogg', 'oga', 'opus', 'mp3', 'm4a', 'aac', 'wav', 'amr'], video: ['mp4', 'mov', 'webm', '3gp', 'mkv'], image: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic']
+};
+function fileBadge(name, big = false) {
+    const ext = (String(name).match(/\.([a-z0-9]{1,6})$/i)?.[1] ?? '').toLowerCase();
+    const family = Object.keys(FILE_FAMILIES).find(f => FILE_FAMILIES[f].includes(ext)) ?? 'other';
+    const glyph = { audio: '♪', video: '▶', image: '▣', contact: '👤', calendar: '📅', archive: '🗜', apk: '🤖', book: '📖' }[family] ?? '';
+    return el('span', { class: `file-badge fb-${family}${big ? ' big' : ''}`, title: ext ? `.${ext}` : '' },
+        glyph ? el('span', { class: 'fb-glyph' }, glyph) : null, el('span', { class: 'fb-ext' }, (ext || '?').toUpperCase().slice(0, 4)));
+}
+
+// 75 → "1:15", 3725 → "1:02:05": the duration of a video
+const clockText = (seconds) => {
+    const [h, m, sec] = [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, Math.round(seconds) % 60];
+    return `${h ? `${h}:${String(m).padStart(2, '0')}` : m}:${String(sec).padStart(2, '0')}`;
+};
+
+// 23/11 19:54 (the year only when it is not this one): the date column of the list
+const shortDate = (ms) => new Date(ms).toLocaleString(locale, { day: '2-digit', month: '2-digit', ...(new Date(ms).getFullYear() !== new Date().getFullYear() ? { year: '2-digit' } : {}), hour: '2-digit', minute: '2-digit' });
+
+// When the cleanup takes it: "leaves in 2 days" (red under a day); past the date, in the next cleanup
+function expiryNode(item, short = false) {
+    const G = T.gal;
+    const left = item.expiresAt - Date.now();
+    return el('span', { class: `gal-expiry${left < 86_400_000 ? ' soon' : ''}`, title: G.expiresTitle(fmtFull(item.expiresAt)) },
+        left <= 0 ? G.expiresNext : short ? relTime(item.expiresAt) : G.expiresIn(relTime(item.expiresAt)));
+}
+
 async function showGallery(content) {
     const G = T.gal;
-    state.gal ??= { kind: '', chat: '', days: 30 };
+    state.gal ??= { kind: '', chat: '', days: 30, q: '', sort: 'date', desc: true, same: false, view: (() => { try { return localStorage.getItem('zb_gal_view') || 'grid'; } catch { return 'grid'; } })() };
     const g = state.gal;
-    const params = () => {
-        const p = new URLSearchParams({ kind: g.kind, chat: g.chat });
+    const params = (extra = {}) => {
+        const p = new URLSearchParams({ kind: g.kind, chat: g.chat, q: g.q, sort: g.sort, desc: g.desc ? '1' : '0', ...extra });
         if (g.days) p.set('from', String(Date.now() - g.days * 86_400_000));
         return p;
     };
     let data = await (await api(`/api/gallery?${params()}`)).json();
     const items = [...data.items];
-    const grid = el('div', { class: 'gal-grid' });
+    const body = el('div', {});
     const more = el('button', { class: 'btn', hidden: !data.next }, T.loadMore);
     const picked = new Set();
     // Picking: Shift/Ctrl+click, or ☑️ (on the phone, where there is no Shift) and then a tap on each one
@@ -1552,58 +1584,125 @@ async function showGallery(content) {
     const renderBar = () => {
         bar.hidden = !picked.size && !picking;
         fill(bar, el('span', { class: 'grow' }, G.selected(picked.size)),
-            el('button', { class: 'btn', onclick: () => { picked.clear(); picking = false; selectButton.classList.remove('on'); grid.querySelectorAll('.gal-tile.picked').forEach(t => t.classList.remove('picked')); renderBar(); } }, '✕'),
+            el('button', { class: 'btn', onclick: () => { picked.clear(); picking = false; selectButton.classList.remove('on'); content.querySelectorAll('.picked').forEach(t => t.classList.remove('picked')); content.querySelectorAll('.gal-pick').forEach(c => { c.checked = false; }); renderBar(); } }, '✕'),
             el('button', { class: 'btn on', disabled: !picked.size, onclick: () => removeFiles([...picked]) }, `🧹 ${G.removeSelected(picked.size)}`));
+    };
+    const togglePick = (item, node) => {
+        if (picked.has(item.id)) picked.delete(item.id); else picked.add(item.id);
+        node.classList.toggle('picked', picked.has(item.id));
+        const box = node.querySelector('.gal-pick');
+        if (box) box.checked = picked.has(item.id);
+        renderBar();
     };
     const removeFiles = (ids) => confirmBox({
         title: G.removeSelected(ids.length), text: G.removeText, submitLabel: `🧹 ${T.remove}`,
         action: async () => { const result = await manage({ section: 'gallery', op: 'delete', ids }); if (!result.error) { messageBox(G.freed(humanSize(result.freed ?? 0))); redraw(); } return result; }
     });
+    const clickItem = (item, node, event, list) => {
+        if (picking || event.shiftKey || event.metaKey || event.ctrlKey || picked.size) {
+            event.preventDefault();
+            togglePick(item, node);
+            return;
+        }
+        lightbox(list, list.indexOf(item));
+    };
+    const iconOf = (item) => el('div', { class: 'gal-icon' }, fileBadge(item.name), el('span', {}, item.name));
+    // A picture: its thumbnail (the file itself if it fails); a video: its frame with ▶ and the duration (the icon if
+    // no frame could be read); the rest: the sheet of its extension
+    const thumbOf = (item) => {
+        if (item.kind === 'sticker') return el('img', { src: item.url, alt: item.name, loading: 'lazy' });
+        if (item.kind === 'image') {
+            const img = el('img', { src: item.thumb ?? item.url, alt: item.name, loading: 'lazy' });
+            img.addEventListener('error', () => { if (img.src !== new URL(item.url, location.href).href) img.src = item.url; }, { once: true });
+            return img;
+        }
+        if (item.kind === 'video' && item.thumb) {
+            const box = el('div', { class: 'gal-video' }, el('img', { src: item.thumb, alt: item.name, loading: 'lazy' }),
+                el('span', { class: 'gal-play' }, '▶'), item.duration ? el('span', { class: 'gal-duration' }, clockText(item.duration)) : null);
+            box.querySelector('img').addEventListener('error', () => box.replaceWith(iconOf(item)), { once: true });
+            return box;
+        }
+        return iconOf(item);
+    };
 
-    function tile(item, index) {
-        const thumb = item.kind === 'image' || item.kind === 'sticker'
-            ? el('img', { src: item.url, alt: item.name, loading: 'lazy' })
-            : el('div', { class: 'gal-icon' }, { video: '🎬', audio: '🎧', document: '📄' }[item.kind] ?? '📎', el('span', {}, item.name));
-        const box = el('div', { class: `gal-tile k-${item.kind}${item.deleted ? ' deleted' : ''}`, title: `${item.chatName} · ${fmtFull(item.at)} · ${humanSize(item.size)}`, onclick: (event) => {
-            if (picking || event.shiftKey || event.metaKey || event.ctrlKey || picked.size) {
-                event.preventDefault();
-                box.classList.toggle('picked');
-                if (picked.has(item.id)) picked.delete(item.id); else picked.add(item.id);
-                renderBar();
-                return;
-            }
-            lightbox(index);
-        } }, thumb, el('span', { class: 'gal-size' }, humanSize(item.size)), item.deleted ? el('span', { class: 'gal-flag', title: G.deleted }, '🗑️') : null);
+    function tile(item) {
+        const box = el('div', { class: `gal-tile k-${item.kind}${item.deleted ? ' deleted' : ''}`, title: `${item.name} · ${item.chatName} · ${fmtFull(item.at)} · ${humanSize(item.size)}`, onclick: (event) => clickItem(item, box, event, items) },
+            thumbOf(item), el('span', { class: 'gal-size' }, humanSize(item.size)),
+            item.deleted ? el('span', { class: 'gal-flag', title: G.deleted }, '🗑️') : null,
+            item.linked ? el('span', { class: 'gal-link', title: G.linked }, '🔗') : null,
+            item.expiresAt - Date.now() < 86_400_000 ? el('span', { class: 'gal-soon', title: G.expiresTitle(fmtFull(item.expiresAt)) }, '⏳') : null);
         return box;
     }
 
-    // The viewer: ← → go through what is loaded, Esc closes
-    function lightbox(index) {
-        let i = index;
+    // The list: a row per file, the columns sortable (by the server: the sort goes over every page)
+    const COLS = [['name', 'name'], ['size', 'size'], ['mime', null], ['date', 'date'], ['chat', 'chat'], ['expires', 'expires']];
+    function row(item) {
+        const tr = el('tr', { class: `gal-row${item.deleted ? ' deleted' : ''}`, onclick: (event) => { if (!event.target.closest('input')) clickItem(item, tr, event, items); } },
+            el('td', {}, el('input', { type: 'checkbox', class: 'gal-pick', onchange: () => togglePick(item, tr) })),
+            el('td', { class: 'gal-name' }, item.kind === 'sticker' || item.thumb ? el('span', { class: `gal-mini-box${item.kind === 'video' ? ' video' : ''}` }, el('img', { class: 'gal-mini', src: item.thumb ?? item.url, alt: '', loading: 'lazy' })) : fileBadge(item.name),
+                el('span', {}, item.name), item.linked ? el('span', { title: G.linked }, ' 🔗') : null, item.deleted ? el('span', { title: G.deleted }, ' 🗑️') : null),
+            el('td', { class: 'nowrap num' }, humanSize(item.size)),
+            el('td', { class: 'muted gal-mime' }, item.mime),
+            el('td', { class: 'nowrap', title: fmtFull(item.at) }, shortDate(item.at)),
+            el('td', { class: 'gal-chat' }, item.chatName),
+            el('td', { class: 'nowrap' }, expiryNode(item, true)));
+        return tr;
+    }
+    const sortBy = (key) => { if (g.sort === key) g.desc = !g.desc; else { g.sort = key; g.desc = key === 'date' || key === 'size'; } redraw(); };
+    const table = () => el('div', { class: 'tablewrap' }, el('table', { class: 'gal-table' },
+        el('thead', {}, el('tr', {}, el('th', {}), COLS.map(([col, key]) => el('th', { class: key ? 'sortable' : '', title: key ? G.sortHint : '', onclick: key ? () => sortBy(key) : null },
+            G.cols[col], g.sort === key ? (g.desc ? ' ▼' : ' ▲') : '')))),
+        el('tbody', { id: 'gal-rows' }, items.map(row))));
+
+    // The same files: one card per content, with every message that has it, and "join the copies"
+    async function sameFiles() {
+        const dupes = await apiProgress(`/api/gallery/duplicates?${params()}`, T.loading);
+        if (!dupes.groups.length) return el('div', { class: 'empty' }, G.noDupes);
+        const join = (hashes, size) => confirmBox({
+            title: G.joinAll(humanSize(size)), text: G.joinText, submitLabel: '🔗 OK',
+            action: async () => { const r = await manage({ section: 'gallery', op: 'join', hashes }); if (!r.error) { messageBox(G.joined(r.joined, humanSize(r.freed))); redraw(); } return r; }
+        });
+        const all = dupes.groups.flatMap(x => x.items);
+        return el('div', { class: 'gal-same' },
+            el('div', { class: 'gal-same-head' }, el('span', { class: 'grow' }, G.dupes(dupes.groups.length, dupes.copies, humanSize(dupes.wasted))),
+                dupes.wasted ? el('button', { class: 'btn on', onclick: () => join(dupes.groups.filter(x => x.wasted).map(x => x.hash), dupes.wasted) }, G.joinAll(humanSize(dupes.wasted))) : null),
+            dupes.groups.map(group => el('div', { class: 'gal-group' },
+                el('div', { class: 'gal-group-thumb', onclick: () => lightbox(all, all.indexOf(group.items[0])) }, thumbOf(group.items[0])),
+                el('div', { class: 'gal-group-body' },
+                    el('div', {}, el('strong', {}, group.items[0].name), el('span', { class: 'muted' }, ` · ${humanSize(group.size)} ${G.copies(group.count)}`)),
+                    el('div', { class: 'chips' }, group.items.map(it => el('button', { class: 'chip', title: fmtFull(it.at), onclick: () => lightbox(all, all.indexOf(it)) }, `${it.chatName} · ${fmtDate(it.at)}`))),
+                    group.wasted ? el('button', { class: 'btn', onclick: () => join([group.hash], group.wasted) }, G.join(humanSize(group.wasted))) : el('span', { class: 'muted' }, G.alreadyJoined)))));
+    }
+
+    // The viewer: ← → go through the list it came from, Delete frees, Esc closes
+    function lightbox(list, index) {
+        let i = Math.max(0, index);
         const stage = el('div', { class: 'gal-stage' });
         const info = el('div', { class: 'gal-info' });
         const draw = () => {
-            const item = items[i];
+            const item = list[i];
             fill(stage, item.kind === 'image' || item.kind === 'sticker' ? el('img', { src: item.url, alt: item.name })
-                : item.kind === 'video' ? el('video', { src: item.url, controls: true, autoplay: true })
-                    : item.kind === 'audio' ? el('audio', { src: item.url, controls: true, autoplay: true })
-                        : el('div', { class: 'gal-icon big' }, '📄', el('span', {}, item.name)));
-            fill(info, 
+                : item.kind === 'video' ? el('video', { src: item.url, controls: true, autoplay: true, ...(item.thumb ? { poster: item.thumb } : {}) })
+                    : item.kind === 'audio' ? el('div', { class: 'gal-icon big' }, fileBadge(item.name, true), el('audio', { src: item.url, controls: true, autoplay: true }))
+                        : el('div', { class: 'gal-icon big' }, fileBadge(item.name, true), el('span', {}, item.name)));
+            fill(info,
                 el('div', {}, el('strong', {}, item.chatName), item.fromMe || (item.sender && item.sender !== item.chatName) ? el('span', { class: 'muted' }, ` · ${item.fromMe ? G.fromMe : item.sender}`) : null),
-                el('div', { class: 'muted' }, `${fmtFull(item.at)} · ${humanSize(item.size)} · ${i + 1}/${items.length}${item.deleted ? ` · 🗑️ ${G.deleted}` : ''}`),
+                el('div', { class: 'muted' }, `${item.name} · ${item.mime} · ${humanSize(item.size)} · ${fmtFull(item.at)} · ${i + 1}/${list.length}${item.deleted ? ` · 🗑️ ${G.deleted}` : ''}${item.linked ? ' · 🔗' : ''}`),
+                el('div', {}, expiryNode(item)),
                 item.caption ? el('div', {}, item.caption) : null,
                 el('div', { class: 'gal-actions' },
                     el('button', { class: 'btn', title: G.prev, disabled: i === 0, onclick: () => { i--; draw(); } }, '←'),
-                    el('button', { class: 'btn', title: G.next, disabled: i === items.length - 1, onclick: () => { i++; draw(); } }, '→'),
+                    el('button', { class: 'btn', title: G.next, disabled: i === list.length - 1, onclick: () => { i++; draw(); } }, '→'),
                     el('button', { class: 'btn', onclick: () => { dialog.close(); jumpToMessage({ chat: item.chat, id: item.id, at: item.at }); } }, `💬 ${G.open}`),
                     el('a', { class: 'btn', href: `${item.url}&download=1`, download: item.name }, `⬇️ ${G.download}`),
-                    el('button', { class: 'btn', onclick: () => { dialog.close(); removeFiles([item.id]); } }, `🧹 ${G.remove}`),
+                    el('button', { class: 'btn', title: 'Delete', onclick: () => { dialog.close(); removeFiles([item.id]); } }, `🧹 ${G.remove}`),
                     el('button', { class: 'btn', onclick: () => dialog.close() }, T.contact.close)));
         };
         const dialog = el('dialog', { class: 'modal gal-viewer' }, stage, info);
         dialog.addEventListener('keydown', (event) => {
             if (event.key === 'ArrowLeft' && i > 0) { i--; draw(); }
-            if (event.key === 'ArrowRight' && i < items.length - 1) { i++; draw(); }
+            if (event.key === 'ArrowRight' && i < list.length - 1) { i++; draw(); }
+            if (event.key === 'Delete') { dialog.close(); removeFiles([list[i].id]); }
         });
         dialog.addEventListener('close', () => dialog.remove(), { once: true });
         document.body.append(dialog);
@@ -1611,23 +1710,34 @@ async function showGallery(content) {
         dialog.showModal();
     }
 
-    grid.append(...(items.length ? items.map(tile) : [el('div', { class: 'empty' }, G.empty)]));
     more.addEventListener('click', async () => {
-        const p = params();
-        p.set('before', data.next);
-        data = await (await api(`/api/gallery?${p}`)).json();
-        const start = items.length;
+        data = await (await api(`/api/gallery?${params({ offset: String(data.next) })}`)).json();
         items.push(...data.items);
-        grid.append(...data.items.map((item, k) => tile(item, start + k)));
+        if (g.view === 'list') content.querySelector('#gal-rows').append(...data.items.map(row));
+        else content.querySelector('.gal-grid').append(...data.items.map(tile));
         more.hidden = !data.next;
+        count.textContent = G.shown(items.length, data.matched);
     });
+
+    if (g.same) fill(body, await sameFiles());
+    else if (!items.length) fill(body, el('div', { class: 'empty' }, G.empty));
+    else fill(body, g.view === 'list' ? table() : el('div', { class: 'gal-grid' }, items.map(tile)), el('div', { class: 'gal-more' }, more));
+    const count = el('span', { class: 'muted' }, g.same ? '' : G.shown(items.length, data.matched));
 
     const kinds = el('div', { class: 'spy-tabs' },
         el('button', { class: `btn${g.kind ? '' : ' on'}`, onclick: () => { g.kind = ''; redraw(); } }, `${G.all} · ${humanSize(data.totals.size)}`),
         Object.entries(data.totals.byKind).map(([kind, t]) => el('button', { class: `btn${g.kind === kind ? ' on' : ''}`, disabled: !t.count, title: G.total(t.count, humanSize(t.size)), onclick: () => { g.kind = kind; redraw(); } },
             `${{ image: '🖼️', video: '🎬', audio: '🎧', sticker: '🌟', document: '📄' }[kind]} ${G.kinds[kind]} · ${t.count}`)));
     const selectButton = el('button', { class: 'btn', title: G.select, onclick: () => { picking = !picking; selectButton.classList.toggle('on', picking); renderBar(); } }, `☑️ ${G.select}`);
-    const periods = el('div', { class: 'spy-tabs' }, selectButton, [7, 30, 90, 0].map(days => el('button', { class: `btn${g.days === days ? ' on' : ''}`, onclick: () => { g.days = days; redraw(); } }, G.period[days])),
+    const setView = (view) => { g.view = view; g.same = false; try { localStorage.setItem('zb_gal_view', view); } catch { /* only a convenience */ } redraw(); };
+    const search = el('input', { type: 'search', placeholder: G.search, value: g.q, oninput: debounce((event) => { g.q = event.target.value.trim(); redraw(); }, 500) });
+    const tools = el('div', { class: 'spy-tabs gal-tools' },
+        el('span', { class: 'gal-switch' },
+            el('button', { class: `btn${!g.same && g.view === 'grid' ? ' on' : ''}`, title: G.grid, onclick: () => setView('grid') }, `▦ ${G.grid}`),
+            el('button', { class: `btn${!g.same && g.view === 'list' ? ' on' : ''}`, title: G.list, onclick: () => setView('list') }, `☰ ${G.list}`),
+            el('button', { class: `btn${g.same ? ' on' : ''}`, title: G.sameTitle, onclick: () => { g.same = !g.same; redraw(); } }, G.same)),
+        g.same ? null : selectButton,
+        [7, 30, 90, 0].map(days => el('button', { class: `btn${g.days === days ? ' on' : ''}`, onclick: () => { g.days = days; redraw(); } }, G.period[days])),
         g.chat ? el('button', { class: 'btn chip', onclick: () => { g.chat = ''; redraw(); } }, `💬 ${data.chats.find(c => c.id === g.chat)?.name ?? g.chat} ✕`) : null);
     const top = Math.max(1, ...data.chats.map(c => c.size));
     const chats = el('div', { class: 'spy-people' }, el('h3', {}, G.chats),
@@ -1635,14 +1745,18 @@ async function showGallery(content) {
             el('span', { class: 'rank-n' }, String(n + 1)),
             el('div', { class: 'rank-body' }, el('div', { class: 'rank-line' }, el('span', { class: 'rank-name' }, c.name), el('span', { class: 'rank-val' }, `${humanSize(c.size)} · ${c.count}`)),
                 el('div', { class: 'rank-track' }, el('span', { class: 'rank-text', style: `width:${c.size / top * 100}%` }))))))
-            : el('div', { class: 'muted' }, G.empty));
+            : el('div', { class: 'muted' }, G.empty),
+        data.totals.disk < data.totals.size ? el('p', { class: 'muted' }, `🔗 ${G.disk(humanSize(data.totals.disk))}`) : null);
 
-    fill(content, el('div', { class: 'page' },
+    content.replaceChildren(el('div', { class: 'page' },
         el('div', { class: 'page-head' }, el('h2', {}, `🖼️ ${G.nav}`), el('span', { class: 'muted grow' }, `${G.subtitle} · ${G.total(data.totals.count, humanSize(data.totals.size))}`),
             el('button', { class: 'btn', onclick: redraw }, `↻ ${T.refresh}`)),
-        kinds, periods, bar,
-        el('div', { class: 'spy-layout' }, el('div', {}, grid, more), chats)));
+        kinds, tools, el('div', { class: 'search spy-search gal-search' }, search, count), bar,
+        // the list takes the whole width (the chats go under it)
+        el('div', { class: `spy-layout${!g.same && g.view === 'list' ? ' gal-wide' : ''}` }, body, chats)));
+    if (document.activeElement !== search && g.q) { search.focus(); search.setSelectionRange(g.q.length, g.q.length); }
 }
+
 
 /* statistics: charts drawn as SVG (no library: the page has a strict CSP) */
 const SVG = 'http://www.w3.org/2000/svg';

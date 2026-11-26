@@ -254,6 +254,107 @@ describe('media gallery', () => {
         assert.equal(month.totals.byKind.image.count, 1, 'the totals follow the period too');
     });
 
+    test('sorted by size or name, searched, with the MIME type and when the cleanup takes each one', async () => {
+        const now = Date.now();
+        await bot.setSetting('cache.messageMediaRetentionDays', 5);
+        await insert('s1', 'a@c.us', 'document', file('contrato.pdf', 900), now - 1000, { name: 'Ana' });
+        await insert('s2', 'a@c.us', 'document', file('planilha.xlsx', 5000), now - 2000, { name: 'Ana' });
+        await insert('s3', 'b@c.us', 'image', file('foto.jpg', 300), now - 3000, { name: 'Bia' });
+        await bot.dbRun("UPDATE messages SET revoked = 1, revoked_at = ? WHERE id = 's3'", [now]);
+        bot.src('web/gallery').forgetSizes();
+        assert.deepEqual((await json('/api/gallery?sort=size')).items.map(i => i.id), ['s2', 's1', 's3']);
+        assert.deepEqual((await json('/api/gallery?sort=name&desc=0')).items.map(i => i.name), ['contrato.pdf', 'foto.jpg', 'planilha.xlsx']);
+        const found = await json('/api/gallery?q=PLANILHA');
+        assert.deepEqual([found.items.map(i => i.id), found.matched], [['s2'], 1]);
+        assert.equal((await json('/api/gallery?q=bia')).items[0].id, 's3', 'the chat name too');
+        const [pdf] = (await json('/api/gallery?q=contrato')).items;
+        assert.equal(pdf.mime, 'application/pdf');
+        assert.equal(pdf.expiresAt, now - 1000 + 5 * 86_400_000, 'the media window');
+        const deleted = (await json('/api/gallery?q=foto')).items[0];
+        assert.equal(deleted.expiresAt, now + bot.getSetting('cache.revokedRetentionDays') * 86_400_000, 'a deleted one: its own window');
+    });
+
+    test('the same files: grouped by content, joined as hard links (space freed, every message keeps its media)', async () => {
+        const now = Date.now();
+        const same = Buffer.alloc(4096, 9);
+        await insert('c1', 'a@c.us', 'image', (fs.mkdirSync(MEDIA_DIR, { recursive: true }), fs.writeFileSync(path.join(MEDIA_DIR, 'meme1.jpg'), same), 'meme1.jpg'), now - 3000, { name: 'Ana' });
+        await insert('c2', 'b@c.us', 'image', (fs.writeFileSync(path.join(MEDIA_DIR, 'meme2.jpg'), same), 'meme2.jpg'), now - 2000, { name: 'Bia' });
+        await insert('c3', 'c@c.us', 'image', (fs.writeFileSync(path.join(MEDIA_DIR, 'meme3.jpg'), same), 'meme3.jpg'), now - 1000, { name: 'Caio' });
+        // the same size, another content: not a copy
+        await insert('c4', 'a@c.us', 'image', (fs.writeFileSync(path.join(MEDIA_DIR, 'other.jpg'), Buffer.alloc(4096, 1)), 'other.jpg'), now, { name: 'Ana' });
+        bot.src('web/gallery').forgetSizes();
+        const dupes = await json('/api/gallery/duplicates');
+        assert.equal(dupes.groups.length, 1);
+        const [group] = dupes.groups;
+        assert.deepEqual([group.count, group.files, group.wasted, group.items.map(i => i.id)], [3, 3, 8192, ['c1', 'c2', 'c3']]);
+        assert.equal((await manage({ section: 'gallery', op: 'join', hashes: ['nope'] })).status, 400);
+
+        const joined = (await manage({ section: 'gallery', op: 'join', hashes: [group.hash] })).body;
+        assert.deepEqual([joined.joined, joined.freed], [2, 8192]);
+        const ino = (name) => fs.statSync(path.join(MEDIA_DIR, name)).ino;
+        assert.equal(ino('meme2.jpg'), ino('meme1.jpg'));
+        assert.equal(ino('meme3.jpg'), ino('meme1.jpg'));
+        assert.deepEqual(fs.readFileSync(path.join(MEDIA_DIR, 'meme3.jpg')), same, 'the content is the same');
+        const after = await json('/api/gallery/duplicates');
+        assert.deepEqual([after.groups[0].files, after.groups[0].wasted, after.wasted], [1, 0, 0], 'already one file');
+        const list = await json('/api/gallery');
+        assert.equal(list.totals.disk, 4096 * 2, 'on disk the joined copies count once');
+        assert.ok(list.items.find(i => i.id === 'c2').linked);
+        // freeing one copy frees nothing (the others keep the data) and does not take theirs
+        assert.equal((await manage({ section: 'gallery', op: 'delete', ids: ['c2'] })).body.freed, 0);
+        assert.deepEqual(fs.readFileSync(path.join(MEDIA_DIR, 'meme1.jpg')), same);
+    });
+
+    test('the statuses: each person who posted is one "chat" (picking one does not bring the others)', async () => {
+        const now = Date.now();
+        const status = (id, who, name, at) => bot.dbRun(
+            "INSERT INTO messages (id, chat_id, chat_name, type, timestamp, has_media, media_path, sender_jid, sender_name) VALUES (?, 'status@broadcast', ?, 'image', ?, 1, ?, ?, ?)",
+            [id, `Status de ${name}`, at, file(`${id}.jpg`, 100), who, name]);
+        await status('st1', '1@c.us', 'Vanildo', now - 3000);
+        await status('st2', '2@c.us', 'Leandro', now - 2000);
+        await status('st3', '1@c.us', 'Vanildo', now - 1000);
+        await insert('gr1', 'g@g.us', 'image', file('gr1.jpg', 100), now - 5000, { name: 'Nome antigo' });
+        await insert('gr2', 'g@g.us', 'image', file('gr2.jpg', 100), now - 500, { name: 'Nome novo' });
+        bot.src('web/gallery').forgetSizes();
+        const all = await json('/api/gallery');
+        const vanildo = all.chats.find(c => c.name === 'Status de Vanildo');
+        assert.deepEqual([vanildo.id, vanildo.count], ['status@broadcast|1@c.us', 2]);
+        assert.equal(all.chats.find(c => c.id === 'g@g.us').name, 'Nome novo', 'the most recent name');
+        const picked = await json(`/api/gallery?chat=${encodeURIComponent(vanildo.id)}`);
+        assert.deepEqual(picked.items.map(i => i.id), ['st3', 'st1']);
+        assert.equal(picked.items[0].chat, 'status@broadcast', 'it still opens in the statuses');
+    });
+
+    test('thumbnails: a frame of each video (with its duration), a small copy of a big picture, made once', async () => {
+        const { processes } = bot;
+        const now = Date.now();
+        processes.duration = 75;
+        await insert('v1', 'a@c.us', 'video', file('clip.mp4', 500_000), now - 1000);
+        await insert('p1', 'a@c.us', 'image', file('big.jpg', 200_000), now - 2000);
+        await insert('p2', 'a@c.us', 'image', file('small.jpg', 1000), now - 3000);
+        await insert('d1', 'a@c.us', 'document', file('doc.pdf', 1000), now - 4000);
+        bot.src('web/gallery').forgetSizes();
+        const before = (await json('/api/gallery')).items.find(i => i.id === 'v1');
+        assert.deepEqual([before.thumb, before.duration], ['/api/media/thumb?id=v1', null], 'the duration comes with the first thumbnail');
+
+        const video = await get('/api/media/thumb?id=v1');
+        assert.deepEqual([video.status, video.headers.get('content-type'), video.headers.get('cache-control')], [200, 'image/jpeg', 'private, max-age=86400']);
+        const ffmpeg = processes.calls.filter(c => c.bin.endsWith('ffmpeg'));
+        assert.equal(ffmpeg.length, 1);
+        assert.deepEqual(ffmpeg[0].args.slice(ffmpeg[0].args.indexOf('-ss'), ffmpeg[0].args.indexOf('-ss') + 2), ['-ss', '1']);
+        assert.ok(ffmpeg[0].args.includes('-protocol_whitelist'));
+        await get('/api/media/thumb?id=v1');
+        assert.equal(processes.calls.filter(c => c.bin.endsWith('ffmpeg')).length, 1, 'made once, then from the cache');
+        assert.equal((await json('/api/gallery')).items.find(i => i.id === 'v1').duration, 75);
+
+        const big = await get('/api/media/thumb?id=p1');
+        assert.deepEqual([big.status, big.headers.get('content-type')], [200, 'image/jpeg']);
+        assert.ok((await big.arrayBuffer()).byteLength < 1000, 'the small copy, not the 200 KB file');
+        assert.equal((await (await get('/api/media/thumb?id=p2')).arrayBuffer()).byteLength, 1000, 'a small picture is its own thumbnail');
+        assert.equal((await get('/api/media/thumb?id=d1')).status, 404, 'a document has none: the page shows its icon');
+        assert.equal((await get('/api/media/thumb?id=v1', null)).status, 401);
+    });
+
     test('freeing files: the files go, the messages stay (media missing)', async () => {
         await insert('d1', 'a@c.us', 'image', file('d1.jpg', 2048), Date.now());
         const result = await manage({ section: 'gallery', op: 'delete', ids: ['d1', 'nope'] });

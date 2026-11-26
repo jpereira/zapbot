@@ -470,7 +470,7 @@ const HANDLERS = {
         check: async (body) => ({ ...(await require('./tryCommand').checkLine(body.command)), parts: undefined }),
         watch: async (body) => require('./watchTest').tryWatchRule(body.rule)
     },
-    gallery: { delete: async (body) => noteResult(await require('./gallery').deleteMedia(body)) },
+    gallery: { delete: async (body) => noteResult(await require('./gallery').deleteMedia(body)), join: async (body) => noteResult(await require('./gallery').joinCopies(body)) },
     push: {
         subscribe: async (body, token, req) => pushResult(() => webPush.subscribe({ ...body, agent: req?.agent })),
         unsubscribe: async (body) => pushResult(() => webPush.unsubscribe(body.endpoint)),
