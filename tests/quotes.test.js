@@ -270,6 +270,30 @@ describe('alertas de preço (-alert)', () => {
         assert.equal(bot.client.sent.length, beforeAlt + 1);
     });
 
+    test('-alert -pause e -resume: o pausado fica na lista com ⏸️ e não dispara até ser retomado', async () => {
+        await bot.replyAlt('/crypto -alert BTC > 96000');
+        await bot.replyAlt('/crypto -alert ETH < 1000');
+        const [paused] = await bot.replyAlt('/crypto -alert -pause 1');
+        assert.match(paused, /^⏸️ \*Pausado\* \(1\)\n1\. ₿ BTC\/USDT acima de \*\$96,000\.00\*\n💡 \*Dicas\*\n-alert -resume <nº\.\.\.\|all> retoma$/);
+        assert.match((await bot.replyAlt('/crypto -alert'))[0], /1\. ₿ BTC\/USDT acima de \*\$96,000\.00\* ⏸️ _pausado_/);
+        assert.deepEqual(await bot.replyAlt('/crypto -alert -pa 1'), ['ℹ️ Nada a mudar: já estão todos pausados.']);
+        assert.match((await bot.replyAlt('/crypto -alert -pause 9'))[0], /❌ Alerta nº 9 não existe/);
+
+        // paused: the price crossed, but nothing goes out and the alert stays
+        prices.BTC = 97000;
+        const beforeAlt = bot.client.sent.length;
+        await priceCheckAlerts({ force: true });
+        assert.equal(bot.client.sent.length, beforeAlt);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 2);
+
+        // resumed (all: only the paused one changes): fires on the next check
+        assert.match((await bot.replyAlt('/crypto -alert -resume all'))[0], /^▶️ \*Retomado\* \(1\)\n1\. ₿ BTC/);
+        assert.deepEqual(await bot.replyAlt('/crypto -alert -re all'), ['ℹ️ Nada a mudar: nenhum estava pausado.']);
+        await priceCheckAlerts({ force: true });
+        assert.match(bot.client.sent.at(-1).content, /ALERTA DE PREÇO[\s\S]*BTC\/USDT/);
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM price_alerts')).n, 1);
+    });
+
     test('/crypto -alert: abaixo de, em dólar', async () => {
         assert.match((await bot.replyAlt('/crypto -alert BTC < 90000'))[0], /₿ BTC\/USDT abaixo de \*\$90,000\.00\*/);
         prices.BTC = 89000;

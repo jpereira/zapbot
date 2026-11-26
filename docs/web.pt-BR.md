@@ -330,6 +330,7 @@ Tudo que pode ser ligado e desligado tem a **mesma célula, na coluna `alerta`**
 - na tabela do `/watch`, 🔔 é o **aviso da regra** ligado e 🔕 desligado. Desligado, as ocorrências continuam sendo
   guardadas (e o histórico da regra continua crescendo), mas ninguém é avisado;
 - na tabela do `/monitor`, 🔔 é o alerta do contato (você é avisado quando ele ficar online) e 🔕 desligado;
+- nos alertas de preço, ▶️ é um alerta sendo verificado e ⏸️ um pausado (o mesmo que `-alert -pause` / `-resume`);
 - na agenda, ▶️ é uma mensagem ativa e ⏸️ uma pausada.
 
 Desligado ou pausado, **a linha inteira fica mais opaca, com o texto riscado** (ela continua funcionando; nada fica

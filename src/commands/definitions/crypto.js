@@ -3,11 +3,11 @@
  */
 
 const { ADMIN, USER } = require('../../roles').ROLES;
-const { OPTION_ALERT_MSG, OPTION_ALERT_RM, OPTION_ALERT_TO } = require('./_options');
+const { OPTION_ALERT_MSG, OPTION_ALERT_PAUSE, OPTION_ALERT_RESUME, OPTION_ALERT_RM, OPTION_ALERT_TO } = require('./_options');
 
 module.exports = {
     cmd: '/crypto',
-    usage: '/crypto [OPTION] [CURRENCY...]  or  /crypto [CURRENCY] -alert [rule] [-to <target>]... [-msg <text>]  or  /crypto -alert -rm <num...|all>',
+    usage: '/crypto [OPTION] [CURRENCY...]  or  /crypto [CURRENCY] -alert [rule] [-to <target>]... [-msg <text>]  or  /crypto -alert -rm|-pause|-resume <num...|all>',
     aliases: [],
     summary: 'Price and 24 h change of cryptocurrencies',
     help: 'Current price and 24 h change of the enabled cryptocurrencies (Binance) or only the requested ones (e.g. /crypto BTC ETH).',
@@ -41,6 +41,8 @@ module.exports = {
         { opts: ['list', 'l'], values: [], desc: 'Lists the supported coins (* = enabled).' },
         OPTION_ALERT_MSG,
         OPTION_ALERT_RM,
+        OPTION_ALERT_PAUSE,
+        OPTION_ALERT_RESUME,
         OPTION_ALERT_TO,
         {
             opts: ['tts'],

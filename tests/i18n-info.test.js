@@ -59,7 +59,7 @@ describe('en_US: informação', () => {
         assert.match(created, /^🔔 \*Alert created\*\n/);
         assert.match(created, /\n   📨 your private chat\n💰 Now: R\$ 5\.2000\n💡 _Checked every \d+ minutes?\._$/);
 
-        assert.match((await bot.replyAlt('/stocks -alert'))[0], /^🔔 \*PRICE ALERTS\* _\(\/stocks · every \d+ minutes?\)_\n\n1\. [^]*💡 _-alert -rm <num\.\.\.\|all> removes_$/);
+        assert.match((await bot.replyAlt('/stocks -alert'))[0], /^🔔 \*PRICE ALERTS\* _\(\/stocks · every \d+ minutes?\)_\n\n1\. [^]*💡 \*Tips\*\n-alert -rm <num\.\.\.\|all> removes\n-alert -pause <num\.\.\.\|all> pauses\n-alert -resume <num\.\.\.\|all> resumes$/);
         assert.equal((await bot.replyAlt('/stocks -alert -rm 9'))[0],
             "❌ Alert #9 doesn't exist. See the list with /stocks -alert");
         assert.match((await bot.replyAlt('/stocks -alert -rm 1'))[0], /^🗑️ Alert removed: /);

@@ -178,7 +178,8 @@ async function seed() {
         ['/stash.view', 'Abre a tag protegida #cofre', '/notes -v -lock $1 #cofre', 1, 1], ['/rap', 'Texto respondido, falado com uma batida', '/tts -l -v tugão -sp 65 -b 95 $@', 0, 0]
     ]) await bot.dbRun('INSERT INTO command_aliases (name, description, command, quiet, owner_only) VALUES (?, ?, ?, ?, ?)', [name, description, command, quiet, owner]);
     await bot.dbRun("INSERT INTO price_alerts (kind, symbol, op, target, created_at, dest_id, dest_name, message) VALUES ('crypto', 'BTC', '>', 120000, ?, '5521999990001@c.us', 'Ana Souza', 'Hora de vender?')", [now - 3 * DAY]);
-    await bot.dbRun("INSERT INTO price_alerts (kind, symbol, op, target, created_at) VALUES ('acao', 'USD', '<', 5, ?)", [now - DAY]);
+    // paused (-alert -pause): the ⏸️ and the struck-through row
+    await bot.dbRun("INSERT INTO price_alerts (kind, symbol, op, target, created_at, paused) VALUES ('acao', 'USD', '<', 5, ?, 1)", [now - DAY]);
     await bot.setSetting('watch.rules', ['boleto', '/pix|ted/i', 'promoção']);
     await bot.dbRun("INSERT INTO monitor_contacts (contact_id, contact_name, created_at, last_status, last_seen, last_checked_at, alert_enabled) VALUES ('5521999990002@c.us', 'Carlos Lima', 1, 'offline', ?, ?, 1)", [Math.floor((now - 40 * MIN) / 1000), now - MIN]); // (the monitor keeps the last seen in seconds)
     await bot.dbRun("INSERT INTO watch_destinations (rule, dest_id, dest_name, dest_is_group) VALUES ('boleto', '5521999990001@c.us', 'Ana Souza', 0)");

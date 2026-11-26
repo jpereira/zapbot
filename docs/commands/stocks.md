@@ -16,6 +16,8 @@ indexes** (MSTR, NVDA, PETR4.SA, the S&P 500...). It shows the enabled symbols (
 | `-alert`, `-al` | `[rule]` | Without a rule, lists the alerts; with a rule (e.g. `USD > 5.30` or `MSTR < 90`), creates one (bot owner or an [admin](bot.md#extra-admins) only). The symbol can also come first: `/stocks MSTR -alert < 90`. See [Price alerts](#price-alerts) |
 | `-msg`, `-m` | `<text>` | Together with `-alert`: the text goes at the start of the notice. Runs to the end of the command. See [Message in the notice](#message-in-the-notice) |
 | `-rm` | `<no...\|all>` | Together with `-alert`: removes the alerts with those numbers (`-rm 2`, `-rm 1 2 3` or `-rm 1,2,3`), or all of them (`all`). If any number doesn't exist, none is removed |
+| `-pause`, `-pa` | `<#...\|all>` | Together with `-alert`: pauses those alerts (`-pause 2`, `-pause 1 3` or `all`). A paused one stays in the list with ⏸️ and is not checked until `-resume` |
+| `-resume`, `-re` | `<#...\|all>` | Together with `-alert`: resumes paused alerts. If the price crossed the value meanwhile, it notifies on the next check |
 | `-to` | `<destination>` | Together with `-alert`: notifies a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/L200 Group/`), a number (`+5521999999999`) or by email (`email`) instead of your private chat. Repeat for several: a single alert that notifies all of them. See [Notify another chat or by email](#notify-another-chat-or-by-email) |
 
 ```text
@@ -154,6 +156,8 @@ Each alert fires once and is removed. Only the bot owner (and the
 /stocks -alert -rm 2         → removes no. 2 from the list
 /crypto -alert -rm 1 2 3      → removes nos. 1, 2 and 3 (also -rm 1,2,3)
 /crypto -alert -rm all        → removes all the /crypto ones
+/stocks -alert -pause 2      → pauses #2 (it stays in the list with ⏸️, without notifying)
+/stocks -alert -resume all   → resumes the paused ones
 ```
 
 - The rule is `<SYMBOL> > value` or `<SYMBOL> < value`. The value accepts `.` or `,` as the decimal
@@ -167,6 +171,8 @@ Each alert fires once and is removed. Only the bot owner (and the
   and `crypto.alert.max`.
 - With `-rm` and several numbers, if any doesn't exist, none is removed (the bot says which ones are
   missing). The numbers are the ones from the list before removing.
+- A paused alert (`-pause`, or the ⏸️ in [Web > Alerts](../web.md#alerts)) stays in the list, but out of the
+  check until `-resume` (or the ▶️).
 - Alerts are kept in the `price_alerts` table and survive restarts.
 
 ### Message in the notice

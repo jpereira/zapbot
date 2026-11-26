@@ -3,11 +3,11 @@
  */
 
 const { ADMIN, USER } = require('../../roles').ROLES;
-const { OPTION_ALERT_MSG, OPTION_ALERT_RM, OPTION_ALERT_TO } = require('./_options');
+const { OPTION_ALERT_MSG, OPTION_ALERT_PAUSE, OPTION_ALERT_RESUME, OPTION_ALERT_RM, OPTION_ALERT_TO } = require('./_options');
 
 module.exports = {
     cmd: '/stocks',
-    usage: '/stocks [OPTION] [TICKER...]  or  /stocks [TICKER] -alert [rule] [-to <target>]... [-msg <text>]  or  /stocks -alert -rm <num...|all>',
+    usage: '/stocks [OPTION] [TICKER...]  or  /stocks [TICKER] -alert [rule] [-to <target>]... [-msg <text>]  or  /stocks -alert -rm|-pause|-resume <num...|all>',
     aliases: [],
     summary: 'Quotes of currencies, stocks, ETFs and indexes',
     help: 'Market quotes in one place: the dollar, euro, pound and USDT against the real (USD, EUR, GBP, USDT) and stocks, ETFs and indexes (Yahoo Finance), with the change since the previous close, open, high and low, and, for stocks, volume and the 52-week range. Without symbols, the enabled ones (setting stocks.symbols: USD, EUR, USDT and MSTR by default); with symbols, only those (e.g. /stocks usd MSTR PETR4.SA). The ticker is the Yahoo Finance one: MSTR, NVDA, PETR4.SA (B3), BRK-B, ^GSPC (S&P 500). For crypto, /crypto.',
@@ -42,6 +42,8 @@ module.exports = {
         { opts: ['list', 'l'], values: [], desc: 'Lists everything it supports: the enabled symbols, the currencies (✅ the enabled ones) and the kinds of ticker, with examples.' },
         OPTION_ALERT_MSG,
         OPTION_ALERT_RM,
+        OPTION_ALERT_PAUSE,
+        OPTION_ALERT_RESUME,
         OPTION_ALERT_TO,
         {
             opts: ['tts'],

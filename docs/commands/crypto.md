@@ -14,6 +14,8 @@ only the requested ones. Default: BTC, ETH, SOL and HYPE.
 | `-alert`, `-al` | `[rule]` | Without a rule, lists the alerts; with a rule (e.g. `BTC < 90000`), creates one (bot owner or an [admin](bot.md#extra-admins) only). The coin can also come first: `/crypto BTC -alert < 90000`. See [Price alerts](stocks.md#price-alerts) |
 | `-msg`, `-m` | `<text>` | Together with `-alert`: the text goes at the start of the notification. It runs to the end of the command. See [Message in the notice](stocks.md#message-in-the-notice) |
 | `-rm` | `<#...\|all>` | Together with `-alert`: removes the alerts with those numbers (`-rm 2`, `-rm 1 2 3` or `-rm 1,2,3`), or all of them (`all`). If any number doesn't exist, none is removed |
+| `-pause`, `-pa` | `<#...\|all>` | Together with `-alert`: pauses those alerts (`-pause 2`, `-pause 1 3` or `all`). A paused one stays in the list with ⏸️ and is not checked until `-resume` |
+| `-resume`, `-re` | `<#...\|all>` | Together with `-alert`: resumes paused alerts. If the price crossed the value meanwhile, it notifies on the next check |
 | `-to` | `<destination>` | Together with `-alert`: notifies a contact (`/Jorge Pereira/`), a mention (`@Fulano Da Silva`), a group (`/L200 Group/`), a number (`+5521999999999`) or by email (`email`) instead of your private chat. Repeat for several: a single alert that notifies all of them. See [Notify another chat or by email](stocks.md#notify-another-chat-or-by-email) |
 
 Supported: BTC, ETH, SOL, HYPE, BNB, XRP, DOGE, ADA, TRX, AVAX, LINK, DOT, LTC, TON, SUI, PEPE,

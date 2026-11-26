@@ -17,6 +17,22 @@ const OPTION_ALERT_RM = {
     desc: 'Removes alert #N from the list, several at once (-rm 1 2 3 or -rm 1,2,3), or all (with -alert). If any # does not exist, none is removed.'
 };
 
+const OPTION_ALERT_PAUSE = {
+    opts: ['pause', 'pa'],
+    values: ['<#...|all>'],
+    desc: 'Pauses alert #N, several (-pause 1 3 or 1,3) or all (with -alert): it stays in the list, but is not checked until -resume. If any # does not exist, none is paused.',
+    ex: ['-alert -pause 2'],
+    cron: false
+};
+
+const OPTION_ALERT_RESUME = {
+    opts: ['resume', 're'],
+    values: ['<#...|all>'],
+    desc: 'Resumes paused alerts (one, several or all, with -alert). If the price already crossed the value while paused, it notifies on the next check.',
+    ex: ['-alert -resume all'],
+    cron: false
+};
+
 const OPTION_ALERT_TO = {
     opts: ['to'],
     values: ['<destination>'],
@@ -58,6 +74,8 @@ module.exports = {
     optionStatus,
     OPTION_ALERT_MSG,
     OPTION_ALERT_RM,
+    OPTION_ALERT_PAUSE,
+    OPTION_ALERT_RESUME,
     OPTION_ALERT_TO,
     OPTION_VERBOSE_FFMPEG
 };

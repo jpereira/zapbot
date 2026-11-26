@@ -329,6 +329,7 @@ Everything that can be turned on and off has the **same cell, in the `alert` col
 - in the `/watch` table, 🔔 is the **notice of the rule** on and 🔕 off. With it off the matches keep being saved (and
   the history of the rule keeps growing), but nobody is told;
 - in the `/monitor` table, 🔔 is the alert of the contact (you are told when it comes online) and 🔕 off;
+- in the price alerts, ▶️ is an alert being checked and ⏸️ a paused one (the same as `-alert -pause` / `-resume`);
 - in the schedule, ▶️ is a message that is running and ⏸️ a paused one.
 
 Off or paused, the **whole row goes duller, with the text struck through** (it still works; nothing is hidden, just

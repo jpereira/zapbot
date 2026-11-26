@@ -305,7 +305,8 @@ async function initializeDb() {
         dest_is_group: 'INTEGER DEFAULT 0',
         dest_email: 'TEXT',
         recipients: 'TEXT',  // JSON [{ id, name, group } | { email }]: several -to
-        message: 'TEXT'      // the -msg text, at the start of the notice
+        message: 'TEXT',     // the -msg text, at the start of the notice
+        paused: 'INTEGER DEFAULT 0' // -alert -pause: stays in the list, but is not checked until -resume
     });
 
     /*

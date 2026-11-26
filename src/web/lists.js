@@ -76,12 +76,12 @@ async function alerts() {
     return {
         sections: [
             {
-                title: 'price', columns: ['#', 'kind', 'symbol', 'rule', 'created', 'notifies', 'message'],
+                title: 'price', columns: ['#', 'kind', 'symbol', 'rule', 'created', 'notifies', 'message', 'alert'],
                 rows: await Promise.all(price.map(async a => {
                     const setting = a.kind === 'acao' ? 'stocks' : 'crypto';
                     return [a.id, setting, a.symbol, `${a.op} ${priceText(a.target)}`, { date: a.created_at },
                         await recipientCell(a, { id: 'dest_id', name: 'dest_name', email: 'dest_email', group: 'dest_is_group' }),
-                        a.message ? `${getSetting(`${setting}.alert.msgPrepend`)}${a.message}` : ''];
+                        a.message ? `${getSetting(`${setting}.alert.msgPrepend`)}${a.message}` : '', bell(!a.paused, PLAY)];
                 })),
                 ids: price.map(a => a.id), values: price.map(a => ({ rule: `${a.symbol} ${a.op} ${priceText(a.target)}`, message: a.message ?? '', recipients: peopleOf(a) })),
                 manage: {

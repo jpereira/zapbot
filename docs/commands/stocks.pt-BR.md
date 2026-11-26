@@ -16,6 +16,8 @@ pedidos. Para **cripto**, use o [`/crypto`](crypto.md) (BTC, ETH,
 | `-alert`, `-al` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `USD > 5.30` ou `MSTR < 90`), cria um (só o dono do bot ou um [admin](bot.md#admins-extras)). O símbolo também pode vir antes: `/stocks MSTR -alert < 90`. Veja [Alertas de preço](#alertas-de-preço) |
 | `-msg`, `-m` | `<texto>` | Junto do `-alert`: o texto vai no começo do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](#mensagem-no-aviso) |
 | `-rm` | `<nº...\|all>` | Junto do `-alert`: remove os alertas com esses números (`-rm 2`, `-rm 1 2 3` ou `-rm 1,2,3`), ou todos (`all`). Se algum número não existir, nenhum é removido |
+| `-pause`, `-pa` | `<nº...\|all>` | Junto com `-alert`: pausa esses alertas (`-pause 2`, `-pause 1 3` ou `all`). O pausado fica na lista com ⏸️ e não é verificado até o `-resume` |
+| `-resume`, `-re` | `<nº...\|all>` | Junto com `-alert`: retoma alertas pausados. Se o preço passou do valor nesse meio-tempo, avisa na próxima verificação |
 | `-to` | `<destino>` | Junto do `-alert`: avisa um contato (`/Jorge Pereira/`), uma menção (`@Fulano Da Silva`), um grupo (`/Grupo L200/`), um número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só que avisa todos. Veja [Avisar em outro chat ou por e-mail](#avisar-em-outro-chat-ou-por-e-mail) |
 
 ```text
@@ -153,6 +155,8 @@ cria, lista e remove.
 /stocks -alert -rm 2         → remove o nº 2 da lista
 /crypto -alert -rm 1 2 3      → remove os nº 1, 2 e 3 (também -rm 1,2,3)
 /crypto -alert -rm all        → remove todos os do /crypto
+/stocks -alert -pause 2      → pausa o nº 2 (fica na lista com ⏸️, sem avisar)
+/stocks -alert -resume all   → retoma os pausados
 ```
 
 - A regra é `<SÍMBOLO> > valor` ou `<SÍMBOLO> < valor`. O valor aceita `.` ou `,` como decimal, **sem**
@@ -166,6 +170,8 @@ cria, lista e remove.
   `crypto.alert.intervalMin` e `crypto.alert.max`.
 - No `-rm` com vários nºs, se algum não existir, nenhum é removido (o bot diz quais faltam). Os nºs
   são os da lista de antes de remover.
+- Um alerta pausado (`-pause`, ou o ⏸️ no [Web > Alertas](../web.md#alertas)) continua na lista, mas fica fora
+  da verificação até o `-resume` (ou o ▶️).
 - Os alertas ficam na tabela `price_alerts` e sobrevivem a reinícios.
 
 ### Mensagem no aviso

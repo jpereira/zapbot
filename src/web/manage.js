@@ -128,7 +128,7 @@ async function setPriceRecipients(id, people) {
 }
 
 // Changes an alert by making it again through the command (same checks: supported symbol, the price, "already met"),
-// keeping where it notifies and when it was created; if the new rule is refused, the old one comes back
+// keeping where it notifies, when it was created and the pause; if the new rule is refused, the old one comes back
 async function editPrice(body) {
     const old = await dbGet('SELECT * FROM price_alerts WHERE id = ?', [Number(body.id)]);
     if (!old) throw new ManageError('alert: not found');
@@ -136,14 +136,15 @@ async function editPrice(body) {
     const people = readRecipients(body.recipients);
     const rule = str(body.rule, 'rule', { max: 80 });
     const message = str(body.message, 'message', { max: 300, required: false }).replace(/\s+/g, ' ');
-    const columns = ['id', 'kind', 'symbol', 'op', 'target', 'price_at_creation', 'created_at', 'dest_id', 'dest_name', 'dest_is_group', 'dest_email', 'recipients', 'message'];
+    const columns = ['id', 'kind', 'symbol', 'op', 'target', 'price_at_creation', 'created_at', 'dest_id', 'dest_name', 'dest_is_group', 'dest_email', 'recipients', 'message', 'paused'];
     await dbRun('DELETE FROM price_alerts WHERE id = ?', [old.id]);
     const replies = [];
     await priceHandleAlert(kindKey, { msg: silentMsg(replies), args: `-alert ${rule}${message ? ` -msg ${message}` : ''}`, admin: true });
     const fresh = await dbGet('SELECT id FROM price_alerts WHERE kind = ? ORDER BY id DESC LIMIT 1', [kindKey]);
     if (fresh) {
-        await dbRun('UPDATE price_alerts SET created_at = ?, dest_id = ?, dest_name = ?, dest_is_group = ?, dest_email = ?, recipients = ? WHERE id = ?',
-            [old.created_at, old.dest_id, old.dest_name, old.dest_is_group, old.dest_email, old.recipients, fresh.id]);
+        // a paused alert stays paused after the edit
+        await dbRun('UPDATE price_alerts SET created_at = ?, dest_id = ?, dest_name = ?, dest_is_group = ?, dest_email = ?, recipients = ?, paused = ? WHERE id = ?',
+            [old.created_at, old.dest_id, old.dest_name, old.dest_is_group, old.dest_email, old.recipients, old.paused ?? 0, fresh.id]);
         if (people) await setPriceRecipients(fresh.id, people);
         return { ok: true, message: replies.join('\n') };
     }
@@ -362,6 +363,14 @@ async function deleteSchedule(body) {
     return { ok: true };
 }
 
+// ▶️/⏸️ of a price alert: the same as /stocks or /crypto -alert -pause / -resume
+async function pausePrice(body) {
+    const row = await dbGet('SELECT id FROM price_alerts WHERE id = ?', [Number(body.id)]);
+    if (!row) throw new ManageError('price: not found');
+    await dbRun('UPDATE price_alerts SET paused = 1 - COALESCE(paused, 0) WHERE id = ?', [row.id]);
+    return { ok: true };
+}
+
 async function pauseSchedule(body) {
     const row = await dbGet('SELECT id FROM schedules WHERE id = ?', [Number(body.id)]);
     if (!row) throw new ManageError('schedule: not found');
@@ -420,7 +429,7 @@ async function cleanCachePicked(body) {
 
 const HANDLERS = {
     alias: { add: saveAlias, edit: saveAlias, delete: deleteAlias },
-    price: { add: addPrice, edit: editPrice, delete: deletePrice },
+    price: { add: addPrice, edit: editPrice, delete: deletePrice, toggle: pausePrice },
     tag: { add: async (body, token) => noteResult(await webNotes.addTag(token, body)), edit: async (body, token) => noteResult(await webNotes.editTag(token, body)), copy: async (body, token) => noteResult(await webNotes.copyTag(token, body)), move: async (body, token) => noteResult(await webNotes.moveTag(token, body)), delete: async (body, token) => noteResult(await webNotes.deleteTag(token, body)) },
     note: { add: async (body, token) => noteResult(await webNotes.addNote(token, body)), edit: async (body, token) => noteResult(await webNotes.updateNote(token, body)), move: async (body, token) => noteResult(await webNotes.moveNote(token, body)), copy: async (body, token) => noteResult(await webNotes.copyNote(token, body)), delete: async (body, token) => noteResult(await webNotes.deleteNote(token, body.id)) },
     watch: { add: saveWatch, edit: saveWatch, delete: deleteWatch, toggle: toggleWatch },

@@ -14,6 +14,8 @@ das pedidas. Por padrão: BTC, ETH, SOL e HYPE.
 | `-alert`, `-al` | `[regra]` | Sem regra, lista os alertas; com regra (ex.: `BTC < 90000`), cria um (só o dono do bot ou um [admin](bot.md#admins-extras)). A moeda também pode vir antes: `/crypto BTC -alert < 90000`. Veja [Alertas de preço](stocks.md#alertas-de-preço) |
 | `-msg`, `-m` | `<texto>` | Junto com `-alert`: o texto vai no início do aviso. Vai até o fim do comando. Veja [Mensagem no aviso](stocks.md#mensagem-no-aviso) |
 | `-rm` | `<nº...\|all>` | Junto com `-alert`: remove os alertas com esses nºs (`-rm 2`, `-rm 1 2 3` ou `-rm 1,2,3`), ou todos (`all`). Se algum nº não existe, nenhum sai |
+| `-pause`, `-pa` | `<nº...\|all>` | Junto com `-alert`: pausa esses alertas (`-pause 2`, `-pause 1 3` ou `all`). O pausado fica na lista com ⏸️ e não é verificado até o `-resume` |
+| `-resume`, `-re` | `<nº...\|all>` | Junto com `-alert`: retoma alertas pausados. Se o preço passou do valor nesse meio-tempo, avisa na próxima verificação |
 | `-to` | `<destino>` | Junto com `-alert`: avisa num contato (`/Jorge Pereira/`), numa menção (`@Fulano Da Silva`), num grupo (`/Grupo L200/`), num número (`+5521999999999`) ou por e-mail (`email`) em vez do seu privado. Repita para vários: um alerta só, que avisa em todos. Veja [Avisar em outro chat ou por e-mail](stocks.md#avisar-em-outro-chat-ou-por-e-mail) |
 
 Suportadas: BTC, ETH, SOL, HYPE, BNB, XRP, DOGE, ADA, TRX, AVAX, LINK, DOT, LTC, TON, SUI, PEPE,

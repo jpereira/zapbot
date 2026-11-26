@@ -151,6 +151,30 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
 
     const alerts = await listAlerts(kind);
 
+    // -pause / -resume <no....|all>: the same numbers as -rm; a paused alert stays in the list, out of the check
+    const pausing = opts.given.has('pause');
+    if (pausing || opts.given.has('resume')) {
+        const partsAlt = [pausing ? opts.opt.pause : opts.opt.resume, ...opts.argv].join(' ').toLowerCase()
+            .split(/[\s,]+/).filter(Boolean);
+        const numbers = partsAlt.includes('all') ? alerts.map((_, i) => String(i + 1)) : [...new Set(partsAlt)].sort((a, b) => a - b);
+        const missing = numbers.filter(n => !/^\d+$/.test(n) || !alerts[Number(n) - 1]);
+        if (!numbers.length || missing.length) {
+            await msg.reply(missing.length > 1
+                ? t('alerts.notFoundManyKept', { list: missing.join(', '), cmd: type.cmd })
+                : t('alerts.notFoundOne', { n: missing[0] ?? '?', cmd: type.cmd }));
+            return;
+        }
+        const changed = numbers.map(n => alerts[Number(n) - 1]).filter(a => Boolean(a.paused) !== pausing);
+        if (!changed.length) {
+            await msg.reply(t('alerts.nothingToChange', { which: t(pausing ? 'alerts.allPaused' : 'alerts.noneToResume') }));
+            return;
+        }
+        for (const a of changed) await dbRun('UPDATE price_alerts SET paused = ? WHERE id = ?', [pausing ? 1 : 0, a.id]);
+        const list = changed.map(a => `${alerts.indexOf(a) + 1}. ${describeAlert(kind, a, { withDestinations: false })}`).join('\n');
+        await msg.reply(t(pausing ? 'alerts.pausedDone' : 'alerts.resumedDone', { n: changed.length, list }));
+        return;
+    }
+
     // -rm <no....|all>: -rm 2, -rm 1 2 3 or -rm 1,3 (the list numbers). Does any not exist? None is removed,
     // because removing halfway is worse than not removing
     if (opts.given.has('rm')) {
@@ -206,7 +230,7 @@ async function priceHandleAlert(kind, { msg, args, admin }) {
             return;
         }
 
-        const linesAlt = alerts.map((a, i) => t('alerts.listItem', { n: i + 1, alert: describeAlert(kind, a, { withDestinations: false }), details: detailsAlert(kind, a), date: formatDataShort(a.created_at) }));
+        const linesAlt = alerts.map((a, i) => t('alerts.listItem', { n: i + 1, alert: describeAlert(kind, a, { withDestinations: false }) + (a.paused ? t('alerts.paused') : ''), details: detailsAlert(kind, a), date: formatDataShort(a.created_at) }));
         await msg.reply(t('alerts.list', {
             cmd: type.cmd,
             items: linesAlt.join('\n\n'),
@@ -298,7 +322,8 @@ async function priceCheckAlerts({ force = false } = {}) {
 
     try {
         await dbReady;
-        const alerts = await dbAll('SELECT * FROM price_alerts ORDER BY id');
+        // A paused alert (-alert -pause) is out of the check until -resume
+        const alerts = await dbAll('SELECT * FROM price_alerts WHERE COALESCE(paused, 0) = 0 ORDER BY id');
 
         for (const [kind, type] of due) {
             const typeAlt = alerts.filter(a => a.kind === kind);

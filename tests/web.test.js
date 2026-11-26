@@ -1111,6 +1111,24 @@ describe('alerts and notes: editing, deleting and playing', () => {
         assert.deepEqual([kept.id, kept.op, kept.target, kept.message, kept.dest_name], [row.id, '<', 5, 'caiu', 'Fulano']);
         assert.equal((await manage({ section: 'price', op: 'edit', id: 99999, rule: 'USD > 9' })).status, 400);
 
+        // ▶️/⏸️: the same pause as -alert -pause / -resume
+        assert.equal((await manage({ section: 'price', op: 'toggle', id: row.id })).status, 200);
+        assert.equal((await bot.dbGet('SELECT paused FROM price_alerts WHERE id = ?', [row.id])).paused, 1);
+        let cells = (await (await get('/api/lists/alerts', cookie)).json()).sections[0].rows[0];
+        assert.deepEqual(cells.at(-1), { bell: false, text: 'off', icon: '⏸️', play: true });
+        // an edit (made again through the command) and a refused edit both keep the pause
+        const pausedEdit = await manage({ section: 'price', op: 'edit', id: row.id, rule: 'USD < 5.00', message: 'caiu' });
+        assert.equal(pausedEdit.status, 200, JSON.stringify(pausedEdit.body));
+        const afterEdit = await bot.dbGet('SELECT id, paused, target FROM price_alerts');
+        assert.deepEqual([afterEdit.paused, afterEdit.target], [1, 5]);
+        assert.equal((await manage({ section: 'price', op: 'edit', id: afterEdit.id, rule: 'USD < 5.50', message: 'x' })).status, 400);
+        assert.equal((await bot.dbGet('SELECT paused FROM price_alerts')).paused, 1);
+        row.id = afterEdit.id;
+        assert.equal((await manage({ section: 'price', op: 'toggle', id: row.id })).status, 200);
+        cells = (await (await get('/api/lists/alerts', cookie)).json()).sections[0].rows[0];
+        assert.equal(cells.at(-1).icon, '▶️');
+        assert.equal((await manage({ section: 'price', op: 'toggle', id: 99999 })).status, 400);
+
         const section = (await (await get('/api/lists/alerts', cookie)).json()).sections[0];
         assert.equal(section.manage.canEdit, true);
         assert.deepEqual(section.values[0], { rule: 'USD < 5', message: 'caiu', recipients: [{ id: 'x@c.us', name: 'Fulano', group: false }] });
