@@ -29,6 +29,15 @@ module.exports = [
         }
     },
     {
+        // The web page runs in the browser, and its service worker in the worker scope
+        files: ['src/web/public/**/*.js'],
+        languageOptions: { globals: globals.browser }
+    },
+    {
+        files: ['src/web/public/sw.js'],
+        languageOptions: { globals: globals.serviceworker }
+    },
+    {
         // The tests compare the bot's exact output, with the alignment spaces
         files: ['tests/**/*.js'],
         rules: {

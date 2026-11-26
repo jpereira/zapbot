@@ -31,6 +31,12 @@ const TEXTS = {
         cannotShow: 'this message could not be shown', phTag: 'travel', phTagDesc: 'places to visit', phNoteTag: 'ideas', envForced: (env) => `Decided by the ${env} variable (config/.env), which has priority over this setting`, noticeOn: 'Off: click to turn it on', noticeOff: 'On: click to turn it off', flag: { quiet: ['Quiet (-q): click to answer normally', 'Answers normally: click to make it quiet (-q)'], ownerOnly: ['Only you (-p): click to open it to everyone', 'Everyone can use it: click to make it only yours (-p)'] }, runOn: 'Running: click to pause', runOff: 'Paused: click to resume', clearHistory: 'Clear the history of this chat', clearBtn: 'Clear', clearTitle: (name) => `Clear the history · ${name}`, clearInfo: (r) => `${r.removed} messages will be deleted (with their media). ${r.kept} stay: the deleted, the edited and the ones with reactions, with what they had before.`, clearNothing: 'Nothing to delete: every message here is a deleted, edited or reacted one.', clearEmpty: 'This chat has no messages in the database.', cacheBtn: 'Clean', deleteNote: 'Delete the note', notice: 'Notice', spy: { nav: 'Show', subtitle: 'What /show keeps: the deleted, the edited, the reactions, the statuses and the channels', kinds: { deleted: 'Deleted', edited: 'Edited', reactions: 'Reactions', status: 'Statuses', channels: 'Channels' }, alerts: 'Notices in your private chat', alertOn: 'On: click to turn it off', alertOff: 'Off: click to turn it on', people: 'Who deletes, edits and reacts the most', nobody: 'Nobody yet.', search: 'Search the text, the chat or the person', empty: 'Nothing here.', mute: 'Mute this person (/mute)', unmute: 'Unmute (/unmute)', muted: 'muted', removeTitle: 'Take it out of the cache', removeText: 'The bot forgets this item (and its media); WhatsApp is not touched.', removed: 'removed', media: 'Open the media', openChat: 'Open the chat at this message', mutedCount: (n) => `${n} muted`, selectAll: 'All', selectOne: 'Select', selectHint: 'Click the items to select them (Shift+click: a range)', selected: (n) => `${n} selected`, removeSelected: (n) => `Take ${n} item${n === 1 ? '' : 's'} out of the cache` }, cacheClean: 'Clean the cache (/cache)', cacheRetention: 'What is past the retention windows (/cache -clean)', cachePick: 'Pick at least one.', cacheAll: 'Everything (/cache -all): every message (deleted, edited and reacted included), media, temporary files and backups', cacheAllWarning: '⚠️ Everything takes the whole history of every chat and the backups too: there is no undo. The notes always stay.', flushAll: 'Clear the history of every chat', flushBtn: 'Clear every chat', flushEmpty: 'There are no messages in the database.', flushWarning: (n) => `⚠️ This clears the history of all the ${n} chats at once, not only this one. There is no undo (only a /backup).`, clearAll: (n) => `Delete everything (${n}), including the deleted, the edited and the reacted ones, with their media`, webPanel: 'Web interface', webAt: 'Open at', webAccess: 'Access', webLogin: 'Login and session', webScreen: 'Screen', webAlerts: 'Warnings', notSet: 'not set', needsRestart: 'Takes effect when the bot restarts', restSettings: 'All the other settings', protectedHere: 'Change it with /set in WhatsApp',  meBtn: 'Me (my private chat)', watchedBy: '/watch', openInHistory: 'Open in the history, at this message', presenceSource: 'WhatsApp presence · time not confirmed', newTag: 'New tag', newNote: 'New note', editTagBtn: 'Edit the tag', copyTag: 'Duplicate the tag', copyTagInfo: (n) => `Its ${n} note${n === 1 ? '' : 's'} (and files) go as copies to the new tag, without the alerts.`, moveNote: 'Move to another tag', copyNote: 'Copy to another tag', duplicateNote: 'Duplicate the note', moveTag: 'Move every note to another tag', moveTagInfo: (n) => `The ${n} note${n === 1 ? '' : 's'} go to the tag you pick (if it has notes, the two merge).`, copyNoteInfo: 'The copy keeps the text and the file, without the alert.', pickTag: 'Tag', orNewTag: 'or a new tag', removeTag: 'Remove the tag', confirmRemoveTag: 'Remove this tag (it has no notes)?', removeTagWithNotes: 'Remove the tag and everything in it', removeTagInfo: (n) => `${n} note${n === 1 ? '' : 's'} (and their media) will be deleted, along with the tag's description and lock, if any.`, historyBtn: 'History', loadingHistory: 'Loading the history…', searchContact: 'Search a contact or group (name or number) or type an email', pickContact: 'Search the contact (name or number)', noMatches: 'No contact found', privateChat: 'Empty: it goes to your private chat', useEmail: (email) => `✉️ Use ${email}`, updatedAt: (time) => `updated at ${time}`, noHistory: 'Nothing recorded yet.', removeReading: 'Remove this reading', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 ${who ? `${who}'s` : 'a participant\'s'} security code changed`, systemNotice: (text) => `ℹ️ ${text ?? 'WhatsApp notice'}`, loadMore: 'Load more', noMore: 'No more messages.', loadingFor: (name) => `Loading ${name}…`, loadingStats: 'Loading the statistics…', loadingHome: 'Loading…', statsOverview: 'Statistics', last30: 'last 30 days', seeAllStats: 'See all the statistics',
         code: '6-digit code', quotedGone: 'message not in the database', searchAll: 'Search all the messages', searchResults: (n) => `${n} results`, exportChat: 'Export PDF', reacted: 'reaction', removedReaction: 'removed', reactionHistory: 'Reaction history',
         reactionChanged: 'Changed reaction', reactionRemoved: 'Removed reaction', autoRefresh: 'New messages',
+        gal: { nav: 'Media', subtitle: 'Every picture, video, audio, sticker and document the bot kept', kinds: { image: 'Photos', video: 'Videos', audio: 'Audios', sticker: 'Stickers', document: 'Documents' }, all: 'All', allChats: 'Every chat', period: { 7: '7 days', 30: '30 days', 90: '90 days', 0: 'Always' }, total: (n, size) => `${n} files · ${size}`, chats: 'The chats that take the most space', empty: 'No media here.', open: 'Open in the chat', download: 'Download', remove: 'Free this file', removeText: 'The file leaves the disk; the message stays in the history, with its media missing.', removeSelected: (n) => `Free ${n} file${n === 1 ? '' : 's'}`, freed: (size) => `${size} freed`, select: 'Select', selected: (n) => `${n} selected`, deleted: 'deleted', prev: 'Previous (←)', next: 'Next (→)', fromMe: 'you' },
+        health: { nav: 'Health', subtitle: 'How the bot is doing right now', verdict: { ok: '✅ All good', warn: '⚠️ Worth a look', bad: '🚨 Something is wrong' }, problems: { whatsapp: 'WhatsApp is not connected', loops: 'a periodic check is stuck', eventLoop: 'the bot is slow to answer (event loop)', errors: 'errors in the last 15 minutes' }, whatsapp: 'WhatsApp', wa: { ready: '🟢 Connected', connecting: '⏳ Connecting', down: '🔴 Down', restarting: '🔄 Restarting' }, since: (ago) => `since ${ago}`, outage: 'Last drop', attempts: 'Failed attempts', paused: '⏸️ the bot is paused (/bot -pause)', process: 'Process', uptime: 'Up since', memory: 'Memory (RSS)', heap: 'JS heap', load: 'Load (1, 5, 15 min)', host: 'Free memory of the host', eventLoop: 'Event loop delay', mean: 'mean', p99: 'p99', max: 'max', loops: 'Periodic checks', loopIdle: 'idle', loopRunning: (ago) => `running ${ago}`, loopStuck: (ago) => `🚨 stuck, running ${ago}`, runs: (n) => `${n} round${n === 1 ? '' : 's'}`, lastRound: (ms, ago) => `last: ${ms} ms, ${ago}`, never: 'not run yet', regex: 'Regex worker (/watch, searches)', queueLabel: 'Waiting', missedLabel: 'Answered "no match"', queue: (n, max) => `${n} waiting (limit ${max})`, urgent: (n) => `${n} urgent`, regexRun: (n) => `${n} batches run`, regexMissed: (full, slow) => `${full} refused (queue full) · ${slow} past the deadline`, errors: 'Last errors of the log', noErrors: 'No error since the start. 🎉', auto: 'Updates every 10 s', version: 'Version' },
+        push: { title: '📲 This device', install: '⬇️ Install the app', installed: 'Installed as an app', installHint: 'In Safari: Share → Add to Home Screen', on: '🔔 Notify me here', off: '🔕 Stop notifying here', test: 'Send a test', enabled: '✅ Done: the notices of the bot come to this device too (Settings → 📲 picks which).', testSent: 'Sent: it shows up in a few seconds.', kinds: { monitor: '👀 a monitored contact came online', watch: '🔎 a /watch match', price: '📈 a price alert', web: '🌐 an access to this page' }, devices: (n) => `${n} device${n === 1 ? '' : 's'} get the notices`, needsHttps: 'The notices need the page on https (Tailscale serve, a proxy with a certificate) or on localhost.', unsupported: 'This browser has no push notices.', denied: 'The notices are blocked for this site in the browser: allow them in its settings.', offline: '📴 Offline: the notes you opened are here; the rest comes back with the network.', offlineReady: 'The notes you open stay available offline (never a protected tag).' },
+        tryCmd: { check: 'Check', run: '▶️ Test', running: 'Running…', ok: 'ok', unknown: 'does not exist', options: 'options', noInput: 'does not read a pipe', option: (o) => `${o} is not tested here (it changes something)`, command: 'is not tested here (it may change something)', text: 'A text shortcut: its {/commands} run when it is used.', result: (ms) => `What it would answer (${ms} ms), nothing was sent`, nothing: 'It answered nothing.', notRunnable: 'Checked: it is not run here.', voice: 'voice', sticker: 'sticker' },
+        wtest: { title: 'Try it on the last messages', none: 'No match in the last messages.', matches: (n, total, since) => `Would match ${n} of the last ${total} messages received${since ? ` (since ${since})` : ''}`, many: 'Many matches: a notice for each one. A narrower rule may be better.', chats: 'Where', cheats: 'Insert', regexHint: 'A text matches anywhere, without case and accents. /regex/i for more.' },
+        mon: { nav: 'Monitor', subtitle: 'The contacts of /monitor: when each one was seen, and when they usually are', state: { active: '🟢 Checking', paused: '⏸️ Paused', waiting: '⏳ Waiting for WhatsApp', disabled: '🚫 /monitor is disabled' }, every: (t) => `each contact every ${t}`, count: (n, max) => `${n}/${max} contacts`, alerts: (n) => `${n} with 🔔`, pause: '⏸️ Pause', resume: '▶️ Resume', pauseTitle: 'Pause every check (monitor.enabled), keeping the contacts and the history', resumeTitle: 'Turn the checks back on (monitor.enabled)', add: 'Monitor a contact', contact: 'contact', name: 'name (optional)', alertField: '🔔 notify me when it comes online', filter: 'Filter by name or number', empty: 'Nobody monitored yet. ＋ Add picks a contact of your address book.', none: 'No contact matches.', onlineNow: 'online now', seen: (ago) => `seen ${ago}`, notSeen: 'last seen not known', checked: (ago) => `checked ${ago}`, notChecked: 'not checked yet', next: (when) => `next ${when}`, nextRound: 'next in the coming round', peak: (hours) => `usually seen around ${hours.join(' and ')}`, readings: (n) => `${n} reading${n === 1 ? '' : 's'}`, week: 'Last 7 days', habits: 'When it is seen (weekday × hour)', timesWord: 'times', checkNow: 'Check now (in the next round, ~10 s)', queued: 'Queued: it is checked in the next round.', openChat: 'Open the chat', alertOn: 'Notifies you when it comes online: click to turn off', alertOff: 'Does not notify: click to be told when it comes online', removeTitle: 'Stop monitoring', removeText: (name) => `${name} leaves the monitor, with the history of what was read.`, risk: '⚠️ More contacts and short intervals may contribute to a WhatsApp block; no interval guarantees safety.', presence: { 1: 'online', 0: 'offline', null: 'online hidden or not read yet' }, now: 'now', weekAgo: '7 days ago', online: '⏱️ Online (last 7 days)', onlineToday: (t) => `${t} today`, onlineWeek: (t) => `${t} in 7 days`, onlineAvg: (t) => `${t} per visit`, noSessions: 'No online time seen yet: it shows the contacts that do not hide it, from the checks of now on.', sessionTip: (from, to, open) => `${from} → ${open ? 'still online' : to}`, together: '🤝 Online together', togetherHint: 'Both online at the same time in the last 7 days (a coincidence of times, not proof that they talked)', togetherNone: 'No two monitored contacts were online at the same time in the last 7 days.', togetherNow: '🟢 together now', times: (n) => `${n} time${n === 1 ? '' : 's'}`, lastTogether: (ago) => `last ${ago}`, notifyHere: '📲 Notify on this device' },
         home: 'Home', navHistory: 'History', notes: 'Notes', alerts: 'Alerts', aliases: 'Shortcuts', schedule: 'Schedule', stats: 'Stats', settings: 'Settings',
         filter: 'Filter', rows: (n) => `${n} ${n === 1 ? 'row' : 'rows'}`, empty: 'Nothing here.', readOnly: 'Changes here use the same checks as the commands.', periodLabel: 'Period',
         sec: { price: 'Price alerts (/stocks, /crypto)', watch: 'Watch rules (/watch)', monitor: 'Monitored contacts (/monitor)', aliases: 'Shortcuts (/alias)', schedule: 'Scheduled (/cron)', days: 'Messages per day', hours: 'Messages per hour', chats: 'Chats with the most messages', people: 'People who talk the most', settings: 'Settings (/set)' },
@@ -74,6 +80,12 @@ const TEXTS = {
         cannotShow: 'não foi possível mostrar esta mensagem', phTag: 'viagens', phTagDesc: 'lugares para conhecer', phNoteTag: 'ideias', envForced: (env) => `Decidido pela variável ${env} (config/.env), que tem prioridade sobre este setting`, noticeOn: 'Desligado: clique para ligar', noticeOff: 'Ligado: clique para desligar', flag: { quiet: ['Silencioso (-q): clique para responder normalmente', 'Responde normalmente: clique para silenciar (-q)'], ownerOnly: ['Só você (-p): clique para liberar a todos', 'Todos podem usar: clique para deixar só para você (-p)'] }, runOn: 'Ativo: clique para pausar', runOff: 'Pausado: clique para retomar', clearHistory: 'Limpar o histórico desta conversa', clearBtn: 'Limpar', clearTitle: (name) => `Limpar o histórico · ${name}`, clearInfo: (r) => `${r.removed} mensagens serão apagadas (com a mídia). ${r.kept} ficam: as apagadas, as editadas e as com reações, com o que tinham antes.`, clearNothing: 'Nada a apagar: toda mensagem daqui é apagada, editada ou tem reação.', clearEmpty: 'Esta conversa não tem mensagens no banco.', cacheBtn: 'Limpar', deleteNote: 'Apagar a nota', notice: 'Aviso', spy: { nav: 'Show', subtitle: 'O que o /show guarda: as apagadas, as editadas, as reações, os status e os canais', kinds: { deleted: 'Apagadas', edited: 'Editadas', reactions: 'Reações', status: 'Status', channels: 'Canais' }, alerts: 'Avisos no seu privado', alertOn: 'Ligado: clique para desligar', alertOff: 'Desligado: clique para ligar', people: 'Quem mais apaga, edita e reage', nobody: 'Ninguém ainda.', search: 'Busque no texto, na conversa ou na pessoa', empty: 'Nada aqui.', mute: 'Silenciar esta pessoa (/mute)', unmute: 'Tirar o silêncio (/unmute)', muted: 'silenciada', removeTitle: 'Tirar do cache', removeText: 'O bot esquece este item (e a mídia dele); o WhatsApp não é tocado.', removed: 'tirou', media: 'Abrir a mídia', openChat: 'Abrir a conversa nesta mensagem', mutedCount: (n) => `${n} silenciadas`, selectAll: 'Todas', selectOne: 'Selecionar', selectHint: 'Clique nos itens para selecioná-los (Shift+clique: um intervalo)', selected: (n) => `${n} selecionado${n === 1 ? '' : 's'}`, removeSelected: (n) => `Tirar ${n} ${n === 1 ? 'item' : 'itens'} do cache` }, cacheClean: 'Limpar o cache (/cache)', cacheRetention: 'O que passou da retenção (/cache -clean)', cachePick: 'Marque pelo menos um.', cacheAll: 'Tudo (/cache -all): todas as mensagens (inclusive apagadas, editadas e com reações), mídias, temporários e backups', cacheAllWarning: '⚠️ Tudo leva o histórico inteiro de todas as conversas e os backups também: não tem como desfazer. As notas ficam sempre.', flushAll: 'Limpar o histórico de todas as conversas', flushBtn: 'Limpar todas as conversas', flushEmpty: 'Não há mensagens no banco.', flushWarning: (n) => `⚠️ Isto limpa o histórico de todas as ${n} conversas de uma vez, não só de uma. Não tem como desfazer (só por um /backup).`, clearAll: (n) => `Apagar tudo (${n}), inclusive as apagadas, as editadas e as com reações, com a mídia delas`, webPanel: 'Interface web', webAt: 'Abra em', webAccess: 'Acesso', webLogin: 'Login e sessão', webScreen: 'Tela', webAlerts: 'Avisos', notSet: 'não definido', needsRestart: 'Vale quando o bot reiniciar', restSettings: 'Todos os outros settings', protectedHere: 'Mude com o /set no WhatsApp',  meBtn: 'Eu (meu privado)', watchedBy: '/watch', openInHistory: 'Abrir no histórico, nesta mensagem', presenceSource: 'presença do WhatsApp · horário não confirmado', newTag: 'Nova tag', newNote: 'Nova nota', editTagBtn: 'Editar a tag', copyTag: 'Duplicar a tag', copyTagInfo: (n) => `As ${n} nota${n === 1 ? '' : 's'} (e os arquivos) vão como cópia para a nova tag, sem os alertas.`, moveNote: 'Mover para outra tag', copyNote: 'Copiar para outra tag', duplicateNote: 'Duplicar a nota', moveTag: 'Mover todas as notas para outra tag', moveTagInfo: (n) => `As ${n} nota${n === 1 ? '' : 's'} vão para a tag que você escolher (se ela já tem notas, as duas se juntam).`, copyNoteInfo: 'A cópia leva o texto e o arquivo, sem o alerta.', pickTag: 'Tag', orNewTag: 'ou uma tag nova', removeTag: 'Remover a tag', confirmRemoveTag: 'Remover esta tag (ela não tem notas)?', removeTagWithNotes: 'Remover a tag e tudo dentro dela', removeTagInfo: (n) => `${n} nota${n === 1 ? '' : 's'} (e a mídia delas) serão apagadas, junto com a descrição e o cadeado da tag, se houver.`, historyBtn: 'Histórico', loadingHistory: 'Carregando o histórico…', searchContact: 'Busque um contato ou grupo (nome ou número) ou digite um e-mail', pickContact: 'Busque o contato (nome ou número)', noMatches: 'Nenhum contato encontrado', privateChat: 'Vazio: vai para o seu privado', useEmail: (email) => `✉️ Usar ${email}`, updatedAt: (time) => `atualizado às ${time}`, noHistory: 'Nada registrado ainda.', removeReading: 'Remover esta leitura', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 o código de segurança de ${who ?? 'um participante'} mudou`, systemNotice: (text) => `ℹ️ ${text ?? 'aviso do WhatsApp'}`, loadMore: 'Carregar mais', noMore: 'Não há mais mensagens.', loadingFor: (name) => `Carregando ${name}…`, loadingStats: 'Carregando as estatísticas…', loadingHome: 'Carregando…', statsOverview: 'Estatísticas', last30: 'últimos 30 dias', seeAllStats: 'Ver todas as estatísticas',
         code: 'Código de 6 dígitos', quotedGone: 'mensagem fora do banco', searchAll: 'Buscar em todas as mensagens', searchResults: (n) => `${n} resultados`, exportChat: 'Exportar PDF', reacted: 'reação', removedReaction: 'removida', reactionHistory: 'Histórico de reações',
         reactionChanged: 'Alterou a reação', reactionRemoved: 'Removeu a reação', autoRefresh: 'Mensagens novas',
+        gal: { nav: 'Mídias', subtitle: 'Toda foto, vídeo, áudio, figurinha e documento que o bot guardou', kinds: { image: 'Fotos', video: 'Vídeos', audio: 'Áudios', sticker: 'Figurinhas', document: 'Documentos' }, all: 'Tudo', allChats: 'Todas as conversas', period: { 7: '7 dias', 30: '30 dias', 90: '90 dias', 0: 'Sempre' }, total: (n, size) => `${n} arquivos · ${size}`, chats: 'As conversas que mais ocupam espaço', empty: 'Nenhuma mídia aqui.', open: 'Abrir na conversa', download: 'Baixar', remove: 'Liberar este arquivo', removeText: 'O arquivo sai do disco; a mensagem fica no histórico, com a mídia faltando.', removeSelected: (n) => `Liberar ${n} arquivo${n === 1 ? '' : 's'}`, freed: (size) => `${size} liberados`, select: 'Selecionar', selected: (n) => `${n} selecionado${n === 1 ? '' : 's'}`, deleted: 'apagada', prev: 'Anterior (←)', next: 'Próxima (→)', fromMe: 'você' },
+        health: { nav: 'Saúde', subtitle: 'Como o bot está agora', verdict: { ok: '✅ Tudo certo', warn: '⚠️ Vale uma olhada', bad: '🚨 Algo está errado' }, problems: { whatsapp: 'o WhatsApp não está conectado', loops: 'uma checagem periódica travou', eventLoop: 'o bot está lento para responder (event loop)', errors: 'erros nos últimos 15 minutos' }, whatsapp: 'WhatsApp', wa: { ready: '🟢 Conectado', connecting: '⏳ Conectando', down: '🔴 Fora do ar', restarting: '🔄 Reiniciando' }, since: (ago) => `desde ${ago}`, outage: 'Última queda', attempts: 'Tentativas falhas', paused: '⏸️ o bot está pausado (/bot -pause)', process: 'Processo', uptime: 'No ar desde', memory: 'Memória (RSS)', heap: 'Heap do JS', load: 'Carga (1, 5, 15 min)', host: 'Memória livre do servidor', eventLoop: 'Atraso do event loop', mean: 'média', p99: 'p99', max: 'máx', loops: 'Checagens periódicas', loopIdle: 'parada', loopRunning: (ago) => `rodando ${ago}`, loopStuck: (ago) => `🚨 travada, rodando ${ago}`, runs: (n) => `${n} rodada${n === 1 ? '' : 's'}`, lastRound: (ms, ago) => `última: ${ms} ms, ${ago}`, never: 'ainda não rodou', regex: 'Worker de regex (/watch, buscas)', queueLabel: 'Na fila', missedLabel: 'Respondidos "sem match"', queue: (n, max) => `${n} na fila (limite ${max})`, urgent: (n) => `${n} urgentes`, regexRun: (n) => `${n} lotes rodados`, regexMissed: (full, slow) => `${full} recusados (fila cheia) · ${slow} passaram do prazo`, errors: 'Últimos erros do log', noErrors: 'Nenhum erro desde o início. 🎉', auto: 'Atualiza a cada 10 s', version: 'Versão' },
+        push: { title: '📲 Este aparelho', install: '⬇️ Instalar o app', installed: 'Instalado como app', installHint: 'No Safari: Compartilhar → Adicionar à Tela de Início', on: '🔔 Me avisar aqui', off: '🔕 Parar de avisar aqui', test: 'Mandar um teste', enabled: '✅ Pronto: os avisos do bot chegam também neste aparelho (Settings → 📲 escolhe quais).', testSent: 'Enviado: aparece em alguns segundos.', kinds: { monitor: '👀 um contato monitorado ficou online', watch: '🔎 uma ocorrência do /watch', price: '📈 um alerta de preço', web: '🌐 um acesso a esta página' }, devices: (n) => `${n} aparelho${n === 1 ? '' : 's'} recebe${n === 1 ? '' : 'm'} os avisos`, needsHttps: 'Os avisos precisam da página em https (Tailscale serve, um proxy com certificado) ou em localhost.', unsupported: 'Este navegador não tem avisos push.', denied: 'Os avisos estão bloqueados para este site no navegador: libere nas configurações dele.', offline: '📴 Sem rede: as notas que você abriu estão aqui; o resto volta com a rede.', offlineReady: 'As notas que você abre ficam disponíveis sem rede (nunca as de tag protegida).' },
+        tryCmd: { check: 'Checagem', run: '▶️ Testar', running: 'Rodando…', ok: 'ok', unknown: 'não existe', options: 'opções', noInput: 'não lê um pipe', option: (o) => `o ${o} não é testado aqui (muda alguma coisa)`, command: 'não é testado aqui (pode mudar alguma coisa)', text: 'Um atalho de texto: os {/comandos} dele rodam quando ele é usado.', result: (ms) => `O que ele responderia (${ms} ms), nada foi enviado`, nothing: 'Não respondeu nada.', notRunnable: 'Checado: não roda aqui.', voice: 'voz', sticker: 'figurinha' },
+        wtest: { title: 'Teste nas últimas mensagens', none: 'Nenhuma ocorrência nas últimas mensagens.', matches: (n, total, since) => `Casaria com ${n} das últimas ${total} mensagens recebidas${since ? ` (desde ${since})` : ''}`, many: 'Muitas ocorrências: um aviso para cada uma. Uma regra mais estreita pode ser melhor.', chats: 'Onde', cheats: 'Inserir', regexHint: 'Um texto casa em qualquer lugar, sem maiúsculas e acentos. /regex/i para mais.' },
+        mon: { nav: 'Monitor', subtitle: 'Os contatos do /monitor: quando cada um foi visto e quando costuma aparecer', state: { active: '🟢 Verificando', paused: '⏸️ Pausado', waiting: '⏳ Esperando o WhatsApp', disabled: '🚫 /monitor desativado' }, every: (t) => `cada contato a cada ${t}`, count: (n, max) => `${n}/${max} contatos`, alerts: (n) => `${n} com 🔔`, pause: '⏸️ Pausar', resume: '▶️ Retomar', pauseTitle: 'Pausa todas as consultas (monitor.enabled), sem apagar contatos nem histórico', resumeTitle: 'Liga as consultas de novo (monitor.enabled)', add: 'Monitorar um contato', contact: 'contato', name: 'nome (opcional)', alertField: '🔔 me avisar quando ficar online', filter: 'Filtrar por nome ou número', empty: 'Ninguém monitorado ainda. ＋ Adicionar escolhe um contato da sua agenda.', none: 'Nenhum contato combina.', onlineNow: 'online agora', seen: (ago) => `visto ${ago}`, notSeen: 'visto por último desconhecido', checked: (ago) => `checado ${ago}`, notChecked: 'ainda não checado', next: (when) => `próxima ${when}`, nextRound: 'próxima na rodada que vem', peak: (hours) => `costuma aparecer por volta das ${hours.join(' e das ')}`, readings: (n) => `${n} leitura${n === 1 ? '' : 's'}`, week: 'Últimos 7 dias', habits: 'Quando aparece (dia × hora)', timesWord: 'vezes', checkNow: 'Checar agora (na próxima rodada, ~10 s)', queued: 'Na fila: é checado na próxima rodada.', openChat: 'Abrir a conversa', alertOn: 'Avisa quando ficar online: clique para desligar', alertOff: 'Não avisa: clique para ser avisado quando ficar online', removeTitle: 'Parar de monitorar', removeText: (name) => `${name} sai do monitor, com o histórico do que foi lido.`, risk: '⚠️ Mais contatos e intervalos curtos podem contribuir para um bloqueio do WhatsApp; nenhum intervalo garante segurança.', presence: { 1: 'online', 0: 'offline', null: 'online oculto ou ainda não lido' }, now: 'agora', weekAgo: 'há 7 dias', online: '⏱️ Online (últimos 7 dias)', onlineToday: (t) => `${t} hoje`, onlineWeek: (t) => `${t} em 7 dias`, onlineAvg: (t) => `${t} por visita`, noSessions: 'Nenhum tempo online visto ainda: aparece para os contatos que não escondem, das checagens de agora em diante.', sessionTip: (from, to, open) => `${from} → ${open ? 'ainda online' : to}`, together: '🤝 Online juntos', togetherHint: 'Os dois online ao mesmo tempo nos últimos 7 dias (uma coincidência de horários, não prova de que conversaram)', togetherNone: 'Nenhum par de contatos monitorados ficou online ao mesmo tempo nos últimos 7 dias.', togetherNow: '🟢 juntos agora', times: (n) => `${n} vez${n === 1 ? '' : 'es'}`, lastTogether: (ago) => `última ${ago}`, notifyHere: '📲 Avisar neste aparelho' },
         home: 'Início', navHistory: 'Histórico', notes: 'Notas', alerts: 'Alertas', aliases: 'Atalhos', schedule: 'Agenda', stats: 'Estatísticas', settings: 'Settings',
         filter: 'Filtrar', rows: (n) => `${n} ${n === 1 ? 'linha' : 'linhas'}`, empty: 'Nada aqui.', readOnly: 'As mudanças aqui passam pelas mesmas checagens dos comandos.', periodLabel: 'Período',
         sec: { price: 'Alertas de preço (/stocks, /crypto)', watch: 'Regras do /watch', monitor: 'Contatos monitorados (/monitor)', aliases: 'Atalhos (/alias)', schedule: 'Agendados (/cron)', days: 'Mensagens por dia', hours: 'Mensagens por hora', chats: 'Conversas com mais mensagens', people: 'Quem mais fala', settings: 'Settings (/set)' },
@@ -247,6 +259,7 @@ async function apiProgress(path, label, shared = null) {
 
 /* login */
 function showLogin(message = '') {
+    forgetOffline();
     document.querySelector('.contact-dialog')?.close();
     clearInterval(sessionTimer);
     sessionTimer = null;
@@ -727,7 +740,7 @@ async function start() {
     startRefresh();
 
     const rail = el('nav', { class: 'rail' },
-        ...[['home', '🏠', T.home], ['history', '💬', T.navHistory], ['notes', '📝', T.notes], ['alerts', '🔔', T.alerts], ['aliases', '⚡', T.aliases], ['schedule', '⏰', T.schedule], ['stats', '📊', T.stats], ['show', '🏴‍☠️', T.spy.nav], ['settings', '⚙️', T.settings]].map(([name, icon, label]) =>
+        ...[['home', '🏠', T.home], ['history', '💬', T.navHistory], ['notes', '📝', T.notes], ['alerts', '🔔', T.alerts], ['monitor', '👀', T.mon.nav], ['aliases', '⚡', T.aliases], ['schedule', '⏰', T.schedule], ['stats', '📊', T.stats], ['show', '🏴‍☠️', T.spy.nav], ['gallery', '🖼️', T.gal.nav], ['health', '🩺', T.health.nav], ['settings', '⚙️', T.settings]].map(([name, icon, label]) =>
             el('button', { class: `rail-btn${state.view === name ? ' active' : ''}`, 'data-view': name, title: label, 'aria-label': label, onclick: () => show(name) },
                 el('span', { class: 'icon' }, icon), el('span', { class: 'cap' }, label))),
         el('span', { class: 'grow' }),
@@ -735,9 +748,17 @@ async function start() {
             el('span', { class: 'icon' }, themeIcon()), el('span', { class: 'cap' }, T.theme)),
         el('button', { class: 'rail-btn', title: T.language, 'aria-label': T.language, onclick: () => { setLanguage(state.lang === 'pt' ? 'en' : 'pt', true); start(); } },
             el('span', { class: 'icon' }, state.lang === 'pt' ? 'PT' : 'EN'), el('span', { class: 'cap' }, T.language)),
-        el('button', { class: 'rail-btn', title: T.logout, 'aria-label': T.logout, onclick: async () => { await fetch('/api/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); showLogin(); } },
+        el('button', { class: 'rail-btn', title: T.logout, 'aria-label': T.logout, onclick: async () => { await fetch('/api/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); forgetOffline(); showLogin(); } },
             el('span', { class: 'icon' }, '⏻'), el('span', { class: 'cap' }, T.logout)));
     root.replaceChildren(el('div', { class: 'shell' }, rail, el('div', { class: 'view', id: 'content' })));
+    registerWorker();
+    if (!document.querySelector('.offline-bar')) watchConnection();
+    // A link into the page (a notice clicked, a shortcut of the installed app): it opens there, once
+    const link = new URLSearchParams(location.search);
+    if ([...link].length) {
+        history.replaceState(null, '', '/');
+        if (await openLink(link) !== null) return;
+    }
     await show(state.view);
 }
 
@@ -755,6 +776,9 @@ async function show(view) {
         else if (view === 'notes') await showNotes(content);
         else if (view === 'stats') await showStats(content);
         else if (view === 'show') await showSpy(content);
+        else if (view === 'monitor') await showMonitor(content);
+        else if (view === 'gallery') await showGallery(content);
+        else if (view === 'health') await showHealth(content);
         else if (['alerts', 'aliases', 'schedule', 'settings'].includes(view)) await showList(content, view);
         else await showHistory(content);
     } finally {
@@ -1038,6 +1062,584 @@ async function showSpy(content) {
     await load(true);
 }
 
+/* the monitor: the /monitor contacts as cards, with when each one is usually seen */
+const relTime = (ms) => {
+    const format = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+    const diff = (ms - Date.now()) / 1000;
+    for (const [unit, seconds] of [['day', 86400], ['hour', 3600], ['minute', 60]]) {
+        if (Math.abs(diff) >= seconds) return format.format(Math.round(diff / seconds), unit);
+    }
+    return format.format(0, 'second');
+};
+// A relative time that keeps itself fresh (the page redraws them every 30 s), with the full date on hover
+const agoNode = (ms, text) => el('span', { class: 'ago', 'data-at': String(ms), title: fmtFull(ms) }, text(relTime(ms)));
+const poolText = (s) => (s % 60 === 0 ? `${s / 60} min` : `${s} s`);
+let monitorTimer = null;
+
+async function showMonitor(content, data = null) {
+    const M = T.mon;
+    state.mon ??= { q: '', open: new Set(), online: new Set(), pair: null };
+    data ??= await (await api('/api/monitor')).json();
+    const refresh = async () => { if (state.view === 'monitor') await showMonitor(content, await (await api('/api/monitor')).json()); };
+    const run = async (body) => { const result = await manage({ section: 'monitor', ...body }); if (result.error) messageBox(result.error); else await refresh(); return result; };
+
+    const addForm = () => openForm({
+        title: M.add,
+        fields: [{ name: 'contact', label: M.contact, type: 'people', single: true }, { name: 'name', label: M.name, type: 'text' }, { name: 'alert', label: M.alertField, type: 'checkbox' }],
+        onSubmit: async (body) => { const result = await manage({ section: 'monitor', op: 'add', ...body }); if (!result.error) await refresh(); return result; }
+    });
+    const editForm = (c) => openForm({
+        title: `${T.edit} · ${c.name}`, values: { name: c.name, alert: c.alert },
+        fields: [{ name: 'name', label: M.name.replace(/ \(.*\)$/, ''), type: 'text' }, { name: 'alert', label: M.alertField, type: 'checkbox' }],
+        onSubmit: async (body) => { const result = await manage({ section: 'monitor', op: 'edit', id: c.id, ...body }); if (!result.error) await refresh(); return result; }
+    });
+
+    // The last 7 days as a strip: a tick for each time it was seen
+    const week = (c) => {
+        const now = Date.now();
+        const from = now - 7 * 86400_000;
+        const ticks = c.seen.filter(ms => ms >= from).map(ms => el('span', { class: 'mon-tick', style: `left:${((ms - from) / (now - from) * 100).toFixed(2)}%`, title: fmtFull(ms) }));
+        return el('div', { class: 'mon-week-wrap', title: M.week },
+            el('div', { class: 'mon-week' }, ticks),
+            el('div', { class: 'mon-week-axis muted' }, el('span', {}, M.weekAgo), el('span', {}, M.now)));
+    };
+
+    function card(c) {
+        const presence = c.online === 1 ? 'on' : c.online === 0 ? 'off' : 'unknown';
+        const open = state.mon.open.has(c.id);
+        const lines = [
+            c.online === 1 ? el('span', { class: 'mon-online' }, `🟢 ${M.onlineNow}`) : c.lastSeen ? agoNode(c.lastSeen, M.seen) : el('span', { class: 'muted' }, M.notSeen),
+            c.status && c.online !== 1 ? el('div', { class: 'muted' }, c.status) : null,
+            el('div', { class: 'muted mon-checks' },
+                c.lastCheckedAt ? agoNode(c.lastCheckedAt, M.checked) : M.notChecked, ' · ',
+                c.nextAt && c.nextAt > Date.now() ? agoNode(c.nextAt, M.next) : M.nextRound),
+            c.error ? el('div', { class: 'warning' }, `⚠️ ${c.error}`) : null
+        ];
+        const actions = el('div', { class: 'row-actions' },
+            el('button', { class: `bell${c.alert ? '' : ' flag-off'}`, title: c.alert ? M.alertOn : M.alertOff, onclick: () => run({ op: 'toggle', id: c.id }) }, c.alert ? '🔔' : '🔕'),
+            el('button', { class: 'icon-btn', title: M.checkNow, onclick: async () => { const result = await run({ op: 'check', id: c.id }); if (!result.error) messageBox(M.queued); } }, '🔄'),
+            el('button', { class: 'icon-btn', title: T.historyBtn, onclick: () => openHistory('monitor', c.id) }, '📜'),
+            c.hasChat ? el('button', { class: 'icon-btn', title: M.openChat, onclick: async () => { await show('history'); await openChat(c.contactId); } }, '💬') : null,
+            el('button', { class: 'icon-btn', title: T.edit, onclick: () => editForm(c) }, '✏️'),
+            el('button', { class: 'icon-btn', title: M.removeTitle, onclick: () => confirmBox({ title: M.removeTitle, text: M.removeText(c.name), action: () => run({ op: 'delete', id: c.id }) }) }, '🗑️'));
+        const activity = c.activity;
+        const online = el('details', { class: 'mon-habits', open: state.mon.online.has(c.id), ontoggle: (event) => { if (event.target.open) state.mon.online.add(c.id); else state.mon.online.delete(c.id); } },
+            el('summary', {}, [M.online, activity.sessions.length ? [M.onlineToday(durationText(activity.today)), M.onlineWeek(durationText(activity.week)), activity.average ? M.onlineAvg(durationText(activity.average)) : null].filter(Boolean).join(' · ') : null].filter(Boolean).join(' · ')),
+            activity.sessions.length ? gantt([{ sessions: activity.sessions, cls: 'g-a' }]) : el('p', { class: 'muted' }, M.noSessions));
+        const habits = el('details', { class: 'mon-habits', open, ontoggle: (event) => { if (event.target.open) state.mon.open.add(c.id); else state.mon.open.delete(c.id); } },
+            el('summary', {}, `🔥 ${M.habits} · ${M.readings(c.readings)}`), heatmap(c.heatmap, M.timesWord));
+        return el('div', { class: `mon-card${c.alert ? '' : ' alert-off'}`, 'data-q': `${c.name} ${c.number ?? ''}`.toLowerCase() },
+            el('div', { class: 'mon-top' },
+                el('div', { class: `mon-avatar presence-${presence}`, title: M.presence[c.online] }, avatar({ id: c.contactId, name: c.name })),
+                el('div', { class: 'mon-who' }, el('div', { class: 'spy-name' }, c.name), c.number ? el('div', { class: 'muted' }, `+${c.number}`) : null),
+                actions),
+            el('div', { class: 'mon-lines' }, lines),
+            c.peaks.length ? el('div', { class: 'mon-peak' }, `⏰ ${M.peak(c.peaks.map(h => `${String(h).padStart(2, '0')}h`))}`) : null,
+            week(c), online, c.readings ? habits : null);
+    }
+
+    // Online first, then the most recently seen
+    const sorted = [...data.contacts].sort((a, b) => (b.online === 1) - (a.online === 1) || (b.lastSeen ?? 0) - (a.lastSeen ?? 0));
+    const grid = el('div', { class: 'mon-grid' });
+    const filterCards = () => {
+        const q = state.mon.q.toLowerCase();
+        let shown = 0;
+        for (const node of grid.querySelectorAll('.mon-card')) { node.hidden = Boolean(q) && !node.dataset.q.includes(q); shown += !node.hidden; }
+        grid.querySelector('.mon-none')?.toggleAttribute('hidden', Boolean(shown) || !data.contacts.length);
+    };
+    grid.append(...(sorted.length ? sorted.map(card) : [el('div', { class: 'empty' }, M.empty)]), el('div', { class: 'empty mon-none', hidden: true }, M.none));
+
+    const paused = data.state === 'paused' || data.state === 'disabled';
+    const alerts = data.contacts.filter(c => c.alert).length;
+    const strip = el('div', { class: 'mon-strip' },
+        el('span', { class: `mon-state mon-${data.state}` }, M.state[data.state]),
+        el('span', { class: 'muted' }, M.every(poolText(data.pool))),
+        el('span', { class: 'mon-meter', title: M.count(data.contacts.length, data.max) },
+            el('span', { class: 'fill', style: `width:${Math.min(100, data.contacts.length / Math.max(1, data.max) * 100)}%` }),
+            el('span', { class: 'num' }, M.count(data.contacts.length, data.max))),
+        alerts ? el('span', { class: 'muted' }, M.alerts(alerts)) : null,
+        el('span', { class: 'grow' }),
+        data.state === 'disabled' ? null : el('button', { class: `btn${paused ? ' on' : ''}`, title: data.enabled ? M.pauseTitle : M.resumeTitle, onclick: async () => {
+            const result = await manage({ section: 'setting', op: 'edit', id: 'monitor.enabled', value: data.enabled ? 'false' : 'true' });
+            if (result.error) messageBox(result.error); else await refresh();
+        } }, data.enabled ? M.pause : M.resume),
+        pushSupported() && Notification.permission !== 'granted' ? el('button', { class: 'btn', title: T.push.kinds.monitor, onclick: async () => {
+            const result = await enablePush(['monitor', 'watch', 'price', 'web']);
+            messageBox(result.error ?? T.push.enabled);
+            if (!result.error) refresh();
+        } }, M.notifyHere) : null,
+        el('button', { class: 'btn on', disabled: data.contacts.length >= data.max, onclick: addForm }, `＋ ${T.add}`));
+    // 🤝 The pairs that were online at the same time; a click shows the two on the same 7 days (the overlap marked)
+    const byId = new Map(data.contacts.map(c => [c.id, c]));
+    const pairs = data.together ?? [];
+    const pairDetail = el('div', { class: 'mon-pair' });
+    const pairList = el('div', { class: 'ranking' });
+    const pickPair = (pair) => {
+        state.mon.pair = `${pair.a}-${pair.b}`;
+        const [a, b] = [byId.get(pair.a), byId.get(pair.b)];
+        pairList.querySelectorAll('.rank').forEach(node => node.classList.toggle('active', node.dataset.pair === state.mon.pair));
+        pairDetail.replaceChildren(
+            el('div', { class: 'gantt-legend' }, el('span', { class: 'g-key g-a' }), a.name, el('span', { class: 'g-key g-b' }), b.name, el('span', { class: 'g-key g-both' }), M.together.replace(/^\S+\s/, '')),
+            gantt([{ sessions: a.activity.sessions, cls: 'g-a' }, { sessions: b.activity.sessions, cls: 'g-b' }], pair.intervals.map(([start, end]) => ({ start, end }))));
+    };
+    const top = Math.max(1, ...pairs.map(x => x.total));
+    pairList.append(...pairs.map(pair => el('button', { class: 'rank', 'data-pair': `${pair.a}-${pair.b}`, onclick: () => pickPair(pair) },
+        el('div', { class: 'rank-body' },
+            el('div', { class: 'rank-line' }, el('span', { class: 'rank-name' }, `${byId.get(pair.a)?.name} × ${byId.get(pair.b)?.name}`),
+                el('span', { class: 'rank-val' }, [pair.ongoing ? M.togetherNow : null, durationText(pair.total), M.times(pair.times), M.lastTogether(relTime(pair.last))].filter(Boolean).join(' · '))),
+            el('div', { class: 'rank-track' }, el('span', { class: 'rank-text', style: `width:${pair.total / top * 100}%` }))))));
+    const togetherBox = data.contacts.length < 2 ? null : el('details', { class: 'mon-together', open: true },
+        el('summary', {}, `${M.together} · ${pairs.length}`), el('p', { class: 'muted' }, M.togetherHint),
+        pairs.length ? el('div', { class: 'mon-together-body' }, pairList, pairDetail) : el('p', { class: 'muted' }, M.togetherNone));
+    if (pairs.length) pickPair(pairs.find(x => `${x.a}-${x.b}` === state.mon.pair) ?? pairs[0]);
+
+    const filter = el('input', { type: 'search', placeholder: M.filter, value: state.mon.q, oninput: (event) => { state.mon.q = event.target.value.trim(); filterCards(); } });
+
+    content.replaceChildren(el('div', { class: 'page' },
+        el('div', { class: 'page-head' }, el('h2', {}, `👀 ${M.nav}`), el('span', { class: 'muted grow' }, M.subtitle),
+            el('span', { class: 'muted' }, T.updatedAt(fmtTime(Date.now()))), el('button', { class: 'btn', onclick: () => show('monitor') }, `↻ ${T.refresh}`)),
+        strip, togetherBox, data.contacts.length > 3 ? el('div', { class: 'search spy-search' }, filter) : null, grid,
+        el('p', { class: 'muted mon-risk' }, M.risk)));
+    filterCards();
+
+    // Every 30 s the "seen 5 min ago" move on; every minute (with no window open) the cards come again
+    clearInterval(monitorTimer);
+    let ticks = 0;
+    monitorTimer = setInterval(async () => {
+        if (state.view !== 'monitor' || !content.isConnected) { clearInterval(monitorTimer); return; }
+        if (document.hidden) return;
+        if (++ticks % 2 === 0 && !document.querySelector('.overlay, dialog[open]') && document.activeElement?.type !== 'search') {
+            const fresh = await api('/api/monitor').then(r => r.json()).catch(() => null);
+            if (fresh && state.view === 'monitor') showMonitor(content, fresh);
+            return;
+        }
+        for (const node of content.querySelectorAll('.ago')) {
+            const at = Number(node.dataset.at);
+            const text = node.closest('.mon-checks') ? (at > Date.now() ? M.next : M.checked) : M.seen;
+            node.textContent = text(relTime(at));
+        }
+    }, 30_000);
+}
+
+// replaceChildren with the empty parts left out (a null child would show as the text "null")
+const fill = (node, ...children) => node.replaceChildren(...children.flat(Infinity).filter(child => child != null && child !== false));
+
+/* the WhatsApp marks of a bot reply (*bold*, _italic_, ~struck~, `code`, ```block```) as nodes, never as HTML */
+function waText(text) {
+    const out = [];
+    const marks = { '*': 'strong', _: 'em', '~': 'del', '`': 'code' };
+    const pattern = /```([\s\S]+?)```|(^|[\s(])([*_~`])(?=\S)([^\n]*?\S)\3(?=[\s).,!?:;]|$)/gm;
+    let last = 0;
+    for (const m of String(text).matchAll(pattern)) {
+        const start = m.index + (m[2]?.length ?? 0);
+        if (start > last) out.push(...linkify(text.slice(last, start)));
+        out.push(m[1] !== undefined ? el('pre', {}, m[1]) : el(marks[m[3]], {}, m[4]));
+        last = m.index + m[0].length;
+    }
+    if (last < text.length) out.push(...linkify(text.slice(last)));
+    return out;
+}
+
+// 95 → "1h35"; 4 → "4 min"
+const durationText = (ms) => {
+    const minutes = Math.max(1, Math.round(ms / 60000));
+    return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)}h${String(minutes % 60).padStart(2, '0')}`;
+};
+
+/*
+ * The last 7 days, a row per day (today on top) and 24 h wide: a bar for each online time of each layer
+ * (layers: [{ sessions: [{ start, end, open }], cls }]) and, over them, where they overlap (both)
+ */
+function gantt(layers, both = []) {
+    const M = T.mon;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const now = Date.now();
+    const axis = el('div', { class: 'gantt-row gantt-axis' }, el('span', { class: 'gantt-day' }),
+        el('div', { class: 'gantt-track' }, [0, 6, 12, 18].map(h => el('span', { class: 'gantt-hour', style: `left:${h / 24 * 100}%` }, `${h}h`))));
+    const rows = Array.from({ length: 7 }, (_, i) => {
+        const start = new Date(today);
+        start.setDate(today.getDate() - i);
+        const from = start.getTime();
+        const to = from + 86_400_000;
+        const bars = [];
+        const add = (list, cls) => {
+            for (const s of list) {
+                const [a, b] = [Math.max(s.start, from), Math.min(s.end, to)];
+                if (b <= a) continue;
+                bars.push(el('span', { class: `gantt-bar ${cls}${s.open ? ' open' : ''}`, style: `left:${((a - from) / 864000).toFixed(3)}%;width:${Math.max(0.4, (b - a) / 864000).toFixed(3)}%`,
+                    title: `${M.sessionTip(fmtTime(s.start), fmtTime(s.end), s.open)} · ${durationText(s.end - s.start)}` }));
+            }
+        };
+        layers.forEach(layer => add(layer.sessions, layer.cls));
+        add(both, 'g-both');
+        if (i === 0) bars.push(el('span', { class: 'gantt-now', style: `left:${((now - from) / 864000).toFixed(3)}%`, title: M.now }));
+        return el('div', { class: 'gantt-row' }, el('span', { class: 'gantt-day' }, `${T.weekdays[start.getDay()]} ${String(start.getDate()).padStart(2, '0')}`), el('div', { class: 'gantt-track' }, bars));
+    });
+    return el('div', { class: 'gantt' }, axis, rows);
+}
+
+/* the device: the push notices and the installable app (Settings, and a shortcut in the Monitor) */
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', (event) => { event.preventDefault(); installPrompt = event; });
+
+const pushSupported = () => window.isSecureContext && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const keyBytes = (b64) => Uint8Array.from(atob(b64.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(b64.length / 4) * 4, '=')), c => c.charCodeAt(0));
+
+// The service worker: once, on a page that can have one (https or localhost)
+let workerReady = null;
+function registerWorker() {
+    if (workerReady || !window.isSecureContext || !('serviceWorker' in navigator)) return workerReady;
+    workerReady = navigator.serviceWorker.register('/sw.js').then(() => navigator.serviceWorker.ready).catch(() => null);
+    // A click on a notice with the page already open: it goes where the notice points
+    navigator.serviceWorker.addEventListener('message', (event) => { if (event.data?.type === 'open') openLink(new URL(event.data.url).searchParams); });
+    return workerReady;
+}
+
+async function currentPush() {
+    const registration = await registerWorker();
+    return registration ? { registration, subscription: await registration.pushManager.getSubscription() } : { registration: null, subscription: null };
+}
+
+async function enablePush(kinds) {
+    const P = T.push;
+    if (!pushSupported()) return { error: window.isSecureContext ? P.unsupported : P.needsHttps };
+    if (Notification.permission === 'denied' || await Notification.requestPermission() !== 'granted') return { error: P.denied };
+    const { registration, subscription: old } = await currentPush();
+    if (!registration) return { error: P.unsupported };
+    const { publicKey } = await (await api('/api/push')).json();
+    let subscription = old;
+    try {
+        subscription ??= await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) });
+    } catch {
+        // made with other keys of the server (a reinstalled bot): a new one
+        await old?.unsubscribe();
+        subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) });
+    }
+    const json = subscription.toJSON();
+    return manage({ section: 'push', op: 'subscribe', endpoint: json.endpoint, keys: json.keys, kinds });
+}
+
+async function disablePush() {
+    const { subscription } = await currentPush();
+    if (!subscription) return { ok: true };
+    const result = await manage({ section: 'push', op: 'unsubscribe', endpoint: subscription.endpoint });
+    await subscription.unsubscribe().catch(() => {});
+    return result;
+}
+
+async function devicePanel() {
+    const P = T.push;
+    const box = el('div', { class: 'device-panel' }, el('h3', {}, P.title));
+    const standalone = window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone;
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    box.append(el('div', { class: 'device-row' },
+        standalone ? el('span', { class: 'muted' }, `✅ ${P.installed}`)
+            : installPrompt ? el('button', { class: 'btn on', onclick: async () => { installPrompt.prompt(); await installPrompt.userChoice.catch(() => null); installPrompt = null; show('settings'); } }, P.install)
+                : ios ? el('span', { class: 'muted' }, P.installHint) : null,
+        el('span', { class: 'muted' }, P.offlineReady)));
+    if (!pushSupported()) {
+        box.append(el('p', { class: 'muted' }, window.isSecureContext ? P.unsupported : P.needsHttps));
+        return box;
+    }
+    const { subscription } = await currentPush();
+    const info = await (await api(`/api/push${subscription ? `?endpoint=${encodeURIComponent(subscription.endpoint)}` : ''}`)).json();
+    const on = Boolean(subscription && info.subscription);
+    const chosen = new Set(info.subscription?.kinds ?? info.kinds);
+    const kinds = el('div', { class: 'device-kinds' }, info.kinds.map(kind => el('label', { class: 'check' },
+        el('input', { type: 'checkbox', checked: chosen.has(kind), onchange: async (event) => {
+            if (event.target.checked) chosen.add(kind); else chosen.delete(kind);
+            if (on) { const result = await enablePush([...chosen]); if (result.error) messageBox(result.error); }
+        } }), P.kinds[kind])));
+    const status = el('span', { class: 'muted' }, P.devices(info.devices));
+    box.append(kinds, el('div', { class: 'device-row' },
+        el('button', { class: `btn${on ? '' : ' on'}`, onclick: async () => {
+            const result = on ? await disablePush() : await enablePush([...chosen]);
+            if (result.error) messageBox(result.error); else show(state.view);
+        } }, on ? P.off : P.on),
+        on ? el('button', { class: 'btn', onclick: async () => {
+            const result = await manage({ section: 'push', op: 'test', endpoint: subscription.endpoint, title: '🔔 ZapBot', text: P.testSent });
+            messageBox(result.error ?? P.testSent);
+        } }, P.test) : null,
+        status));
+    if (Notification.permission === 'denied') box.append(el('p', { class: 'warning' }, P.denied));
+    return box;
+}
+
+/* a link into the page: ?view=monitor, or ?chat=…&msg=…&at=… (a /watch notice) */
+const VIEWS = ['home', 'history', 'notes', 'alerts', 'monitor', 'aliases', 'schedule', 'stats', 'show', 'gallery', 'health', 'settings'];
+async function openLink(params) {
+    if (params.get('chat')) {
+        const at = Number(params.get('at'));
+        if (params.get('msg') && at) return jumpToMessage({ chat: params.get('chat'), id: params.get('msg'), at });
+        await show('history');
+        return openChat(params.get('chat'));
+    }
+    if (VIEWS.includes(params.get('view'))) return show(params.get('view'));
+    return null;
+}
+
+// Offline (the installed app with no network): a bar on top; the notes kept come from the service worker
+function watchConnection() {
+    const bar = el('div', { class: 'offline-bar', hidden: navigator.onLine }, T.push.offline);
+    document.body.append(bar);
+    window.addEventListener('offline', () => { bar.hidden = false; });
+    window.addEventListener('online', () => { bar.hidden = true; });
+}
+function forgetOffline() {
+    navigator.serviceWorker?.controller?.postMessage({ type: 'forget' });
+    window.caches?.delete('zb-data').catch(() => {});
+}
+
+/* the tries of the forms: a shortcut's command (checked while typed, run on ▶️) and a /watch rule */
+function mediaPreview(media) {
+    if (!media?.data) return null;
+    const blob = new Blob([Uint8Array.from(atob(media.data), c => c.charCodeAt(0))], { type: media.mimetype });
+    const url = URL.createObjectURL(blob);
+    const mime = String(media.mimetype);
+    if (mime.startsWith('image/')) return el('img', { class: 'try-media', src: url, alt: media.filename ?? '' });
+    if (mime.startsWith('audio/')) return el('audio', { controls: true, src: url });
+    if (mime.startsWith('video/')) return el('video', { class: 'try-media', controls: true, src: url });
+    return el('a', { class: 'btn', href: url, download: media.filename ?? 'file' }, `📎 ${media.filename ?? mime}`);
+}
+
+function commandTester(input) {
+    const C = T.tryCmd;
+    const stages = el('span', { class: 'try-stages' });
+    const out = el('div', { class: 'try-out' });
+    const note = el('div', { class: 'muted' });
+    const runButton = el('button', { type: 'button', class: 'btn', disabled: true }, C.run);
+    const problem = (s) => (s.problem === 'unknown' ? C.unknown : s.problem === 'options' ? (s.message ?? C.options) : s.problem === 'noInput' ? C.noInput
+        : s.problem === 'option' ? C.option(s.message) : s.problem === 'command' ? C.command : C.ok);
+    const check = debounce(async () => {
+        const result = await manage({ section: 'try', op: 'check', command: input.value });
+        runButton.disabled = !result.runnable;
+        note.textContent = result.text ? C.text : (result.error && result.error !== 'empty' ? result.error : '');
+        fill(stages, ...(result.stages ?? []).flatMap((s, i) => [i ? el('span', { class: 'muted' }, ' | ') : null,
+            el('span', { class: `try-stage ${!s.ok ? 'bad' : s.problem ? 'warn' : 'good'}`, title: problem(s) }, `${!s.ok ? '❌' : s.problem ? '⚠️' : '✅'} ${s.cmd}`)]));
+    }, 400);
+    input.addEventListener('input', check);
+    runButton.addEventListener('click', async () => {
+        runButton.disabled = true;
+        fill(out, el('div', { class: 'muted' }, C.running));
+        const result = await manage({ section: 'try', op: 'command', command: input.value });
+        runButton.disabled = false;
+        if (result.error) { fill(out, el('div', { class: 'error' }, result.error === 'not runnable' ? C.notRunnable : result.error)); return; }
+        fill(out, el('div', { class: 'muted' }, C.result(result.ms)),
+            ...(result.replies.length ? result.replies.map(r => el('div', { class: 'try-bubble' },
+                r.text !== undefined ? waText(r.text) : [mediaPreview(r.media), r.caption ? el('div', {}, waText(r.caption)) : null,
+                    el('div', { class: 'muted' }, [humanSize(r.size), r.voice ? C.voice : null, r.sticker ? C.sticker : null].filter(Boolean).join(' · '))]))
+                : [el('div', { class: 'muted' }, C.nothing)]));
+    });
+    check();
+    return el('div', { class: 'try-box' }, el('div', { class: 'try-head' }, el('span', { class: 'muted' }, `${C.check}:`), stages, el('span', { class: 'grow' }), runButton), note, out);
+}
+
+function watchTester(input) {
+    const W = T.wtest;
+    const out = el('div', { class: 'try-out' });
+    const insert = (text) => {
+        const [a, b] = [input.selectionStart ?? input.value.length, input.selectionEnd ?? input.value.length];
+        input.value = input.value.slice(0, a) + text + input.value.slice(b);
+        input.focus();
+        input.setSelectionRange(a + text.length, a + text.length);
+        input.dispatchEvent(new Event('input'));
+    };
+    const cheats = [
+        ['/…/i', () => { if (!/^\/.+\/[a-z]*$/s.test(input.value)) { input.value = `/${input.value.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}/i`; input.dispatchEvent(new Event('input')); } }],
+        ['\\b', () => insert('\\b')], ['a|b', () => insert('|')], ['\\d+', () => insert('\\d+')], ['.*', () => insert('.*')], ['(?:…)', () => insert('(?:)')]
+    ];
+    const marked = (s) => (s.match ? [s.body.slice(0, s.match.start), el('mark', {}, s.body.slice(s.match.start, s.match.end)), s.body.slice(s.match.end)] : [s.body]);
+    const run = debounce(async () => {
+        if (!input.value.trim()) { fill(out, el('div', { class: 'muted' }, W.regexHint)); return; }
+        const r = await manage({ section: 'try', op: 'watch', rule: input.value });
+        if (!r.ok) { fill(out, el('div', { class: 'error' }, r.error)); return; }
+        const summary = r.matches ? W.matches(r.matches, r.tested, r.since ? fmtDate(r.since) : '') : W.none;
+        fill(out, 
+            el('div', { class: r.matches ? '' : 'muted' }, `${r.matches ? '🎯' : '∅'} ${summary}`),
+            r.matches > Math.max(30, r.tested * 0.05) ? el('div', { class: 'warning-text' }, `⚠️ ${W.many}`) : null,
+            r.chats.length ? el('div', { class: 'chips' }, el('span', { class: 'muted' }, `${W.chats}:`), r.chats.map(c => el('span', { class: 'chip' }, `${c.name} · ${c.count}`))) : null,
+            el('div', { class: 'try-samples' }, r.samples.map(s => el('button', { type: 'button', class: 'try-sample', title: T.openInHistory, onclick: () => jumpToMessage({ chat: s.chat, id: s.id, at: s.at }) },
+                el('div', { class: 'muted' }, `${fmtFull(s.at)} · ${s.chatName}${s.sender ? ` · ${s.sender}` : ''}`), el('div', {}, marked(s))))));
+    }, 600);
+    input.addEventListener('input', run);
+    run();
+    return el('div', { class: 'try-box' },
+        el('div', { class: 'try-head' }, el('span', { class: 'muted' }, `${W.title} · ${W.cheats}:`), cheats.map(([label, action]) => el('button', { type: 'button', class: 'btn chip-btn', onclick: action }, label))),
+        out);
+}
+
+// The forms of the lists that get a try under their fields
+const FORM_TRIES = { alias: (inputs) => commandTester(inputs.command), watch: (inputs) => watchTester(inputs.rule) };
+
+/* health: what the bot is doing right now */
+let healthTimer = null;
+async function showHealth(content, data = null) {
+    const H = T.health;
+    data ??= await (await api('/api/health')).json();
+    const card = (label, value, extra = null) => el('div', { class: 'card' }, el('div', { class: 'card-label' }, label), el('div', { class: 'card-value' }, value), extra ? el('div', { class: 'card-label' }, extra) : null);
+    const w = data.whatsapp;
+    const p = data.process;
+    const loops = el('div', { class: 'health-loops' }, data.loops.map(l => el('div', { class: `health-loop${l.stuck ? ' stuck' : l.since ? ' running' : ''}` },
+        el('span', { class: 'health-dot' }), el('strong', {}, l.name),
+        el('span', { class: 'muted' }, l.since ? (l.stuck ? H.loopStuck(relTime(l.since)) : H.loopRunning(relTime(l.since))) : H.loopIdle),
+        el('span', { class: 'muted grow' }, l.lastEnd ? H.lastRound(l.lastMs, relTime(l.lastEnd)) : H.never),
+        el('span', { class: 'muted' }, H.runs(l.runs)))));
+    const r = data.regex;
+    const errors = data.errors.length
+        ? el('div', { class: 'health-errors' }, data.errors.map(e => el('details', { class: 'health-error' },
+            el('summary', {}, el('span', { class: 'muted' }, `${fmtFull(e.at)} · `), e.text.split('\n')[0].slice(0, 160)),
+            el('pre', {}, `${e.where ?? ''}\n${e.text}`))))
+        : el('p', { class: 'muted' }, H.noErrors);
+    fill(content, el('div', { class: 'page' },
+        el('div', { class: 'page-head' }, el('h2', {}, `🩺 ${H.nav}`), el('span', { class: 'muted' }, `${H.subtitle} · ${H.auto}`),
+            el('button', { class: 'btn', onclick: () => show('health') }, `↻ ${T.refresh}`)),
+        el('div', { class: `health-verdict v-${data.verdict}` }, el('strong', {}, H.verdict[data.verdict]),
+            data.problems.length ? el('span', {}, ` · ${data.problems.map(x => H.problems[x]).join(' · ')}`) : null),
+        el('h3', {}, H.whatsapp),
+        el('div', { class: 'cards' },
+            card(H.whatsapp, H.wa[w.status], w.since ? H.since(relTime(w.since)) : null),
+            w.lastOutage ? card(H.outage, String(w.lastOutage)) : null,
+            w.attempts ? card(H.attempts, String(w.attempts)) : null,
+            w.paused ? card('⏸️', H.paused) : null),
+        el('h3', {}, H.process),
+        el('div', { class: 'cards' },
+            card(H.uptime, relTime(data.startedAt), fmtFull(data.startedAt)),
+            card(H.memory, humanSize(p.rss), `${H.heap}: ${humanSize(p.heapUsed)} / ${humanSize(p.heapTotal)}`),
+            card(H.eventLoop, `${data.eventLoop.p99} ms`, `${H.mean} ${data.eventLoop.mean} ms · ${H.max} ${data.eventLoop.max} ms`),
+            card(H.load, p.load.join(' · '), `${p.cpus} CPU · ${p.node}`),
+            card(H.host, humanSize(p.freeMemory), `/ ${humanSize(p.totalMemory)}`),
+            card(H.version, data.version.split(' ')[0], data.version.split(' ').slice(1).join(' '))),
+        el('h3', {}, H.loops), loops,
+        el('h3', {}, H.regex),
+        el('div', { class: 'cards' },
+            card(H.queueLabel, String(r.queued), [H.queue(r.queued, r.maxQueue), r.urgent ? H.urgent(r.urgent) : null, H.regexRun(r.run)].filter(Boolean).join(' · ')),
+            card(H.missedLabel, String(r.full + r.slow), H.regexMissed(r.full, r.slow))),
+        el('h3', {}, H.errors), errors));
+    clearInterval(healthTimer);
+    healthTimer = setInterval(async () => {
+        if (state.view !== 'health' || !content.isConnected) { clearInterval(healthTimer); return; }
+        if (document.hidden || content.querySelector('.health-error[open]')) return;
+        const fresh = await api('/api/health').then(x => x.json()).catch(() => null);
+        if (fresh && state.view === 'health') showHealth(content, fresh);
+    }, 10_000);
+}
+
+/* the media gallery */
+async function showGallery(content) {
+    const G = T.gal;
+    state.gal ??= { kind: '', chat: '', days: 30 };
+    const g = state.gal;
+    const params = () => {
+        const p = new URLSearchParams({ kind: g.kind, chat: g.chat });
+        if (g.days) p.set('from', String(Date.now() - g.days * 86_400_000));
+        return p;
+    };
+    let data = await (await api(`/api/gallery?${params()}`)).json();
+    const items = [...data.items];
+    const grid = el('div', { class: 'gal-grid' });
+    const more = el('button', { class: 'btn', hidden: !data.next }, T.loadMore);
+    const picked = new Set();
+    // Picking: Shift/Ctrl+click, or ☑️ (on the phone, where there is no Shift) and then a tap on each one
+    let picking = false;
+    const bar = el('div', { class: 'gal-bar', hidden: true });
+    const redraw = () => show('gallery');
+
+    const renderBar = () => {
+        bar.hidden = !picked.size && !picking;
+        fill(bar, el('span', { class: 'grow' }, G.selected(picked.size)),
+            el('button', { class: 'btn', onclick: () => { picked.clear(); picking = false; selectButton.classList.remove('on'); grid.querySelectorAll('.gal-tile.picked').forEach(t => t.classList.remove('picked')); renderBar(); } }, '✕'),
+            el('button', { class: 'btn on', disabled: !picked.size, onclick: () => removeFiles([...picked]) }, `🧹 ${G.removeSelected(picked.size)}`));
+    };
+    const removeFiles = (ids) => confirmBox({
+        title: G.removeSelected(ids.length), text: G.removeText, submitLabel: `🧹 ${T.remove}`,
+        action: async () => { const result = await manage({ section: 'gallery', op: 'delete', ids }); if (!result.error) { messageBox(G.freed(humanSize(result.freed ?? 0))); redraw(); } return result; }
+    });
+
+    function tile(item, index) {
+        const thumb = item.kind === 'image' || item.kind === 'sticker'
+            ? el('img', { src: item.url, alt: item.name, loading: 'lazy' })
+            : el('div', { class: 'gal-icon' }, { video: '🎬', audio: '🎧', document: '📄' }[item.kind] ?? '📎', el('span', {}, item.name));
+        const box = el('div', { class: `gal-tile k-${item.kind}${item.deleted ? ' deleted' : ''}`, title: `${item.chatName} · ${fmtFull(item.at)} · ${humanSize(item.size)}`, onclick: (event) => {
+            if (picking || event.shiftKey || event.metaKey || event.ctrlKey || picked.size) {
+                event.preventDefault();
+                box.classList.toggle('picked');
+                if (picked.has(item.id)) picked.delete(item.id); else picked.add(item.id);
+                renderBar();
+                return;
+            }
+            lightbox(index);
+        } }, thumb, el('span', { class: 'gal-size' }, humanSize(item.size)), item.deleted ? el('span', { class: 'gal-flag', title: G.deleted }, '🗑️') : null);
+        return box;
+    }
+
+    // The viewer: ← → go through what is loaded, Esc closes
+    function lightbox(index) {
+        let i = index;
+        const stage = el('div', { class: 'gal-stage' });
+        const info = el('div', { class: 'gal-info' });
+        const draw = () => {
+            const item = items[i];
+            fill(stage, item.kind === 'image' || item.kind === 'sticker' ? el('img', { src: item.url, alt: item.name })
+                : item.kind === 'video' ? el('video', { src: item.url, controls: true, autoplay: true })
+                    : item.kind === 'audio' ? el('audio', { src: item.url, controls: true, autoplay: true })
+                        : el('div', { class: 'gal-icon big' }, '📄', el('span', {}, item.name)));
+            fill(info, 
+                el('div', {}, el('strong', {}, item.chatName), item.fromMe || (item.sender && item.sender !== item.chatName) ? el('span', { class: 'muted' }, ` · ${item.fromMe ? G.fromMe : item.sender}`) : null),
+                el('div', { class: 'muted' }, `${fmtFull(item.at)} · ${humanSize(item.size)} · ${i + 1}/${items.length}${item.deleted ? ` · 🗑️ ${G.deleted}` : ''}`),
+                item.caption ? el('div', {}, item.caption) : null,
+                el('div', { class: 'gal-actions' },
+                    el('button', { class: 'btn', title: G.prev, disabled: i === 0, onclick: () => { i--; draw(); } }, '←'),
+                    el('button', { class: 'btn', title: G.next, disabled: i === items.length - 1, onclick: () => { i++; draw(); } }, '→'),
+                    el('button', { class: 'btn', onclick: () => { dialog.close(); jumpToMessage({ chat: item.chat, id: item.id, at: item.at }); } }, `💬 ${G.open}`),
+                    el('a', { class: 'btn', href: `${item.url}&download=1`, download: item.name }, `⬇️ ${G.download}`),
+                    el('button', { class: 'btn', onclick: () => { dialog.close(); removeFiles([item.id]); } }, `🧹 ${G.remove}`),
+                    el('button', { class: 'btn', onclick: () => dialog.close() }, T.contact.close)));
+        };
+        const dialog = el('dialog', { class: 'modal gal-viewer' }, stage, info);
+        dialog.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowLeft' && i > 0) { i--; draw(); }
+            if (event.key === 'ArrowRight' && i < items.length - 1) { i++; draw(); }
+        });
+        dialog.addEventListener('close', () => dialog.remove(), { once: true });
+        document.body.append(dialog);
+        draw();
+        dialog.showModal();
+    }
+
+    grid.append(...(items.length ? items.map(tile) : [el('div', { class: 'empty' }, G.empty)]));
+    more.addEventListener('click', async () => {
+        const p = params();
+        p.set('before', data.next);
+        data = await (await api(`/api/gallery?${p}`)).json();
+        const start = items.length;
+        items.push(...data.items);
+        grid.append(...data.items.map((item, k) => tile(item, start + k)));
+        more.hidden = !data.next;
+    });
+
+    const kinds = el('div', { class: 'spy-tabs' },
+        el('button', { class: `btn${g.kind ? '' : ' on'}`, onclick: () => { g.kind = ''; redraw(); } }, `${G.all} · ${humanSize(data.totals.size)}`),
+        Object.entries(data.totals.byKind).map(([kind, t]) => el('button', { class: `btn${g.kind === kind ? ' on' : ''}`, disabled: !t.count, title: G.total(t.count, humanSize(t.size)), onclick: () => { g.kind = kind; redraw(); } },
+            `${{ image: '🖼️', video: '🎬', audio: '🎧', sticker: '🌟', document: '📄' }[kind]} ${G.kinds[kind]} · ${t.count}`)));
+    const selectButton = el('button', { class: 'btn', title: G.select, onclick: () => { picking = !picking; selectButton.classList.toggle('on', picking); renderBar(); } }, `☑️ ${G.select}`);
+    const periods = el('div', { class: 'spy-tabs' }, selectButton, [7, 30, 90, 0].map(days => el('button', { class: `btn${g.days === days ? ' on' : ''}`, onclick: () => { g.days = days; redraw(); } }, G.period[days])),
+        g.chat ? el('button', { class: 'btn chip', onclick: () => { g.chat = ''; redraw(); } }, `💬 ${data.chats.find(c => c.id === g.chat)?.name ?? g.chat} ✕`) : null);
+    const top = Math.max(1, ...data.chats.map(c => c.size));
+    const chats = el('div', { class: 'spy-people' }, el('h3', {}, G.chats),
+        data.chats.length ? el('div', { class: 'ranking' }, data.chats.map((c, n) => el('button', { class: `rank${g.chat === c.id ? ' active' : ''}`, onclick: () => { g.chat = g.chat === c.id ? '' : c.id; redraw(); } },
+            el('span', { class: 'rank-n' }, String(n + 1)),
+            el('div', { class: 'rank-body' }, el('div', { class: 'rank-line' }, el('span', { class: 'rank-name' }, c.name), el('span', { class: 'rank-val' }, `${humanSize(c.size)} · ${c.count}`)),
+                el('div', { class: 'rank-track' }, el('span', { class: 'rank-text', style: `width:${c.size / top * 100}%` }))))))
+            : el('div', { class: 'muted' }, G.empty));
+
+    fill(content, el('div', { class: 'page' },
+        el('div', { class: 'page-head' }, el('h2', {}, `🖼️ ${G.nav}`), el('span', { class: 'muted grow' }, `${G.subtitle} · ${G.total(data.totals.count, humanSize(data.totals.size))}`),
+            el('button', { class: 'btn', onclick: redraw }, `↻ ${T.refresh}`)),
+        kinds, periods, bar,
+        el('div', { class: 'spy-layout' }, el('div', {}, grid, more), chats)));
+}
+
 /* statistics: charts drawn as SVG (no library: the page has a strict CSP) */
 const SVG = 'http://www.w3.org/2000/svg';
 const svg = (tag, attrs = {}, ...children) => {
@@ -1122,13 +1724,13 @@ function donut(parts) {
     return node;
 }
 
-function heatmap(grid) {
+function heatmap(grid, unit = T.msgsWord) {
     const max = Math.max(1, ...grid.flat());
     const cells = [el('span', { class: 'hm-corner' })];
     for (let h = 0; h < 24; h++) cells.push(el('span', { class: 'hm-hour' }, h % 3 === 0 ? String(h) : ''));
     grid.forEach((row, day) => {
         cells.push(el('span', { class: 'hm-day' }, T.weekdays[day]));
-        row.forEach((value, hour) => cells.push(el('span', { class: 'hm-cell', style: `opacity:${value ? 0.12 + 0.88 * value / max : 0.05}`, title: `${T.weekdays[day]} ${String(hour).padStart(2, '0')}h: ${num(value)} ${T.msgsWord}` })));
+        row.forEach((value, hour) => cells.push(el('span', { class: 'hm-cell', style: `opacity:${value ? 0.12 + 0.88 * value / max : 0.05}`, title: `${T.weekdays[day]} ${String(hour).padStart(2, '0')}h: ${num(value)} ${unit}` })));
     });
     return el('div', { class: 'heatmap' }, cells);
 }
@@ -1346,7 +1948,7 @@ async function openHistory(kind, id) {
 }
 
 /* a form in a window, from the field definitions of the section */
-function openForm({ title, fields, values = {}, onSubmit, submitLabel = null, noCancel = false }) {
+function openForm({ title, fields, values = {}, onSubmit, submitLabel = null, noCancel = false, addOn = null }) {
     const inputs = fields.map((field) => {
         const value = values[field.name] ?? '';
         let input;
@@ -1360,8 +1962,10 @@ function openForm({ title, fields, values = {}, onSubmit, submitLabel = null, no
         return [field, input];
     });
     const error = el('div', { class: 'error' });
+    // Something under the fields that reads them (the tries of the shortcut and /watch forms)
+    const extra = addOn ? addOn(Object.fromEntries(inputs.map(([field, input]) => [field.name, input]))) : null;
     const close = () => overlay.remove();
-    const form = el('form', { class: 'modal', onsubmit: async (event) => {
+    const form = el('form', { class: `modal${extra ? ' wide' : ''}`, onsubmit: async (event) => {
         event.preventDefault();
         const body = {};
         for (const [field, input] of inputs) {
@@ -1374,6 +1978,7 @@ function openForm({ title, fields, values = {}, onSubmit, submitLabel = null, no
     } },
     el('h3', {}, title),
     inputs.map(([field, input]) => field.type === 'note' ? input : el(field.type === 'people' ? 'div' : 'label', { class: field.type === 'checkbox' ? 'check' : 'field' }, el('span', {}, T.col[field.label] ?? field.label), input)),
+    extra,
     error,
     el('div', { class: 'modal-actions' }, noCancel ? null : el('button', { type: 'button', class: 'btn', onclick: close }, T.cancel), el('button', { type: 'submit', class: 'btn on' }, submitLabel ?? T.save)));
     const overlay = el('div', { class: 'overlay', onclick: (event) => { if (event.target === overlay) close(); } }, form);
@@ -1413,7 +2018,7 @@ async function showList(content, view, days = 30) {
             const buttons = (i) => el('td', { class: 'row-actions' },
                 m.history ? el('button', { class: 'icon-btn', title: T.historyBtn, onclick: () => openHistory(m.history, section.ids[i]) }, '📜') : null,
                 m.canEdit && !section.values[i].protected ? el('button', { class: 'icon-btn', title: T.edit, onclick: () => openForm({
-                    title: `${T.edit} · ${section.ids[i]}`, fields: (m.editFields ? m.fields.filter(f => m.editFields.includes(f.name)) : m.fields).filter(f => !f.addOnly), values: section.values[i],
+                    title: `${T.edit} · ${section.ids[i]}`, fields: (m.editFields ? m.fields.filter(f => m.editFields.includes(f.name)) : m.fields).filter(f => !f.addOnly), values: section.values[i], addOn: FORM_TRIES[m.kind],
                     onSubmit: (body) => run({ op: 'edit', ...(m.idField ? { [m.idField]: section.ids[i] } : { id: section.ids[i] }), ...body })
                 }) }, '✏️') : null,
                 m.canDelete && !section.values[i].protected ? el('button', { class: 'icon-btn', title: m.deleteLabel ? T.reset : T.remove, onclick: async () => {
@@ -1433,10 +2038,16 @@ async function showList(content, view, days = 30) {
                         return el('tr', { class: stateCell && !stateCell.bell ? 'row-off' : '' }, section.rows[i].map(cell => el('td', { class: isShort(cell) ? 'nowrap' : '' }, cellNode(cell, { toggle: (extra = {}) => run({ op: 'toggle', id: section.ids[i], ...extra }) }))), hasActions ? buttons(i) : null);
                     })))
                 : el('div', { class: 'empty' }, T.empty);
-            const add = m.canAdd ? el('button', { class: 'btn on', onclick: () => openForm({ title: `${T.add} · ${T.sec[section.title] ?? section.title}`, fields: m.fields, values: {}, onSubmit: (body) => run({ op: 'add', ...body }) }) }, `＋ ${T.add}`) : null;
+            const add = m.canAdd ? el('button', { class: 'btn on', onclick: () => openForm({ title: `${T.add} · ${T.sec[section.title] ?? section.title}`, fields: m.fields, values: {}, addOn: FORM_TRIES[m.kind], onSubmit: (body) => run({ op: 'add', ...body }) }) }, `＋ ${T.add}`) : null;
             return el('div', { class: 'section' }, el('div', { class: 'section-head' }, el('h3', {}, `${view === 'settings' ? T.restSettings : (T.sec[section.title] ?? section.title)} · ${T.rows(indexes.length)}`), add), el('div', { class: 'tablewrap' }, table));
         }));
-        if (view === 'settings') sections.prepend(webSettingsPanel(data, () => showList(content, view, days)));
+        if (view === 'settings') {
+            sections.prepend(webSettingsPanel(data, () => showList(content, view, days)));
+            // The device first (async: the service worker and the browser's push state)
+            const device = el('div');
+            sections.prepend(device);
+            devicePanel().then(node => device.replaceWith(node)).catch(() => device.remove());
+        }
     };
     filter.addEventListener('input', debounce(draw, 150));
     draw();
