@@ -35,7 +35,7 @@ test('/welcome e /goodbye', async () => {
 
 test('/promote, /demote e /invite', async () => {
     assert.deepEqual(await bot.replyAlt(`/promote +${OTHERAlt.user}`), ['✅ Fulano is now a group admin.']);
-    assert.deepEqual(await bot.replyAlt('/promote'), ['```Usage: /promote [/contact/|@mention|+number]...```\n💡 _/promote -h for help_']);
+    assert.deepEqual(await bot.replyAlt('/promote'), ['*Usage*\n`/promote [/contact/|@mention|+number]...`\n💡 _/promote -h for help_']);
     assert.deepEqual(await bot.replyAlt('/invite'), ['🔗 Group invite link:\nhttps://chat.whatsapp.com/ABC123']);
     assert.deepEqual(await bot.replyAlt('/welcome Hi', { chat: OTHERAlt.jid }), ['Only usable inside groups.']);
 });
@@ -46,17 +46,17 @@ test('/ocr, /tts, /qr, /carbon e /profile -set', async () => {
 
     await setSetting('gpt.api.key', 'sk-teste');
     assert.deepEqual(await bot.replyAlt('/ocr'), ['Reply to a photo with /ocr (or send the photo with /ocr as the caption).\n💡 _/ocr -h for help_']);
-    assert.deepEqual(await bot.replyAlt('/tts'), ['```Usage: /tts [-gpt|-g] [-local|-l] [-voice|-v <name>] [-speed|-sp <%>] [-pitch|-pi <semitones>] [-volume|-vol <%>] [-pause|-pa <ms>] [-beat|-b <bpm>] [-beatvol|-bv <%>] [-quiet|-q] [-status|-s] [<text>]```\n💡 _/tts -h for help_']);
+    assert.deepEqual(await bot.replyAlt('/tts'), ['*Usage*\n`/tts [-gpt|-g] [-local|-l] [-voice|-v <name>] [-speed|-sp <%>] [-pitch|-pi <semitones>] [-volume|-vol <%>] [-pause|-pa <ms>] [-beat|-b <bpm>] [-beatvol|-bv <%>] [-quiet|-q] [-status|-s] [<text>]`\n💡 _/tts -h for help_']);
 
-    assert.match((await bot.replyAlt('/qr'))[0], /^```Usage: \/qr \[-decode\|-d\] \[<text>\]```/);
+    assert.match((await bot.replyAlt('/qr'))[0], /^\*Usage\*\n`\/qr \[-decode\|-d\] \[<text>\]`/);
     assert.deepEqual(await bot.replyAlt('/qr -d'), ['Reply to a photo of a QR Code with /qr -d (or send the photo with /qr -d as the caption).\n💡 _/qr -h for help_']);
     assert.deepEqual(await bot.replyAlt('/carbon -t neon x'), ['❌ Unknown theme "neon". Available: dark, light.']);
-    assert.match((await bot.replyAlt('/carbon'))[0], /^```Usage: \/carbon /);
+    assert.match((await bot.replyAlt('/carbon'))[0], /^\*Usage\*\n`\/carbon /);
     assert.deepEqual(await bot.replyAlt('/profile -s'), ['Reply to an image with /profile -s (or send the photo with /profile -s as the caption).\n💡 _/profile -h for help_']);
 });
 
 test('/forward', async () => {
-    assert.match((await bot.replyAlt('/forward'))[0], /^```Usage: \/forward /);
+    assert.match((await bot.replyAlt('/forward'))[0], /^\*Usage\*\n`\/forward /);
     assert.deepEqual(await bot.replyAlt('/forward /Fulano/'), ['Reply to the message you want to forward, or give its position (e.g. /forward -1 /Fulano/).\n💡 _/forward -h for help_']);
 
     const quoted = bot.createMessage({ text: 'Meeting at 10', de: OTHERAlt.jid });

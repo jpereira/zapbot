@@ -57,7 +57,7 @@ describe('/help', () => {
     test('um comando, com ou sem "/", por nome ou alias', async () => {
         for (const line of ['/help show', '/help /show', '/help show']) {
             const [r] = await bot.replyAlt(line);
-            assert.match(r, /AJUDA[\s\S]*Usage: \/show/, line);
+            assert.match(r, /\*\/[\s\S]*`\/show/, line);
         }
     });
 
@@ -73,7 +73,7 @@ describe('/help', () => {
 
         assert.deepEqual(await bot.replyAlt('/help show', { de: OTHERAlt.jid }),
             ['⛔ O /show é só do dono do bot (e dos admins).\n💡 _Veja os que você pode usar com /help_']);
-        assert.match((await bot.replyAlt('/help stocks', { de: OTHERAlt.jid }))[0], /Usage: \/stocks/);
+        assert.match((await bot.replyAlt('/help stocks', { de: OTHERAlt.jid }))[0], /`\/stocks/);
 
         await bot.setSetting('bot.admins', [OTHERAlt.user]);
         const [admin] = await bot.replyAlt('/help', { de: OTHERAlt.jid });
@@ -98,7 +98,7 @@ describe('/help', () => {
         assert.doesNotMatch(delegated, /Role: owner/);
 
         // with the command, -r does not get in the way
-        assert.match((await bot.replyAlt('/help -r get'))[0], /Usage: \/get/);
+        assert.match((await bot.replyAlt('/help -r get'))[0], /`\/get/);
     });
 
     test('comando desativado por setting some do menu', async () => {
@@ -205,7 +205,7 @@ describe('/noffa', () => {
     });
 
     test('sem texto mostra a sintaxe', async () => {
-        assert.match((await bot.replyAlt('/noffa'))[0], /^```Usage: \/noffa/);
+        assert.match((await bot.replyAlt('/noffa'))[0], /^\*Uso\*\n`\/noffa/);
     });
 
     test('texto começando com "/" ganha um 🌈 na frente (nunca vira comando)', async () => {
@@ -217,13 +217,13 @@ describe('/noffa', () => {
 describe('/bot', () => {
     test('-h: os pares +a/-a, +u/-u e +cmd/-cmd juntos, uma opção por bloco', async () => {
         const [r] = await bot.replyAlt('/bot -h');
-        const linesAlt = r.split('\n').filter(l => /^  [+-]/.test(l)).map(l => l.trim().split(/\s{2,}/)[0]);
+        const linesAlt = r.split('\n').filter(l => /^`[+-]/.test(l)).map(l => l.match(/^`([^`]+)`/)[1]);
         assert.deepEqual(linesAlt, ['-on', '-off', '+a, -a [pessoa...]', '+u, -u [pessoa|grupo...]', '+cmd, -cmd <comandos>',
-            '+limit, -limit <N[/período]|comandos>', '-list-users, -lu [all]', '-list-commands, -lc', '-reset, -r [force]', '-yes, -y', '-status, -s [<hora>|off]', '-to <destino>',
-            '-info, -i', '-test, -t', '-denied, -d [on|off|reset|<texto>]', '-flood, -f [off|on|<N>[/<segundos>]]', '-passwd, -pw <senha|off>', '-login, -lo <senha>', '-flush-email, -fe', '-mask, -m']);
-        assert.match(r, /\n  -on +Liga o bot\n/);
-        assert.match(r, /\nDetalhes: https:\/\/jpereira\.github\.io\/zapbot\/pt-BR\/commands\/bot\/```$/);
-        assert.doesNotMatch(r, /admin, -admin|Argumentos:/);
+            '+limit, -limit <N[/período]|comandos>', '-lu [all]', '-lc', '-r [force]', '-y', '-s [<hora>|off]', '-to <destino>',
+            '-i', '-t', '-d [on|off|reset|<texto>]', '-f [off|on|<N>[/<segundos>]]', '-pw <senha|off>', '-lo <senha>', '-fe', '-m']);
+        assert.match(r, /\n`-on` · liga o bot\n/);
+        assert.match(r, /\n🔗 https:\/\/jpereira\.github\.io\/zapbot\/pt-BR\/commands\/bot\/$/);
+        assert.doesNotMatch(r, /admin, -admin|Argumentos/);
     });
 
     test('sem opção: o status (o mesmo do -status), com o estado no topo e quem usa', async () => {

@@ -66,21 +66,21 @@ module.exports = {
     'notes.when.tooFar': `❌ No máximo {days} dias à frente.`,
 
     // ---- /notes: -a
-    'notes.add.syntax': `Usage: /notes #tag <texto> [-alert <quando> [-to <destino>]...]\n💡 _/notes -h para ajuda_`,
+    'notes.add.syntax': `*Uso*\n\`/notes #tag <texto> [-alert <quando> [-to <destino>]...]\`\n💡 _/notes -h para ajuda_`,
     'notes.add.missingTag': `💡 _Falta a #tag. Veja as tags com /notes_`,
     'notes.add.noText': `Falta o texto: /notes #tag <texto>`,
     'notes.add.quotedNoText': `❌ A mensagem respondida não tem texto.`,
     'notes.add.toNeedsAlert': `❌ O -to só vale com o -alert: /notes -a <texto> -alert amanhã 9h -to /Grupo L200/`,
 
     // ---- /notes: -u
-    'notes.update.usage': `Usage: /notes -u <id> [#tag] <novo texto>\n💡 _/notes -h para ajuda_`,
+    'notes.update.usage': `*Uso*\n\`/notes -u <id> [#tag] <novo texto>\`\n💡 _/notes -h para ajuda_`,
 
     // ---- /notes: -alert
     'notes.alert.toOnlyCreate': `❌ O -to só vale ao criar o alerta: /notes -alert <id|#tag> amanhã 9h -to /Grupo L200/`,
     'notes.alert.none': `🔔 Nenhuma anotação com alerta.`,
     'notes.alert.noneIn': `🔔 Nenhuma anotação em{tags} com alerta.`,
     'notes.alert.createHint': `💡 _Crie com /notes -alert <id|#tag> <quando>_`,
-    'notes.alert.usage': `Usage: /notes -alert <id|#tag> <quando> [-to <destino>]...\n💡 _/notes -h para ajuda_`,
+    'notes.alert.usage': `*Uso*\n\`/notes -alert <id|#tag> <quando> [-to <destino>]...\`\n💡 _/notes -h para ajuda_`,
     'notes.alert.noNotesInTags': `❌ Nenhuma anotação em {tags}. Veja as tags com /notes`,
     'notes.alert.createdOne': `🔔 *Alerta criado* na anotação #{id}\n{text}\n{where}`,
     'notes.alert.createdMany': `🔔 *Alerta criado* em {notes} de {tags} ({ids})\n{where}`,
@@ -92,8 +92,8 @@ module.exports = {
     'notes.tipsTags': `\n\n💡 _/notes #tag lista as anotações de uma tag_`,
     'notes.sentTo': `📝 Anotações enviadas em {where}.`,
     'notes.sendFail': `❌ Não consegui enviar as anotações: {error}`,
-    'notes.list.searchUsage': `Usage: /notes -s [#tag...] <texto|/regex/flags> [-to <destino>]...\n💡 _/notes -h para ajuda_`,
-    'notes.list.usage': `Usage: /notes -l [#tag...] [-to <destino>]...\n💡 _/notes -h para ajuda_`,
+    'notes.list.searchUsage': `*Uso*\n\`/notes -s [#tag...] <texto|/regex/flags> [-to <destino>]...\`\n💡 _/notes -h para ajuda_`,
+    'notes.list.usage': `*Uso*\n\`/notes -l [#tag...] [-to <destino>]...\`\n💡 _/notes -h para ajuda_`,
     'notes.list.none': `📝 Nenhuma anotação{inTags}{withSearch}.`,
     'notes.list.titleClean': `📝 *ANOTAÇÕES*{found}{count}`,
     'notes.list.titleFull': `📝 ANOTAÇÕES{tags}{found} ({total})`,
@@ -105,11 +105,11 @@ module.exports = {
     'notes.subject.alert': `🔔 Anotação #{id}: {text}`,
 
     // ---- /notes: -m, -d
-    'notes.move.usage': `Usage: /notes -m #tag #novatag\n💡 _/notes -h para ajuda_`,
+    'notes.move.usage': `*Uso*\n\`/notes -m #tag #novatag\`\n💡 _/notes -h para ajuda_`,
     'notes.move.same': `❌ A tag nova é igual à atual.`,
     'notes.move.notFound': `❌ #{tag} não existe. Veja as tags com /notes`,
     'notes.move.done': { one: `🏷️ #{from} → #{to} · {count} anotação`, other: `🏷️ #{from} → #{to} · {count} anotações` },
-    'notes.desc.usage': `Usage: /notes -d #tag [<descrição>] (ou /notes -d #tag -rm para apagar)\n💡 _/notes -h para ajuda_`,
+    'notes.desc.usage': `*Uso*\n\`/notes -d #tag [<descrição>] (ou /notes -d #tag -rm para apagar)\`\n💡 _/notes -h para ajuda_`,
     'notes.desc.shown': `🏷️ *#{tag}*\n{desc}`,
     'notes.desc.none': `🏷️ #{tag} não tem descrição.`,
     'notes.desc.createHint': `💡 _Crie com /notes -d #{tag} <texto>_`,
@@ -119,14 +119,14 @@ module.exports = {
     'notes.desc.replaced': `🏷️ *#{tag}* · descrição trocada`,
 
     // ---- /notes: -v
-    'notes.view.usage': `Usage: /notes -v <id...|#tag...> [-to <destino>]...\n💡 _/notes -h para ajuda_`,
+    'notes.view.usage': `*Uso*\n\`/notes -v <id...|#tag...> [-to <destino>]...\`\n💡 _/notes -h para ajuda_`,
     'notes.view.missingOne': `❌ {list} não existe. Veja a lista com /notes -l`,
     'notes.view.missingMany': `❌ {list} não existem. Veja a lista com /notes -l`,
     'notes.view.fileNotFound': `#{id}: arquivo da mídia não encontrado`,
     'notes.view.sent': { one: `📝 {count} anotação enviada em {where}.`, other: `📝 {count} anotações enviadas em {where}.` },
 
     // ---- /notes: -e (PDF)
-    'notes.export.usage': `Usage: /notes -e [#tag...] [-to <destino>]...\n💡 _/notes -h para ajuda_`,
+    'notes.export.usage': `*Uso*\n\`/notes -e [#tag...] [-to <destino>]...\`\n💡 _/notes -h para ajuda_`,
     'notes.pdf.withMedia': `com mídia`,
     'notes.pdf.withAlert': `com alerta`,
     'notes.pdf.withLink': `com link`,

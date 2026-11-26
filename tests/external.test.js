@@ -310,7 +310,7 @@ describe('/news', () => {
         `<item><title><![CDATA[${title}]]></title><link>https://n.com/${encodeURIComponent(title)}</link><pubDate>${data}</pubDate></item>`).join('')}</channel></rss>`;
 
     test('sem categoria mostra a ajuda', async () => {
-        assert.match((await bot.replyAlt('/news'))[0], /Usage: \/news/);
+        assert.match((await bot.replyAlt('/news'))[0], /`\/news/);
     });
 
     test('-g1: manchetes da mais nova para a mais antiga, com fonte e link', async () => {
@@ -563,7 +563,7 @@ describe('/gpt', () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
         const beforeAlt = network.calls.length;
 
-        assert.deepEqual(await bot.replyAlt('/gpt -v'), ['Usage: /gpt -v <texto> (ou responda uma mensagem de texto)\n💡 _/gpt -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -v'), ['*Uso*\n`/gpt -v <texto> (ou responda uma mensagem de texto)`\n💡 _/gpt -h para ajuda_']);
         assert.match((await bot.replyAlt(`/gpt -v ${'a'.repeat(32001)}`))[0], /❌ O texto tem 32001 caracteres: a voz aceita até 32000\./);
         assert.equal(network.calls.length, beforeAlt, 'nada foi para a OpenAI');
 
@@ -615,7 +615,7 @@ describe('/gpt', () => {
 
     test('-img: gera uma imagem (v1/images/generations) e, respondendo uma foto, a edita (v1/images/edits)', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        assert.deepEqual(await bot.replyAlt('/gpt -img'), ['Usage: /gpt -img <o que criar> (respondendo uma foto, ela é editada)\n💡 _/gpt -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -img'), ['*Uso*\n`/gpt -img <o que criar> (respondendo uma foto, ela é editada)`\n💡 _/gpt -h para ajuda_']);
 
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: 'UE5H' }] });
         const r = (await bot.execute('/gpt -img um robô nadando em aquarela')).at(-1);
@@ -682,7 +682,7 @@ describe('/gpt', () => {
 
     test('-gif: o GIF animado da API de imagens (output_format gif) vira um MP4 mandado como GIF; respondendo uma foto, ela é a base', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        assert.deepEqual(await bot.replyAlt('/gpt -gif'), ['Usage: /gpt -gif <o que animar> (respondendo uma foto, ela é animada)\n💡 _/gpt -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -gif'), ['*Uso*\n`/gpt -gif <o que animar> (respondendo uma foto, ela é animada)`\n💡 _/gpt -h para ajuda_']);
 
         network.responder('post', 'api.openai.com/v1/images/generations', { data: [{ b64_json: Buffer.from('GIF89a').toString('base64') }] });
         network.responder('post', 'api.openai.com/v1/images/edits', { data: [{ b64_json: Buffer.from('GIF89a').toString('base64') }] });
@@ -985,10 +985,10 @@ describe('/gpt', () => {
         assert.match(withoutAdmin, /• tokens: 10 de 1\.000$/);
         assert.doesNotMatch(withoutAdmin, /requisições/);
 
-        assert.deepEqual(await bot.replyAlt('/gpt -u 99'), ['Usage: /gpt -u [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
-        assert.deepEqual(await bot.replyAlt('/gpt -u 0'), ['Usage: /gpt -u [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
-        assert.deepEqual(await bot.replyAlt('/gpt -u 99'), ['Usage: /gpt -u [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
-        assert.deepEqual(await bot.replyAlt('/gpt -u abc'), ['Usage: /gpt -u [dias] (de 1 a 31; padrão 7)\n💡 _/gpt -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -u 99'), ['*Uso*\n`/gpt -u [dias] (de 1 a 31; padrão 7)`\n💡 _/gpt -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -u 0'), ['*Uso*\n`/gpt -u [dias] (de 1 a 31; padrão 7)`\n💡 _/gpt -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -u 99'), ['*Uso*\n`/gpt -u [dias] (de 1 a 31; padrão 7)`\n💡 _/gpt -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/gpt -u abc'), ['*Uso*\n`/gpt -u [dias] (de 1 a 31; padrão 7)`\n💡 _/gpt -h para ajuda_']);
 
         await bot.setSetting('gpt.admin.key', 'sk-admin-teste');
         network.responder('get', 'api.openai.com/v1/organization/usage/completions', errorHttp(403));
@@ -1094,7 +1094,7 @@ describe('/gpt', () => {
 
     test('sem pergunta mostra a sintaxe', async () => {
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        assert.match((await bot.replyAlt('/gpt'))[0], /Usage: \/gpt/);
+        assert.match((await bot.replyAlt('/gpt'))[0], /`\/gpt/);
     });
 
     test('erros: chave inválida (sem vazar no log), limite, timeout e outros', async () => {
@@ -1131,7 +1131,7 @@ describe('/draw', () => {
         assert.match((await bot.replyAlt('/draw um gato'))[0], /⚠️ API key da OpenAI não encontrada: o \/draw está desativado/);
 
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        assert.match((await bot.replyAlt('/draw'))[0], /Usage: \/draw/);
+        assert.match((await bot.replyAlt('/draw'))[0], /`\/draw/);
         assert.equal(imageCalls().length, 0);
     });
 
@@ -1457,7 +1457,7 @@ describe('/tldr', () => {
 
     test('poucas mensagens, período inválido, sem chave e erro da OpenAI', async () => {
         assert.match((await bot.replyAlt('/tldr'))[0], /📝 Poucas mensagens para resumir \(0\) em Família/);
-        assert.match((await bot.replyAlt('/tldr ontem'))[0], /Usage: \/tldr/);
+        assert.match((await bot.replyAlt('/tldr ontem'))[0], /`\/tldr/);
 
         await chat([['a'], ['b'], ['c']]);
         network.responder('post', 'api.openai.com', errorHttp(429));
@@ -1529,7 +1529,7 @@ describe('/translate', () => {
     });
 
     test('validações e erros do Google', async () => {
-        assert.match((await bot.replyAlt('/translate'))[0], /Usage: \/translate/);
+        assert.match((await bot.replyAlt('/translate'))[0], /`\/translate/);
         assert.match((await bot.replyAlt('/translate -to português oi'))[0], /❌ Idioma inválido: português/);
         assert.match((await bot.replyAlt(`/translate ${'a'.repeat(5001)}`))[0], /❌ Texto grande demais: 5001 caracteres/);
 

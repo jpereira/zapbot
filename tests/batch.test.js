@@ -46,7 +46,7 @@ test('-dry só mostra a separação; sem comando, erro; /batch dentro de /batch,
     assert.match(d, /antes do primeiro comando/);
     assert.equal((await notes()).length, 0);
 
-    assert.match((await bot.replyAlt('/batch'))[0], /Usage: \/batch/);
+    assert.match((await bot.replyAlt('/batch'))[0], /`\/batch/);
     assert.match((await bot.replyAlt('/batch só texto'))[0], /Nenhum comando/);
     assert.match((await bot.replyAlt('/batch\n/batch\n/notes #t x'))[0], /dentro de \/batch/);
 });

@@ -70,7 +70,7 @@ test('-e: um .vcf com nome, número, recado e foto; segunda vez usa o cache', as
 test('sem opção mostra a ajuda; no privado com id @lid também vale', async () => {
     const [h] = await bot.replyAlt('/contacts', { chat: MY_CHAT });
     assert.match(h, /Usage|Uso/);
-    assert.match(h, /-export/);
+    assert.match(h, /\n`-e` · /);
     const [ok] = await bot.replyAlt('/contacts -l', { chat: MY_CHAT });
     assert.match(ok, /1 contato|1 contact/);
 });

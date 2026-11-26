@@ -42,17 +42,21 @@ que o `/set` mostra de cada setting ainda são em português.
 ```text
 /set zapbot.lang en_US
 /ping -h
-Usage: /ping
-Checks whether the bot is responding (replies pong).
+*/ping* · Checks whether the bot is responding
 
-Help: -help, -h
+*Usage*
+`/ping`
+
+🔗 https://jpereira.github.io/zapbot/commands/ping/
 ```
 
 ```text
 /set zapbot.lang pt_BR
 /ping -h
-Usage: /ping
-Verifica se o bot está respondendo (responde pong).
+*/ping* · Verifica se o bot está respondendo
 
-Ajuda: -help, -h
+*Uso*
+`/ping`
+
+🔗 https://jpereira.github.io/zapbot/pt-BR/commands/ping/
 ```

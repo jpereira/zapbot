@@ -105,8 +105,8 @@ test('sem a mensagem respondida, sem destinatários e sem nada para encaminhar',
     const usage = bot.src('commands/localize').locate(bot.src('commands/commands').commands.find(c => c.cmd === '/forward')).usage;
     const [first, second] = usage.split(/\s{2}ou\s{2}/);
     const [reply] = await bot.replyAlt('/forward', { quoted: quoted() });
-    assert.ok(reply.startsWith(`\`\`\`Usage: ${first}\n`), reply);
-    assert.ok(reply.includes(`${second}\`\`\``), reply);
+    assert.ok(reply.startsWith(`*Uso*\n\`${first}\`\n`), reply);
+    assert.ok(reply.includes(`\`${second}\`\n💡`), reply);
     assert.deepEqual(await bot.replyAlt('/forward /Fulano/', { quoted: quoted({ text: '' }) }), ['❌ Essa mensagem não tem nada que eu possa encaminhar.']);
 });
 
@@ -533,7 +533,7 @@ describe('listas de destinatários (#lista)', () => {
         assert.match(list(await bot.execute('/forward -desc #b')), /#b\*: Os de casa/, 'the existing description stays');
         assert.match(list(await bot.execute('/forward -l')), /• #a \(2\) — A turma[\s\S]*• #b \(3\)/);
 
-        assert.match(list(await bot.execute('/forward -c #a')), /Usage: \/forward -c #lista #nova/);
+        assert.match(list(await bot.execute('/forward -c #a')), /`\/forward -c #lista #nova/);
         assert.match(list(await bot.execute('/forward -c #a #a')), /Os dois nomes são iguais/);
         assert.match(list(await bot.execute('/forward -c #zz #b')), /A lista #zz não existe/);
     });

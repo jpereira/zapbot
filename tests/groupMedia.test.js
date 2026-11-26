@@ -273,7 +273,7 @@ describe('/sticker', () => {
     const photo = { mimetype: 'image/jpeg', data: Buffer.from('jpg').toString('base64') };
 
     test('sem responder uma mensagem', async () => {
-        assert.match((await bot.replyAlt('/sticker'))[0], /^```Usage: \/sticker/);
+        assert.match((await bot.replyAlt('/sticker'))[0], /^\*Uso\*\n`\/sticker/);
     });
 
     test('imagem: enquadrada em webp, com o nome e o autor do setting', async () => {

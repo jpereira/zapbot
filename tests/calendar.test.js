@@ -299,7 +299,7 @@ describe('/calendar', () => {
     });
 
     test('without text, without a date, or too long', async () => {
-        assert.match((await bot.replyAlt('/calendar'))[0], /^```Usage: \/calendar /);
+        assert.match((await bot.replyAlt('/calendar'))[0], /^\*Uso\*\n`\/calendar /);
         assert.equal((await bot.execute('/calendar nada de data aqui')).at(-1).text, '❌ Não achei uma data no texto. Mande com uma data (25/11/2026, "25 de novembro") ou tente o -gpt.');
         assert.match((await bot.replyAlt(`/calendar ${'a'.repeat(6001)}`))[0], /6001 caracteres: o limite é 6000/);
     });

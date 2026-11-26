@@ -47,7 +47,7 @@ describe('/promote e /demote', () => {
         assert.deepEqual(await bot.replyAlt(`/promote +${OTHERAlt.user}`), ['⚠️ Fulano já é admin.']);
         bot.createContact('5521955555555@c.us', 'Forasteiro');
         assert.deepEqual(await bot.replyAlt('/promote +5521955555555'), ['⚠️ Forasteiro não está neste grupo.']);
-        assert.match((await bot.replyAlt('/promote'))[0], /Usage: \/promote \[\/contato\/\|@menção\|\+número\]\.\.\./);
+        assert.match((await bot.replyAlt('/promote'))[0], /`\/promote \[\/contato\/\|@menção\|\+número\]\.\.\./);
         assert.deepEqual(calls, []);
     });
 

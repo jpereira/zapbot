@@ -184,7 +184,7 @@ const commandLimitable = (cmd) => {
 
 // A failure message (the command did not do what was asked): does not spend the limit
 const isFailure = (content) => typeof content === 'string' &&
-    /^\s*(?:[❌⚠🚫🔒⌛]|```\s*(?:Usage|Uso):|(?:Usage|Uso):)/u.test(content);
+    /^\s*(?:[❌⚠🚫🔒⌛]|\*(?:Usage|Uso)\*\n|```\s*(?:Usage|Uso):|(?:Usage|Uso):)/u.test(content);
 
 /**
  * Runs `execute` respecting the `cmds` limits for whoever typed. Reserves first, returns it if the command

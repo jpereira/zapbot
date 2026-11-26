@@ -18,8 +18,8 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
   seria lido como destino), e `/gpt explique \-a` manda `-a` para o ChatGPT. Também vale como valor de
   uma opção (`-msg \-to`). Só conta a `\` logo antes do `-`, no começo da palavra.
 - Todo comando aceita `-help` / `-h`: `/get -h` mostra a ajuda só dele. Um comando digitado sem o que ele precisa
-  responde só com o `Usage:` e a dica do `-h` (sem ❌: faltar parâmetro não é um erro): `/qr` responde
-  ```Usage: /qr [-decode|-d] [<texto>]``` e `💡 /qr -h para ajuda`.
+  responde só com o *Uso* e a dica do `-h` (sem ❌: faltar parâmetro não é um erro): `/qr` responde
+  `*Uso*`, a linha `/qr [-decode|-d] [<texto>]` e `💡 /qr -h para ajuda`.
 - `/help` mostra as categorias disponíveis e `/help -f` lista os comandos. Use `/help get` ou
   `/help /get` mostram um específico, e `/help -r` agrupa a lista por role (`owner`, `admin` e
   `user`).

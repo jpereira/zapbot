@@ -132,7 +132,7 @@ describe('comandos', () => {
             ["🤔 Comando '/un' ambíguo. Possíveis comandos: /unblock, /unmute"]);
         assert.deepEqual(await bot.replyAlt('/wa'),
             ["🤔 Comando '/wa' ambíguo. Possíveis comandos: /walissu, /warn, /watch"]);
-        assert.match((await bot.replyAlt('/watc -h'))[0], /Usage: \/watch/);
+        assert.match((await bot.replyAlt('/watc -h'))[0], /`\/watch/);
         assert.deepEqual(await bot.replyAlt('/'),
             ["⚠️ Comando '/' desconhecido, tente: /help"]);
     });
@@ -167,7 +167,7 @@ describe('comandos', () => {
 
     test('-h mostra a sintaxe do comando', async () => {
         const [r] = await bot.replyAlt('/ping -h');
-        assert.match(r, /Usage: \/ping/);
+        assert.match(r, /`\/ping/);
     });
 
     test('comando desativado por setting: o dono é avisado de como ligar; para os outros é desconhecido', async () => {
@@ -272,7 +272,7 @@ describe('comando desconhecido', () => {
 describe('nomes em inglês, sem aliases fixos em português', () => {
     test('os nomes em inglês respondem; os antigos aliases em português não existem mais (use o /alias)', async () => {
         for (const nameAlt of ['/draw', '/weather', '/everybody', '/bills', '/stocks', '/translate']) {
-            assert.ok((await bot.replyAlt(`${nameAlt} -h`))[0].includes(`Usage: ${nameAlt}`), `${nameAlt} -h`);
+            assert.ok((await bot.replyAlt(`${nameAlt} -h`))[0].includes(`*Uso*\n\`${nameAlt}`), `${nameAlt} -h`);
         }
         for (const oldAlt2 of ['/desenhe', '/tempo', '/todos', '/boletos', '/cotacao', '/traduzir', '/bloquear', '/agenda',
             '/lembrete', '/download', '/ai', '/mudo', '/perfil', '/buscar', '/config', '/resumo']) {
@@ -299,7 +299,7 @@ describe('permissões', () => {
         await bot.setSetting('bot.users', [OTHERAlt.user]);
         for (const nameAlt of common) {
             const [help] = await bot.replyAlt(`/${nameAlt} -h`, { de: OTHERAlt.jid });
-            assert.ok(help.includes(`Usage: /${nameAlt}`), nameAlt);
+            assert.ok(help.includes(`*Uso*\n\`/${nameAlt}`), nameAlt);
         }
         assert.deepEqual(await bot.replyAlt('/ping', { de: OTHERAlt.jid }), ['pong']);
         assert.match((await bot.replyAlt('/uptime', { de: OTHERAlt.jid }))[0], /Conectado:/);
@@ -324,7 +324,7 @@ describe('permissões', () => {
         assert.deepEqual(await bot.replyAlt('/show -h', { de: OTHERAlt.jid }), []);
 
         await bot.setSetting('bot.users.cmds', [`${OTHERAlt.user}=/ping,/show`]);
-        assert.ok((await bot.replyAlt('/show -h', { de: OTHERAlt.jid }))[0].includes('Usage: /show'));
+        assert.ok((await bot.replyAlt('/show -h', { de: OTHERAlt.jid }))[0].includes('*Uso*\n`/show'));
         assert.deepEqual(await bot.replyAlt('/debug', { de: OTHERAlt.jid }), []);
 
         await bot.setSetting('bot.users.cmds', []);
@@ -400,7 +400,7 @@ describe('permissões', () => {
         assert.deepEqual(bot.getSetting('bot.users'), [OTHERAlt.user]);
         assert.match((await bot.replyAlt('/bot -lu', { chat: OWNER.jid }))[0], /Usuários/);
         assert.match((await bot.replyAlt('/bot -lu all', { chat: OWNER.jid }))[0], /Usuários/);
-        assert.match((await bot.replyAlt('/bot -lu xyz', { chat: OWNER.jid }))[0], /Usage: \/bot -lu \[all\]/);
+        assert.match((await bot.replyAlt('/bot -lu xyz', { chat: OWNER.jid }))[0], /`\/bot -lu \[all\]/);
         await bot.replyAlt('/bot -u /Fulano/', { chat: OWNER.jid });
         assert.deepEqual(bot.getSetting('bot.users'), []);
 

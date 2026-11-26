@@ -498,7 +498,7 @@ client.on('message_create', (msg) => (msg.fromMe && logIsCopy(msg.body)) ? undef
 
         // foo -help
         if (opts.opt.help) {
-            await msg.reply('```' + getCommandSyntax(command.cmd, helpProtocol(command, opts.argv)) + '```');
+            await msg.reply(getCommandSyntax(command.cmd, helpProtocol(command, opts.argv)));
             return;
         }
 

@@ -3,12 +3,12 @@
  */
 module.exports = {
     // -h|-help (src/commands/base.js)
-    'help.usage': 'Usage: ',
-    'help.options': 'Options:',
-    'help.arguments': 'Arguments:',
-    'help.more': 'Details: {url}',
+    'help.usage': 'Usage',
+    'help.options': 'Options',
+    'help.arguments': 'Arguments',
+    'help.more': '🔗 {url}',
     'help.hint': '💡 _{cmd} -h for help_',
-    'help.aliases': 'Aliases: {list}',
+    'help.aliases': '*Aliases:* {list}',
     'help.groupAll': 'All',
     'help.and': ' and ',
 

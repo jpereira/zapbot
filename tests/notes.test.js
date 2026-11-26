@@ -51,7 +51,7 @@ test('-add, -list e -rm (vários IDs, all e ID inexistente sem remover nada)', a
 });
 
 test('-add sem texto, com -to sem -alert e com quando inválido ou no passado', async () => {
-    assert.match((await bot.replyAlt('/notes -a'))[0], /Usage: \/notes #tag <texto>/);
+    assert.match((await bot.replyAlt('/notes -a'))[0], /`\/notes #tag <texto>/);
     assert.match((await bot.replyAlt('/notes -a #t'))[0], /Falta o texto/);
     assert.match((await bot.replyAlt('/notes -a #t texto -to /Grupo sobre L200/'))[0], /só vale com o -alert/);
     assert.match((await bot.replyAlt('/notes -a #t texto -alert banana'))[0], /Quando inválido/);
@@ -109,7 +109,7 @@ test('a sintaxe é /notes #tag <texto>: sem tag ou sem texto dá erro; opção d
     assert.match((await bot.replyAlt('/notes -l'))[0], /1\. não esquecer/);
 
     // Without a tag
-    assert.match((await bot.replyAlt('/notes meu texto'))[0], /Usage: \/notes #tag <texto>[\s\S]*Falta a #tag/);
+    assert.match((await bot.replyAlt('/notes meu texto'))[0], /`\/notes #tag <texto>[\s\S]*Falta a #tag/);
     assert.match((await bot.replyAlt('/notes -a meu texto'))[0], /Falta a #tag/);
     // Only the tag lists; no text on -add is an error
     assert.match((await bot.replyAlt('/notes #tagg'))[0], /Nenhuma anotação em #tagg/);
@@ -214,7 +214,7 @@ test('-export gera o PDF (tudo ou só da #tag) com o nome por data/hora', async 
     assert.doesNotMatch(Buffer.from(soHome.content.data, 'base64').toString('latin1'), /ETFs/);
 
     assert.match((await bot.replyAlt('/notes -e #nada'))[0], /Nenhuma anotação em #nada/);
-    assert.match((await bot.replyAlt('/notes -e abc'))[0], /Usage: \/notes -e/);
+    assert.match((await bot.replyAlt('/notes -e abc'))[0], /`\/notes -e/);
 });
 
 test('respostas com link na anotação saem sem thumbnail (linkPreview: false)', async () => {
@@ -288,7 +288,7 @@ test('-to nas listas e no -export: manda nos destinos; no -rm é recusado', asyn
 
     assert.match((await bot.replyAlt('/notes -rm #casa -to /Grupo sobre L200/'))[0], /-to não vale ao remover/);
     assert.equal((await notes()).length, 2);
-    assert.match((await bot.replyAlt('/notes -l abc -to /Grupo sobre L200/'))[0], /Usage: \/notes -l/);
+    assert.match((await bot.replyAlt('/notes -l abc -to /Grupo sobre L200/'))[0], /`\/notes -l/);
 });
 
 test('-export -to e-mail: manda o PDF em anexo, sem mexer no chat', async () => {
@@ -461,7 +461,7 @@ test('-view: manda a imagem com o texto na legenda (e só o texto, sem imagem)',
     assert.match((await bot.replyAlt('/notes -v 2'))[0], /#2\* · #eleicao[\s\S]*sem imagem/);
     assert.match((await bot.replyAlt('/notes -v #eleic'))[0], /Narrativas|sem imagem/);
     assert.match((await bot.replyAlt('/notes -v 9'))[0], /9 não existe/);
-    assert.match((await bot.replyAlt('/notes -v'))[0], /Usage: \/notes -v/);
+    assert.match((await bot.replyAlt('/notes -v'))[0], /`\/notes -v/);
 
     const n = bot.client.sent.length;
     await bot.replyAlt('/notes -v 1 -to /Grupo sobre L200/');
@@ -481,7 +481,7 @@ test('-search: texto (sem acento/maiúscula), /regex/flags, #tag, -to e erros', 
     await bot.replyAlt('/notes #duvidas Olhar sobre ETFs');
     await withoutTag('Ligar pro João amanhã');
 
-    assert.equal((await bot.replyAlt('/notes -s'))[0], 'Usage: /notes -s [#tag...] <texto|/regex/flags> [-to <destino>]...\n💡 _/notes -h para ajuda_');
+    assert.equal((await bot.replyAlt('/notes -s'))[0], '*Uso*\n`/notes -s [#tag...] <texto|/regex/flags> [-to <destino>]...`\n💡 _/notes -h para ajuda_');
 
     const [textAlt] = await bot.replyAlt('/notes -s PAO');
     assert.match(textAlt, /🔎 PAO \(1\)/);
@@ -526,7 +526,7 @@ test('-move: renomeia a tag (juntando se a nova já existe)', async () => {
     await bot.replyAlt('/notes #lar três');
     assert.match((await bot.replyAlt('/notes -m #casa #CASA'))[0], /igual/);
     assert.match((await bot.replyAlt('/notes -m #nada #x'))[0], /#nada não existe/);
-    assert.match((await bot.replyAlt('/notes -m casa'))[0], /Usage: \/notes -m/);
+    assert.match((await bot.replyAlt('/notes -m casa'))[0], /`\/notes -m/);
     assert.match((await bot.replyAlt('/notes -m #casa #lar'))[0], /#casa → #lar · 2 anotações/);
     assert.match((await bot.replyAlt('/notes'))[0], /#lar: 3/);
     await bot.replyAlt('/notes -rm all -yes');
@@ -556,7 +556,7 @@ test('-desc: grava, mostra, aparece na lista e no /notes sozinho, vai no -move e
     assert.match((await bot.replyAlt('/notes -d #lar'))[0], /Coisas de casa/);
     assert.match((await bot.replyAlt('/notes -d #lar -rm'))[0], /apagada/);
     assert.match((await bot.replyAlt('/notes -d #lar -rm'))[0], /não tem descrição/);
-    assert.match((await bot.replyAlt('/notes -d'))[0], /Usage: \/notes -d/);
+    assert.match((await bot.replyAlt('/notes -d'))[0], /`\/notes -d/);
     await bot.replyAlt('/notes -rm all -yes');
 });
 
@@ -611,9 +611,9 @@ test('-update: troca o texto (e a tag, se vier) e mantém o alerta', async () =>
     ]);
 
     assert.match((await bot.replyAlt('/notes -u 9 x'))[0], /ID 9 não existe/);
-    assert.match((await bot.replyAlt('/notes -u 1'))[0], /Usage: \/notes -u/);
-    assert.match((await bot.replyAlt('/notes -u #novatag'))[0], /Usage: \/notes -u/);
-    assert.match((await bot.replyAlt('/notes -u 1 #so'))[0], /Usage: \/notes -u/);
+    assert.match((await bot.replyAlt('/notes -u 1'))[0], /`\/notes -u/);
+    assert.match((await bot.replyAlt('/notes -u #novatag'))[0], /`\/notes -u/);
+    assert.match((await bot.replyAlt('/notes -u 1 #so'))[0], /`\/notes -u/);
 
     // In reply to a message, without text: uses its own, with ↩️
     const quoted = bot.createMessage({ de: bot.OWNER.jid, text: 'texto citado' });

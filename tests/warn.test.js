@@ -54,7 +54,7 @@ test('admins do grupo e o bot não levam aviso; fora de grupo e sem ninguém', a
     assert.match((await bot.replyAlt(`/warn +${OTHERAlt.user}`))[0], /Fulano é admin do grupo: não leva aviso/);
     const my = bot.createMessage({ text: 'oi', fromMe: true });
     assert.deepEqual(await bot.replyAlt('/warn', { quoted: my }), ['❌ Eu não me aviso. 🙂']);
-    assert.match((await bot.replyAlt('/warn'))[0], /Usage: \/warn/);
+    assert.match((await bot.replyAlt('/warn'))[0], /`\/warn/);
     assert.match((await bot.replyAlt('/warn +5521999999999', { chat: OWNER.jid }))[0], /grupos/);
     assert.deepEqual(await notices(), []);
 });

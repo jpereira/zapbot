@@ -142,7 +142,7 @@ describe('/screenshot', () => {
 
         const plain = bot.createMessage({ text: 'no link here', de: OTHERAlt.jid });
         assert.match((await bot.replyAlt('/screenshot', { quoted: plain }))[0], /link/);
-        assert.match((await bot.replyAlt('/screenshot'))[0], /^```Usage: \/screenshot /);
+        assert.match((await bot.replyAlt('/screenshot'))[0], /^\*Uso\*\n`\/screenshot /);
     });
 
     test('without the browser, it says so; it is delegable but not for users by default', async () => {

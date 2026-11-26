@@ -321,7 +321,7 @@ describe('backup diário', () => {
     });
 
     test('o -to aparece na ajuda e backup.to, no status; anexo grande não é enviado por e-mail', async () => {
-        assert.match((await bot.replyAlt('/backup -h'))[0], /\n  -to <destino>/);
+        assert.match((await bot.replyAlt('/backup -h'))[0], /\n`-to <destino>` · /);
         await bot.setSetting('backup.to', 'Fulano');
         assert.match((await bot.replyAlt('/backup'))[0], /• 📤 \*Destino automático:\* Fulano/);
         const { MAX_ATTACHMENT_BYTES, sendBackupPerEmail } = bot.src('backup');

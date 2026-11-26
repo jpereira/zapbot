@@ -117,7 +117,7 @@ describe('/tts', () => {
         assert.match((await bot.replyAlt('/tts -gpt oi'))[0], /⚠️ API key da OpenAI não encontrada: o \/tts está desativado/);
 
         await bot.setSetting('gpt.api.key', 'sk-teste');
-        assert.deepEqual(await bot.replyAlt('/tts'), ['```Usage: /tts [-gpt|-g] [-local|-l] [-voice|-v <nome>] [-speed|-sp <%>] [-pitch|-pi <semitons>] [-volume|-vol <%>] [-pause|-pa <ms>] [-beat|-b <bpm>] [-beatvol|-bv <%>] [-quiet|-q] [-status|-s] [<texto>]```\n💡 _/tts -h para ajuda_']);
+        assert.deepEqual(await bot.replyAlt('/tts'), ['*Uso*\n`/tts [-gpt|-g] [-local|-l] [-voice|-v <nome>] [-speed|-sp <%>] [-pitch|-pi <semitons>] [-volume|-vol <%>] [-pause|-pa <ms>] [-beat|-b <bpm>] [-beatvol|-bv <%>] [-quiet|-q] [-status|-s] [<texto>]`\n💡 _/tts -h para ajuda_']);
 
         network.responder('post', 'api.openai.com/v1/audio/speech', Buffer.from('OGGDATA'));
         const r = (await bot.execute('/tts -gpt Bom dia!')).at(-1);
@@ -185,7 +185,7 @@ describe('/qr', () => {
     test('sem texto: o da mensagem respondida; sem nada, o uso; grande demais', async () => {
         const quoted = bot.createMessage({ text: 'meu texto', de: OTHERAlt.jid });
         assert.ok((await bot.execute('/qr', { quoted })).at(-1).content instanceof MessageMedia);
-        assert.match((await bot.replyAlt('/qr'))[0], /^```Usage: \/qr \[-decode\|-d\] \[<texto>\]```\n💡 _\/qr -h para ajuda_/);
+        assert.match((await bot.replyAlt('/qr'))[0], /^\*Uso\*\n`\/qr \[-decode\|-d\] \[<texto>\]`\n💡 _\/qr -h para ajuda_/);
         assert.match((await bot.replyAlt(`/qr ${'a'.repeat(1001)}`))[0], /❌ O texto tem 1001 caracteres: o QR Code aceita até 1000\./);
     });
 
@@ -254,7 +254,7 @@ describe('/carbon', () => {
         const quoted = bot.createMessage({ text: 'let a = 1;', de: OTHERAlt.jid });
         await bot.execute('/carbon', { quoted });
         assert.match(sharp.inputs.at(-1).toString(), /let<\/tspan> a = <tspan fill="#fab387">1/);
-        assert.match((await bot.replyAlt('/carbon'))[0], /^```Usage: \/carbon /);
+        assert.match((await bot.replyAlt('/carbon'))[0], /^\*Uso\*\n`\/carbon /);
     });
 
     test('a cerca do Markdown sai, o texto é escapado e os limites valem', () => {

@@ -26,9 +26,9 @@ test('/monitor sem cadastro e /help explicam uso e risco', async () => {
     assert.match(r, /a cada 5 min \(300 s\)/);
     assert.match(r, /bloqueio/);
     const [help] = await bot.replyAlt('/help monitor');
-    assert.match(help, /-add.*-a/);
-    assert.match(help, /-rm.*-r/);
-    assert.match(help, /-list.*-l/);
+    assert.match(help, /-add <contato>[\s\S]*\n`-a <contato>` · /);
+    assert.match(help, /-rm <id[\s\S]*\n`-r <[^`]+>` · /);
+    assert.match(help, /-list \[contato\][\s\S]*\n`-l \[contato\]` · /);
     assert.doesNotMatch((await bot.replyAlt('/help'))[0], /\n\*\/test\*\n/);
 });
 

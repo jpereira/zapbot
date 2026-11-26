@@ -4,7 +4,7 @@
 
 const { aliasesFor, listAliases } = require('../aliases');
 const { ROLES, answer } = require('../roles');
-const { activeCommands, activeGroupCommands, findCommand, formatCommandHelp, helpProtocol, resolveGroupInput } = require('./base');
+const { activeCommands, activeGroupCommands, findCommand, firstPhrase, formatCommandHelp, helpProtocol, resolveGroupInput } = require('./base');
 const { GROUP_TARGETS } = require('./groupNamespace');
 const { locate } = require('./localize');
 const { t } = require('../i18n');
@@ -31,7 +31,8 @@ const CATEGORY_ALIASES = { g: 'groups', group: 'groups', mod: 'moderation' };
 const oneLine = value => String(value).replace(/\s+/g, ' ').trim();
 const description = command => {
     const localized = locate(command);
-    return oneLine(String(localized.summary ?? localized.help ?? '').replace(/[*_~`]/g, ''));
+    // Only the 1st sentence, without the final period: the lists read the same in every category
+    return firstPhrase(oneLine(String(localized.summary ?? localized.help ?? '').replace(/[*_~`]/g, ''))).replace(/\.$/, '');
 };
 const listLine = command => `${command.cmd} · ${description(command)}`;
 const heading = key => `*${t(`help.category.${key}`)}*`;
@@ -124,7 +125,7 @@ async function cmdHelp({ msg, args: typed, opts, level, admin,
         }
 
         const protocol = helpProtocol(command, rest);
-        await msg.reply(`${t('help.title')}\n\n\`\`\`${formatCommandHelp(command, { protocol })}\n\`\`\``);
+        await msg.reply(formatCommandHelp(command, { protocol }));
         return;
     }
 

@@ -103,7 +103,7 @@ test('-list, -add (só ticker que o Yahoo conhece) e -del; só o dono ou um admi
 
     assert.match((await bot.replyAlt('/stocks -a xxxx'))[0], /Ticker não encontrado no Yahoo Finance: XXXX/);
     assert.match((await bot.replyAlt('/stocks -a "a b"'))[0], /não é um ticker válido/);
-    assert.match((await bot.replyAlt('/stocks -a'))[0], /Usage: \/stocks/);
+    assert.match((await bot.replyAlt('/stocks -a'))[0], /`\/stocks/);
 
     assert.deepEqual(await bot.replyAlt('/stocks -d mstr'), ['🗑️ MSTR desabilitado.']);
     assert.deepEqual(await bot.replyAlt('/stocks -d mstr'), ['ℹ️ MSTR não está habilitado.']);

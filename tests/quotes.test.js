@@ -129,7 +129,7 @@ describe('/stocks (moedas e ações)', () => {
     test('-a/-d: símbolo inválido, ticker desconhecido, sem símbolo e de outra pessoa', async () => {
         assert.match((await bot.replyAlt('/stocks -a "a b"'))[0], /não é um ticker válido/);
         assert.match((await bot.replyAlt('/stocks -a xyz'))[0], /Ticker não encontrado no Yahoo Finance: XYZ/);
-        assert.match((await bot.replyAlt('/stocks -a'))[0], /Usage: \/stocks/);
+        assert.match((await bot.replyAlt('/stocks -a'))[0], /`\/stocks/);
         assert.deepEqual(await bot.replyAlt('/stocks -a gbp', { de: OTHERAlt.jid }), ['⛔ Apenas o dono do bot (ou um admin) pode usar o -add do /stocks.']);
     });
 
@@ -213,7 +213,7 @@ describe('/crypto', () => {
         assert.deepEqual(await bot.replyAlt('/crypto -d hype'), ['🗑️ HYPE removida.']);
         assert.deepEqual(await bot.replyAlt('/crypto -d hype'), ['ℹ️ HYPE não está ativada.']);
         assert.match((await bot.replyAlt('/crypto -a xyz'))[0], /❌ Moeda não suportada: XYZ/);
-        assert.match((await bot.replyAlt('/crypto -a'))[0], /Usage: \/crypto/);
+        assert.match((await bot.replyAlt('/crypto -a'))[0], /`\/crypto/);
         assert.deepEqual(await bot.replyAlt('/crypto -a sol', { de: OTHERAlt.jid }), ['⛔ Apenas o dono do bot (ou um admin) pode usar o -add do /crypto.']);
     });
 
