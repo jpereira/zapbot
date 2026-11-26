@@ -54,9 +54,19 @@ const MAX_PHRASE = 70;      // the 1st sentence of an option goes over that: cut
 const MAX_EXAMPLES = 2;
 const SITE = 'https://jpereira.github.io/zapbot';
 
+// "With -txt: the background color", "No modo lembrete: lembra no seu privado": the part before the ":" is only when it
+// applies. Cut there, the help said "-cl · com -lock #tag"; the meaning comes first and the context goes in parentheses
+const CONTEXT = /^((?:with|com|in|no|na|only with|s[óo] junto d[oa]|sem|without)\b[^:]{0,32}):\s+(\S.*)$/iu;
+
 // The 1st sentence, only up to the first ":", ";" or " (" (what comes after stays on the site) and not exceeding MAX_PHRASE
 function firstPhrase(textAlt) {
-    let phrase = String(textAlt ?? '').split(PHRASE_END).filter(Boolean)[0]?.trim() ?? '';
+    const sentence = String(textAlt ?? '').split(PHRASE_END).filter(Boolean)[0]?.trim() ?? '';
+    const context = sentence.match(CONTEXT);
+    if (context) {
+        const meaning = firstPhrase(context[2]);
+        return meaning ? `${meaning} (${lowerFirst(context[1])})` : lowerFirst(context[1]);
+    }
+    let phrase = sentence;
     const cut = [...phrase.matchAll(/:\s|;\s|\s\(|\s[—–]\s/g)].find(m => m.index >= 12)?.index;
     if (cut != null) phrase = phrase.slice(0, cut);
     if (phrase.length > MAX_PHRASE) {
