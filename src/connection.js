@@ -6,7 +6,7 @@ const qrcode = require('qrcode');
 const qrcodeTerminal = require('qrcode-terminal');
 
 const { state: stateAlt } = require('./state');
-const { client, messageToSelf } = require('./client');
+const { client, messageToSelf, sendWaitingToSelf } = require('./client');
 const { dbReady } = require('./db');
 const { fillMentionsOld } = require('./mentions');
 const { t } = require('./i18n');
@@ -363,7 +363,9 @@ client.on('ready', () => withContextDebug({ noFilter: true }, async () => {
     printSuccess(`🤖 ZapBot ${versionWithCommit()} ready! Reporting to ${process.env.PHONE_NUMBER}`);
     const { isWebRunning, webUrl } = require('./web/server'); // here: it loads the client and the database, like this file
     const web = isWebRunning() ? `\n${t('conexao.web', { url: webUrl() })}` : '';
-    messageToSelf(`${t('conexao.inicializado', { version: versionWithCommit(), notices })}${web}`);
+    messageToSelf(`${t('conexao.inicializado', { version: versionWithCommit(), notices })}${web}`)
+        // then the notices that came while it was not ready (an access to the web page during the boot)
+        .then(() => sendWaitingToSelf());
 
     alertPerEmail(t(jaStayedReady ? 'conexao.reconectadoTitulo' : 'conexao.iniciadoTitulo'),
         [jaStayedReady ? (dropReason ? t('conexao.conectadoDeNovoQueda', { reason: dropReason }) : t('conexao.conectadoDeNovo')) : t('conexao.conectado'),

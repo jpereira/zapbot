@@ -5,7 +5,7 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 
 const { BIN_CHROMIUM } = require('./constants');
-const { printError, printSuccess } = require('./log');
+const { printError, printInfo, printSuccess } = require('./log');
 const { logIsCopy } = require('./debugCopy');
 const { contextDebug } = require('./debugContext');
 const { maskPhones } = require('./util/phone');
@@ -39,10 +39,40 @@ const client = new Client({
 
 printSuccess('Client created');
 
-// Message to your own number (PHONE_NUMBER): bot notices
+/*
+ * Message to your own number (PHONE_NUMBER): bot notices. Before WhatsApp is ready (the bot starting, the session
+ * being restored, a QR waiting) there is nobody to send it through: it waits and goes when it connects (the 'ready'
+ * of connection.js), the oldest first; one waiting for more than 30 min is dropped (it would come late and stale).
+ */
+const SELF_WAIT_MS = 30 * 60 * 1000;
+const SELF_MAX = 20;
+const waitingToSelf = [];
 function messageToSelf(message) {
-    return client.sendMessage(phoneBotJid(), message)
-        .catch(err => printError('messageToSelf failed:', err.message));
+    if (!require('./state').state.ready) {
+        if (waitingToSelf.length < SELF_MAX) waitingToSelf.push({ message, at: Date.now() });
+        printInfo('messageToSelf: WhatsApp is not ready yet, the notice goes when it connects');
+        return Promise.resolve(null);
+    }
+    return sendToSelf(message, 0);
+}
+
+// Right after 'ready' the WhatsApp page may not send yet (the error comes as a minified "t"): two more tries
+const SELF_RETRIES_MS = [3000, 10000];
+function sendToSelf(message, attempt) {
+    return client.sendMessage(phoneBotJid(), message).catch(async (err) => {
+        if (attempt >= SELF_RETRIES_MS.length || !require('./state').state.ready) {
+            printError(`messageToSelf failed (${attempt + 1} attempts):`, err.message);
+            return null;
+        }
+        await new Promise(resolve => setTimeout(resolve, SELF_RETRIES_MS[attempt]));
+        return sendToSelf(message, attempt + 1);
+    });
+}
+
+async function sendWaitingToSelf() {
+    for (const { message, at } of waitingToSelf.splice(0)) {
+        if (Date.now() - at <= SELF_WAIT_MS) await messageToSelf(message);
+    }
 }
 
 /*
@@ -274,6 +304,7 @@ function marksStartCleanup() {
 
 module.exports = {
     client,
+    sendWaitingToSelf,
     completeNotice,
     botConsumeSending,
     botRegisterSending,

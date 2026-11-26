@@ -90,6 +90,19 @@ describe('eventos de conexão', () => {
         assert.equal(bot.state.lastOutage, null);
     });
 
+    test('um aviso para o seu privado antes do WhatsApp ficar pronto espera e sai depois da mensagem de início', async () => {
+        const { messageToSelf } = bot.src('client');
+        bot.state.ready = false;
+        await messageToSelf('⚠️ alguém abriu a página de login');
+        assert.deepEqual(bot.client.sent, [], 'nothing to send it through yet');
+        assert.ok(!bot.logs.some(l => /messageToSelf failed/.test(l)));
+        await emit('ready');
+        await new Promise(r => setTimeout(r, 20));
+        assert.equal(bot.client.sent.length, 2);
+        assert.match(bot.client.sent[0].content, /inicializado/);
+        assert.equal(bot.client.sent[1].content, '⚠️ alguém abriu a página de login');
+    });
+
     test('authenticated marca o horário (usado pelo /uptime)', async () => {
         bot.state.authenticatedAt = 0;
         await emit('authenticated');
