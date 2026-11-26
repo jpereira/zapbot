@@ -214,6 +214,10 @@ class DbFake {
         }
     }
 
+    exec(sql, cb) {
+        try { this.db.exec(sql); cb(null); } catch (e) { cb(e); }
+    }
+
     get(sql, params, cb) {
         try { cb(null, this.normalize(this.db.prepare(sql).get(...params))); } catch (e) { cb(e); }
     }

@@ -26,6 +26,10 @@ const dbAll = (sql, params = []) => new Promise((resolve, reject) =>
 const dbRun = (sql, params = []) => new Promise((resolve, reject) =>
     db.run(sql, params, function (err) { return err ? reject(err) : resolve(this); }));
 
+// Several statements as ONE call on the connection: nothing else (a message arriving, a check) runs in
+// between. A BEGIN made with dbRun would take in, and roll back, whatever other code wrote across its awaits
+const dbExec = (sql) => new Promise((resolve, reject) => db.exec(sql, err => (err ? reject(err) : resolve())));
+
 /*
  * dbReady: resolved when the tables were created and the settings loaded
  * (see initializeDb, called in app.js). Handlers that use the database do
@@ -40,6 +44,7 @@ function markDbReady() {
 
 module.exports = {
     dbAll,
+    dbExec,
     dbGet,
     dbReady,
     dbRun,

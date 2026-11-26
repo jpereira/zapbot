@@ -12,7 +12,7 @@ const { MessageMedia } = require('whatsapp-web.js');
 
 const { client } = require('./client');
 const { BACKUP_DIR, CONTACTS_DIR, NOTES_DIR, TMP_DIR } = require('./constants');
-const { dbAll, dbGet, dbReady, dbRun } = require('./db');
+const { dbAll, dbExec, dbGet, dbReady, dbRun } = require('./db');
 const { describeDestination, extractDestinations, resolveDestination } = require('./destinations');
 const { alertPerEmail, sendFilePerEmail } = require('./email');
 const { printError, printInfo } = require('./log');
@@ -272,20 +272,20 @@ async function restoreBackup(b) {
 
     try {
         const doBackup = new Set(await tables('bk'));
-        await dbRun('BEGIN');
+        // The statements first, then all of them in one dbExec: the copy is atomic for the rest of the bot too
+        const statements = [];
+        for (const t of await tables('main')) {
+            statements.push(`DELETE FROM main."${t}";`);
+            if (!doBackup.has(t)) continue;
 
+            const columns = (c) => dbAll(`PRAGMA ${c}.table_info("${t}")`).then(r => r.map(x => x.name));
+            const inBackup = new Set(await columns('bk'));
+            const common = (await columns('main')).filter(c => inBackup.has(c)).map(c => `"${c}"`).join(', ');
+
+            statements.push(`INSERT INTO main."${t}" (${common}) SELECT ${common} FROM bk."${t}";`);
+        }
         try {
-            for (const t of await tables('main')) {
-                await dbRun(`DELETE FROM main."${t}"`);
-                if (!doBackup.has(t)) continue;
-
-                const columns = (c) => dbAll(`PRAGMA ${c}.table_info("${t}")`).then(r => r.map(x => x.name));
-                const inBackup = new Set(await columns('bk'));
-                const common = (await columns('main')).filter(c => inBackup.has(c)).map(c => `"${c}"`).join(', ');
-
-                await dbRun(`INSERT INTO main."${t}" (${common}) SELECT ${common} FROM bk."${t}"`);
-            }
-            await dbRun('COMMIT');
+            await dbExec(`BEGIN;\n${statements.join('\n')}\nCOMMIT;`);
         } catch (err) {
             await dbRun('ROLLBACK').catch(() => {});
             throw err;
