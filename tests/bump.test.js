@@ -12,8 +12,11 @@ for (const tagExisting of [false, true]) {
     test(`bump publica os exemplos corretos; tag atual existente: ${tagExisting}`, t => {
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'zapbot-bump-'));
         t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+        // Without the GIT_* of the caller: run from the pre-commit hook, git exports GIT_INDEX_FILE
+        // (and GIT_DIR), and the temporary repository would write into the project's own index
+        const inherited = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
         const env = {
-            ...process.env, GIT_AUTHOR_NAME: 'Teste', GIT_AUTHOR_EMAIL: 'teste@example.com',
+            ...inherited, GIT_AUTHOR_NAME: 'Teste', GIT_AUTHOR_EMAIL: 'teste@example.com',
             GIT_COMMITTER_NAME: 'Teste', GIT_COMMITTER_EMAIL: 'teste@example.com'
         };
         const run = (cmd, args) => execFileSync(cmd, args, {
