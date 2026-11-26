@@ -214,6 +214,8 @@ function progressBar(label) {
             clearInterval(timer);
             if (activeBar === bar) activeBar = null;
             bar.set(100);
+            // it fades for a moment at 100%, but no longer takes the clicks
+            overlay.style.pointerEvents = 'none';
             setTimeout(() => overlay.remove(), 180);
         }
     };
@@ -766,8 +768,10 @@ async function start() {
 async function show(view) {
     state.view = view;
     document.querySelectorAll('.rail-btn[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
-    const content = document.getElementById('content');
-    content.replaceChildren();
+    // Each visit draws in a pane of its own: a screen still loading when you go to another one ends in a pane that
+    // is no longer on the page, instead of drawing over the new one
+    const content = el('div', { class: 'pane' });
+    document.getElementById('content').replaceChildren(content);
     // A screen is never "Loading...": the bar in the middle goes from 0 to 100% while it loads
     const bar = progressBar(T.loading);
     bar.creep();
