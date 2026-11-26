@@ -25,7 +25,7 @@ const rulesCompiled = new Map();
  * test function. It is also the -q of /show and /watch.
  * @throws {Error} invalid regex
  */
-function compileSearch(search) {
+function compileSearch(search, options) {
     const m = search.match(RULE_REGEX);
 
     if (m) {
@@ -39,7 +39,7 @@ function compileSearch(search) {
         } catch (e) {
             throw new Error(t('watch.err.invalidRegex', { error: e.message }), { cause: e });
         }
-        return regexTest(re);
+        return regexTest(re, options);
     }
 
     const target = withoutAccents(search);
@@ -82,7 +82,8 @@ function compileRuleWatch(rule) {
         throw new Error(t('watch.err.ruleLength', { max: RULE_MAX_LEN }));
     }
 
-    const test = compileSearch(rule);
+    // The rule checks every arriving message: its regex goes ahead of the searches (src/util/regexRunner.js)
+    const test = compileSearch(rule, { urgent: true });
     if (rulesCompiled.size >= 256) rulesCompiled.delete(rulesCompiled.keys().next().value);
     rulesCompiled.set(rule, test);
     return test;

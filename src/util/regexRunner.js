@@ -2,9 +2,27 @@ const path = require('path');
 const { Worker } = require('worker_threads');
 const { MAX_TEXT_TESTED } = require('./safeRegex');
 
+const { printError } = require('../log');
+
 const queue = [];
 let worker;
 let current;
+
+/*
+ * A full queue or a batch past the deadline answers "no match": the bot never hangs on a regex. That used to be silent:
+ * a burst of messages (the backlog after a reconnection) or a page of /show -q could fill the queue and the /watch
+ * missed its notices without a trace. Now the /watch of an arriving message goes first (urgent, with a larger room)
+ * and every miss is counted in the log (once a minute at most).
+ */
+const MAX_QUEUE = 64;
+const MAX_QUEUE_URGENT = 1024;
+const missed = { full: 0, slow: 0, since: 0 };
+function noteMiss(kind) {
+    missed[kind]++;
+    if (Date.now() - missed.since < 60_000) return;
+    printError(`Regex: ${missed.full} batch(es) refused (queue full) and ${missed.slow} past the deadline answered "no match"`);
+    Object.assign(missed, { full: 0, slow: 0, since: Date.now() });
+}
 
 function next() {
     if (current || !queue.length) return;
@@ -19,7 +37,7 @@ function next() {
         instance.on('exit', () => stop(instance));
     }
     worker.ref();
-    current.timer = setTimeout(stop, 500, worker);
+    current.timer = setTimeout((instance) => { noteMiss('slow'); stop(instance); }, 500, worker);
     worker.postMessage(current.data);
 }
 
@@ -42,15 +60,24 @@ function stop(instance) {
     });
 }
 
-function matchBatch(regex, texts) {
-    if (queue.length >= 64) return Promise.resolve([]);
+function matchBatch(regex, texts, { urgent = false } = {}) {
+    if (queue.length >= (urgent ? MAX_QUEUE_URGENT : MAX_QUEUE)) {
+        noteMiss('full');
+        return Promise.resolve([]);
+    }
     const data = {
         source: regex.source,
         flags: regex.flags.replace(/[gy]/g, ''),
         texts: texts.map(text => String(text ?? '').slice(0, MAX_TEXT_TESTED))
     };
     return new Promise(resolve => {
-        queue.push({ data, resolve });
+        // urgent: ahead of the searches already waiting, after the other urgent ones (in arrival order)
+        if (urgent) {
+            const firstSearch = queue.findIndex(task => !task.urgent);
+            queue.splice(firstSearch < 0 ? queue.length : firstSearch, 0, { data, resolve, urgent });
+        } else {
+            queue.push({ data, resolve });
+        }
         next();
     });
 }
@@ -74,6 +101,6 @@ async function matchingRows(test, rows, texts) {
     return rows.filter((_, index) => matched.has(index));
 }
 
-const regexTest = regex => Object.assign(async text => Boolean((await matchBatch(regex, [text]))[0]), { regex });
+const regexTest = (regex, options) => Object.assign(async text => Boolean((await matchBatch(regex, [text], options))[0]), { regex });
 
 module.exports = { matchBatch, matchingRows, regexTest };
