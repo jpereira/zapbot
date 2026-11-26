@@ -153,10 +153,15 @@ function initials(name) {
     return ((words[0]?.[0] ?? '#') + (words[1]?.[0] ?? '')).toUpperCase();
 }
 
+// The chats with no photo: the list is drawn again on every click, and a 404 is not cached by the browser
+const noPhoto = new Set();
 function avatar(chat, onClick = () => showContact(chat)) {
     const box = el('div', { class: 'avatar' }, initials(chat.name));
-    const img = el('img', { src: `/api/photo?chat=${encodeURIComponent(chat.id)}`, alt: chat.name, loading: 'lazy' });
-    img.addEventListener('load', () => box.replaceChildren(img));
+    if (!noPhoto.has(chat.id)) {
+        const img = el('img', { src: `/api/photo?chat=${encodeURIComponent(chat.id)}`, alt: chat.name, loading: 'lazy' });
+        img.addEventListener('load', () => box.replaceChildren(img));
+        img.addEventListener('error', () => noPhoto.add(chat.id));
+    }
     if (onClick) {
         box.tabIndex = 0;
         box.setAttribute('role', 'button');
@@ -409,17 +414,24 @@ function messageNodeUnsafe(message) {
 }
 
 /* the list of chats */
+// The whole list once; the search box filters it here (it used to ask the server again on every key)
 async function loadChats() {
-    const q = document.getElementById('chat-search')?.value ?? '';
-    const response = await api(`/api/chats?q=${encodeURIComponent(q)}`);
+    const response = await api('/api/chats');
     state.chats = (await response.json()).chats;
     renderChats();
+}
+
+function chatMatches(chat, q) {
+    if (!q) return true;
+    const number = q.replace(/\D/g, '');
+    return chat.name.toLowerCase().includes(q) || (number !== '' && chat.id.split('@')[0].replace(/\D/g, '').includes(number));
 }
 
 function renderChats() {
     const list = document.getElementById('chats');
     if (!list) return;
-        list.replaceChildren(...state.chats.map(chat => el('button', { class: `chat${chat.id === 'status@broadcast' ? ' status-chat' : ''}${state.chat === chat.id ? ' active' : ''}`, onclick: () => openChat(chat.id) },
+    const q = (document.getElementById('chat-search')?.value ?? '').trim().toLowerCase();
+    list.replaceChildren(...state.chats.filter(chat => chatMatches(chat, q)).slice(0, 300).map(chat => el('button', { class: `chat${chat.id === 'status@broadcast' ? ' status-chat' : ''}${state.chat === chat.id ? ' active' : ''}`, onclick: () => openChat(chat.id) },
         avatar(chat),
         el('div', { class: 'info' },
             el('div', { class: 'row' }, el('span', { class: 'name' }, chat.name), el('span', { class: 'when' }, chat.lastAt ? fmtDate(chat.lastAt) : '')),
@@ -767,7 +779,7 @@ const emptyMain = () => [el('div', { class: 'main-head phone-only' }, el('button
     el('div', { class: 'empty-main' }, T.pick)];
 
 async function showHistory(content) {
-    const searchBox = el('input', { id: 'chat-search', type: 'search', placeholder: T.search, oninput: debounce(loadChats, 250) });
+    const searchBox = el('input', { id: 'chat-search', type: 'search', placeholder: T.search, oninput: renderChats });
     const globalBox = el('input', { id: 'global-search', type: 'search', placeholder: T.searchAll, onkeydown: (event) => { if (event.key === 'Enter') searchEverywhere(event.target.value.trim()); } });
     content.replaceChildren(el('div', { class: `app${state.chat && state.info ? ' chat-open' : ''}` },
         el('div', { class: 'side' },
@@ -1666,7 +1678,8 @@ function startRefresh() {
     if (!state.refreshSeconds) return;
     refreshTimer = setInterval(async () => {
         const box = document.getElementById('messages');
-        if (state.view !== 'history' || !state.chat || !box || state.loading || refreshingHistory) return;
+        // A tab in the background (the phone in the pocket) does not poll: on return the next tick catches up
+        if (document.hidden || state.view !== 'history' || !state.chat || !box || state.loading || refreshingHistory) return;
         refreshingHistory = true;
         try {
             await refreshReactions(box, state.chat);

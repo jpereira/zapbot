@@ -351,6 +351,29 @@ describe('chats and messages', () => {
         }
     });
 
+    test('the chat list does not wait for a slow WhatsApp: the stored name now, the live one on the next load', async () => {
+        const group = '120363000000000099@g.us';
+        await insert('S1', group, { chatName: 'Nome salvo', group: true, body: 'oi', at: 3000 });
+        const original = bot.client.getChatById;
+        const page = bot.client.pupPage;
+        let answer;
+        bot.client.pupPage = {};
+        bot.client.getChatById = id => (id === group ? new Promise(resolve => { answer = resolve; }) : original.call(bot.client, id));
+        try {
+            const started = Date.now();
+            const first = (await (await get('/api/chats', cookie)).json()).chats.find(c => c.id === group);
+            assert.ok(Date.now() - started < 2400, 'the list has a time budget for the names');
+            assert.equal(first.name, 'Nome salvo');
+            answer({ name: 'x', groupMetadata: { subject: 'Nome ao vivo' } });
+            await new Promise(resolve => setImmediate(resolve));
+            const next = (await (await get('/api/chats', cookie)).json()).chats.find(c => c.id === group);
+            assert.equal(next.name, 'Nome ao vivo');
+        } finally {
+            bot.client.pupPage = page;
+            bot.client.getChatById = original;
+        }
+    });
+
     test('contact details use the chat history and expose verification only when available', async () => {
         const profile = async () => (await get('/api/contact?chat=' + encodeURIComponent(CHAT), cookie)).json();
         assert.equal((await get('/api/contact?chat=' + encodeURIComponent(CHAT))).status, 401);

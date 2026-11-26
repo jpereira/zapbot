@@ -8,7 +8,8 @@
  *   HttpOnly + SameSite=Strict cookie, in memory (restarting the bot logs everybody out), for zapbot.web.sessionHours;
  * - 5 wrong passwords block the address for 15 minutes; every access and every failure is logged;
  * - the default listens only on 127.0.0.1: outside it, put an HTTPS proxy in front (and set zapbot.web.trustProxy);
- * - everything is read-only; the only POSTs are the login and the logout, and they take only JSON;
+ * - every POST takes only JSON (with the SameSite=Strict cookie, that is what stops CSRF); what changes data goes
+ *   through /api/manage (src/web/manage.js), with the same checks as the commands;
  * - the page has no inline script and the media is served with a sandbox CSP and nosniff.
  */
 
@@ -564,7 +565,7 @@ async function startWeb() {
 }
 
 // Forgets the sessions and the blocks (the tests)
-const resetWeb = () => { destroySessions(); attempts.clear(); webNotes.reset(); require('./alert').reset(); };
+const resetWeb = () => { destroySessions(); attempts.clear(); webNotes.reset(); require('./alert').reset(); require('./data').resetNames(); };
 
 async function stopWeb() {
     destroySessions();

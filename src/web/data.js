@@ -17,8 +17,11 @@ const { findMatch } = require('../watch/rules');
 
 const STATUS = 'status@broadcast';
 const MAX_PAGE = 500;
+// The page filters the list itself (the search box), so it gets every chat, not only the first ones
+const MAX_CHATS = 3000;
 const NAME_TIMEOUT_MS = 2500;
-const GROUP_NAME_TTL_MS = 30_000;
+// The whole list waits at most this for the names it has never seen; the rest come in the background (next load)
+const LIST_NAMES_BUDGET_MS = 1500;
 
 // The media the browser may show on the page itself; the rest is always a download
 const INLINE_TYPES = {
@@ -30,9 +33,37 @@ const INLINE_TYPES = {
 
 const digits = (id) => String(id ?? '').split('@')[0].replace(/\D/g, '');
 
-// Name cache of the private chats (the address book name), so as not to ask WhatsApp on every page
-const names = new Map();
+// The live names (address book, group subject): an old one is still shown at once and asked again in the
+// background (getChatById builds the whole group: asking for every chat on every page made the list take seconds)
+const names = new Map();       // id → { name, at }
+const asking = new Map();      // id → the lookup in progress
 const NAME_TTL_MS = 30 * 60 * 1000;
+const NAME_LOOKUPS = 4;        // at most these at the same time in the WhatsApp page
+let lookups = 0;
+const waiting = [];
+
+async function lookupName(id) {
+    if (lookups >= NAME_LOOKUPS) await new Promise(resolve => waiting.push(resolve));
+    lookups++;
+    try {
+        const isGroup = id.endsWith('@g.us');
+        const name = await withTimeout((isGroup ? resolveGroupName(id, { maxAge: 0 }) : resolvePrivateName(id)).catch(() => null), NAME_TIMEOUT_MS);
+        names.set(id, { name: name || names.get(id)?.name || null, at: Date.now() });
+    } finally {
+        lookups--;
+        waiting.shift()?.();
+        asking.delete(id);
+    }
+}
+
+// The live name of a chat (null: unknown); `wait` is how long to wait for one never seen (0: only the cache)
+async function liveName(id, wait = NAME_TIMEOUT_MS) {
+    const cached = names.get(id);
+    if (client.pupPage && (!cached || Date.now() - cached.at >= NAME_TTL_MS) && !asking.has(id)) asking.set(id, lookupName(id));
+    if (cached || !asking.has(id) || wait <= 0) return cached?.name ?? null;
+    await withTimeout(asking.get(id), wait);
+    return names.get(id)?.name ?? null;
+}
 
 // "X's security code changed": the WhatsApp notice (type e2e_notification) that the bot saves with the jid of X as the body.
 // zapbot.web.warnChangedPhone off: these notices do not appear in the history, nor in the counts
@@ -74,13 +105,12 @@ const withTimeout = (promise, ms) => Promise.race([promise, new Promise(resolve 
  * stored; without it, the number.
  * @param {{ chat_id: string, chat_name?: string|null, is_group?: number }} chat
  */
-async function chatName(chat) {
+async function chatName(chat, { wait = NAME_TIMEOUT_MS } = {}) {
     const id = chat.chat_id;
     if (id === STATUS) return 'Status';
     const stored = String(chat.chat_name ?? '').trim();
     if (chat.is_group || id.endsWith('@g.us')) {
-        const live = client.pupPage && await withTimeout(
-            resolveGroupName(id, { maxAge: GROUP_NAME_TTL_MS }).catch(() => null), NAME_TIMEOUT_MS);
+        const live = await liveName(id, wait);
         if (live) return live;
         const last = await dbGet(`SELECT chat_name FROM messages
             WHERE chat_id = ? AND TRIM(chat_name) <> ''
@@ -88,12 +118,7 @@ async function chatName(chat) {
         return last?.chat_name.trim() || stored || id.split('@')[0];
     }
 
-    const cached = names.get(id);
-    let live = cached && Date.now() - cached.at < NAME_TTL_MS ? cached.name : null;
-    if (!live && !cached && client.pupPage) {
-        live = await withTimeout(resolvePrivateName(id).catch(() => null), NAME_TIMEOUT_MS);
-        names.set(id, { name: live, at: Date.now() });
-    }
+    const live = await liveName(id, wait);
     const number = digits(id);
     // A stored name that is only the number is not a name
     const storedName = stored && !(number && stored.replace(/\D/g, '') === number) ? stored : null;
@@ -111,18 +136,16 @@ async function listChats(search = '') {
           FROM messages WHERE ${REAL}
          GROUP BY chat_id
          ORDER BY (chat_id = ?) DESC, last_ts DESC`, [STATUS]);
-    const chats = [];
-    for (let i = 0; i < rows.length; i += 8) {
-        chats.push(...await Promise.all(rows.slice(i, i + 8).map(async (row) => ({ ...row, name: await chatName(row) }))));
-    }
+    const until = Date.now() + LIST_NAMES_BUDGET_MS;
+    const chats = await Promise.all(rows.map(async row => ({ ...row, name: await chatName(row, { wait: until - Date.now() }) })));
     const q = String(search ?? '').trim().toLowerCase();
     const found = q ? chats.filter(c => c.name.toLowerCase().includes(q) || digits(c.chat_id).includes(q.replace(/\D/g, '') || '\0')) : chats;
 
-    for (const chat of found.slice(0, 300)) {
+    for (const chat of found.slice(0, MAX_CHATS)) {
         const last = await dbGet('SELECT body, type, has_media, revoked, from_me FROM messages WHERE chat_id = ? AND ' + REAL + ' ORDER BY timestamp DESC LIMIT 1', [chat.chat_id]);
         chat.last = last ? { body: last.type === E2E ? '🔒' : SYSTEM_NOTICES.has(last.type) ? 'ℹ️' : visibleBody(last.body).slice(0, 120), type: last.type, media: Boolean(last.has_media), deleted: Boolean(last.revoked), fromMe: Boolean(last.from_me) } : null;
     }
-    return found.slice(0, 300).map(c => ({
+    return found.slice(0, MAX_CHATS).map(c => ({
         id: c.chat_id, name: c.name, isGroup: Boolean(c.is_group), total: c.total, deleted: c.deleted ?? 0,
         firstAt: c.first_ts, lastAt: c.last_ts, last: c.last
     }));
@@ -383,6 +406,9 @@ async function contactProfile(id) {
 }
 
 /** The profile photo of a chat (a JPEG), from the contacts cache or from WhatsApp; null without one */
+const noPhotos = new Map();     // key → when it had no photo
+const NO_PHOTO_TTL_MS = 30 * 60 * 1000;
+
 async function chatPhoto(chatId) {
     const id = String(chatId ?? '');
     if (!/^[\w.+-]+@(?:c\.us|lid|g\.us)$/.test(id)) return null;
@@ -391,10 +417,16 @@ async function chatPhoto(chatId) {
     const cached = path.join(CONTACTS_DIR, `${key}.jpg`);
     if (await fs.pathExists(cached)) return fs.readFile(cached);
     if (!client.pupPage) return null;
+    // Without a photo (or private): not asked again for a while, each ask is a round trip to WhatsApp of up to 15 s
+    if (Date.now() - (noPhotos.get(key) ?? 0) < NO_PHOTO_TTL_MS) return null;
 
     const source = { getProfilePicUrl: () => client.getProfilePicUrl(id) };
     const { photo } = await withTimeout(contactPhoto(source, key), 15000) ?? {};
+    if (!photo) noPhotos.set(key, Date.now());
     return photo ?? null;
 }
 
-module.exports = { chatInfo, chatName, chatPhoto, chatReactions, contactProfile, listChats, listMessages, messageMedia, REAL, searchMessages, STATUS };
+// Forgets the live names (the tests)
+const resetNames = () => { names.clear(); asking.clear(); noPhotos.clear(); };
+
+module.exports = { resetNames, chatInfo, chatName, chatPhoto, chatReactions, contactProfile, listChats, listMessages, messageMedia, REAL, searchMessages, STATUS };
