@@ -6,6 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/alias',
+    pipeOut: false,     // its text is a command or a rule: a " | /x" in it is not a pipe
     usage: '/alias <name> [-q] [-p] [-d "Description"] <command or text with {/command}>  or  /alias [<name>|-l]  or  /alias -m <name> <new name>  or  /alias -rm <name...|all>  or  /alias -ex [<file>]',
     aliases: [],
     summary: 'Saves shortcuts for commands with arguments',

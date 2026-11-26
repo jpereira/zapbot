@@ -6,6 +6,7 @@ const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/me',
+    pipeOut: false,     // its text is a command or a rule: a " | /x" in it is not a pipe
     usage: '/me [-repeat|-r <n>] <message>',
     aliases: [],
     summary: 'Sends the typed message',

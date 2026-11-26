@@ -7,6 +7,7 @@ const { OPTION_VERBOSE_FFMPEG } = require('./_options');
 
 module.exports = {
     cmd: '/sticker',
+    pipeIn: true, // reads the text or the media of a pipe (/a | /b) as its replied message
     usage: '/sticker [OPTION]... [url]  (or replying to an image, video or link)  or  /sticker -txt <text> [-bg <color>] [-fg <color>]',
     summary: 'Creates a sticker',
     help: 'Creates a sticker: same as /get -sticker. Downloads the video from the URL or from the replied link; with no video, uses the link preview. On a photo post (Instagram, X/Twitter) uses the photo; on a carousel, -photo picks which one. From a video, up to 6 s with a square crop from the middle, from the -ss to -es range. From an image, the square crop from the middle. -pos moves the crop to the top or the bottom. With -txt, an animated sticker with the text, blinking between the -fg and -bg colors.',

@@ -35,6 +35,38 @@ You can send them in **any chat** (private, group, or the chat with yourself).
   matches more than one (`/wa`), the bot replies with the possible commands (`/walissu, /warn, /watch`).
   The exact name and the `/alias` shortcuts take priority.
 
+## Pipes: `/a | /b`
+
+The output of a command can be the input of the next one: `/a | /b` is the same as replying to the reply
+of `/a` with `/b`, in a single line.
+
+```text
+/stocks -q USD | /tts -q -sp 50 -l -v tugão        → speaks the dollar quote
+/weather -q Lisbon | /translate -to en             → the forecast, in English
+/draw an astronaut cat | /sticker                  → the drawing, as a sticker
+/get -a <link> | /stt | /gpt -q summarize in 3 lines → transcribes the video and summarizes it
+/crypto -q BTC | /translate -to en | /tts -l       → three steps
+```
+
+- Only the last command answers in the chat; the ones before it work quietly (their "⏳" notices included).
+- What goes on is the text without the WhatsApp marks (`*`, `_`, `~`, `` ` ``) and without the
+  "💡 Tips" block, or the media (picture, audio, video, sticker) with its caption: the next command
+  reads it as the message you replied to.
+- The commands after a `|` are the ones that read a replied message. Text: `/tts`, `/translate`,
+  `/ascii`, `/calc`, `/carbon` and `/screenshot` (a link); media: `/ocr`; either: `/gpt`, `/draw`,
+  `/sticker`, `/stt`, `/get` and `/qr`. Any other answers with this list, and a picture given to one that
+  reads text (or the other way around) says so before running it.
+- A command that fails (❌, ⚠️) stops the pipe with its own message: the error is not translated nor
+  spoken. At most 4 commands, and 10 minutes for each one.
+- The permissions are the same as typing each command (and the usage limit counts each one); the
+  options of each command are checked as if typed (`-h`, an unknown option, options that do not combine).
+- Replying to a message with a pipe, that message is the input of the first command: reply to an audio
+  with `/stt | /translate -to en`.
+- Only `" | /command"` splits: the bar between spaces and followed by a command or a shortcut, outside a
+  `{/command}`. `\|` is the bar itself, and `/alias`, `/cron`, `/me`, `/batch` and `/watch` keep the bar
+  as their text, so a shortcut can save a pipe: `/alias /dollarvoice /stocks -q USD | /tts -l`
+  (see [`examples/pipes.zb`](https://github.com/jpereira/zapbot/blob/main/examples/pipes.zb)).
+
 ## Destinations: contact, group, number, or email
 
 Commands that send to destinations use **`-to`**: [`/cron`](cron.md), the alerts of

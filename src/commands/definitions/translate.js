@@ -6,6 +6,7 @@ const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/translate',
+    pipeIn: 'text', // reads the text of a pipe (/a | /b) as its replied message
     usage: '/translate [-to <language>] [text]',
     aliases: [],
     summary: 'Translates text with Google Translate',

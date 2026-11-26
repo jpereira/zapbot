@@ -9,6 +9,7 @@ module.exports = {
     'help.more': '🔗 {url}',
     'help.hint': '💡 _{cmd} -h for help_',
     'help.aliases': '*Aliases:* {list}',
+    'help.pipe': '*Pipe:* `/command | {cmd}` reads the output of the other command',
     'help.groupAll': 'All',
     'help.and': ' and ',
 

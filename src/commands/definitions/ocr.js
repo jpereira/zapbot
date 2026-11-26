@@ -8,6 +8,7 @@ const { OPTION_QUIET_TIP } = require('./_options');
 
 module.exports = {
     cmd: '/ocr',
+    pipeIn: 'media', // reads the media of a pipe (/a | /b) as its replied message
     usage: '/ocr [-gpt|-g] [-local|-l] [-status|-s]',
     aliases: [],
     summary: 'The text in an image (OCR), local or by ChatGPT (-gpt)',

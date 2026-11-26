@@ -6,6 +6,7 @@ const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/carbon',
+    pipeIn: 'text', // reads the text of a pipe (/a | /b) as its replied message
     usage: '/carbon [-theme|-t <dark|light>] <code>',
     aliases: [],
     summary: 'The code in an editor-window image',

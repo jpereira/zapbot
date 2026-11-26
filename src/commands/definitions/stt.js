@@ -8,6 +8,7 @@ const { OPTION_QUIET_TIP } = require('./_options');
 
 module.exports = {
     cmd: '/stt',
+    pipeIn: true, // reads the text or the media of a pipe (/a | /b) as its replied message
     usage: '/stt [OPTION]... <url>  or  /stt [OPTION]... (replying to a video, audio or link)',
     summary: 'Transcribes the speech of a video or audio',
     help: 'Transcribes the speech of a video or audio to text. /get -stt (-t) is a shortcut for it. From a URL (Instagram, YouTube, X, TikTok and other yt-dlp sites) or the replied link, downloads only the lowest-quality audio. Replying to any video or audio file (a voice note too), uses it. By default it runs on the server (faster-whisper, Portuguese, English and other languages detected by itself), with no cost per minute; with -gpt (-g), through ChatGPT, which needs the OpenAI key.',

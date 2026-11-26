@@ -7,6 +7,7 @@ const { optionStatus, OPTION_QUIET_TIP } = require('./_options');
 
 module.exports = {
     cmd: '/draw',
+    pipeIn: true, // reads the text or the media of a pipe (/a | /b) as its replied message
     usage: '/draw [-quality|-ql <q>] [-size|-sz <size>] [request]  or  /draw -gif [-frames N] [-ms N] [request]  or  /draw [-gif] -model [model]',
     aliases: [],
     summary: 'Draws an image with ChatGPT (GPT Image)',

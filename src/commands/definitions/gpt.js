@@ -7,6 +7,7 @@ const { optionStatus, OPTION_QUIET_TIP } = require('./_options');
 
 module.exports = {
     cmd: '/gpt',
+    pipeIn: true, // reads the text or the media of a pipe (/a | /b) as its replied message
     usage: '/gpt [-s] [question]  or  /gpt -voice|-img|-gif <text>  or  /gpt -model [model]  or  /gpt -prices|-usage [days]',
     aliases: [],
     summary: 'Asks ChatGPT',

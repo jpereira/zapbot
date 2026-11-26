@@ -6,6 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/cron',
+    pipeOut: false,     // its text is a command or a rule: a " | /x" in it is not a pipe
     usage: '/cron <when> [OPTION] <text>  or  /cron -edit <n> [when] [text]',
     aliases: [],
     summary: 'Schedules a text or command for a set time',

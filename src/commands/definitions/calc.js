@@ -6,6 +6,7 @@ const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/calc',
+    pipeIn: 'text', // reads the text of a pipe (/a | /b) as its replied message
     usage: '/calc [OPTION]... <calculation>  or  /calc [OPTION]... (replying to a list of numbers)',
     aliases: ['/math', '/sum'],
     summary: 'Calculates and sums the numbers of a list',

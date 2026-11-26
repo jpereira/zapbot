@@ -7,6 +7,7 @@ const { OPTION_VERBOSE_FFMPEG, OPTION_QUIET_TIP } = require('./_options');
 
 module.exports = {
     cmd: '/get',
+    pipeIn: true, // reads the text or the media of a pipe (/a | /b) as its replied message
     usage: '/get [OPTION]... <url>...  or  /get [OPTION]... (replying to a link or media)',
     aliases: [],
     summary: 'Downloads video or audio from social networks',

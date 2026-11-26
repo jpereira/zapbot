@@ -6,6 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/watch',
+    pipeOut: false,     // its text is a command or a rule: a " | /x" in it is not a pipe
     usage: '/watch [text|/regex/flags] [-in <source>] [-to <destination>]...  or  /watch [-N] [-q <text>]  or  /watch -s|-rm|-flush|-mask|-umask [N|rule]',
     summary: 'Watches incoming messages with text or regex rules',
     help: 'Watches incoming messages with text or regex rules. Location thumbnails are not text and are left out of the rules. A rule without -in applies everywhere; -in restricts it to a contact (sender), group or channel. With no parameters, lists rules and latest matches; -N sets the amount. @newsletter posts are identified with 📰 and the channel name. Anyone muted in /mute does not trigger an alert in your private chat (the -to destinations still receive it). The numbers after -s, -rm and -flush identify rules; in their place, the rule itself works, whole or a fragment. The number of matches comes from -N. With -mask N (🔒), the alerts and occurrences of rule N come out with obfuscated phone numbers; -umask N turns it off.',

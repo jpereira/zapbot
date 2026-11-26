@@ -1,0 +1,20 @@
+# ZapBot example: pipes (/a | /b), the output of a command as the input of the next one.
+#
+#   /dollarvoice       speaks the dollar quote as a voice note (/stocks | /tts)
+#   /forecasten City   the weather forecast, in English (/weather | /translate)
+#   /vidsum <link>     transcribes a video and summarizes it in 3 lines (/get -a | /stt | /gpt)
+#   /drawsticker text  draws and sends it as a sticker (/draw | /sticker)
+#
+# A \ at the end of a line joins it with the next one; a line that starts with # is a comment.
+
+/alias -q /dollarvoice -desc "Speaks the dollar quote" \
+    /stocks -q USD | /tts -q -l
+
+/alias -q /forecasten -desc "The weather forecast, in English" \
+    /weather -q ${1:-Rio de Janeiro} | /translate -to en
+
+/alias -q /vidsum -desc "Transcribes a video and summarizes it" \
+    /get -a $1 | /stt | /gpt -q summarize in 3 lines
+
+/alias -q /drawsticker -desc "Draws and sends it as a sticker" \
+    /draw $@ | /sticker

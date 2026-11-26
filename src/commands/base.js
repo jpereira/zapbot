@@ -202,6 +202,8 @@ function formatCommandHelp(command, { protocol } = {}) {
     if (command.aliases?.length) {
         lines.push('', t('help.aliases', { list: command.aliases.join(', ') }));
     }
+    // It reads the output of another command: the pipe goes in the help, where it is found
+    if (command.pipeIn) lines.push('', t('help.pipe', { cmd: command.cmd }));
 
     lines.push('', t('help.more', { url: commandPage(original.groupAction?.source.cmd ?? original.cmd) }));
 

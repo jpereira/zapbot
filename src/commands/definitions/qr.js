@@ -6,6 +6,7 @@ const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/qr',
+    pipeIn: true, // reads the text or the media of a pipe (/a | /b) as its replied message
     usage: '/qr [-decode|-d] [<text>]',
     aliases: [],
     summary: 'Makes the QR Code of a text',

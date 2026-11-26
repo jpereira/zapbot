@@ -13,6 +13,7 @@ const { OPTION_QUIET_TIP } = require('./_options');
 
 module.exports = {
     cmd: '/tts',
+    pipeIn: 'text', // reads the text of a pipe (/a | /b) as its replied message
     usage: '/tts [-gpt|-g] [-local|-l] [-voice|-v <name>] [-speed|-sp <%>] [-pitch|-pi <semitones>] [-volume|-vol <%>] [-pause|-pa <ms>] [-beat|-b <bpm>] [-beatvol|-bv <%>] [-quiet|-q] [-status|-s] [<text>]',
     aliases: [],
     summary: 'The text as a voice note, with a local voice (Piper) or ChatGPT (-gpt)',

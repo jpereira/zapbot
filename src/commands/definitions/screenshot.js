@@ -6,6 +6,7 @@ const { ADMIN } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/screenshot',
+    pipeIn: 'text', // reads the text of a pipe (/a | /b) as its replied message
     usage: '/screenshot [-full] [-mobile] [-wait <seconds>] [-pdf] <url>',
     aliases: ['/ss'],
     summary: 'A picture of a web page',

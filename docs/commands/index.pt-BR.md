@@ -34,6 +34,38 @@ Podem ser enviados em **qualquer chat** (privado, grupo ou no chat consigo mesmo
   de um (`/wa`), o bot responde com os possíveis comandos (`/walissu, /warn, /watch`). O nome exato e os
   atalhos do `/alias` têm prioridade.
 
+## Pipes: `/a | /b`
+
+A saída de um comando pode ser a entrada do próximo: `/a | /b` é o mesmo que responder a resposta do
+`/a` com o `/b`, numa linha só.
+
+```text
+/stocks -q USD | /tts -q -sp 50 -l -v tugão        → fala a cotação do dólar
+/weather -q Lisboa | /translate -to en             → a previsão, em inglês
+/draw um gato astronauta | /sticker                → o desenho, como figurinha
+/get -a <link> | /stt | /gpt -q resuma em 3 linhas → transcreve o vídeo e resume
+/crypto -q BTC | /translate -to en | /tts -l       → três etapas
+```
+
+- Só o último comando responde no chat; os anteriores trabalham calados (inclusive os avisos "⏳").
+- O que passa adiante é o texto sem as marcas do WhatsApp (`*`, `_`, `~`, `` ` ``) e sem o bloco
+  "💡 Dicas", ou a mídia (foto, áudio, vídeo, figurinha) com a legenda: o próximo comando lê isso como a
+  mensagem que você respondeu.
+- Depois de um `|` vêm os comandos que leem uma mensagem respondida. Texto: `/tts`, `/translate`,
+  `/ascii`, `/calc`, `/carbon` e `/screenshot` (um link); mídia: `/ocr`; os dois: `/gpt`, `/draw`,
+  `/sticker`, `/stt`, `/get` e `/qr`. Qualquer outro responde com essa lista, e uma foto entregue a quem
+  lê texto (ou o contrário) é avisada antes de rodar.
+- Um comando que falha (❌, ⚠️) para o pipe com a mensagem dele: o erro não é traduzido nem falado. No
+  máximo 4 comandos, e 10 minutos para cada um.
+- As permissões são as mesmas de digitar cada comando (e o limite de uso conta cada um); as opções de
+  cada comando são conferidas como digitadas (`-h`, opção desconhecida, opções que não combinam).
+- Respondendo a uma mensagem com um pipe, ela é a entrada do primeiro comando: responda um áudio com
+  `/stt | /translate -to en`.
+- Só `" | /comando"` separa: a barra entre espaços e seguida de um comando ou atalho, fora de um
+  `{/comando}`. `\|` é a própria barra, e `/alias`, `/cron`, `/me`, `/batch` e `/watch` guardam a barra
+  como texto, então um atalho pode salvar um pipe: `/alias /dolarvoz /stocks -q USD | /tts -l`
+  (veja [`examples/pipes.zb`](https://github.com/jpereira/zapbot/blob/main/examples/pipes.zb)).
+
 ## Destinos: contato, grupo, número ou e-mail
 
 Os comandos com envio a destinos usam **`-to`**: o [`/cron`](cron.md), os alertas do

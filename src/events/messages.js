@@ -8,6 +8,7 @@ const fs = require('fs-extra');
 const { client, botConsumeSending, isNoStore, wasSentByBot, messageToSelf } = require('../client');
 const { getCommandSyntax, helpProtocol } = require('../commands/base');
 const { textRunAlias, resolveAlias } = require('../aliases');
+const { readPipeline, runSources } = require('../pipeline');
 const { ttsRewrite } = require('../ttsOption');
 const { handlePassword: handlePasswordNotes } = require('../notesLock');
 const { extractPassword, maskSecret } = require('../util/lockPassword');
@@ -325,6 +326,10 @@ client.on('message_create', (msg) => (msg.fromMe && logIsCopy(msg.body)) ? undef
         if (resolved?.ownerOnly && !msg.fromMe) resolved = null;
         if (resolved?.candidates && !msg.fromMe) resolved = { ...resolved, candidates: resolved.candidates.filter(c => !c.ownerOnly) };
         // -tts (/crypto -tts BTC): it is /tts {/crypto -q BTC}; the log of the call keeps what was typed
+        // /a | /b: the last command answers here, the ones before it feed it (src/pipeline.js). A wrong pipe is only
+        // answered after the permission checks, like any command
+        const pipe = resolved ? await readPipeline(resolved, body, { resolve: resolveAlias, owner: Boolean(msg.fromMe) }) : null;
+        if (pipe?.resolved) resolved = pipe.resolved;
         const spoken = ttsRewrite(resolved?.command, resolved?.args ?? '');
         if (spoken) resolved = await resolveAlias(spoken);
         const command = resolved?.command ?? null;
@@ -440,6 +445,11 @@ client.on('message_create', (msg) => (msg.fromMe && logIsCopy(msg.body)) ? undef
             return;
         }
 
+        if (pipe?.error) {
+            await msg.reply(pipe.error);
+            return;
+        }
+
         // Flood protection (only for non-admins): over the limit, one warning and then silence
         if (!admin) {
             const flood = checkFlood(senderNumber || senderJid, command.cmd);
@@ -519,13 +529,33 @@ client.on('message_create', (msg) => (msg.fromMe && logIsCopy(msg.body)) ? undef
             return;
         }
 
-        const quotedMsg = msg.hasQuotedMsg ? await msg.getQuotedMessage().catch(() => null) : null;
+        let quotedMsg = msg.hasQuotedMsg ? await msg.getQuotedMessage().catch(() => null) : null;
+        const who = { level, admin, canUse: admin ? () => true : permission.can, senderContact, senderName, senderNumber };
+        const chat = { chatId, chatName, isGroup };
 
-        const run = () => withTyping(msg, command, () => handler(assembleContext({
-            msg, args, opts, quotedMsg,
-            chat: { chatId, chatName, isGroup },
-            who: { level, admin, canUse: admin ? () => true : permission.can, senderContact, senderName, senderNumber }
-        })));
+        // Each command before the last one of a pipe: the same checks as typed (help, options, role), its replies kept
+        const runStage = async (stage, capture, quoted) => {
+            const stageOpts = readOptions(stage.command, stage.args);
+            if (stageOpts.opt.help) return { error: getCommandSyntax(stage.command.cmd) };
+            const refused = optionsError(stage.command, stageOpts) ?? denial(stage.command, stageOpts, level);
+            if (refused) return { error: refused };
+            const stageHandler = handlerFor(stage.command);
+            if (!stageHandler) return { error: t('mensagens.naoImplementado', { cmd: stage.command.cmd }) };
+            await stageHandler(assembleContext({ msg: capture, args: stage.args, opts: stageOpts, quotedMsg: quoted, chat, who }));
+            return null;
+        };
+
+        const run = () => withTyping(msg, command, async () => {
+            if (pipe?.sources) {
+                const fed = await runSources(pipe.sources, { msg, quotedMsg, run: runStage, last: command });
+                if (fed.error) {
+                    await msg.reply(fed.error);
+                    return;
+                }
+                quotedMsg = fed.quoted;
+            }
+            return handler(assembleContext({ msg, args, opts, quotedMsg, chat, who }));
+        });
 
         /*
          * The usage limit (/bot +limit): only counts what succeeded (src/usageLimit.js). The usageFree options of the
@@ -536,7 +566,7 @@ client.on('message_create', (msg) => (msg.fromMe && logIsCopy(msg.body)) ? undef
         } else {
             // The usageCounts of the definition tells whether this call spends (/tts: only the ChatGPT one)
             const free = (command.usageFree ?? []).some(o => opts.given.has(o)) || command.usageCounts?.(opts) === false;
-            await withLimit({ msg, who: { number: senderNumber, chatId, isGroup }, cmds: [command.cmd], free, params: args }, run);
+            await withLimit({ msg, who: { number: senderNumber, chatId, isGroup }, cmds: command.targets ?? [command.cmd], free, params: args }, run);
         }
     } catch (error) {
         printError('[message_create] Handled general error:', {

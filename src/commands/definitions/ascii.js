@@ -6,6 +6,7 @@ const { USER } = require('../../roles').ROLES;
 
 module.exports = {
     cmd: '/ascii',
+    pipeIn: 'text', // reads the text of a pipe (/a | /b) as its replied message
     usage: '/ascii [-width|-w <columns>] [-char|-c <character>] <text>',
     aliases: [],
     summary: 'The text in big ASCII letters',

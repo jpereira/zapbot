@@ -287,6 +287,7 @@ describe('documentação', () => {
     });
 
     test('exemplos dos blocos de código (docs e READMEs): os comandos usam só opções que existem', () => {
+        const { splitPipeline } = bot.src('pipeline');
         const byName = new Map();
         for (const c of CONFIG.commands) for (const n of [c.cmd, ...(c.aliases ?? [])]) byName.set(n, c);
         // What comes after these is another command (the shortcut, the message, the batch...): the options are its own
@@ -297,7 +298,16 @@ describe('documentação', () => {
         for (const fileAlt of files) {
             const md = fs.readFileSync(path.join(bot.ROOT, fileAlt), 'utf8');
             for (const [, block] of md.matchAll(/^```[^\n]*\n([\s\S]*?)^```/gm)) {
-                for (const line of block.split('\n')) {
+                // A pipe (/a | /b): each command is checked with its own options
+                const lines = block.split('\n').map(l => l.replace(/\s{2,}(→|\().*$/, ''))
+                    .flatMap(l => (splitPipeline(l).length ? splitPipeline(l) : [l]));
+                for (const l of block.split('\n')) {
+                    for (const stage of splitPipeline(l).slice(1)) {
+                        const target = byName.get(stage.split(/\s+/, 1)[0]);
+                        assert.ok(target?.pipeIn, `${fileAlt}: "${l.trim()}": ${stage.split(/\s+/, 1)[0]} não lê um pipe`);
+                    }
+                }
+                for (const line of lines) {
                     const m = line.match(/^\s*(\/[^\s]+)\s+(.*)$/);
                     const c = m && byName.get(m[1]);
                     if (!c || withTarget.has(c.cmd)) continue;
