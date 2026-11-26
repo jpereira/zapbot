@@ -315,6 +315,95 @@ async function deleteTag(token, { id, confirm } = {}) {
     return { ok: true, removed: rows.length };
 }
 
+/**
+ * Duplicates a tag (a /notes -cp #tag #newtag): every note goes as a copy to the new tag, with its file copied too
+ * and without the alert (the original already notifies), and the description goes along. The new name has to be
+ * free; a protected tag is not copied (its text and files are encrypted with its own password).
+ */
+async function copyTag(token, { id, tag }) {
+    const from = readTagName(id);
+    const to = readTagName(tag);
+    if (!TAG_NAME.test(to)) return { ok: false, error: 'tag: letters, digits, - and _ (up to 40)' };
+    const known = await dbGet('SELECT 1 AS ok FROM note_tags WHERE tag = ? UNION SELECT 1 FROM notes WHERE tag = ?', [from, from]);
+    if (!from || !known) return { ok: false, error: 'tag: not found' };
+    if ((await protectedTags()).has(from)) return { ok: false, error: 'protected tag: it cannot be copied' };
+    const taken = await dbGet('SELECT 1 AS ok FROM note_tags WHERE tag = ? UNION SELECT 1 FROM notes WHERE tag = ? UNION SELECT 1 FROM note_locks WHERE tag = ?', [to, to, to]);
+    if (taken) return { ok: false, error: 'tag: the new name already exists' };
+
+    const rows = await dbAll('SELECT text, created_at, media_path, media_mime FROM notes WHERE tag = ? ORDER BY id', [from]);
+    for (const row of rows) {
+        const media = await copyMedia(row.media_path);
+        await dbRun('INSERT INTO notes (text, created_at, tag, media_path, media_mime) VALUES (?, ?, ?, ?, ?)',
+            [row.text, row.created_at, to, media, media ? row.media_mime : null]);
+    }
+    const description = await dbGet('SELECT description FROM note_tags WHERE tag = ?', [from]);
+    if (description) await dbRun('INSERT INTO note_tags (tag, description) VALUES (?, ?)', [to, description.description]);
+    printInfo(`[web] notes: #${from} copied to #${to} (${rows.length} notes)`);
+    return { ok: true, tag: to, copied: rows.length };
+}
+
+// A copy of a note's file in NOTES_DIR (null if it is gone)
+async function copyMedia(file) {
+    if (!file) return null;
+    const source = path.resolve(NOTES_DIR, file);
+    const name = path.basename(source).replace(/^\d+_[a-z0-9]+_/, '');
+    const target = path.join(NOTES_DIR, `${Date.now()}_${crypto.randomBytes(3).toString('hex')}_${name}`);
+    return (await fs.copy(source, target).then(() => true, () => false)) ? target : null;
+}
+
+/**
+ * Copies one note to a tag (the same tag: a duplicate; empty: no tag), with its file and without the alert (the
+ * original already notifies). Not from or to a protected tag (its text and files are encrypted with its password).
+ */
+async function copyNote(token, { id, tag }) {
+    const row = await dbGet('SELECT id, text, tag, media_path, media_mime FROM notes WHERE id = ?', [Number(id)]);
+    if (!row) return { ok: false, error: 'note: not found' };
+    const to = tag === undefined ? (row.tag ?? '') : readTagName(tag);
+    if (to && !TAG_NAME.test(to)) return { ok: false, error: 'tag: letters, digits, - and _ (up to 40)' };
+    const locked = await protectedTags();
+    if (locked.has(row.tag) || locked.has(to)) return { ok: false, error: 'protected tag: a note is not copied to or from it here' };
+    const media = await copyMedia(row.media_path);
+    const r = await dbRun('INSERT INTO notes (text, created_at, tag, media_path, media_mime) VALUES (?, ?, ?, ?, ?)',
+        [row.text, Date.now(), to || null, media, media ? row.media_mime : null]);
+    return { ok: true, id: r.lastID, tag: to };
+}
+
+/**
+ * Moves every note of a tag into another one, picked from the list (/notes -m #tag #tag2: if it already exists, the
+ * two merge). The description goes along when the other has none. Not from or to a protected tag.
+ */
+async function moveTag(token, { id, tag }) {
+    const from = readTagName(id);
+    const to = readTagName(tag);
+    if (!TAG_NAME.test(to)) return { ok: false, error: 'tag: letters, digits, - and _ (up to 40)' };
+    if (from === to) return { ok: false, error: 'tag: pick another tag' };
+    const known = await dbGet('SELECT 1 AS ok FROM note_tags WHERE tag = ? UNION SELECT 1 FROM notes WHERE tag = ?', [from, from]);
+    if (!from || !known) return { ok: false, error: 'tag: not found' };
+    const locked = await protectedTags();
+    if (locked.has(from) || locked.has(to)) return { ok: false, error: 'protected tag: move it with /notes -move in WhatsApp' };
+    const moved = await dbRun('UPDATE notes SET tag = ? WHERE tag = ?', [to, from]);
+    await dbRun('INSERT OR IGNORE INTO note_tags (tag, description) SELECT ?, description FROM note_tags WHERE tag = ?', [to, from]);
+    await dbRun('DELETE FROM note_tags WHERE tag = ?', [from]);
+    printInfo(`[web] notes: #${from} moved into #${to} (${moved.changes} notes)`);
+    return { ok: true, tag: to, moved: moved.changes };
+}
+
+/**
+ * Moves one note to another tag (empty: no tag), keeping its text, file and alert. Not to or from a protected tag
+ * (the text and the file would have to be encrypted again, or decrypted).
+ */
+async function moveNote(token, { id, tag }) {
+    const row = await dbGet('SELECT id, tag FROM notes WHERE id = ?', [Number(id)]);
+    if (!row) return { ok: false, error: 'note: not found' };
+    const to = readTagName(tag);
+    if (to && !TAG_NAME.test(to)) return { ok: false, error: 'tag: letters, digits, - and _ (up to 40)' };
+    if ((to || null) === (row.tag || null)) return { ok: false, error: 'tag: the note is already there' };
+    const locked = await protectedTags();
+    if (locked.has(row.tag) || locked.has(to)) return { ok: false, error: 'protected tag: a note does not move to or from it here' };
+    await dbRun('UPDATE notes SET tag = ? WHERE id = ?', [to || null, row.id]);
+    return { ok: true, tag: to };
+}
+
 /** A new note, as /notes <text> #tag makes one (in a protected tag only with it unlocked: the text goes encrypted) */
 async function addNote(token, { text, tag, alertAt }) {
     const body = String(text ?? '').trim();
@@ -346,4 +435,4 @@ async function deleteNote(token, id) {
 
 const reset = () => { keys.clear(); attempts.clear(); };
 
-module.exports = { NONE, addNote, addTag, deleteNote, deleteTag, editTag, forget, listNotes, listTags, lockTag, noteMedia, notesPdf, reset, unlockTag, updateNote };
+module.exports = { NONE, addNote, addTag, copyNote, copyTag, deleteNote, deleteTag, editTag, moveNote, moveTag, forget, listNotes, listTags, lockTag, noteMedia, notesPdf, reset, unlockTag, updateNote };

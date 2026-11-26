@@ -308,6 +308,14 @@ async function main() {
     await page.type('.modal textarea', tr('Lisboa em maio: Alfama, Belém e um pastel de nata por dia'));
     await shot('notes-new-note', 860);
     await closeModal();
+    // ↪️ on a note: the tag comes from the list of tags (the current one and the protected stay out)
+    await page.evaluate(() => [...document.querySelectorAll('.note .icon-btn')].find(b => b.textContent === '↪️').click());
+    await page.waitForSelector('.modal select');
+    const tagOptions = await page.$$eval('.modal select option', (o) => o.map(x => x.textContent));
+    if (!tagOptions.includes(tr('#ideias')) || tagOptions.includes(tr('#receitas')) || tagOptions.includes(tr('#cofre'))) throw new Error(`move: the tag list is ${tagOptions}`);
+    await page.select('.modal select', tr('ideias'));
+    await shot('notes-move', 860);
+    await closeModal();
     await clickText('.chat', '#cofre');
     await page.waitForSelector('.lockpanel');
     await shot('notes-locked');

@@ -421,8 +421,8 @@ async function cleanCachePicked(body) {
 const HANDLERS = {
     alias: { add: saveAlias, edit: saveAlias, delete: deleteAlias },
     price: { add: addPrice, edit: editPrice, delete: deletePrice },
-    tag: { add: async (body, token) => noteResult(await webNotes.addTag(token, body)), edit: async (body, token) => noteResult(await webNotes.editTag(token, body)), delete: async (body, token) => noteResult(await webNotes.deleteTag(token, body)) },
-    note: { add: async (body, token) => noteResult(await webNotes.addNote(token, body)), edit: async (body, token) => noteResult(await webNotes.updateNote(token, body)), delete: async (body, token) => noteResult(await webNotes.deleteNote(token, body.id)) },
+    tag: { add: async (body, token) => noteResult(await webNotes.addTag(token, body)), edit: async (body, token) => noteResult(await webNotes.editTag(token, body)), copy: async (body, token) => noteResult(await webNotes.copyTag(token, body)), move: async (body, token) => noteResult(await webNotes.moveTag(token, body)), delete: async (body, token) => noteResult(await webNotes.deleteTag(token, body)) },
+    note: { add: async (body, token) => noteResult(await webNotes.addNote(token, body)), edit: async (body, token) => noteResult(await webNotes.updateNote(token, body)), move: async (body, token) => noteResult(await webNotes.moveNote(token, body)), copy: async (body, token) => noteResult(await webNotes.copyNote(token, body)), delete: async (body, token) => noteResult(await webNotes.deleteNote(token, body.id)) },
     watch: { add: saveWatch, edit: saveWatch, delete: deleteWatch, toggle: toggleWatch },
     chat: { preview: previewChat, clear: clearChat, previewAll, clearAll },
     cache: { clean: cleanCachePicked },

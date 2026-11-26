@@ -253,12 +253,21 @@ all of them) as the same PDF of `/notes -pdf`, with the images.
   how many notes go, the same way the 🧹 of the history does, and, once you confirm, deletes every note in it, their media, the tag's
   description and its lock, if it was protected — the same as `/notes -rm #tag -yes` in WhatsApp, and a bit more (that
   command leaves the description and the lock behind; this does not).
+- **📋** duplicates the tag: it asks for the new name (it has to be free) and copies every note to it, with its file and
+  the description, but without the alerts (the originals already notify). The original tag stays as it was. A
+  protected tag is not copied.
+- **↪️** moves every note of the tag to another one, picked from the list of tags (or a new name): if it already has
+  notes, the two merge, like `/notes -move #tag #tag2`. The description goes along when the other tag has none.
 - **＋ New note** adds a note to the tag, with an alert at a date and time if you want. On each card, ✏️ edits the text,
-  the tag and the alert, and 🗑️ deletes the note (and its file).
+  the tag and the alert, 📑 duplicates the note in the same tag, 📋 copies it to another tag and ↪️ moves it (both
+  pick the tag from the list, or take a new name). The copies keep the text and the file, without the alert; a move
+  takes everything. 🗑️ deletes the note (and its file). Copying or moving to or from a protected tag is not done here.
 
 ![The form of a new tag](assets/web/notes-new-tag.png)
 
 ![The form of a new note](assets/web/notes-new-note.png)
+
+![Moving a note: the tag comes from the list](assets/web/notes-move.png)
 
 ### Protected tags
 

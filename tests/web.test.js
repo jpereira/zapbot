@@ -1168,6 +1168,67 @@ describe('alerts and notes: editing, deleting and playing', () => {
         assert.equal((await manage({ section: 'note', op: 'delete', id: 3 })).status, 400);
     });
 
+    test('notes: duplicate a tag, move one into another, and copy, duplicate and move one note', async () => {
+        fs.mkdirSync(NOTES_DIR, { recursive: true });
+        const file = path.join(NOTES_DIR, '7_zz_foto.jpg');
+        fs.writeFileSync(file, 'JPEG');
+        await note(1, 'viagem', 'praia', file, 'image/jpeg');
+        await note(2, 'viagem', 'serra');
+        await note(3, 'casa', 'pintar');
+        await bot.dbRun('UPDATE notes SET alert_at = ? WHERE id = 2', [Date.now() + 86_400_000]);
+        await bot.dbRun("INSERT INTO note_tags (tag, description) VALUES ('viagem', 'lugares')");
+
+        const copied = await manage({ section: 'tag', op: 'copy', id: 'viagem', tag: '#Viagem-2027' });
+        assert.equal(copied.status, 200, JSON.stringify(copied.body));
+        const rows = await bot.dbAll("SELECT text, alert_at, media_path FROM notes WHERE tag = 'viagem-2027' ORDER BY id");
+        assert.deepEqual(rows.map(r => [r.text, r.alert_at]), [['praia', null], ['serra', null]]);
+        assert.notEqual(rows[0].media_path, file);
+        assert.equal(fs.readFileSync(rows[0].media_path, 'utf8'), 'JPEG');
+        assert.equal((await bot.dbGet("SELECT description FROM note_tags WHERE tag = 'viagem-2027'")).description, 'lugares');
+        assert.equal((await bot.dbGet("SELECT COUNT(*) AS n FROM notes WHERE tag = 'viagem'")).n, 2, 'the original stays');
+        assert.ok((await bot.dbGet('SELECT alert_at FROM notes WHERE id = 2')).alert_at, 'the original keeps its alert');
+
+        assert.equal((await manage({ section: 'tag', op: 'copy', id: 'viagem', tag: 'casa' })).status, 400, 'a name that exists');
+        assert.equal((await manage({ section: 'tag', op: 'copy', id: 'nada', tag: 'outra' })).status, 400, 'an unknown tag');
+
+        // one note goes to another tag, with its file and alert; empty: no tag
+        assert.equal((await manage({ section: 'note', op: 'move', id: 2, tag: '#casa' })).status, 200);
+        const moved = await bot.dbGet('SELECT tag, text, alert_at FROM notes WHERE id = 2');
+        assert.deepEqual([moved.tag, moved.text, Boolean(moved.alert_at)], ['casa', 'serra', true]);
+        assert.equal((await manage({ section: 'note', op: 'move', id: 2, tag: 'casa' })).status, 400, 'already there');
+        assert.equal((await manage({ section: 'note', op: 'move', id: 2, tag: '' })).status, 200);
+        assert.equal((await bot.dbGet('SELECT tag FROM notes WHERE id = 2')).tag, null);
+
+        // one note copied: to the same tag (a duplicate) or to another, with a copy of its file and no alert
+        await bot.dbRun('UPDATE notes SET alert_at = ? WHERE id = 1', [Date.now() + 86_400_000]);
+        const dup = await manage({ section: 'note', op: 'copy', id: 1 });
+        assert.equal(dup.status, 200, JSON.stringify(dup.body));
+        const copy1 = await bot.dbGet('SELECT tag, text, alert_at, media_path FROM notes WHERE id = ?', [dup.body.id]);
+        assert.deepEqual([copy1.tag, copy1.text, copy1.alert_at], ['viagem', 'praia', null]);
+        assert.notEqual(copy1.media_path, file);
+        assert.equal(fs.readFileSync(copy1.media_path, 'utf8'), 'JPEG');
+        const other = await manage({ section: 'note', op: 'copy', id: 3, tag: 'viagem' });
+        assert.equal((await bot.dbGet('SELECT tag, text FROM notes WHERE id = ?', [other.body.id])).text, 'pintar');
+        assert.equal((await bot.dbGet('SELECT tag FROM notes WHERE id = 3')).tag, 'casa', 'the original stays');
+
+        // a whole tag into another one from the list: they merge, and the description goes when the other has none
+        const merged = await manage({ section: 'tag', op: 'move', id: 'viagem-2027', tag: 'casa' });
+        assert.equal(merged.status, 200, JSON.stringify(merged.body));
+        assert.equal(merged.body.tag, 'casa');
+        assert.equal((await bot.dbGet("SELECT COUNT(*) AS n FROM notes WHERE tag = 'viagem-2027'")).n, 0);
+        assert.equal((await bot.dbGet("SELECT COUNT(*) AS n FROM notes WHERE tag = 'casa'")).n, 3);
+        assert.equal((await bot.dbGet("SELECT description FROM note_tags WHERE tag = 'casa'")).description, 'lugares');
+        assert.equal(await bot.dbGet("SELECT 1 FROM note_tags WHERE tag = 'viagem-2027'"), undefined);
+        assert.equal((await manage({ section: 'tag', op: 'move', id: 'casa', tag: 'casa' })).status, 400);
+
+        // a protected tag: neither copied nor a note moved in or out
+        await bot.dbRun("INSERT INTO note_locks (tag, salt, verifier, created_at) VALUES ('casa', 'x', 'y', 1)");
+        assert.equal((await manage({ section: 'tag', op: 'copy', id: 'casa', tag: 'casa-2' })).status, 400);
+        assert.equal((await manage({ section: 'note', op: 'move', id: 1, tag: 'casa' })).status, 400);
+        assert.equal((await manage({ section: 'note', op: 'copy', id: 1, tag: 'casa' })).status, 400);
+        assert.equal((await manage({ section: 'tag', op: 'move', id: 'viagem', tag: 'casa' })).status, 400);
+    });
+
     test('a video (and audio) of a note plays on the page, with Range; ?download still downloads; unknown types are a download', async () => {
         fs.mkdirSync(NOTES_DIR, { recursive: true });
         const video = path.join(NOTES_DIR, '8_aa_clip.mp4');

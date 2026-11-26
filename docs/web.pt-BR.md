@@ -255,12 +255,21 @@ a tag (ou todas) no mesmo PDF do `/notes -pdf`, com as imagens.
   notas saem, do mesmo jeito que o 🧹 do histórico, e, quando você confirma, apaga todas as notas, a mídia delas, a descrição da tag e o
   cadeado, se ela era protegida — o mesmo que o `/notes -rm #tag -yes` no WhatsApp, e um pouco mais (esse comando
   deixa a descrição e o cadeado para trás; aqui não).
+- **📋** duplica a tag: pede o nome novo (tem que estar livre) e copia todas as notas para ela, com o arquivo e a
+  descrição, mas sem os alertas (as originais já avisam). A tag original fica como estava. Tag protegida não é
+  copiada.
+- **↪️** move todas as notas da tag para outra, escolhida na lista de tags (ou um nome novo): se ela já tem notas, as
+  duas se juntam, como o `/notes -move #tag #tag2`. A descrição vai junto quando a outra tag não tem.
 - **＋ Nova nota** adiciona uma nota na tag, com um alerta numa data e hora se você quiser. Em cada cartão, ✏️ edita o
-  texto, a tag e o alerta, e 🗑️ apaga a nota (e o arquivo dela).
+  texto, a tag e o alerta, 📑 duplica a nota na mesma tag, 📋 copia para outra tag e ↪️ move (os dois escolhem a tag
+  na lista, ou aceitam um nome novo). As cópias levam o texto e o arquivo, sem o alerta; mover leva tudo. 🗑️ apaga a
+  nota (e o arquivo dela). Copiar ou mover para uma tag protegida, ou tirar de uma, não é feito aqui.
 
 ![O formulário de uma nova tag](assets/web/pt-BR/notes-new-tag.png)
 
 ![O formulário de uma nova nota](assets/web/pt-BR/notes-new-note.png)
+
+![Movendo uma nota: a tag vem da lista](assets/web/pt-BR/notes-move.png)
 
 ### Tags protegidas
 
