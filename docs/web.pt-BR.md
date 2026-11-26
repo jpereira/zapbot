@@ -83,7 +83,7 @@ Com a interface ligada, a mensagem que o bot manda para você ao iniciar (`🤖 
 do servidor.
 
 O título da aba do navegador e a tela de login mostram a versão que está rodando
-(`ZapBot 1.0.26 (devel) (git+abc1234/HEAD)`), o que ajuda a saber se um deploy chegou ao servidor.
+(`ZapBot 1.0.26 (git+abc1234/v1.0.26)`), o que ajuda a saber se um deploy chegou ao servidor.
 
 ## As seções de relance
 
