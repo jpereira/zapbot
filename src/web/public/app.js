@@ -446,7 +446,9 @@ async function openChat(id, q = '', focus = null) {
     state.atEnd = false;
     document.querySelector('.app')?.classList.add('chat-open');
     renderChats();
-    const info = await (await api(`/api/chat?chat=${encodeURIComponent(id)}`)).json();
+    // Without the chat (a network failure on the phone), back to the list instead of an empty panel
+    const info = await api(`/api/chat?chat=${encodeURIComponent(id)}`).then(r => r.json()).catch(() => null);
+    if (!info?.id) { state.chat = null; state.info = null; closeChat(); renderChats(); return; }
     state.info = info;
     renderMain();
     await loadMessages(true);
@@ -529,7 +531,7 @@ function renderMain() {
     const search = el('input', { type: 'search', placeholder: T.searchMsgs, value: state.q, onkeydown: (event) => { if (event.key === 'Enter') { state.q = event.target.value.trim(); loadMessages(true); } } });
     main.replaceChildren(
         el('div', { class: 'main-head' },
-            el('button', { class: 'btn back', onclick: () => { document.querySelector('.app').classList.remove('chat-open'); } }, `← ${T.back}`),
+            el('button', { class: 'btn back', onclick: closeChat }, `← ${T.back}`),
             el('div', { class: 'grow' },
                 el('button', { class: 'contact-trigger', title: T.contact.title, onclick: () => showContact(info) },
                     avatar(info), el('span', { class: 'name' }, info.name)),
@@ -759,17 +761,23 @@ async function searchEverywhere(q) {
             el('div', { class: 'last' }, `${r.fromMe ? `${T.you}: ` : (r.sender ? `${r.sender}: ` : '')}${r.deleted ? '🗑️ ' : ''}${r.body}`)))));
 }
 
+// The panel with no chat: on the phone it also has ← back, so it never hides the list without a way out
+const closeChat = () => document.querySelector('.app')?.classList.remove('chat-open');
+const emptyMain = () => [el('div', { class: 'main-head phone-only' }, el('button', { class: 'btn back', onclick: closeChat }, `← ${T.back}`)),
+    el('div', { class: 'empty-main' }, T.pick)];
+
 async function showHistory(content) {
     const searchBox = el('input', { id: 'chat-search', type: 'search', placeholder: T.search, oninput: debounce(loadChats, 250) });
     const globalBox = el('input', { id: 'global-search', type: 'search', placeholder: T.searchAll, onkeydown: (event) => { if (event.key === 'Enter') searchEverywhere(event.target.value.trim()); } });
-    content.replaceChildren(el('div', { class: `app${state.chat ? ' chat-open' : ''}` },
+    content.replaceChildren(el('div', { class: `app${state.chat && state.info ? ' chat-open' : ''}` },
         el('div', { class: 'side' },
             el('div', { class: 'side-head' }, el('span', { class: 'title' }, T.chats), el('button', { class: 'btn', title: T.flushAll, onclick: clearEverything }, '🧹')),
             el('div', { class: 'search' }, searchBox, globalBox),
             el('div', { class: 'chats', id: 'chats' })),
-        el('div', { class: 'main', id: 'main' }, el('div', { class: 'empty-main' }, T.pick))));
+        el('div', { class: 'main', id: 'main' }, ...emptyMain())));
     await loadChats();
-    if (state.chat) { renderMain(); await loadMessages(true); }
+    if (state.chat && state.info) { renderMain(); await loadMessages(true); }
+    else state.chat = null;
 }
 
 /* home: what the bot keeps */

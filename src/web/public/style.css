@@ -190,13 +190,14 @@ button.link:hover { text-decoration: underline; }
 .diff ins { background: rgba(0,168,132,.25); color: var(--text); text-decoration: none; }
 .diff .line { white-space: pre-wrap; word-break: break-word; }
 
-.back { display: none; }
+.back, .main-head.phone-only { display: none; }
 .empty-main { margin: auto; color: var(--muted); text-align: center; }
 
 @media (max-width: 760px) {
     .app { grid-template-columns: 1fr; }
     .app.chat-open .side { display: none; }
     .back { display: inline-block; }
+    .main-head.phone-only { display: flex; }
     .app:not(.chat-open) .main { display: none; }
     .messages { padding: 10px 8px; }
     .msg { max-width: 92%; }
