@@ -191,6 +191,8 @@ button.link:hover { text-decoration: underline; }
 .diff .line { white-space: pre-wrap; word-break: break-word; }
 
 .back, .main-head.phone-only { display: none; }
+.flagcell { display: inline-flex; gap: 2px; white-space: nowrap; }
+.bell.flag-off { opacity: .45; }
 .empty-main { margin: auto; color: var(--muted); text-align: center; }
 
 @media (max-width: 760px) {

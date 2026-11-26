@@ -344,7 +344,8 @@ contato do `/monitor`.
 
 ## Atalhos
 
-A lista do [`/alias`](commands/alias.md): o atalho, o comando, a descrição e as flags (🔇 silencioso e 🔒 só você).
+A lista do [`/alias`](commands/alias.md): o atalho, o comando, a descrição e as flags (🔇 silencioso e 🔒 só você),
+cada uma um botão que inverte na própria lista (🔊 responde normalmente, 🔓 todos podem usar).
 Adicionar e editar usam as mesmas checagens do `/alias`: um nome que é comando é recusado e, se uma edição for
 recusada, o atalho antigo fica.
 

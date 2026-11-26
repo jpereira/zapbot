@@ -344,7 +344,7 @@ contact of the `/monitor`.
 ## Shortcuts
 
 The [`/alias`](commands/alias.md) list: the shortcut, the command, the description and the flags (🔇 quiet and 🔒 only
-you). Adding and editing use the same checks as `/alias`: a name that is a command is refused and, if an edit is
+you), each a button that flips it right in the list (🔊 answers normally, 🔓 anyone can use it). Adding and editing use the same checks as `/alias`: a name that is a command is refused and, if an edit is
 refused, the old shortcut stays.
 
 ![The shortcuts](assets/web/aliases.png)

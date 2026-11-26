@@ -104,6 +104,17 @@ async function deleteAlias(body) {
     return { ok: true };
 }
 
+// 🔇/🔊 and 🔒/🔓 in the list: flips -q or -p of one shortcut
+const ALIAS_FLAGS = { quiet: 'quiet', ownerOnly: 'owner_only' };
+async function toggleAlias(body) {
+    const column = ALIAS_FLAGS[body.flag];
+    if (!column) throw new ManageError('flag: quiet or ownerOnly');
+    const name = str(body.id, 'shortcut', { max: 60 });
+    if (!await dbGet('SELECT 1 FROM command_aliases WHERE name = ?', [name])) throw new ManageError('shortcut: not found');
+    await dbRun(`UPDATE command_aliases SET ${column} = 1 - COALESCE(${column}, 0) WHERE name = ?`, [name]);
+    return { ok: true };
+}
+
 /* price alerts */
 async function addPrice(body) {
     const kind = PRICE_KINDS[body.kind];
@@ -428,7 +439,7 @@ async function cleanCachePicked(body) {
 }
 
 const HANDLERS = {
-    alias: { add: saveAlias, edit: saveAlias, delete: deleteAlias },
+    alias: { add: saveAlias, edit: saveAlias, delete: deleteAlias, toggle: toggleAlias },
     price: { add: addPrice, edit: editPrice, delete: deletePrice, toggle: pausePrice },
     tag: { add: async (body, token) => noteResult(await webNotes.addTag(token, body)), edit: async (body, token) => noteResult(await webNotes.editTag(token, body)), copy: async (body, token) => noteResult(await webNotes.copyTag(token, body)), move: async (body, token) => noteResult(await webNotes.moveTag(token, body)), delete: async (body, token) => noteResult(await webNotes.deleteTag(token, body)) },
     note: { add: async (body, token) => noteResult(await webNotes.addNote(token, body)), edit: async (body, token) => noteResult(await webNotes.updateNote(token, body)), move: async (body, token) => noteResult(await webNotes.moveNote(token, body)), copy: async (body, token) => noteResult(await webNotes.copyNote(token, body)), delete: async (body, token) => noteResult(await webNotes.deleteNote(token, body.id)) },

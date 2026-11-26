@@ -117,7 +117,11 @@ async function aliases() {
     return {
         sections: [{
             title: 'aliases', columns: ['shortcut', 'command', 'description', 'flags'],
-            rows: rows.map(a => [a.name, a.command, a.description, `${a.quiet ? '🔇' : ''}${a.owner_only ? '🔒' : ''}`]),
+            // Each flag is a button in the list (🔇/🔊 quiet, 🔒/🔓 only you), the same as -q and -p in the edit form
+            rows: rows.map(a => [a.name, a.command, a.description, {
+                text: `${a.quiet ? '🔇' : ''}${a.owner_only ? '🔒' : ''}`,
+                flags: [{ name: 'quiet', on: Boolean(a.quiet), icons: ['🔇', '🔊'] }, { name: 'ownerOnly', on: Boolean(a.owner_only), icons: ['🔒', '🔓'] }]
+            }]),
             ids: rows.map(a => a.name),
             values: rows.map(a => ({ name: a.name, command: a.command, description: a.description, quiet: Boolean(a.quiet), ownerOnly: Boolean(a.owner_only) })),
             manage: {

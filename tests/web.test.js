@@ -686,7 +686,8 @@ describe('alerts, shortcuts, schedule, stats and settings', () => {
     test('shortcuts and schedule', async () => {
         await bot.dbRun("INSERT INTO command_aliases (name, description, command, quiet, owner_only) VALUES ('/dolar', 'cotação', '/stocks USD', 1, 1)");
         const [aliases] = await list('aliases');
-        assert.deepEqual(aliases.rows[0], ['/dolar', '/stocks USD', 'cotação', '🔇🔒']);
+        assert.deepEqual(aliases.rows[0].slice(0, 3), ['/dolar', '/stocks USD', 'cotação']);
+        assert.equal(aliases.rows[0][3].text, '🔇🔒');
 
         await bot.dbRun("INSERT INTO schedules (kind, chat_id, chat_name, text, due_at, repeat, created_at, paused) VALUES ('agendar', 'x@c.us', 'Fulano', 'bom dia', 1900000000000, 'daily', 1, 1)");
         const [schedule] = await list('schedule');
@@ -883,6 +884,13 @@ describe('changing things from the page (shortcuts, alerts, /watch, monitor, sch
         assert.equal(edited.status, 200);
         assert.equal(await row('/dolar'), undefined);
         assert.deepEqual([(await row('/dolar2')).command, (await row('/dolar2')).owner_only], ['/stocks EUR', 1]);
+
+        // 🔇/🔊 and 🔒/🔓 in the list flip -q and -p of one shortcut
+        assert.equal((await manage({ section: 'alias', op: 'toggle', id: '/dolar2', flag: 'quiet' })).status, 200);
+        assert.equal((await manage({ section: 'alias', op: 'toggle', id: '/dolar2', flag: 'ownerOnly' })).status, 200);
+        assert.deepEqual([(await row('/dolar2')).quiet, (await row('/dolar2')).owner_only], [1, 0]);
+        assert.equal((await manage({ section: 'alias', op: 'toggle', id: '/dolar2', flag: 'command' })).status, 400);
+        assert.equal((await manage({ section: 'alias', op: 'toggle', id: '/nada', flag: 'quiet' })).status, 400);
 
         // a name that is a command: refused, and the shortcut that was there stays
         const refused = await manage({ section: 'alias', op: 'edit', oldName: '/dolar2', name: '/ping', command: '/stocks EUR' });
