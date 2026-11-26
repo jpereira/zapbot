@@ -106,7 +106,7 @@ function listExampleFiles() {
 
 /** A msg that only keeps what the command replies (the /alias handler replies to whoever typed). */
 function silentMsg(replies) {
-    return { fromMe: true, reply: async (content) => { replies.push(String(content)); return { body: String(content) }; } };
+    return { fromMe: true, reply: async (content) => { const at = replies.push(String(content)) - 1; return { body: String(content), edit: async (text) => { replies[at] = String(text); return true; }, delete: async () => {}, react: async () => {} }; } };
 }
 
 /**

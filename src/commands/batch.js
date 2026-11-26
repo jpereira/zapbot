@@ -48,14 +48,20 @@ function readOptions(args) {
     return { options: optionsAlt, text: rest };
 }
 
-// The block's msg: the same, but the texts the command replies are stored for the summary
+// The block's msg: the same, but the texts the command replies are stored for the summary. A text kept is a
+// notice the command may edit or delete afterwards (the "⏳" of /tts becomes its result), as a sent one would be
 function blockMsg(msg, line, replies) {
     const child = Object.create(msg);
     Object.assign(child, { body: line, hasMedia: false, hasQuotedMsg: false });
     child.reply = async (content, ...rest) => {
         if (typeof content !== 'string') return msg.reply(content, ...rest);
-        replies.push(content);
-        return { id: msg.id, body: content };
+        const at = replies.push(content) - 1;
+        return {
+            id: msg.id, body: content,
+            edit: async (text) => { replies[at] = text; return true; },
+            delete: async () => { replies[at] = null; },
+            react: async () => {}
+        };
     };
     return child;
 }
@@ -86,7 +92,8 @@ async function runBlock(line, context) {
         await handler({ ...context, msg, args, opts: commandReadOptions(command, args), quotedMsg: null });
     }
 
-    return { ok: !replies.some(r => r.startsWith('❌') || r.startsWith('⚠️')), answers: replies };
+    const answers = replies.filter(r => r !== null);
+    return { ok: !answers.some(r => r.startsWith('❌') || r.startsWith('⚠️')), answers };
 }
 
 const top = (line) => summarizeText(line.replace(/\s+/g, ' '), 50);

@@ -91,6 +91,9 @@ async function readCommand(line, whereAlt = '/cron', owner = false, privateOk = 
     const prohibited = (command.cmd_opts ?? []).find(o => (o.cron === false || (o.cron === 'dono' && !owner)) &&
         o.opts?.some(nameAlt => opts.given.has(nameAlt)));
     if (prohibited) return { error: t('cnt.opcaoNaoRoda', { line, opt: prohibited.opts[0], cmd: command.cmd, where: whereAlt }) };
+    // What the options alone do not say (the /tts with tts.engine gpt): the definition tells why it does not run
+    const refused = command.cronRefuses?.(opts);
+    if (refused) return { error: t(refused, { line, cmd: command.cmd, where: whereAlt }) };
 
     return { command, args, opts };
 }
@@ -125,8 +128,16 @@ function messageSynthetic(chatId, line, replies) {
         links: [],
         mentionedIds: [],
         _data: {},
+        // a notice kept can be edited or deleted afterwards (the "⏳" of /tts becomes its result, not a second reply)
         async reply(content, _chatId, options = {}) {
-            replies.push({ content, options });
+            const entry = { content, options };
+            replies.push(entry);
+            return {
+                id: { _serialized: `${id}_REPLY_${replies.length}` }, body: typeof content === 'string' ? content : '',
+                edit: async (text) => { entry.content = text; return true; },
+                delete: async () => { replies.splice(replies.indexOf(entry), 1); },
+                react: async () => {}
+            };
         },
         getChat: () => client.getChatById(chatId),
         getContact: () => client.getContactById(myId),

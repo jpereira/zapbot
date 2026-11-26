@@ -240,7 +240,7 @@ client.sendMessage = (chatId, content, options = {}) => {
 async function completeNotice(msg, notice, textAlt, options = {}) {
     registerReply(textAlt);
     if (contextDebug().maskPhones) textAlt = maskPhones(textAlt);
-    if (notice) {
+    if (typeof notice?.edit === 'function') {
         try {
             if (await notice.edit(textAlt, options)) return notice;
         } catch (e) {

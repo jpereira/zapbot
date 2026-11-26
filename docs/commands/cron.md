@@ -161,11 +161,15 @@ Dollar price!
   position) has its replies separated by a blank line. Media (`/meme`, `/giphy`, `/pixelart`) goes
   out right after the message.
 - Only lookup commands run there: `/ascii`, `/stocks`, `/crypto`, `/cve`, `/defi`, `/giphy`,
-  `/joke`, `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/weather`, `/uptime` and `/version`
+  `/joke`, `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/tts`, `/weather`, `/uptime` and `/version`
   (in the definitions, the ones with `cron: true`). Options that change something don't run
   either: `-width` and `-char` of `/ascii`; `-add`, `-del` and `-alert` of `/crypto` and `/stocks`;
   `-address`, `-wallet`, `-pool`, `-nft`, `-name`, `-rm`, `-alert`, `-fees` and `-to` of `/defi`
   (the protocols, `-l`, `-mask` and `aave -full` run); and `-flush` and `-flush-all` of `/stats`.
+- `/tts` runs too, with the **local voice** (free): `{/tts -l Good morning!}` or a shortcut of it
+  (`{/tuga ora pois}`) sends the voice note right after the message, and its own `{/command}`s run
+  (`{/tts -l The dollar is {/stocks -q USD}}`). The ChatGPT voice is refused, at creation and at each
+  send, since it would spend the key every time: `-gpt`, or the `tts.engine gpt` setting without `-l`.
 - `/bot` is the exception: only the owner creates an item with `{/bot -flush-email -yes}` (in it,
   only `-info` and `-flush-email` run; the other options are refused). An admin who isn't the owner
   gets an error on creation.

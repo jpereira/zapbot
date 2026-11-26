@@ -32,6 +32,13 @@ test('executa os blocos em sequência (linhas em branco e URLs ficam no bloco) e
     assert.equal(n[2].tag, 'casa');
 });
 
+test('um /tts no bloco: o aviso "⏳" vira o resultado (é editado), sem erro no log', async () => {
+    const r = await bot.replyAlt('/batch\n/tts -l -v amy oi\n/tts -l -v ryan olá');
+    assert.match(r.at(-1), /BATCH\* · 2\/2 ok/);
+    assert.ok(!bot.logs.some(l => /Could not edit the notice/.test(l)), 'the notice of each /tts is edited');
+    assert.doesNotMatch(r.at(-1), /⏳/, 'the summary has the results, not the notices');
+});
+
 test('linha com "/" que não é comando continua sendo texto do bloco', async () => {
     await bot.replyAlt('/batch\n/notes #t veja /etc/hosts\n/etc/passwd');
     assert.match((await notes())[0].text, /veja \/etc\/hosts\n\/etc\/passwd/);

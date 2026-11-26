@@ -160,12 +160,16 @@ Preço do Dólar!
   posição) tem as respostas separadas por uma linha em branco. Mídias (`/meme`, `/giphy`,
   `/pixelart`) saem logo depois da mensagem.
 - Só os comandos de consulta rodam aí: `/ascii`, `/stocks`, `/crypto`, `/cve`, `/defi`, `/giphy`,
-  `/joke`, `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/weather`, `/uptime` e `/version`
+  `/joke`, `/kernel`, `/meme`, `/news`, `/pixelart`, `/stats`, `/tts`, `/weather`, `/uptime` e `/version`
   (nas definições, os com `cron: true`). As opções que mudam algo também não: o `-width` e o `-char`
   do `/ascii`; o `-add`, o `-del` e o `-alert` do `/crypto` e do `/stocks`; o `-address`, o
   `-wallet`, o `-pool`, o `-nft`, o `-name`, o `-rm`, o `-alert`, o `-fees` e o `-to` do `/defi`
   (rodam os protocolos, o `-l`, o `-mask` e o `aave -full`); e o `-flush` e o `-flush-all` do
   `/stats`.
+- O `/tts` também roda, com a **voz local** (sem custo): `{/tts -l Bom dia!}` ou um atalho dele
+  (`{/tuga ora pois}`) manda a nota de voz logo depois da mensagem, e os `{/comandos}` dele rodam
+  (`{/tts -l O dólar está {/stocks -q USD}}`). A voz do ChatGPT é recusada, ao criar e a cada envio,
+  porque gastaria a chave toda vez: o `-gpt`, ou o setting `tts.engine gpt` sem o `-l`.
 - O `/bot` é a exceção: só o dono cria um item com `{/bot -flush-email -yes}` (nele, só o `-info` e o
   `-flush-email` rodam; as outras opções são recusadas). Um admin que não é o dono leva erro ao criar.
 - O comando é conferido ao criar (e no `-edit`): um que não existe ou que não roda no `/cron` dá

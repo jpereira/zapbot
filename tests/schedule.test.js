@@ -532,6 +532,40 @@ describe('/cron: comandos no texto ({/comando})', () => {
             /o -off do \/bot não roda dentro do \/cron/);
     });
 
+    test('{/tts} e um atalho dele ({/tuga}) rodam com a voz local: a nota de voz sai depois da mensagem', async () => {
+        await bot.replyAlt('/alias /tuga /tts -q -l -v tugão $@');
+        assert.match((await bot.replyAlt('/cron +1h -to L200 Bom dia! {/tuga ora pois}'))[0], /^📅 \*Mensagem agendada\*/);
+        const [textAlt, voice] = await expire();
+        assert.equal(textAlt.content, 'Bom dia!');
+        assert.match(voice.content.mimetype, /^audio\//);
+        assert.equal(voice.options.sendAudioAsVoice, true);
+        assert.equal(bot.processes.spoken, 'ora pois', 'the local voice (Piper) spoke it');
+    });
+
+    test('{/tts} sem -q: o aviso "⏳" não entra no texto (ele é editado para o resultado)', async () => {
+        await bot.replyAlt('/cron +1h -to L200 Oi {/tts -l bom dia}');
+        const [textAlt, voice] = await expire();
+        assert.doesNotMatch(textAlt.content, /⏳/);
+        assert.match(voice.content.mimetype, /^audio\//);
+        assert.ok(!bot.logs.some(l => /Could not edit the notice/.test(l)));
+    });
+
+    test('{/tts} com a voz do ChatGPT é recusado (gastaria a chave a cada envio): -gpt, ou tts.engine gpt sem -local', async () => {
+        assert.match((await bot.replyAlt('/cron +1h -to L200 x {/tts -gpt oi}', { expectedError: true }))[0],
+            /o -gpt do \/tts não roda dentro do \/cron/);
+        await bot.setSetting('tts.engine', 'gpt');
+        assert.match((await bot.replyAlt('/cron +1h -to L200 x {/tts oi}', { expectedError: true }))[0],
+            /a voz do ChatGPT \(-gpt, ou tts\.engine gpt\) não roda dentro do \/cron[\s\S]*\/tts -local/);
+        assert.match((await bot.replyAlt('/cron +1h -to L200 x {/tts -local oi}'))[0], /^📅 \*Mensagem agendada\*/);
+        // a setting changed after: refused at the send, the message goes with the warning in its place
+        await bot.setSetting('tts.engine', 'local');
+        await bot.replyAlt('/cron +1h -to L200 y {/tts oi}');
+        await bot.dbRun("DELETE FROM schedules WHERE text <> 'y {/tts oi}'");
+        await bot.setSetting('tts.engine', 'gpt');
+        const [sent] = await expire();
+        assert.match(sent.content, /^y ⚠️ \/tts não roda no \/cron$/);
+    });
+
     test('\\n digitado vira quebra de linha, ao criar e no -edit', async () => {
         await bot.replyAlt('/cron +1h -to L200 Versão {/version}\\n Uptime {/uptime}');
         assert.equal((await items())[0].text, 'Versão {/version}\nUptime {/uptime}');

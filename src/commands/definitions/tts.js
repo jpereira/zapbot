@@ -25,7 +25,8 @@ module.exports = {
             opts: ['gpt', 'g'],
             values: [],
             desc: 'Speaks with ChatGPT (OpenAI speech API, spends your account) instead of the local Piper voice. Without -gpt or -local, the tts.engine setting decides.',
-            ex: ['/tts -gpt Good morning!']
+            ex: ['/tts -gpt Good morning!'],
+            cron: false // a schedule would spend the key on every send
         },
         {
             opts: ['local', 'l'],
@@ -93,5 +94,9 @@ module.exports = {
     // The local voice is free; with ChatGPT (-gpt, or tts.engine gpt) it spends the OpenAI key: only the admins, or a user
     // with a limit (/bot +cmd /tts +limit N), and only the ChatGPT calls count toward it
     usageCounts: (opts) => require('../../engines').countsOnlyGpt('tts.engine')(opts),
+    // In /cron ({/tts ...}, {/tuga ...}): only the local voice, free; the ChatGPT one (-gpt, or tts.engine gpt without
+    // -local) is refused, at creation and at each send
+    cron: true,
+    cronRefuses: (opts) => (require('../../engines').countsOnlyGpt('tts.engine')(opts) ? 'cnt.vozGpt' : null),
     role: USER
 };

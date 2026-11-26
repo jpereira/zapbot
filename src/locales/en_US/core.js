@@ -7,6 +7,7 @@ module.exports = {
     'cnt.aliasTexto': '❌ {{line}}: the alias {caller} is a text and does not run inside {where}.',
     'cnt.naoRoda': '❌ {{line}}: {cmd} does not run inside {where}.\n💡 _Allowed: {list}._',
     'cnt.opcaoNaoRoda': '❌ {{line}}: -{opt} of {cmd} does not run inside {where}.',
+    'cnt.vozGpt': '❌ {{line}}: the ChatGPT voice (-gpt, or tts.engine gpt) does not run inside {where}: it would spend the key on every send.\n💡 _Use the local voice: {cmd} -local ..._',
     'cnt.naoRodaNo': '⚠️ {cmd} does not run in {where}',
     'core.voce': 'You',
     'core.desconhecido': 'Unknown',

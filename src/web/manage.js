@@ -69,7 +69,7 @@ function readRecipients(value) {
     });
 }
 
-const silentMsg = (replies) => ({ fromMe: true, reply: async (content) => { replies.push(String(content)); return { body: String(content) }; } });
+const silentMsg = (replies) => ({ fromMe: true, reply: async (content) => { const at = replies.push(String(content)) - 1; return { body: String(content), edit: async (text) => { replies[at] = String(text); return true; }, delete: async () => {}, react: async () => {} }; } });
 
 /* shortcuts */
 async function saveAlias(body) {
