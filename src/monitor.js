@@ -103,6 +103,39 @@ function presenceData(dataAlt) {
     return { lastSeen, status };
 }
 
+const SESSIONS_KEPT_MS = 30 * 24 * 60 * 60 * 1000;
+// An open session with no check for this long is over (two rounds of monitor.pool, plus the 1 to 15 s between contacts)
+const staleAfter = () => 2 * getSetting('monitor.pool') * 1000 + 60_000;
+
+/*
+ * The online sessions (the timeline of the web): online opens one (or stretches the open one), offline closes it at
+ * the "last seen" when it is after the start (more precise than the check), else at the last check that saw it online.
+ * Checks every monitor.pool seconds see only part of it: a short visit between two checks is not there.
+ */
+async function recordSession(contactId, online, at, lastSeen) {
+    if (online === null) return;
+    const open = await dbGet('SELECT * FROM monitor_sessions WHERE contact_id = ? AND ended_at IS NULL ORDER BY id DESC LIMIT 1',
+        [contactId]);
+    // Not seen for more than two rounds (the monitor paused, WhatsApp down): it ended at its last check, it is not
+    // stretched over the gap
+    if (open && at - open.last_at > staleAfter()) {
+        await dbRun('UPDATE monitor_sessions SET ended_at = last_at WHERE id = ?', [open.id]);
+        return recordSession(contactId, online, at, lastSeen);
+    }
+    if (online === 1) {
+        if (open) await dbRun('UPDATE monitor_sessions SET last_at = ? WHERE id = ?', [at, open.id]);
+        else {
+            await dbRun('INSERT INTO monitor_sessions (contact_id, started_at, last_at) VALUES (?, ?, ?)', [contactId, at, at]);
+            await dbRun('DELETE FROM monitor_sessions WHERE contact_id = ? AND started_at < ?', [contactId, at - SESSIONS_KEPT_MS]);
+        }
+        return;
+    }
+    if (!open) return;
+    const seen = lastSeen ? lastSeen * 1000 : null;
+    const end = seen && seen >= open.started_at ? Math.min(seen, at) : open.last_at;
+    await dbRun('UPDATE monitor_sessions SET ended_at = ?, last_at = MAX(last_at, ?) WHERE id = ?', [end, end, open.id]);
+}
+
 async function checkMonitor() {
     if (guard.busy() || !active()) return;
     guard.start();
@@ -148,6 +181,7 @@ async function checkMonitor() {
                     ? (p.isOnline === true ? 1 : p.isOnline === false ? 0 : null) : null;
                 const saved = await dbGet('SELECT * FROM monitor_contacts WHERE id = ?',
                     [contactAlt.id]);
+                await recordSession(contactAlt.id, online, at, lastSeen);
                 const resultAlt = await dbRun(`UPDATE monitor_contacts
                     SET online_state = COALESCE(?, online_state) WHERE id = ?`,
                 [online, contactAlt.id]);
@@ -196,5 +230,5 @@ function stopMonitor() {
 
 module.exports = {
     enableAlertMonitor, registerMonitored, presenceData, historyMonitored, startMonitor,
-    listMonitored, stopMonitor, removeMonitored, removeAllMonitored, checkMonitor
+    listMonitored, stopMonitor, removeMonitored, removeAllMonitored, checkMonitor, recordSession, staleAfter
 };

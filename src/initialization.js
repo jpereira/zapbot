@@ -131,9 +131,22 @@ async function initializeDb() {
         kind TEXT,
         UNIQUE(contact_id, last_seen)
     )`);
+    // The times a contact was online, from the transitions the checks saw (ended_at NULL: still online)
+    await dbRun(`CREATE TABLE IF NOT EXISTS monitor_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        contact_id INTEGER NOT NULL,
+        started_at INTEGER NOT NULL,
+        last_at INTEGER NOT NULL,
+        ended_at INTEGER
+    )`);
+    await dbRun('CREATE INDEX IF NOT EXISTS monitor_sessions_contact ON monitor_sessions (contact_id, started_at)');
     await dbRun(`CREATE TRIGGER IF NOT EXISTS monitor_remove_history
         AFTER DELETE ON monitor_contacts BEGIN
             DELETE FROM monitor_history WHERE contact_id = OLD.id;
+        END`);
+    await dbRun(`CREATE TRIGGER IF NOT EXISTS monitor_remove_sessions
+        AFTER DELETE ON monitor_contacts BEGIN
+            DELETE FROM monitor_sessions WHERE contact_id = OLD.id;
         END`);
     await dbRun(`CREATE TABLE IF NOT EXISTS command_aliases (
         name TEXT PRIMARY KEY,
