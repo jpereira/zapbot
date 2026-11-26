@@ -1016,7 +1016,7 @@ describe('/defi morpho', () => {
         const [call] = network.calls;
         assert.equal(call.url, 'https://api.morpho.org/graphql');
         assert.equal(call.cfg.body.variables.wallet, WALLET);
-        assert.match(call.cfg.body.query, /c8453: userByAddress\(address: \$carteira, chainId: 8453\)/);
+        assert.match(call.cfg.body.query, /c8453: userByAddress\(address: \$wallet, chainId: 8453\)/);
         assert.equal(call.cfg.timeout, 15000);
         assert.ok(bot.logs.some(l => l.includes('[MORPHO] Querying wallet 0x7445...97C4')));
         assert.ok(bot.logs.some(l => l.includes('[MORPHO] Total borrowed: $5,171,721.19')));

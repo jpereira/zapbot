@@ -73,8 +73,8 @@ const QUERY_PER_NETWORK = `
 // One alias per network ("c8453: userByAddress(...)"): all in a single call
 const query = (networks) => {
     const byNetwork = networks.map(id =>
-        `\n    c${id}: userByAddress(address: $carteira, chainId: ${id}) {${QUERY_PER_NETWORK}\n    }`);
-    return `query ($carteira: String!) {${byNetwork.join('')}\n}`;
+        `\n    c${id}: userByAddress(address: $wallet, chainId: ${id}) {${QUERY_PER_NETWORK}\n    }`);
+    return `query ($wallet: String!) {${byNetwork.join('')}\n}`;
 };
 
 /*

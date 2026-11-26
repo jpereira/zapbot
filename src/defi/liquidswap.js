@@ -35,8 +35,8 @@ const RATE_SCALE = 10000;   // fee 30 = 0.3% (the liquidity_pool's FEE_SCALE)
 // Dollar: the stable side of the pair (USDC, USDt, zUSDC...); without it, only the amounts
 const isStable = (symbolAlt) => /USD/i.test(symbolAlt);
 
-const BALANCES = `query ($dono: String) {
-  current_fungible_asset_balances(where: { owner_address: { _eq: $dono }, amount: { _gt: "0" } }, limit: 500) {
+const BALANCES = `query ($owner: String) {
+  current_fungible_asset_balances(where: { owner_address: { _eq: $owner }, amount: { _gt: "0" } }, limit: 500) {
     asset_type_v1
     amount
   }

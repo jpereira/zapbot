@@ -251,6 +251,15 @@ class DbFake {
  */
 const REPLY_HTTP = Symbol('resposta HTTP completa');
 
+function graphqlMismatch({ query, variables = {} }) {
+    const header = query.match(/^\s*(?:query|mutation)\s*\w*\s*\(([^)]*)\)/)?.[1] ?? '';
+    const declared = [...header.matchAll(/\$(\w+)\s*:\s*([\w[\]!]+)/g)].map(m => ({ name: m[1], required: m[2].endsWith('!') }));
+    const unexpected = Object.keys(variables ?? {}).filter(k => !declared.some(d => d.name === k));
+    if (unexpected.length) return `unexpected variables in variableValues: ${unexpected.join(', ')}`;
+    const missing = declared.find(d => d.required && variables?.[d.name] == null);
+    return missing ? `Variable "$${missing.name}" of required type was not provided.` : null;
+}
+
 const network = {
     rotas: [],
     calls: [],
@@ -276,6 +285,10 @@ const network = {
 
     async dispatch(method, url, cfg = {}) {
         this.calls.push({ method, url, cfg });
+        // A GraphQL query answers as the real servers do when its variables do not match what it declares
+        // ($dono declared, { owner } sent: "unexpected variables"), so a renamed variable fails in the tests too
+        const graphql = method === 'post' && typeof cfg.body?.query === 'string' ? graphqlMismatch(cfg.body) : null;
+        if (graphql) return { data: { errors: [{ message: graphql }] }, headers: {}, status: 200 };
         const rota = this.rotas.find(r => r.method === method &&
             (r.fallback instanceof RegExp ? r.fallback.test(url) : url.includes(r.fallback)));
 
