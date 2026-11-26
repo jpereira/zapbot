@@ -428,6 +428,15 @@ message goes to WhatsApp.
 
 ![Editing a scheduled message: the text, the date, the repeat and the chat](assets/web/schedule-edit.png)
 
+**🧪 Test now** (each row, and **🧪 Test** in the form, with what is typed and not saved yet) builds the message **as it
+will go out**: its `{/commands}` run for real, as at the scheduled time and as in its first chat (a `/stats` is the
+group's), and the window shows where it goes, when, the text with the WhatsApp marks, the media and the commands that
+failed. **Nothing is sent** and the schedule is not touched (the same as `/cron -test <no.>`). A text that starts with
+`/` (`/stocks USD`) goes out as text and does not run (the bot never runs what it sends itself): the window warns and
+shows the braces that would run it (`{/stocks USD}`). **↻ Run again** builds it again.
+
+![Testing a scheduled message: what goes out, with its {/command} run](assets/web/schedule-test.png)
+
 ## Statistics
 
 Charts of the counters of [`/stats`](commands/stats.md) for 7, 30, 90 or 365 days. Cards with messages, media,
@@ -464,9 +473,29 @@ A click opens the **viewer**: the picture or the video (the audio plays), the ch
 the caption, with **←/→** (the keyboard arrows too) for the next ones, **💬 Open in the chat** (at the message),
 **⬇️ Download** and **🧹 Free this file**. Freeing takes the file off the disk; the message stays in the history, with
 its media missing. **☑️ Select** (or Shift/Ctrl+click) picks several to free at once. The deleted messages have a red
-dashed frame and a 🗑️.
+dashed frame and a 🗑️. A document shows as a **sheet with its extension** (PDF red, DOC blue, XLS green, PPT orange,
+ZIP brown...), and a file the cleanup takes in less than a day has a ⏳. A **video shows a frame of it**, with ▶ and
+its duration, and a picture a small copy (360 px) instead of the whole file: both are made the first time they are
+seen (ffmpeg and sharp, two at a time) and kept in `cache/tmp/thumbs`. The search box finds by the **name**, the
+**caption** or the **chat**; in the viewer, **Delete** frees the file.
 
 ![The media: by kind, period and chat, with the space each one takes](assets/web/gallery.png)
+
+**☰ List** shows a row per file: the name, the **size**, the **type** (MIME), the date, the chat and **when the
+cleanup takes it** (`cache.messageMediaRetentionDays`; a deleted message, `cache.revokedRetentionDays`; red under a
+day). A click on a column header sorts by it (again: the other way), over every page, so *Size ▼* gives the biggest
+files first. The browser remembers grid or list.
+
+![The media as a list, the biggest first](assets/web/gallery-list.png)
+
+**🧬 The same** groups the files that have **the same content** (the same picture forwarded to three chats, the same
+PDF in two groups): only files of the same size are read, and their SHA-1 decides. Each group shows the messages that
+have it and how much joining frees. **🔗 Join the copies** turns each copy into a **hard link** of the oldest one: the
+space is freed and **every message keeps its media**; the cleanup still removes each one on its own date (removing one
+link does not take the others). A joined copy has a 🔗, and the panel of chats says what the files take on disk for
+real.
+
+![The same files, with the space joining them frees](assets/web/gallery-same.png)
 
 ![The viewer: ← → for the next ones, open in the chat, download or free](assets/web/gallery-viewer.png)
 
@@ -543,6 +572,7 @@ and `bot.login` cannot be changed here.
 | 🔔 / 🔕 | the `alert` column and the Monitor cards | On / off; a click toggles |
 | 🔄 | the Monitor cards | Checks the contact in the next round of the loop |
 | ▶️ Test | the shortcut form | Runs the command and shows what it would answer, without sending |
+| 🧪 | the schedule | Builds the message as it will go out, its {/commands} run, without sending |
 | ☑️ | the Media | Picks several files (on the phone, where there is no Shift) |
 | 📲 | the Monitor and the Settings | Turns the notices on this device on and off |
 | ▶️ / ⏸️ | the schedule | Running / paused; a click toggles |

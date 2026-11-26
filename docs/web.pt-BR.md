@@ -431,6 +431,15 @@ mensagem agendada vai para o WhatsApp.
 
 ![Editando uma mensagem agendada: o texto, a data, a repetição e a conversa](assets/web/pt-BR/schedule-edit.png)
 
+**🧪 Testar agora** (em cada linha, e **🧪 Testar** no formulário, com o que está digitado e ainda não salvo) monta a
+mensagem **como ela vai sair**: os `{/comandos}` rodam de verdade, como na hora agendada e como na primeira conversa
+dela (um `/stats` é o do grupo), e a janela mostra para onde vai, quando, o texto com as marcas do WhatsApp, a mídia e
+os comandos que falharam. **Nada é enviado** e a agenda não muda (o mesmo que `/cron -test <nº>`). Um texto que começa
+com `/` (`/stocks USD`) sai como texto e não roda (o bot nunca executa o que ele mesmo envia): a janela avisa e mostra
+as chaves que fariam rodar (`{/stocks USD}`). **↻ Rodar de novo** monta de novo.
+
+![Testando uma mensagem agendada: o que sai, com o {/comando} rodado](assets/web/pt-BR/schedule-test.png)
+
 ## Estatísticas
 
 Gráficos dos contadores do [`/stats`](commands/stats.md) para 7, 30, 90 ou 365 dias. Cartões com mensagens, mídia,
@@ -468,9 +477,28 @@ Um clique abre o **visualizador**: a foto ou o vídeo (o áudio toca), a convers
 legenda, com **←/→** (as setas do teclado também) para as próximas, **💬 Abrir na conversa** (na mensagem),
 **⬇️ Baixar** e **🧹 Liberar este arquivo**. Liberar tira o arquivo do disco; a mensagem fica no histórico, com a mídia
 faltando. **☑️ Selecionar** (ou Shift/Ctrl+clique) escolhe várias para liberar de uma vez. As mensagens apagadas têm
-moldura vermelha tracejada e um 🗑️.
+moldura vermelha tracejada e um 🗑️. Um documento aparece como uma **folha com a extensão** (PDF vermelho, DOC azul, XLS
+verde, PPT laranja, ZIP marrom...), e um arquivo que a limpeza tira em menos de um dia tem um ⏳. Um **vídeo mostra um
+quadro dele**, com ▶ e a duração, e uma foto uma cópia pequena (360 px) em vez do arquivo inteiro: os dois são feitos
+na primeira vez que aparecem (ffmpeg e sharp, dois de cada vez) e ficam em `cache/tmp/thumbs`. A busca encontra pelo
+**nome**, pela **legenda** ou pela **conversa**; no visualizador, **Delete** libera o arquivo.
 
 ![As mídias: por tipo, período e conversa, com o espaço de cada uma](assets/web/pt-BR/gallery.png)
+
+**☰ Lista** mostra uma linha por arquivo: o nome, o **tamanho**, o **tipo** (MIME), a data, a conversa e **quando a
+limpeza tira** (`cache.messageMediaRetentionDays`; uma mensagem apagada, `cache.revokedRetentionDays`; vermelho com
+menos de um dia). Um clique no título de uma coluna ordena por ela (de novo: ao contrário), em todas as páginas, então
+*Tamanho ▼* traz os maiores primeiro. O navegador lembra grade ou lista.
+
+![As mídias em lista, as maiores primeiro](assets/web/pt-BR/gallery-list.png)
+
+**🧬 Iguais** agrupa os arquivos de **mesmo conteúdo** (a mesma foto encaminhada para três conversas, o mesmo PDF em
+dois grupos): só os de mesmo tamanho são lidos, e o SHA-1 decide. Cada grupo mostra as mensagens que têm o arquivo e
+quanto unir libera. **🔗 Unir as cópias** transforma cada cópia num **hard link** da mais antiga: o espaço é liberado e
+**toda mensagem continua com a mídia**; a limpeza ainda tira cada uma na sua data (apagar um link não leva os outros).
+Uma cópia unida tem um 🔗, e o painel das conversas diz o que os arquivos ocupam de verdade no disco.
+
+![Os arquivos iguais, com o espaço que unir libera](assets/web/pt-BR/gallery-same.png)
 
 ![O visualizador: ← → para as próximas, abrir na conversa, baixar ou liberar](assets/web/pt-BR/gallery-viewer.png)
 
@@ -548,6 +576,7 @@ muda aqui.
 | 🔔 / 🔕 | a coluna `alerta` e os cards do Monitor | Ligado / desligado; um clique alterna |
 | 🔄 | os cards do Monitor | Checa o contato na próxima rodada do loop |
 | ▶️ Testar | o formulário de atalho | Roda o comando e mostra o que ele responderia, sem enviar |
+| 🧪 | a agenda | Monta a mensagem como vai sair, com os {/comandos} rodados, sem enviar |
 | ☑️ | as Mídias | Escolhe vários arquivos (no celular, onde não há Shift) |
 | 📲 | o Monitor e os Settings | Liga e desliga os avisos neste aparelho |
 | ▶️ / ⏸️ | a agenda | Ativo / pausado; um clique alterna |

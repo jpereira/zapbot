@@ -91,7 +91,10 @@ async function seed() {
     const gallery = [
         ['pordosol.png', png(640, 420, [230, 110, 60])], ['montanha.png', png(420, 640, [70, 140, 90])], ['bolo.png', png(500, 500, [200, 160, 110])],
         ['cachorro.png', png(480, 360, [150, 120, 90])], ['festa.png', png(600, 400, [170, 60, 140])], ['ceu.png', png(520, 360, [60, 110, 200])],
-        ['viagem.mp4', Buffer.alloc(2_400_000, 7)], ['audio.ogg', Buffer.alloc(48_000, 3)], ['boleto-novembro.pdf', Buffer.alloc(180_000, 5)]
+        ['viagem.mp4', Buffer.alloc(2_400_000, 7)], ['audio.ogg', Buffer.alloc(48_000, 3)], ['boleto-novembro.pdf', Buffer.alloc(180_000, 5)],
+        ['contrato-aluguel.docx', Buffer.alloc(64_000, 11)], ['orcamento-reforma.xlsx', Buffer.alloc(22_000, 12)], ['apresentacao.pptx', Buffer.alloc(1_200_000, 13)],
+        ['fotos-da-festa.zip', Buffer.alloc(3_100_000, 14)], ['bom-dia.png', png(400, 400, [250, 200, 60])], ['bom-dia-copia.png', png(400, 400, [250, 200, 60])],
+        ['bom-dia-de-novo.png', png(400, 400, [250, 200, 60])]
     ].map(([name, data]) => galleryFile(name, data));
     const noteImage = path.join(NOTES_DIR, '1_demo_receita.png');
     fs.writeFileSync(noteImage, png(480, 300, [120, 70, 160]));
@@ -108,7 +111,15 @@ async function seed() {
     await insert('a4', ANA, { chatName: 'Ana Souza', body: 'Fechado 🍿', at: t0 + 6 * MIN, fromMe: true });
     await insert('a5', ANA, { chatName: 'Ana Souza', sender: 'Ana Souza', number: '5521999990001', type: 'image', body: 'Olha onde fui hoje!', at: t0 + 2 * HOUR, media: photo });
     await insert('a6', ANA, { chatName: 'Ana Souza', sender: 'Ana Souza', number: '5521999990001', type: 'sticker', at: t0 + 2 * HOUR + MIN, media: sticker });
-    const galleryTypes = ['image', 'image', 'image', 'image', 'image', 'image', 'video', 'ptt', 'document'];
+    // (the last three: the same "good morning" picture forwarded to three chats, for "The same")
+    // The thumbnail of the video, ready (the ffmpeg of the test helpers is a fake): a frame and its duration
+    const { THUMBS_DIR, keyOf } = bot.src('web/thumbs');
+    fs.mkdirSync(THUMBS_DIR, { recursive: true });
+    const clip = gallery.find(f => f.endsWith('.mp4'));
+    const clipKey = keyOf(clip, fs.statSync(clip));
+    fs.writeFileSync(path.join(THUMBS_DIR, `${clipKey}.jpg`), png(360, 202, [30, 90, 140]));
+    fs.writeFileSync(path.join(THUMBS_DIR, `${clipKey}.json`), JSON.stringify({ duration: 83 }));
+    const galleryTypes = ['image', 'image', 'image', 'image', 'image', 'image', 'video', 'ptt', 'document', 'document', 'document', 'document', 'document', 'image', 'image', 'image'];
     for (const [i, file] of gallery.entries()) {
         const family = i % 3 === 1;
         await insert(`m${i}`, family ? FAMILY : ANA, { chatName: family ? 'Família Souza' : 'Ana Souza', group: family, sender: family ? 'Mãe' : 'Ana Souza', number: '5521999990001', type: galleryTypes[i], at: now - (i + 1) * 5 * HOUR, media: file, fromMe: i === 4 });
@@ -230,6 +241,8 @@ async function seed() {
     await bot.dbRun("INSERT INTO schedules (kind, chat_id, chat_name, text, due_at, repeat, created_at) VALUES ('agendar', ?, 'Você', 'Bom dia! ☀️', ?, 'daily', 1)", ['5521999999999@c.us', now + 14 * HOUR]);
     await bot.dbRun("INSERT INTO schedules (kind, chat_id, chat_name, is_group, text, due_at, repeat, created_at, paused) VALUES ('agendar', ?, 'Família Souza', 1, 'Bom domingo, família! ☀️', ?, 'weekly', 1, 1)", [FAMILY, now + 5 * DAY]);
     await bot.dbRun("INSERT INTO schedules (kind, chat_id, chat_name, text, due_at, repeat, created_at) VALUES ('lembrete', ?, 'Você', 'Pagar o condomínio', ?, 'monthly', 1)", ['5521999999999@c.us', now + 3 * DAY]);
+    // with a {/command}: the 🧪 test runs it, as at the scheduled time
+    await bot.dbRun("INSERT INTO schedules (kind, chat_id, chat_name, is_group, text, due_at, repeat, created_at) VALUES ('agendar', ?, 'Família Souza', 1, 'Bom dia, família! ☀️ {/stocks -q USD}', ?, 'daily', 1)", [FAMILY, now + 20 * HOUR]);
 
     fs.mkdirSync(MEDIA_DIR, { recursive: true });
     return { ANA };
@@ -270,7 +283,7 @@ async function main() {
         console.log('→', `docs/assets/web/${name}.png`);
     };
     const view = async (name) => {
-        await page.click(`.rail-btn[data-view="${name}"]`);
+        await page.evaluate((v) => document.querySelector(`.rail-btn[data-view="${v}"]`).click(), name);
         await wait(450);
     };
     // Clicks the first element of a selector whose text includes a word
@@ -286,6 +299,9 @@ async function main() {
     }, section, tr(word), icon);
     const closeModal = async () => { await page.evaluate(() => document.querySelector('.modal .modal-actions .btn:not(.on)')?.click()); await wait(200); };
 
+    // An error of the page shows in the output (a screen that does not draw is easier to find)
+    // (on stderr: the helpers of the tests silence the console)
+    page.on('pageerror', (err) => process.stderr.write(`page error: ${err.message}\n`));
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
     await page.evaluateOnNewDocument(() => localStorage.setItem('zb_order', 'start')); // the conversation from its start
     await page.goto(base);
@@ -421,6 +437,12 @@ async function main() {
     await page.waitForSelector('.modal');
     await shot('schedule-edit', 900);
     await closeModal();
+    // 🧪 on the one with a {/command}: what goes out, built now, without sending
+    await rowButton(0, 'Bom dia, família', '🧪');
+    await page.waitForSelector('.sched-note', { timeout: 15000 });
+    await shot('schedule-test', 760);
+    await page.evaluate(() => document.querySelector('dialog .modal-actions .btn.on').click());
+    await wait(200);
 
     /* Show: what /show keeps */
     await view('show');
@@ -463,6 +485,19 @@ async function main() {
     await shot('gallery-viewer', 860);
     await page.keyboard.press('Escape');
     await wait(200);
+    // the list (sorted by size) and the same files grouped
+    await page.evaluate(() => [...document.querySelectorAll('.gal-switch .btn')][1].click());
+    await page.waitForSelector('.gal-table');
+    await page.evaluate(() => [...document.querySelectorAll('.gal-table th.sortable')].find(th => th.textContent.match(/Size|Tamanho/)).click());
+    await page.waitForSelector('.gal-table');
+    await wait(500);
+    await shot('gallery-list', 900);
+    await page.evaluate(() => [...document.querySelectorAll('.gal-switch .btn')][2].click());
+    await page.waitForSelector('.gal-group');
+    await wait(400);
+    await shot('gallery-same', 760);
+    await page.evaluate(() => [...document.querySelectorAll('.gal-switch .btn')][0].click());
+    await page.waitForSelector('.gal-tile');
 
     /* health */
     await view('health');
