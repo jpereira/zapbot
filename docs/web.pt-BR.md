@@ -94,11 +94,14 @@ Os ícones da esquerda abrem cada parte (no celular eles viram uma barra embaixo
 | 🏠 | Início | O que o bot guarda: armazenamento, contadores, retenção e os últimos 30 dias |
 | 💬 | Histórico | As conversas e suas mensagens, com as apagadas e as editadas marcadas |
 | 📝 | Notas | Tudo do [`/notes`](commands/notes.md): tags, notas, imagens, tags protegidas |
-| 🔔 | Alertas | Alertas de preço, regras do [`/watch`](commands/watch.md) e contatos do [`/monitor`](commands/monitor.md), com seus históricos |
+| 🔔 | Alertas | Alertas de preço e regras do [`/watch`](commands/watch.md), com seus históricos |
+| 👀 | Monitor | Os contatos do [`/monitor`](commands/monitor.md): presença, tempo online, quem ficou online junto e hábitos |
 | ⚡ | Atalhos | A lista do [`/alias`](commands/alias.md) |
 | ⏰ | Agenda | O que o [`/cron`](commands/cron.md) tem agendado |
 | 📊 | Estatísticas | Gráficos dos contadores do [`/stats`](commands/stats.md) |
 | 🏴‍☠️ | Show | O que o [`/show`](commands/show.md) guarda (apagadas, editadas, reações, status, canais) e quem está silenciado |
+| 🖼️ | Mídias | Toda foto, vídeo, áudio, figurinha e documento guardado, por conversa, tipo e período, com o espaço |
+| 🩺 | Saúde | WhatsApp, memória, o event loop, as checagens periódicas, a fila de regex e os últimos erros |
 | ⚙️ | Settings | Um painel dos settings da interface web e, depois, todos os outros settings |
 
 Embaixo da barra, os botões trocam o **tema** (automático, claro, escuro) e o **idioma** (inglês ou português; ele
@@ -233,6 +236,13 @@ se revezam (o botão *Voltar* volta para a lista) e a barra de ferramentas quebr
 
 ![No celular: uma conversa](assets/web/pt-BR/mobile-chat.png)
 
+As outras páginas funcionam do mesmo jeito no celular: o Monitor empilha os cards e as linhas do tempo cabem na
+largura, e as Mídias mostram três por linha, com **☑️ Selecionar** no lugar do Shift.
+
+![No celular: o Monitor](assets/web/pt-BR/mobile-monitor.png)
+
+![No celular: as Mídias](assets/web/pt-BR/mobile-gallery.png)
+
 Só aparece o que o bot tem no banco: o texto das mensagens comuns fica por `cache.messageRetentionDays` (3 dias por
 padrão; até 90), e as apagadas, editadas e com reação pela retenção própria de cada uma
 ([`/cache`](commands/cache.md), [`/show`](commands/show.md)). Para guardar mais histórico, aumente esses settings.
@@ -284,10 +294,10 @@ protegida não pode ser renomeada aqui (o `/notes -move` no WhatsApp faz isso).
 
 ## Alertas
 
-Três tabelas: os alertas de preço, as regras do `/watch` e os contatos monitorados. Cada uma tem **＋ Adicionar** e, em
-cada linha, ✏️ editar e 🗑️ apagar.
+Duas tabelas: os alertas de preço e as regras do `/watch` (os contatos monitorados têm a própria página,
+[Monitor](#monitor)). Cada uma tem **＋ Adicionar** e, em cada linha, ✏️ editar e 🗑️ apagar.
 
-![As três tabelas da página de Alertas](assets/web/pt-BR/alerts.png)
+![As duas tabelas da página de Alertas](assets/web/pt-BR/alerts.png)
 
 ### Alertas de preço
 
@@ -314,14 +324,13 @@ de uma, se várias casaram). Essas marcas aparecem sempre que você lê aquela c
 
 ![A conversa aberta nas ocorrências: com contorno, a regra e a parte que casou](assets/web/pt-BR/history-watch.png)
 
-### Contatos monitorados
+**Teste antes de salvar.** O formulário de uma regra testa ela, enquanto você digita, nas **últimas 3000 mensagens
+recebidas** (as que o `/watch` teria visto: não as suas, não comandos): com quantas casaria, em quais conversas, e cada
+ocorrência com a parte que casou destacada (um clique abre no Histórico). Uma regex inválida ou arriscada mostra o
+mesmo erro do comando. Acima, botões inserem as peças de sempre: **/…/i** transforma o texto numa regex (escapada),
+`\b`, `a|b`, `\d+`, `.*` e `(?:…)`. Ocorrências demais avisam: cada uma é um aviso.
 
-Os contatos do [`/monitor`](commands/monitor.md) com a situação, a última vez em que foram vistos, a última checagem e o
-erro, se houver. **＋ Adicionar** escolhe um contato da sua agenda (o limite é o setting `monitor.max`) e ✏️ edita o nome
-e o alerta. O botão **📜** abre o que o monitor leu do contato: cada "visto por último", com a hora em que foi lido, e um
-🗑️ para remover uma leitura.
-
-![As leituras de um contato monitorado](assets/web/pt-BR/alerts-monitor-history.png)
+![Uma regra do /watch testada nas últimas mensagens, com a parte que casou](assets/web/pt-BR/alerts-watch-test.png)
 
 ### A coluna alerta e quem é avisado
 
@@ -329,18 +338,70 @@ Tudo que pode ser ligado e desligado tem a **mesma célula, na coluna `alerta`**
 
 - na tabela do `/watch`, 🔔 é o **aviso da regra** ligado e 🔕 desligado. Desligado, as ocorrências continuam sendo
   guardadas (e o histórico da regra continua crescendo), mas ninguém é avisado;
-- na tabela do `/monitor`, 🔔 é o alerta do contato (você é avisado quando ele ficar online) e 🔕 desligado;
 - nos alertas de preço, ▶️ é um alerta sendo verificado e ⏸️ um pausado (o mesmo que `-alert -pause` / `-resume`);
 - na agenda, ▶️ é uma mensagem ativa e ⏸️ uma pausada.
 
 Desligado ou pausado, **a linha inteira fica mais opaca, com o texto riscado** (ela continua funcionando; nada fica
-escondido, só mais apagado), então uma olhada na tabela já mostra quais regras, contatos e mensagens não estão fazendo
+escondido, só mais apagado), então uma olhada na tabela já mostra quais regras, alertas e mensagens não estão fazendo
 nada no momento. O próprio botão de sino/play, e os botões 🗑️/✏️/📜 da linha, ficam como são.
 
 Os alertas de preço e as regras do `/watch` têm um **seletor de contatos** no campo *avisa*. Digite parte de um nome (ou
 um número) e aparecem os contatos e grupos da sua agenda que combinam; clique para adicionar (pode ser mais de um), ou
 digite um e-mail. **👤 Eu** adiciona a sua própria conta. Vazio quer dizer o seu privado. O mesmo seletor escolhe o
-contato do `/monitor`.
+contato do [Monitor](#monitor).
+
+## Monitor
+
+Os contatos do [`/monitor`](commands/monitor.md), um card cada, **os online primeiro** e depois os vistos mais
+recentemente. Acima deles, o loop: 🟢 verificando, ⏸️ pausado (`monitor.enabled` desligado ou o bot pausado), ⏳
+esperando o WhatsApp ou 🚫 `/monitor` desativado, o intervalo (`monitor.pool`), quantas das `monitor.max` vagas estão
+em uso e **⏸️ Pausar** / **▶️ Retomar**, que desliga e liga o `monitor.enabled` sem apagar nada. **＋ Adicionar**
+escolhe um contato da sua agenda (fica desabilitado com a lista cheia).
+
+Cada card tem:
+
+- a foto com um **ponto de presença**: verde é online, cinza offline e tracejado desconhecido (o contato esconde, ou
+  ainda não foi lido);
+- *online agora* ou *visto há 40 minutos*, a situação que o monitor leu, quando foi checado e **quando é a próxima
+  checagem** (os tempos andam com a página aberta, com a data completa ao passar o mouse);
+- **quando costuma aparecer**: a uma ou duas horas com mais leituras (*costuma aparecer por volta das 08h e das 19h*);
+- os **últimos 7 dias** numa faixa, um traço para cada vez que foi visto;
+- **⏱️ Online**: o tempo online hoje, em 7 dias e por visita, e uma **linha do tempo dos últimos 7 dias** (uma linha
+  por dia, 24 h de largura, uma barra para cada vez que ficou online, listrada enquanto ainda está, com uma marca
+  vermelha no agora);
+- **🔥 Quando aparece**, um mapa de calor dia × hora de todas as leituras (ele lembra quais você abriu);
+- o erro da última checagem, se houver.
+
+E os botões: **🔔 / 🔕** liga e desliga o alerta de online, **🔄** checa na próxima rodada do loop (uns 10 s, passando a
+espera do `monitor.pool`), **📜** abre cada leitura (com um 🗑️ para remover uma), **💬** abre a conversa com o contato
+no Histórico, **✏️** edita o nome e o alerta e **🗑️** para de monitorar (com o histórico). O filtro aparece com mais
+de três contatos. A página se recarrega a cada minuto enquanto nenhuma janela está aberta e você não está digitando no
+filtro.
+
+O mapa de calor só tem o que o monitor guardou: `monitor.maxRecords` leituras por contato (30 por padrão). Aumente para
+ver os hábitos com mais nitidez.
+
+### Tempo online e online juntos
+
+Cada checagem que vê um contato **online** abre uma sessão (ou estica a aberta); a checagem que vê ele **offline**
+fecha no *visto por último*, quando ele é depois do começo (mais preciso que a checagem). As sessões ficam 30 dias.
+Checagens a cada `monitor.pool` segundos veem só parte: uma visita curta entre duas checagens não aparece, e um contato
+que esconde o *online* não tem sessões. Sem checagem por duas rodadas (o monitor pausado, o WhatsApp fora), uma sessão
+aberta termina na última checagem em vez de crescer sobre o buraco.
+
+**🤝 Online juntos**, acima dos cards, lista os pares de contatos monitorados que ficaram online **ao mesmo tempo** nos
+últimos 7 dias, os de mais tempo primeiro: quanto tempo, quantas vezes, a última, e *🟢 juntos agora* quando os dois
+estão online. Um clique num par desenha os dois nos mesmos 7 dias, com **onde se sobrepõem em laranja**. É uma
+coincidência de horários, não prova de que conversaram.
+
+**📲 Avisar neste aparelho** (quando o navegador consegue, veja [O app instalável](#o-app-instalável-e-os-avisos-no-aparelho))
+liga os avisos do bot neste navegador: um alerta de *online* chega como notificação, mesmo com a página fechada.
+
+![A página do Monitor: online juntos, os cards e a linha do tempo de um](assets/web/pt-BR/monitor.png)
+
+![Os hábitos de um contato: a linha do tempo e o mapa de calor dia × hora](assets/web/pt-BR/monitor-habits.png)
+
+![As leituras de um contato monitorado](assets/web/pt-BR/monitor-history.png)
 
 ## Atalhos
 
@@ -350,6 +411,14 @@ Adicionar e editar usam as mesmas checagens do `/alias`: um nome que é comando 
 recusada, o atalho antigo fica.
 
 ![Os atalhos](assets/web/pt-BR/aliases.png)
+
+**▶️ Testar** no formulário: enquanto você digita, cada estágio do comando é **checado** (✅ ok, ❌ não existe, as opções
+estão erradas ou não lê um pipe, ⚠️ checado mas não roda aqui), e **▶️ Testar** roda como se você digitasse no seu
+privado, mostrando **o que ele responderia** (o texto com as marcas do WhatsApp, uma imagem, um áudio para ouvir), com
+**nada enviado**. Só roda o que não muda nada: o que o [`/cron`](commands/cron.md) pode rodar, ou um comando que lê um
+pipe (`/tts`, `/translate`, `/qr`...), e nunca com uma opção que o `/cron` recusa (`-alert`, `-rm`...).
+
+![Testando um atalho: os estágios checados e o que ele responderia](assets/web/pt-BR/aliases-test.png)
 
 ## Agenda
 
@@ -389,6 +458,56 @@ clique numa pessoa para ver só os dela (o box fica destacado; clique de novo pa
 
 ![Show: os avisos, as abas, os itens recuperados e quem mais apaga](assets/web/pt-BR/show.png)
 
+## Mídias
+
+Toda foto, vídeo, áudio (inclusive os de voz), figurinha e documento que o bot guardou, **os mais novos primeiro**, com
+o tamanho de cada um. Os chips filtram por **tipo** (cada um com quantos há), os seguintes por **período** (7, 30, 90
+dias ou sempre), e o painel à direita lista **as conversas que mais ocupam espaço**: um clique mostra só aquela.
+
+Um clique abre o **visualizador**: a foto ou o vídeo (o áudio toca), a conversa, quem mandou, a data, o tamanho e a
+legenda, com **←/→** (as setas do teclado também) para as próximas, **💬 Abrir na conversa** (na mensagem),
+**⬇️ Baixar** e **🧹 Liberar este arquivo**. Liberar tira o arquivo do disco; a mensagem fica no histórico, com a mídia
+faltando. **☑️ Selecionar** (ou Shift/Ctrl+clique) escolhe várias para liberar de uma vez. As mensagens apagadas têm
+moldura vermelha tracejada e um 🗑️.
+
+![As mídias: por tipo, período e conversa, com o espaço de cada uma](assets/web/pt-BR/gallery.png)
+
+![O visualizador: ← → para as próximas, abrir na conversa, baixar ou liberar](assets/web/pt-BR/gallery-viewer.png)
+
+## Saúde
+
+Como o bot está **agora**, atualizada a cada 10 segundos, com um veredito no topo (✅ tudo certo, ⚠️ vale uma olhada,
+🚨 algo está errado) e o porquê:
+
+- **WhatsApp**: conectado (desde quando), conectando, fora do ar ou reiniciando, a última queda e as tentativas falhas;
+- **o processo**: no ar desde, memória (RSS e o heap do JS), o **atraso do event loop** (p99, média e máximo: acima de
+  500 ms o bot demora a responder), a carga e a memória livre do servidor, e a versão;
+- **as checagens periódicas** (`/cron`, `/monitor`, os alertas de preço, do `/notes` e do `/defi`): parada ou rodando,
+  **travada** (vermelha, depois de 10 minutos), quantas rodadas e quanto durou a última;
+- **o worker de regex** do `/watch` e das buscas: quantos esperam e quantos foram respondidos "sem match" (fila cheia
+  ou fora do prazo);
+- **os últimos 50 erros do log**, já mascarados como o log mostra (um clique abre o texto inteiro).
+
+![Saúde: WhatsApp, o processo, as checagens, a fila de regex e os últimos erros](assets/web/pt-BR/health.png)
+
+## O app instalável e os avisos no aparelho
+
+A página pode ser **instalada como app** (Chrome, Edge, Android: **⬇️ Instalar o app** em Settings → 📲 Este aparelho;
+iPhone: Safari → Compartilhar → *Adicionar à Tela de Início*): ícone e janela próprios, e atalhos para o Monitor, as
+Notas e o Histórico. Instalada ou não, as notas que você abre **ficam disponíveis sem rede** (uma barra 📴 avisa quando
+não há rede); as notas de uma **tag protegida nunca** ficam, nem destrancadas, e tudo que foi guardado é esquecido no
+logout.
+
+**📲 Este aparelho** também liga os **avisos do bot neste navegador**, mesmo com a página fechada: um contato monitorado
+que ficou online, uma ocorrência do `/watch` (um clique abre a mensagem), um alerta de preço e um acesso à página.
+Escolha quais; **Mandar um teste** confere. Cada navegador é uma inscrição; o serviço de push do navegador só
+transporta, **cifrado de ponta a ponta** (o Web Push padrão, com as chaves do próprio bot, criadas na primeira vez). Um
+navegador que sai é removido sozinho.
+
+Os avisos e o service worker precisam da página em **https** (ou em `localhost`): com o
+[Tailscale serve](#do-celular-pela-internet-tailscale) ou um proxy com certificado funciona direto; no `http://<ip>:3200`
+puro o painel avisa.
+
 ## Settings
 
 No topo, um **painel só da interface web** (os settings `zapbot.web.*`), para você ajustá-la sem procurar numa lista
@@ -425,8 +544,12 @@ muda aqui.
 | ＋ | o título de uma lista | Adiciona uma linha (abre um formulário) |
 | ✏️ | cada linha | Edita, com as mesmas checagens do comando |
 | 🗑️ | cada linha | Apaga (pergunta antes); nos Settings, ↺ volta ao padrão |
-| 📜 | linhas do `/watch` e do `/monitor` | Abre o histórico da regra ou do contato |
-| 🔔 / 🔕 | a coluna `alerta` | Ligado / desligado; um clique alterna |
+| 📜 | linhas do `/watch` e cards do Monitor | Abre o histórico da regra ou do contato |
+| 🔔 / 🔕 | a coluna `alerta` e os cards do Monitor | Ligado / desligado; um clique alterna |
+| 🔄 | os cards do Monitor | Checa o contato na próxima rodada do loop |
+| ▶️ Testar | o formulário de atalho | Roda o comando e mostra o que ele responderia, sem enviar |
+| ☑️ | as Mídias | Escolhe vários arquivos (no celular, onde não há Shift) |
+| 📲 | o Monitor e os Settings | Liga e desliga os avisos neste aparelho |
 | ▶️ / ⏸️ | a agenda | Ativo / pausado; um clique alterna |
 | 🧹 | o cabeçalho de uma conversa | Limpa o histórico, mantendo as mensagens apagadas, editadas e com reação |
 | 👤 | o seletor de contatos | Um contato ou um grupo; *Eu* é a sua própria conta |
@@ -450,7 +573,7 @@ muda aqui.
   ditas no próximo) e **no máximo 5 avisos em 10 minutos** de qualquer endereço (o resto só é contado). Só a página
   conta, não os arquivos nem a API, e um navegador já logado não avisa. Desligue com `zapbot.web.warnAccess off`.
 - **As mudanças são só as que você vê**: a página muda atalhos, alertas, regras do `/watch`, contatos monitorados, a
-  agenda, notas e settings, sempre pelo mesmo código dos comandos, e **nunca** o login, a senha e o segredo do TOTP
+  agenda, notas e settings, e libera arquivos de mídia, sempre pelo mesmo código dos comandos, e **nunca** o login, a senha e o segredo do TOTP
   (só o `/set` no WhatsApp). Ela não manda mensagens para outras pessoas. Toda mudança fica no log, sem os valores. Os
   POSTs só aceitam JSON.
 - **Página isolada**: sem script inline (CSP estrita), `nosniff`, sem enquadramento, e a mídia é servida com uma CSP
@@ -465,6 +588,11 @@ muda aqui.
   `X-Forwarded-For` ou acrescentar o IP do cliente ao final, e para sobrescrever
   `X-Forwarded-Proto`. O ZapBot usa o último endereço para contar as tentativas de login e
   adiciona `Secure` ao cookie quando o proxy informa `https`.
+- **Os avisos push** são cifrados para cada navegador (RFC 8291) e assinados com as chaves do bot (VAPID): o serviço de
+  push do navegador não consegue ler. **Sem rede**, só as notas que o servidor marca como seguras ficam no navegador
+  (nunca uma tag protegida) e o logout esquece.
+- **Os testes não rodam nada que muda alguma coisa**: o ▶️ de um atalho só roda o que o `/cron` poderia (sem `-alert`,
+  `-rm`...) e as respostas são guardadas, nunca enviadas; o teste de uma regra do `/watch` só lê as últimas mensagens.
 - **Notas protegidas** abrem na página só com a senha da tag, na memória, e o que é decifrado nunca é escrito no cache.
   **O que o bot envia nos chats com uma nota decifrada nunca é guardado** no banco (o `notes.lockPrivateOnly` diz onde
   as notas abrem no WhatsApp).

@@ -35,6 +35,12 @@ Yep, we've been busy. The best of the latest batch:
   6-digit code, if you want): the chats with their photos, the **deleted** and **edited** messages in a frame with the
   *before and after*, stickers, videos you can play, notes (even the encrypted ones), charts of your conversations,
   and shortcuts, alerts and settings you can edit. [Web interface](docs/web.md)
+- 👀 **The monitor got eyes.** Each monitored contact's **time online** on a 7-day timeline, **who was online
+  together** (the overlap in orange), the habits as a heatmap, and the alert as a **notification on your phone**, even
+  with the page closed (the web installs as an app). [Monitor](docs/web.md#monitor)
+- 🧪 **Try before saving.** A shortcut runs right in its form and shows what it would answer (nothing is sent), and a
+  `/watch` rule is tried on the last 3000 messages, with the part that matched. Plus a **media gallery** and a
+  **health** page of the bot. [Web interface](docs/web.md)
 - 📅 **From a message to your calendar.** Reply to an "appointment confirmed" message with `/calendar`: you get an
   `.ics` for Google Calendar, Apple or Outlook, a link that adds it to Google Calendar and, with `-gpt`, the event in the
   Google Calendar JSON. [`/calendar`](docs/commands/calendar.md)
@@ -110,6 +116,8 @@ and open `http://<your-server>:3200`. Everything below is made-up data. [All the
 | **Home**: the storage like a phone's, the counters and the charts | **History**: edited (with the before and after) and deleted messages in a frame |
 | ![Statistics](docs/assets/web/stats.png) | ![Notes](docs/assets/web/notes.png) |
 | **Statistics**: charts, heatmap, rankings and the change against the last period | **Notes**: the tags, images, video, PDF, and the encrypted ones locked |
+| ![Monitor: online together and the timeline of a contact](docs/assets/web/monitor.png) | ![Media: every file kept, by kind, period and chat](docs/assets/web/gallery.png) |
+| **Monitor**: time online, who was online together and the habits | **Media**: every picture, video and audio kept, with the space each one takes |
 
 ## ✨ What it can do
 

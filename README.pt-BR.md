@@ -35,6 +35,12 @@ Pois é, a gente andou ocupado. O melhor da última leva:
   (e de um código de 6 dígitos, se você quiser): as conversas com as fotos, as mensagens **apagadas** e **editadas**
   num quadro com o *antes e depois*, figurinhas, vídeos que você toca, notas (até as criptografadas), gráficos das
   suas conversas, e atalhos, alertas e settings que você edita. [Interface web](docs/web.md)
+- 👀 **O monitor ganhou olhos.** O **tempo online** de cada contato monitorado numa linha do tempo de 7 dias, **quem
+  ficou online junto** (a sobreposição em laranja), os hábitos num mapa de calor, e o alerta como **notificação no
+  celular**, mesmo com a página fechada (a web instala como app). [Monitor](docs/web.md#monitor)
+- 🧪 **Teste antes de salvar.** Um atalho roda no próprio formulário e mostra o que responderia (nada é enviado), e uma
+  regra do `/watch` é testada nas últimas 3000 mensagens, com a parte que casou. E ainda uma **galeria de mídias** e uma
+  página de **saúde** do bot. [Interface web](docs/web.md)
 - 📅 **De uma mensagem para a sua agenda.** Responda uma mensagem de "agendamento realizado" com `/calendar`: você
   recebe um `.ics` para o Google Agenda, a Apple ou o Outlook, um link que o adiciona ao Google Agenda e, com
   `-gpt`, o evento no JSON do Google Calendar. [`/calendar`](docs/commands/calendar.md)
@@ -110,6 +116,8 @@ Ligue com `/set zapbot.web.login <nome>`, `/set zapbot.web.password <senha>` e `
 | **Início**: o armazenamento como o do celular, os contadores e os gráficos | **Histórico**: mensagens editadas (com o antes e depois) e apagadas num quadro |
 | ![Estatísticas](docs/assets/web/pt-BR/stats.png) | ![Notas](docs/assets/web/pt-BR/notes.png) |
 | **Estatísticas**: gráficos, mapa de calor, rankings e a variação contra o período anterior | **Notas**: as tags, imagens, vídeo, PDF, e as criptografadas travadas |
+| ![Monitor: online juntos e a linha do tempo de um contato](docs/assets/web/pt-BR/monitor.png) | ![Mídias: todo arquivo guardado, por tipo, período e conversa](docs/assets/web/pt-BR/gallery.png) |
+| **Monitor**: tempo online, quem ficou online junto e os hábitos | **Mídias**: toda foto, vídeo e áudio guardado, com o espaço de cada um |
 
 ## ✨ O que ele faz
 

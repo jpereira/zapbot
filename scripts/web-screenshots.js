@@ -22,7 +22,7 @@ const PASSWORD = 'demo-password-123';
 
 const bot = require('../tests/helpers/bot');
 
-const PAIRS = [["Oi! Vamos no cinema sábado?", "Hi! Want to go to the movies on Saturday?"], ["Bora! Qual filme?", "Sure! Which movie?"], ["O novo do Villeneuve, sessão das 19h30", "The new Villeneuve, the 7:30 pm showing"], ["Fechado 🍿", "Deal 🍿"], ["Olha onde fui hoje!", "Look where I went today!"], ["o código do wifi é 8842-1190, não passa pra ninguém", "the wifi code is 8842-1190, do not share it"], ["Chego às 19h15 na porta do cinema, ok?", "I will be at the cinema door at 7:15 pm, ok?"], ["Chego às 19h na porta do cinema", "I will be at the cinema door at 7 pm"], ["Almoço domingo na casa da vovó, 13h!", "Sunday lunch at grandma and grandpa, 1 pm!"], ["Levo a sobremesa", "I will bring dessert"], ["Eu levo o refri 🥤", "I will bring the soda 🥤"], ["Mandei o contrato por e-mail", "I emailed the contract"], ["Recebi, valeu!", "Got it, thanks!"], ["Bom dia, pessoal! Reunião do condomínio na quinta, 19h.", "Good morning, everyone! Building meeting on Thursday, 7 pm."], ["Lembrete: o boleto de novembro vence dia 28 e já está no portal.", "Reminder: the November invoice is due on the 28th and is already on the portal."], ["Obrigada! Alguém sabe se o boleto aceita pix?", "Thanks! Does anyone know if the invoice accepts pix?"], ["Aceita sim, é só usar o pix copia e cola do portal.", "It does, just use the pix copy and paste on the portal."], ["Condomínio Solar", "Solar Building"], ["Síndico Paulo", "Manager Paul"], ["Administração", "Management"], ["Dona Marta", "Mrs. Marta"], ["Família Souza", "Souza Family"], ["Mãe", "Mom"], ["Fulano de Tal", "John Doe"], ["Coisas para cozinhar no fim de semana", "Things to cook on the weekend"], ["Projetos e ideias soltas", "Projects and loose ideas"], ["Bolo de cenoura\\nCenoura, ovos, óleo e açúcar; cobertura de chocolate. https://example.com/bolo-de-cenoura", "Carrot cake\\nCarrots, eggs, oil and sugar; chocolate frosting. https://example.com/carrot-cake"], ["Risoto de limão siciliano\\nArroz arbóreo, caldo de legumes, limão e parmesão.", "Lemon risotto\\nArborio rice, vegetable stock, lemon and parmesan."], ["App para dividir a conta do bar\\nUsar o Pix copia-e-cola e um QR Code por pessoa.", "App to split the bar tab\\nUse the Pix copy-and-paste and one QR Code per person."], ["Automatizar o relatório mensal com o /cron", "Automate the monthly report with /cron"], ["Renovar o seguro do carro até dia 30", "Renew the car insurance by the 30th"], ["Senha do wifi da casa: exemplo-1234", "House wifi password: example-1234"], ["PIN do cartão (exemplo): 0000", "Card PIN (example): 0000"], ["Cotação do dólar", "Dollar quote"], ["Bitcoin em uma linha", "Bitcoin in one line"], ["Abre a tag protegida #cofre", "Opens the protected tag #vault"], ["Texto respondido, falado com uma batida", "A replied text, spoken over a beat"], ["Hora de vender?", "Time to sell?"], ["Bom dia! ☀️", "Good morning! ☀️"], ["Bom domingo, família! ☀️", "Happy Sunday, family! ☀️"], ["Pagar o condomínio", "Pay the building fee"], ["chatstate offline (confirmar no aplicativo)", "chatstate offline (confirm in the app)"], ["/pix|ted/i", "/pix|wire/i"], ["#cofre", "#vault"], ["#receitas", "#recipes"], ["Bom dia", "Good morning"], ["esquece o que eu falei", "forget what I said"], ["Vou atrasar uns 20 minutos", "I will be about 20 minutes late"], ["Roteiros e lugares para conhecer", "Itineraries and places to visit"], ["Lisboa em maio: Alfama, Belém e um pastel de nata por dia", "Lisbon in May: Alfama, Belém and one custard tart a day"], ["receitas", "recipes"], ["ideias", "ideas"], ["cofre", "vault"], ["boleto", "invoice"], ["promoção", "sale"], ["viagens", "travel"], ["/dolar", "/dollar"]];
+const PAIRS = [["Oi! Vamos no cinema sábado?", "Hi! Want to go to the movies on Saturday?"], ["Bora! Qual filme?", "Sure! Which movie?"], ["O novo do Villeneuve, sessão das 19h30", "The new Villeneuve, the 7:30 pm showing"], ["Fechado 🍿", "Deal 🍿"], ["Olha onde fui hoje!", "Look where I went today!"], ["o código do wifi é 8842-1190, não passa pra ninguém", "the wifi code is 8842-1190, do not share it"], ["Chego às 19h15 na porta do cinema, ok?", "I will be at the cinema door at 7:15 pm, ok?"], ["Chego às 19h na porta do cinema", "I will be at the cinema door at 7 pm"], ["Almoço domingo na casa da vovó, 13h!", "Sunday lunch at grandma and grandpa, 1 pm!"], ["Levo a sobremesa", "I will bring dessert"], ["Eu levo o refri 🥤", "I will bring the soda 🥤"], ["Mandei o contrato por e-mail", "I emailed the contract"], ["Recebi, valeu!", "Got it, thanks!"], ["Bom dia, pessoal! Reunião do condomínio na quinta, 19h.", "Good morning, everyone! Building meeting on Thursday, 7 pm."], ["Lembrete: o boleto de novembro vence dia 28 e já está no portal.", "Reminder: the November invoice is due on the 28th and is already on the portal."], ["Obrigada! Alguém sabe se o boleto aceita pix?", "Thanks! Does anyone know if the invoice accepts pix?"], ["Aceita sim, é só usar o pix copia e cola do portal.", "It does, just use the pix copy and paste on the portal."], ["Condomínio Solar", "Solar Building"], ["Síndico Paulo", "Manager Paul"], ["Administração", "Management"], ["Dona Marta", "Mrs. Marta"], ["Família Souza", "Souza Family"], ["Mãe", "Mom"], ["Fulano de Tal", "John Doe"], ["Coisas para cozinhar no fim de semana", "Things to cook on the weekend"], ["Projetos e ideias soltas", "Projects and loose ideas"], ["Bolo de cenoura\\nCenoura, ovos, óleo e açúcar; cobertura de chocolate. https://example.com/bolo-de-cenoura", "Carrot cake\\nCarrots, eggs, oil and sugar; chocolate frosting. https://example.com/carrot-cake"], ["Risoto de limão siciliano\\nArroz arbóreo, caldo de legumes, limão e parmesão.", "Lemon risotto\\nArborio rice, vegetable stock, lemon and parmesan."], ["App para dividir a conta do bar\\nUsar o Pix copia-e-cola e um QR Code por pessoa.", "App to split the bar tab\\nUse the Pix copy-and-paste and one QR Code per person."], ["Automatizar o relatório mensal com o /cron", "Automate the monthly report with /cron"], ["Renovar o seguro do carro até dia 30", "Renew the car insurance by the 30th"], ["Senha do wifi da casa: exemplo-1234", "House wifi password: example-1234"], ["PIN do cartão (exemplo): 0000", "Card PIN (example): 0000"], ["Cotação do dólar", "Dollar quote"], ["Bitcoin em uma linha", "Bitcoin in one line"], ["Abre a tag protegida #cofre", "Opens the protected tag #vault"], ["Texto respondido, falado com uma batida", "A replied text, spoken over a beat"], ["Hora de vender?", "Time to sell?"], ["Bom dia! ☀️", "Good morning! ☀️"], ["Bom domingo, família! ☀️", "Happy Sunday, family! ☀️"], ["Pagar o condomínio", "Pay the building fee"], ["chatstate offline (confirmar no aplicativo)", "chatstate offline (confirm in the app)"], ["/pix|ted/i", "/pix|wire/i"], ["#cofre", "#vault"], ["#receitas", "#recipes"], ["Bom dia", "Good morning"], ["esquece o que eu falei", "forget what I said"], ["Vou atrasar uns 20 minutos", "I will be about 20 minutes late"], ["Roteiros e lugares para conhecer", "Itineraries and places to visit"], ["Lisboa em maio: Alfama, Belém e um pastel de nata por dia", "Lisbon in May: Alfama, Belém and one custard tart a day"], ["receitas", "recipes"], ["ideias", "ideas"], ["cofre", "vault"], ["boleto", "invoice"], ["promoção", "sale"], ["viagens", "travel"], ["/dolar", "/dollar"], ["sem horário (privacidade)", "no time (privacy)"]];
 
 // The pictures are made in English by default: the invented data is written in Portuguese below and translated here
 // (to the database and to the page) unless LANG_UI=pt
@@ -86,6 +86,13 @@ async function seed() {
     fs.writeFileSync(photo, png(480, 320, [40, 120, 190]));
     const sticker = path.join(MEDIA_DIR, 'demo', 'figurinha.webp');
     fs.writeFileSync(sticker, png(256, 256, [230, 150, 40]));
+    // The gallery: more pictures (each with its own color), a video, a voice note and a document
+    const galleryFile = (name, data) => { const file = path.join(MEDIA_DIR, 'demo', name); fs.writeFileSync(file, data); return file; };
+    const gallery = [
+        ['pordosol.png', png(640, 420, [230, 110, 60])], ['montanha.png', png(420, 640, [70, 140, 90])], ['bolo.png', png(500, 500, [200, 160, 110])],
+        ['cachorro.png', png(480, 360, [150, 120, 90])], ['festa.png', png(600, 400, [170, 60, 140])], ['ceu.png', png(520, 360, [60, 110, 200])],
+        ['viagem.mp4', Buffer.alloc(2_400_000, 7)], ['audio.ogg', Buffer.alloc(48_000, 3)], ['boleto-novembro.pdf', Buffer.alloc(180_000, 5)]
+    ].map(([name, data]) => galleryFile(name, data));
     const noteImage = path.join(NOTES_DIR, '1_demo_receita.png');
     fs.writeFileSync(noteImage, png(480, 300, [120, 70, 160]));
 
@@ -101,6 +108,11 @@ async function seed() {
     await insert('a4', ANA, { chatName: 'Ana Souza', body: 'Fechado 🍿', at: t0 + 6 * MIN, fromMe: true });
     await insert('a5', ANA, { chatName: 'Ana Souza', sender: 'Ana Souza', number: '5521999990001', type: 'image', body: 'Olha onde fui hoje!', at: t0 + 2 * HOUR, media: photo });
     await insert('a6', ANA, { chatName: 'Ana Souza', sender: 'Ana Souza', number: '5521999990001', type: 'sticker', at: t0 + 2 * HOUR + MIN, media: sticker });
+    const galleryTypes = ['image', 'image', 'image', 'image', 'image', 'image', 'video', 'ptt', 'document'];
+    for (const [i, file] of gallery.entries()) {
+        const family = i % 3 === 1;
+        await insert(`m${i}`, family ? FAMILY : ANA, { chatName: family ? 'Família Souza' : 'Ana Souza', group: family, sender: family ? 'Mãe' : 'Ana Souza', number: '5521999990001', type: galleryTypes[i], at: now - (i + 1) * 5 * HOUR, media: file, fromMe: i === 4 });
+    }
     await insert('a7', ANA, { chatName: 'Ana Souza', sender: 'Ana Souza', number: '5521999990001', body: 'o código do wifi é 8842-1190, não passa pra ninguém', at: t0 + 3 * HOUR, deleted: true, deletedAt: t0 + 3 * HOUR + 2 * MIN });
     await insert('a0', ANA, { chatName: 'Ana Souza', sender: 'Ana Souza', number: '5521999990001', body: 'esquece o que eu falei', at: t0 - DAY, deleted: true, deletedAt: t0 - DAY + MIN });
     await insert('a8', ANA, { chatName: 'Ana Souza', body: 'Chego às 19h15 na porta do cinema, ok?', at: t0 + 20 * HOUR, fromMe: true });
@@ -186,10 +198,35 @@ async function seed() {
     await bot.dbRun("INSERT INTO watch_destinations (rule, dest_id, dest_name, dest_is_group, recipients) VALUES ('/pix|ted/i', '5521999990004@c.us', 'Lourival Vieira Neto', 0, ?)", [JSON.stringify([{ id: '5521999990004@c.us', name: 'Lourival Vieira Neto', group: false }, { id: FAMILY, name: 'Família Souza', group: true }])]);
     await bot.dbRun("INSERT INTO watch_muted (rule) VALUES ('promoção')");
     const monitorId = (await bot.dbGet('SELECT id FROM monitor_contacts')).id;
-    for (const [i, ago] of [[0, 40 * MIN], [1, 5 * HOUR], [2, 26 * HOUR], [3, 50 * HOUR]]) {
+    // Two weeks of habits: early in the morning and in the evening (the heatmap of the Monitor tab), latest first
+    const seenAgo = [40 * MIN, 5 * HOUR];
+    for (let day = 1; day < 14 && seenAgo.length < 30; day++) seenAgo.push(day * DAY + ((day * 7) % 5) * 20 * MIN, day * DAY + 13 * HOUR + ((day * 3) % 4) * 25 * MIN);
+    for (const [i, ago] of seenAgo.entries()) {
         await bot.dbRun("INSERT INTO monitor_history (contact_id, last_seen, observed_at, source, kind) VALUES (?, ?, ?, 'WAWebCollections.Presence(…).chatstate.attributes.t', 'chatstate offline (confirmar no aplicativo)')", [monitorId, Math.floor((now - ago) / 1000) - i, now - ago + MIN]);
     }
-    await bot.dbRun("INSERT INTO monitor_contacts (contact_id, contact_name, created_at, last_status, last_seen, last_checked_at, alert_enabled) VALUES ('5521999990004@c.us', 'Lourival Vieira Neto', 2, 'online', ?, ?, 0)", [Math.floor((now - 2 * MIN) / 1000), now - MIN]);
+    await bot.dbRun('UPDATE monitor_contacts SET online_state = 0, last_attempt_at = ? WHERE id = ?', [now - MIN, monitorId]);
+    await bot.dbRun("INSERT INTO monitor_contacts (contact_id, contact_name, created_at, last_status, last_seen, last_checked_at, last_attempt_at, alert_enabled, online_state) VALUES ('5521999990004@c.us', 'Lourival Vieira Neto', 2, 'online', ?, ?, ?, 0, 1)", [Math.floor((now - 2 * MIN) / 1000), now - MIN, now - MIN]);
+    await bot.dbRun("INSERT INTO monitor_contacts (contact_id, contact_name, created_at, last_status, last_checked_at, last_attempt_at, alert_enabled) VALUES ('5521999990007@c.us', 'Dona Marta', 3, 'sem horário (privacidade)', ?, ?, 1)", [now - 3 * MIN, now - 3 * MIN]);
+    // The online sessions of the last 7 days (the timeline and "online together"): Carlos in the morning and in the
+    // evening, Lourival in the evening (online right now); they meet most evenings
+    const midnight = new Date(now);
+    midnight.setHours(0, 0, 0, 0);
+    const lourivalId = (await bot.dbGet("SELECT id FROM monitor_contacts WHERE contact_id = '5521999990004@c.us'")).id;
+    const session = (id, start, end, open = false) => bot.dbRun('INSERT INTO monitor_sessions (contact_id, started_at, last_at, ended_at) VALUES (?, ?, ?, ?)', [id, start, end, open ? null : end]);
+    for (let day = 0; day < 7; day++) {
+        const d = midnight.getTime() - day * DAY;
+        const shift = ((day * 7) % 5) * 6 * MIN;
+        if (d + 8 * HOUR < now) await session(monitorId, d + 7 * HOUR + 40 * MIN + shift, d + 8 * HOUR + 15 * MIN + shift);
+        if (d + 20 * HOUR < now) await session(monitorId, d + 19 * HOUR + shift, d + 20 * HOUR + 10 * MIN + shift);
+        if (day % 3 !== 1 && d + 21 * HOUR < now) await session(lourivalId, d + 19 * HOUR + 35 * MIN - shift, d + 21 * HOUR - shift);
+        if (day % 2 === 0 && d + 13 * HOUR < now) await session(lourivalId, d + 12 * HOUR + 10 * MIN, d + 12 * HOUR + 50 * MIN);
+    }
+    await session(lourivalId, now - 25 * MIN, now - MIN, true);
+    // The quote the ▶️ of the /dolar shortcut reads (no internet: the test network of the helpers), and a bot that is
+    // connected, with a couple of errors in its log (the health page)
+    bot.network.responder('get', 'query1.finance.yahoo.com', () => ({ chart: { result: [{ meta: { symbol: 'USDBRL=X', longName: 'USD/BRL', fullExchangeName: 'CCY', currency: 'BRL', regularMarketPrice: 5.43, regularMarketDayHigh: 5.47, regularMarketDayLow: 5.39, regularMarketVolume: 0, fiftyTwoWeekHigh: 6.3, fiftyTwoWeekLow: 5.1 }, indicators: { quote: [{ open: [5.41], close: [5.43], high: [5.47], low: [5.39] }] } }] } }));
+    Object.assign(bot.state, { ready: true, restarting: false, authenticatedAt: now - 3 * DAY - 4 * HOUR });
+    bot.src('log').printError('Price alert: failed to notify:', 'timeout of 15000ms exceeded');
     await bot.dbRun("INSERT INTO schedules (kind, chat_id, chat_name, text, due_at, repeat, created_at) VALUES ('agendar', ?, 'Você', 'Bom dia! ☀️', ?, 'daily', 1)", ['5521999999999@c.us', now + 14 * HOUR]);
     await bot.dbRun("INSERT INTO schedules (kind, chat_id, chat_name, is_group, text, due_at, repeat, created_at, paused) VALUES ('agendar', ?, 'Família Souza', 1, 'Bom domingo, família! ☀️', ?, 'weekly', 1, 1)", [FAMILY, now + 5 * DAY]);
     await bot.dbRun("INSERT INTO schedules (kind, chat_id, chat_name, text, due_at, repeat, created_at) VALUES ('lembrete', ?, 'Você', 'Pagar o condomínio', ?, 'monthly', 1)", ['5521999999999@c.us', now + 3 * DAY]);
@@ -338,22 +375,45 @@ async function main() {
     await rowButton(1, 'boleto', '📜');
     await page.waitForSelector('.modal.wide table');
     await shot('alerts-watch-history', 860);
+    await closeModal();
+    // ✏️ on a /watch rule: it is tried on the last messages, with the part that matched
+    await rowButton(1, 'boleto', '✏️');
+    await page.waitForSelector('.try-sample', { timeout: 15000 });
+    await shot('alerts-watch-test', 900);
+    await closeModal();
+    await rowButton(1, 'boleto', '📜');
+    await page.waitForSelector('.modal.wide table');
     // a click on a match opens its chat at the message, outlined, with the rule and the part that matched
     await page.evaluate(() => document.querySelector('.modal.wide a.link').click());
     await page.waitForSelector('.bubble.watched');
     await wait(600);
     await shot('history-watch', 940);
-    await view('alerts');
-    await page.waitForSelector('table');
-    await rowButton(2, 'Carlos', '📜');
+
+    /* the monitor: a card per contact, with the habits of one open */
+    await view('monitor');
+    await page.waitForSelector('.mon-card');
+    await page.evaluate((w) => [...document.querySelectorAll('.mon-card')].find(c => c.textContent.includes(w)).querySelector('summary').click(), tr('Carlos'));
+    await shot('monitor', 900);
+    await page.evaluate((w) => [...[...document.querySelectorAll('.mon-card')].find(c => c.textContent.includes(w)).querySelectorAll('.icon-btn')].find(b => b.textContent.includes('📜')).click(), tr('Carlos'));
     await page.waitForSelector('.modal.wide table');
-    await shot('alerts-monitor-history', 760);
+    await shot('monitor-history', 760);
     await closeModal();
+    // the habits of the same contact (weekday × hour), under its online time
+    await page.evaluate((w) => [...[...document.querySelectorAll('.mon-card')].find(c => c.textContent.includes(w)).querySelectorAll('summary')].at(-1).click(), tr('Carlos'));
+    await page.evaluate(() => { document.querySelector('#content .page').scrollTop = document.querySelector('.mon-grid').offsetTop - 20; });
+    await shot('monitor-habits', 900);
 
     /* shortcuts, schedule */
     await view('aliases');
     await page.waitForSelector('table');
     await shot('aliases', 760);
+    // ✏️ on a shortcut: the command checked stage by stage, and ▶️ shows what it would answer (nothing is sent)
+    await rowButton(0, '/dolar', '✏️');
+    await page.waitForSelector('.try-stage');
+    await page.evaluate(() => [...document.querySelectorAll('.try-box button')].find(b => b.textContent.includes('▶️')).click());
+    await page.waitForSelector('.try-bubble', { timeout: 15000 });
+    await shot('aliases-test', 860);
+    await closeModal();
     await view('schedule');
     await page.waitForSelector('table');
     await shot('schedule', 760);
@@ -392,6 +452,23 @@ async function main() {
     await page.waitForSelector('.chartcard');
     await shot('stats', 1750);
 
+    /* the media gallery, and its viewer */
+    await view('gallery');
+    await page.waitForSelector('.gal-tile');
+    await wait(500);
+    await shot('gallery', 900);
+    await page.click('.gal-tile');
+    await page.waitForSelector('.gal-viewer');
+    await wait(300);
+    await shot('gallery-viewer', 860);
+    await page.keyboard.press('Escape');
+    await wait(200);
+
+    /* health */
+    await view('health');
+    await page.waitForSelector('.health-verdict');
+    await shot('health', 1100);
+
     /* settings: the panel of the web interface on top, then the rest */
     await view('settings');
     await page.waitForSelector('.webpanel');
@@ -426,6 +503,13 @@ async function main() {
     await wait(500);
     await page.screenshot({ path: path.join(OUT, 'mobile-chat.png') });
     console.log('→ docs/assets/web/mobile-chat.png');
+    for (const name of ['monitor', 'gallery']) {
+        await page.evaluate((v) => document.querySelector(`.rail-btn[data-view="${v}"]`).click(), name);
+        await page.waitForSelector(name === 'monitor' ? '.mon-card' : '.gal-tile');
+        await wait(600);
+        await page.screenshot({ path: path.join(OUT, `mobile-${name}.png`) });
+        console.log(`→ docs/assets/web/mobile-${name}.png`);
+    }
 
     // The QR code the bot sends for the 2FA (a sample: the secret is invented)
     await require('qrcode').toFile(path.join(OUT, '2fa-qr.png'), 'otpauth://totp/ZapBot:demo?secret=JBSWY3DPEHPK3PXP&issuer=ZapBot&digits=6&period=30', { width: 360, margin: 2 });

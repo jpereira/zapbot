@@ -93,11 +93,14 @@ The icons on the left open each part (on a phone they are a bar at the bottom):
 | 🏠 | Home | What the bot keeps: storage, counters, retention and the last 30 days |
 | 💬 | History | The chats and their messages, with the deleted and the edited ones marked |
 | 📝 | Notes | Everything of [`/notes`](commands/notes.md): tags, notes, images, protected tags |
-| 🔔 | Alerts | Price alerts, [`/watch`](commands/watch.md) rules and [`/monitor`](commands/monitor.md) contacts, with their histories |
+| 🔔 | Alerts | Price alerts and [`/watch`](commands/watch.md) rules, with their histories |
+| 👀 | Monitor | The [`/monitor`](commands/monitor.md) contacts: presence, time online, who was online together and habits |
 | ⚡ | Shortcuts | The [`/alias`](commands/alias.md) list |
 | ⏰ | Schedule | What [`/cron`](commands/cron.md) has scheduled |
 | 📊 | Statistics | Charts of the counters of [`/stats`](commands/stats.md) |
 | 🏴‍☠️ | Show | What [`/show`](commands/show.md) keeps (deleted, edited, reactions, statuses, channels) and who is muted |
+| 🖼️ | Media | Every picture, video, audio, sticker and document kept, by chat, kind and period, with the space |
+| 🩺 | Health | WhatsApp, memory, the event loop, the periodic checks, the regex queue and the last errors |
 | ⚙️ | Settings | A panel for the web interface settings, then every other setting |
 
 At the bottom of the bar, the buttons switch the **theme** (automatic, light, dark) and the **language** (English or
@@ -231,6 +234,13 @@ The same page fits a narrow screen: the left bar becomes a bar at the bottom, th
 
 ![On a phone: a chat](assets/web/mobile-chat.png)
 
+The other pages work the same way on a phone: the Monitor stacks its cards and the timelines fit the width, and the
+Media shows three per row, with **☑️ Select** in place of Shift.
+
+![On a phone: the Monitor](assets/web/mobile-monitor.png)
+
+![On a phone: the Media](assets/web/mobile-gallery.png)
+
 Only what the bot has in the database is shown: the text of the common messages stays for
 `cache.messageRetentionDays` (3 days by default; up to 90), and the deleted, edited and reacted ones for their own
 retention ([`/cache`](commands/cache.md), [`/show`](commands/show.md)). To keep more history, raise those settings.
@@ -282,10 +292,10 @@ tag stays out until you unlock it. A protected tag cannot be renamed here (`/not
 
 ## Alerts
 
-Three tables: the price alerts, the `/watch` rules and the monitored contacts. Each one has **＋ Add** and, in each row,
-✏️ edit and 🗑️ delete.
+Two tables: the price alerts and the `/watch` rules (the monitored contacts have their own page, [Monitor](#monitor)).
+Each one has **＋ Add** and, in each row, ✏️ edit and 🗑️ delete.
 
-![The three tables of the Alerts page](assets/web/alerts.png)
+![The two tables of the Alerts page](assets/web/alerts.png)
 
 ### Price alerts
 
@@ -313,14 +323,13 @@ here.
 
 ![The chat opened at the matches: outlined, with the rule and the part that matched](assets/web/history-watch.png)
 
-### Monitored contacts
+**Try it before saving.** The form of a rule tries it, while you type, on the **last 3000 messages received** (the
+ones the `/watch` would have seen: not yours, not commands): how many it would match, in which chats, and each match
+with the part that matched highlighted (a click opens it in the History). An invalid or risky regex shows the same
+error the command gives. Above it, buttons insert the usual pieces: **/…/i** turns the text into a regex (escaped),
+`\b`, `a|b`, `\d+`, `.*` and `(?:…)`. Too many matches warn you: each one is a notice.
 
-The contacts of [`/monitor`](commands/monitor.md) with the status, the last time they were seen, the last check and the
-error, if any. **＋ Add** picks a contact of your address book (the limit is the `monitor.max` setting) and ✏️ edits the
-name and the alert. The **📜** button opens what the monitor read of the contact: each "last seen", with the time it
-was read, and a 🗑️ to remove one reading.
-
-![The readings of a monitored contact](assets/web/alerts-monitor-history.png)
+![A /watch rule tried on the last messages, with the part that matched](assets/web/alerts-watch-test.png)
 
 ### The alert column and who is notified
 
@@ -328,18 +337,69 @@ Everything that can be turned on and off has the **same cell, in the `alert` col
 
 - in the `/watch` table, 🔔 is the **notice of the rule** on and 🔕 off. With it off the matches keep being saved (and
   the history of the rule keeps growing), but nobody is told;
-- in the `/monitor` table, 🔔 is the alert of the contact (you are told when it comes online) and 🔕 off;
 - in the price alerts, ▶️ is an alert being checked and ⏸️ a paused one (the same as `-alert -pause` / `-resume`);
 - in the schedule, ▶️ is a message that is running and ⏸️ a paused one.
 
 Off or paused, the **whole row goes duller, with the text struck through** (it still works; nothing is hidden, just
-dimmer), so a glance at the table already tells which rules, contacts and messages are not doing anything right now.
+dimmer), so a glance at the table already tells which rules, alerts and messages are not doing anything right now.
 The bell/play button itself, and the row's own 🗑️/✏️/📜 buttons, stay as they are.
 
 The price alerts and the `/watch` rules have a **contact picker** in the field *notifies*. Type part of a name (or a
 number) and the matching contacts and groups of your address book show up; click one to add it (several are fine), or
 type an email address. **👤 Me** adds your own account. Empty means your private chat. The same picker chooses the
-contact of the `/monitor`.
+contact of the [Monitor](#monitor).
+
+## Monitor
+
+The contacts of [`/monitor`](commands/monitor.md), one card each, **online first** and then the most recently seen.
+Above them, the loop: 🟢 checking, ⏸️ paused (`monitor.enabled` off or the bot paused), ⏳ waiting for WhatsApp or 🚫
+`/monitor` disabled, the interval (`monitor.pool`), how many of the `monitor.max` slots are used and **⏸️ Pause** /
+**▶️ Resume**, which turns `monitor.enabled` off and on without deleting anything. **＋ Add** picks a contact of your
+address book (it is off when the list is full).
+
+Each card has:
+
+- the photo with a **presence dot**: green is online, grey offline and dashed not known (the contact hides it, or it was
+  not read yet);
+- *online now* or *seen 40 minutes ago*, the status the monitor read, when it was checked and **when the next check
+  is** (the times keep moving while the page is open, with the full date on hover);
+- **when it is usually seen**: the one or two hours with the most readings (*usually seen around 08h and 19h*);
+- the **last 7 days** as a strip, a tick for each time it was seen;
+- **⏱️ Online**: the time online today, in 7 days and per visit, and a **timeline of the last 7 days** (a row per day,
+  24 h wide, a bar for each time it was online, striped while it still is, with a red mark at now);
+- **🔥 When it is seen**, a weekday × hour heatmap of every reading (it remembers which ones you opened);
+- the error of the last check, if any.
+
+And the buttons: **🔔 / 🔕** toggles the online alert, **🔄** checks it in the next round of the loop (about 10 s, past
+the `monitor.pool` wait), **📜** opens each reading (with a 🗑️ to remove one), **💬** opens the chat with the contact in
+the History, **✏️** edits the name and the alert and **🗑️** stops monitoring it (with its history). The filter shows
+up with more than three contacts. The page reloads itself every minute while no window is open and you are not typing
+in the filter.
+
+The heatmap only has what the monitor kept: `monitor.maxRecords` readings per contact (30 by default). Raise it for a
+sharper picture of the habits.
+
+### Time online and online together
+
+Each check that sees a contact **online** opens a session (or stretches the open one); the check that sees it
+**offline** closes it at its *last seen*, when that is later than the start (more precise than the check). The
+sessions are kept for 30 days. Checks every `monitor.pool` seconds see only part of it: a short visit between two
+checks is not there, and a contact that hides its *online* has no sessions. With no check for two rounds (the monitor
+paused, WhatsApp down), an open session ends at its last check instead of growing over the gap.
+
+**🤝 Online together**, above the cards, lists the pairs of monitored contacts that were online **at the same time**
+in the last 7 days, the most first: how long, how many times, the last one, and *🟢 together now* when both are
+online. A click on a pair draws the two on the same 7 days, with **where they overlap in orange**. It is a
+coincidence of times, not proof that they talked.
+
+**📲 Notify on this device** (when the browser can, see [The installable app](#the-installable-app-and-the-notices-on-the-device))
+turns on the notices of the bot in this browser: an *online* alert arrives as a notification, even with the page closed.
+
+![The Monitor page: online together, the cards and the timeline of one](assets/web/monitor.png)
+
+![The habits of a contact: its timeline and the weekday × hour heatmap](assets/web/monitor-habits.png)
+
+![The readings of a monitored contact](assets/web/monitor-history.png)
 
 ## Shortcuts
 
@@ -348,6 +408,14 @@ you), each a button that flips it right in the list (🔊 answers normally, 🔓
 refused, the old shortcut stays.
 
 ![The shortcuts](assets/web/aliases.png)
+
+**▶️ Test** in the form: while you type, each stage of the command is **checked** (✅ ok, ❌ it does not exist, its
+options are wrong or it does not read a pipe, ⚠️ checked but not run here), and **▶️ Test** runs it as if you typed it
+in your private chat, showing **what it would answer** (the text with the WhatsApp marks, a picture, an audio you can
+play), with **nothing sent**. Only what changes nothing runs: what [`/cron`](commands/cron.md) can run, or a command
+that reads a pipe (`/tts`, `/translate`, `/qr`...), and never with an option `/cron` refuses (`-alert`, `-rm`...).
+
+![Testing a shortcut: the stages checked and what it would answer](assets/web/aliases-test.png)
 
 ## Schedule
 
@@ -386,6 +454,55 @@ notice, no deadline) and 🔊 unmutes; 🗑️ takes the item out of the cache. 
 
 ![Show: the notices, the tabs, the recovered items and who deletes the most](assets/web/show.png)
 
+## Media
+
+Every picture, video, audio (voice notes too), sticker and document the bot kept, **the newest first**, with the size
+of each one. The chips filter by **kind** (each with how many there are), the next ones by **period** (7, 30, 90 days
+or always), and the panel on the right lists **the chats that take the most space**: a click shows only that chat.
+
+A click opens the **viewer**: the picture or the video (the audio plays), the chat, who sent it, the date, the size and
+the caption, with **←/→** (the keyboard arrows too) for the next ones, **💬 Open in the chat** (at the message),
+**⬇️ Download** and **🧹 Free this file**. Freeing takes the file off the disk; the message stays in the history, with
+its media missing. **☑️ Select** (or Shift/Ctrl+click) picks several to free at once. The deleted messages have a red
+dashed frame and a 🗑️.
+
+![The media: by kind, period and chat, with the space each one takes](assets/web/gallery.png)
+
+![The viewer: ← → for the next ones, open in the chat, download or free](assets/web/gallery-viewer.png)
+
+## Health
+
+How the bot is doing **right now**, updated every 10 seconds, with a verdict on top (✅ all good, ⚠️ worth a look,
+🚨 something is wrong) and why:
+
+- **WhatsApp**: connected (since when), connecting, down or restarting, the last drop and the failed attempts;
+- **the process**: up since, memory (RSS and the JS heap), the **event loop delay** (p99, mean and max: above 500 ms the
+  bot is slow to answer), the load and the free memory of the host, and the version;
+- **the periodic checks** (`/cron`, `/monitor`, the price, `/notes` and `/defi` alerts): idle or running, **stuck**
+  (red, after 10 minutes), how many rounds and how long the last one took;
+- **the regex worker** of `/watch` and the searches: how many are waiting and how many were answered "no match"
+  (queue full or past the deadline);
+- **the last 50 errors of the log**, already masked as the log shows them (a click opens the whole text).
+
+![Health: WhatsApp, the process, the checks, the regex queue and the last errors](assets/web/health.png)
+
+## The installable app and the notices on the device
+
+The page can be **installed as an app** (Chrome, Edge, Android: **⬇️ Install the app** in Settings → 📲 This device;
+iPhone: Safari → Share → *Add to Home Screen*): its own icon and window, and shortcuts to the Monitor, the Notes and
+the History. Installed or not, the notes you open **stay available offline** (a 📴 bar says when there is no
+network); the notes of a **protected tag never** do, not even unlocked, and everything kept is forgotten at the logout.
+
+**📲 This device** also turns on the **notices of the bot in this browser**, even with the page closed: a monitored
+contact that came online, a `/watch` match (a click opens the message), a price alert and an access to the page. Pick
+which ones; **Send a test** checks it. Each browser is one subscription; the push service of the browser only carries
+it, **encrypted end to end** (the standard Web Push, with the bot's own keys, made the first time). A browser that
+leaves is removed by itself.
+
+The notices and the service worker need the page on **https** (or on `localhost`): with
+[Tailscale serve](#from-the-phone-over-the-internet-tailscale) or a proxy with a certificate it just works; on plain
+`http://<ip>:3200` the panel says so.
+
 ## Settings
 
 On top, a **panel only for the web interface** (the `zapbot.web.*` settings), so you adjust it without searching a long
@@ -422,8 +539,12 @@ and `bot.login` cannot be changed here.
 | ＋ | the title of a list | Adds a row (a form opens) |
 | ✏️ | each row | Edits it, with the same checks as the command |
 | 🗑️ | each row | Deletes it (it asks first); in the Settings, ↺ goes back to the default |
-| 📜 | `/watch` and `/monitor` rows | Opens the history of the rule or of the contact |
-| 🔔 / 🔕 | the `alert` column | On / off; a click toggles |
+| 📜 | `/watch` rows and Monitor cards | Opens the history of the rule or of the contact |
+| 🔔 / 🔕 | the `alert` column and the Monitor cards | On / off; a click toggles |
+| 🔄 | the Monitor cards | Checks the contact in the next round of the loop |
+| ▶️ Test | the shortcut form | Runs the command and shows what it would answer, without sending |
+| ☑️ | the Media | Picks several files (on the phone, where there is no Shift) |
+| 📲 | the Monitor and the Settings | Turns the notices on this device on and off |
 | ▶️ / ⏸️ | the schedule | Running / paused; a click toggles |
 | 🧹 | the header of a chat | Clears its history, keeping the deleted, edited and reacted messages |
 | 👤 | the contact picker | A contact or a group; *Me* is your own account |
@@ -448,7 +569,7 @@ and `bot.login` cannot be changed here.
   its files or the API, and a browser that is already logged in does not warn. Turn it off with
   `zapbot.web.warnAccess off`.
 - **Changes are only the ones you can see**: the page can change shortcuts, alerts, `/watch` rules, monitored
-  contacts, the schedule, notes and settings, always through the same code of the commands, and **never** the login, the
+  contacts, the schedule, notes and settings, and free media files, always through the same code of the commands, and **never** the login, the
   password and the TOTP secret (only `/set` in WhatsApp). It cannot send messages to other people. Every change is
   logged, without the values. The POSTs only take JSON.
 - **Isolated page**: no inline script (strict CSP), `nosniff`, no framing, and the media is served with a `sandbox` CSP:
@@ -462,6 +583,11 @@ and `bot.login` cannot be changed here.
   the addresses seen from inside the container. Configure the proxy to replace `X-Forwarded-For`
   or append its client's address, and to overwrite `X-Forwarded-Proto`. ZapBot uses the last address
   to count login attempts and adds `Secure` to the cookie when the proxy reports `https`.
+- **Push notices** are encrypted for each browser (RFC 8291) and signed with the bot's keys (VAPID): the push service
+  of the browser cannot read them. **Offline**, only the notes the server marks as safe stay in the browser (never a
+  protected tag) and the logout forgets them.
+- **The tries run nothing that changes anything**: ▶️ of a shortcut only runs what `/cron` could (no `-alert`, `-rm`...)
+  and its replies are kept, never sent; the try of a `/watch` rule only reads the last messages.
 - **Protected notes** open on the page only with the password of the tag, in memory, and what is decrypted is never
   written to the cache. **What the bot sends in the chats with a decrypted note is never saved** in the database
   (`notes.lockPrivateOnly` says where the notes open in WhatsApp).
