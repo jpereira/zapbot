@@ -671,3 +671,16 @@ span.hint { border-bottom: 1px dotted var(--muted); cursor: help; }
 .gal-mini-box { position: relative; flex: none; display: inline-flex; }
 .gal-mini-box.video::after { content: '▶'; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: 11px; text-shadow: 0 0 3px #000; }
 .gal-tile .gal-link { top: 4px; bottom: auto; }
+/* 🧪 the test of a scheduled message */
+.sched-meta { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.sched-out { max-height: 60vh; }
+.sched-note { font-size: 12px; }
+dialog.modal { color: var(--text); }
+/* a bar that runs inside a window while something is done (the 🧪 and ▶️ tests) */
+.loadbar { display: grid; gap: 6px; padding: 6px 0; }
+.loadbar-label { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 13px; }
+.loadbar-time { font-variant-numeric: tabular-nums; }
+.loadbar-track { position: relative; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.loadbar-fill { position: absolute; top: 0; bottom: 0; width: 35%; border-radius: 3px; background: var(--accent); animation: loadbar 1.2s ease-in-out infinite; }
+@keyframes loadbar { 0% { left: -35%; } 100% { left: 100%; } }
+@media (prefers-reduced-motion: reduce) { .loadbar-fill { animation-duration: 3s; } }

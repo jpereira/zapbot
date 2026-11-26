@@ -507,6 +507,23 @@ async function itemSendOnDestination(s, d, late) {
 }
 
 /*
+ * What an item would send now, built as itemSendOnDestination does (the {/command}s run, as in its first destination,
+ * with their replies kept), without sending: the "🧪 Test" of the web.
+ */
+async function previewItem(s) {
+    const destinations = itemDestinations(s);
+    const d = destinations[0];
+    const inChat = { ...s, chat_id: d.id, chat_name: d.name, is_group: d.group ? 1 : 0 };
+    const { text: assembled, mediaItems, commands, failures } = await assembleText(s.text, inChat);
+    const prepend = s.kind === 'lembrete' ? getSetting('cron.msgPrepend') : '';
+    return {
+        text: assembled ? `${prepend}${itemText(s, assembled)}` : '',
+        mediaItems, commands, failures,
+        destinations: destinations.map(x => ({ id: x.id, name: x.name, group: Boolean(x.group), where: destinationWhere(x) }))
+    };
+}
+
+/*
  * Periodic check (every 30 s): sends what expired. Disconnected, waits;
  * on return, sends what expired in the meantime (reminders warn about the delay).
  */
@@ -540,5 +557,6 @@ module.exports = {
     startSchedule,
     readScheduling,
     handleSchedule,
-    checkSchedule
+    checkSchedule,
+    previewItem
 };

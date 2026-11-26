@@ -134,7 +134,7 @@ async function schedule() {
             ids: rows.map(s => s.id),
             values: rows.map(s => ({ kind: s.kind, text: s.text, dueAt: s.due_at, repeat: s.repeat || '', recipients: peopleOf({ recipients: s.recipients, dest_id: s.chat_id, dest_name: s.chat_name, dest_is_group: s.is_group }) })),
             manage: {
-                kind: 'schedule', canAdd: true, canEdit: true, canDelete: true,
+                kind: 'schedule', canAdd: true, canEdit: true, canDelete: true, canTry: true,
                 fields: [select('kind', 'kind', [['agendar', 'message (as if you typed it)'], ['lembrete', 'reminder']]), area('text', 'text', { required: true }), people('recipients', 'chat', { noEmail: true }),
                     { name: 'dueAt', label: 'when', type: 'datetime', required: true }, select('repeat', 'repeat', [['', '—'], ['daily', 'daily'], ['weekly', 'weekly'], ['monthly', 'monthly']])]
             }

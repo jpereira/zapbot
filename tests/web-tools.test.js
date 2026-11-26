@@ -396,6 +396,34 @@ describe('the tries of the forms', () => {
         assert.equal((await manage({ section: 'try', op: 'command', command: '/stocks -alert USD > 9' })).body.error, 'not runnable');
     });
 
+    test('🧪 a scheduled message: built as it will go out ({/commands} run), and a command one with the bot answer', async () => {
+        await bot.setSetting('stocks.symbols', 'MSTR');
+        network.responder('get', 'query1.finance.yahoo.com', () => yahoo);
+        const own = bot.client.info.wid._serialized;
+        const due = Date.now() + 3_600_000;
+        await bot.dbRun("INSERT INTO schedules (kind, chat_id, chat_name, is_group, text, due_at, created_at) VALUES ('agendar', 'g@g.us', 'Família', 1, 'Bom dia! {/stocks -q MSTR}', ?, 1)", [due]);
+        const { id } = await bot.dbGet('SELECT id FROM schedules');
+        const before = bot.client.sent.length;
+        const r = (await manage({ section: 'try', op: 'schedule', id })).body;
+        assert.match(r.text, /^Bom dia! .*MSTR/s, 'the {/stocks} ran and its reply went in');
+        assert.deepEqual([r.commands, r.failures, r.dueAt, r.slashText], [['/stocks -q MSTR'], [], due, null]);
+        assert.deepEqual(r.destinations.map(d => [d.id, d.group]), [['g@g.us', true]]);
+        assert.equal(bot.client.sent.length, before, 'nothing went out');
+        assert.equal((await bot.dbGet('SELECT COUNT(*) AS n FROM schedules')).n, 1, 'the schedule is untouched');
+
+        // the form, not saved: a text that starts with / goes out as text, never runs (the braces are what runs)
+        const typed = (await manage({ section: 'try', op: 'schedule', kind: 'agendar', text: '/stocks -q MSTR', recipients: [] })).body;
+        assert.equal(typed.destinations[0].id, own, 'empty: your private chat');
+        assert.deepEqual([typed.text, typed.commands, typed.slashText], ['/stocks -q MSTR', [], '{/stocks -q MSTR}']);
+        const reminder = (await manage({ section: 'try', op: 'schedule', kind: 'lembrete', text: 'pagar a conta', recipients: [] })).body;
+        assert.match(reminder.text, /pagar a conta/);
+        assert.notEqual(reminder.text, 'pagar a conta', 'with the reminder title, as it goes out');
+        const blocked = (await manage({ section: 'try', op: 'schedule', kind: 'agendar', text: 'antes {/backup} depois', recipients: [] })).body;
+        assert.equal(blocked.failures.length, 1, 'a command /cron does not run is a failure, as at the scheduled time');
+        assert.equal((await manage({ section: 'try', op: 'schedule', id: 999 })).status, 400);
+        assert.equal(bot.client.sent.length, before);
+    });
+
     test('a /watch rule on the last received messages: the count, where and the part that matched', async () => {
         const at = Date.now();
         const insert = (id, body, o = {}) => bot.dbRun('INSERT INTO messages (id, chat_id, chat_name, body, type, timestamp, from_me) VALUES (?, ?, ?, ?, ?, ?, ?)',

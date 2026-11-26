@@ -363,6 +363,33 @@ async function scheduleTarget(body, { isNew = false } = {}) {
     return { chatId: own, chatName: 'You', isGroup: 0, recipients: null };
 }
 
+/*
+ * 🧪 Test of a scheduled message (saved, by id, or the form not saved yet): what it would send now, built as the
+ * schedule does (its {/command}s run for real, as in its first destination; nothing is sent). A text that starts
+ * with / goes out as text and never runs (the bot does not run what it sends): the page says so, with the braces.
+ */
+async function trySchedule(body) {
+    let item;
+    if (body.id != null) {
+        item = await dbGet('SELECT * FROM schedules WHERE id = ?', [Number(body.id)]);
+        if (!item) throw new ManageError('schedule: not found');
+    } else {
+        const kind = body.kind === 'lembrete' ? 'lembrete' : 'agendar';
+        const target = await scheduleTarget(body, { isNew: true });
+        item = { kind, text: str(body.text, 'text', { max: 3500 }), chat_id: target.chatId, chat_name: target.chatName, is_group: target.isGroup, recipients: target.recipients, due_at: Number(body.dueAt) || null, repeat: body.repeat || null };
+    }
+    const started = Date.now();
+    const preview = await require('../schedule').previewItem(item);
+    const media = (r) => ({ mimetype: r.content?.mimetype, data: r.content?.data, filename: r.content?.filename ?? null, caption: r.options?.caption ?? '' });
+    return {
+        ok: true, kind: item.kind, dueAt: item.due_at ?? null, repeat: item.repeat ?? null, ms: Date.now() - started,
+        text: preview.text, media: preview.mediaItems.map(media), commands: preview.commands, failures: preview.failures,
+        destinations: preview.destinations,
+        // "/stocks USD" alone: sent as text, not run; {/stocks USD} is what runs
+        slashText: /^\s*\/\S/.test(item.text) ? `{${item.text.trim().split('\n')[0]}}` : null
+    };
+}
+
 async function saveSchedule(body) {
     const s = readSchedule(body);
     const target = await scheduleTarget(body, { isNew: body.id == null });
@@ -468,7 +495,8 @@ const HANDLERS = {
     try: {
         command: async (body) => require('./tryCommand').tryLine(body.command),
         check: async (body) => ({ ...(await require('./tryCommand').checkLine(body.command)), parts: undefined }),
-        watch: async (body) => require('./watchTest').tryWatchRule(body.rule)
+        watch: async (body) => require('./watchTest').tryWatchRule(body.rule),
+        schedule: trySchedule
     },
     gallery: { delete: async (body) => noteResult(await require('./gallery').deleteMedia(body)), join: async (body) => noteResult(await require('./gallery').joinCopies(body)) },
     push: {
