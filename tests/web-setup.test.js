@@ -194,6 +194,22 @@ describe('the email settings in the database', () => {
         assert.equal(bot.emails.at(-1).from, 'ZapBot <bot@exemplo.com>');
     });
 
+    test('the boot rebuilds the SMTP with the database values (email.js may have built it before them)', async () => {
+        await bot.setSetting('zapbot.email.smtp.host', 'smtp.do-banco.com');
+        const email = bot.src('email');
+        let built = 0;
+        const original = email.rebuildTransport;
+        const mail = bot.src('mailConfig');
+        const spy = require.cache[require.resolve('../src/email')].exports;
+        spy.rebuildTransport = () => { built++; return original(); };
+        try {
+            mail.applyMailSettings({ boot: true });
+            assert.equal(built, 1);
+        } finally {
+            spy.rebuildTransport = original;
+        }
+    });
+
     test('the port: 587 is STARTTLS (TLS required), 465 and the others implicit SSL', () => {
         const { startTls } = bot.src('email');
         assert.deepEqual([startTls(587), startTls('587'), startTls(25), startTls(465), startTls(2465), startTls(undefined)], [true, true, true, false, false, false]);

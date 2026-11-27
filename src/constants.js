@@ -22,6 +22,7 @@ const CACHE_DIR = process.env.ZAPBOT_CACHE_DIR || path.join(ROOT_DIR, 'cache');
 const DB_PATH = path.join(CACHE_DIR, 'zapbot.db'); // the SQLite database
 const MEDIA_DIR = path.join(CACHE_DIR, 'media'); // media saved to recover deleted messages
 const TMP_DIR = path.join(CACHE_DIR, 'tmp');     // /get temporary files
+const MODELS_DIR = path.join(CACHE_DIR, 'models'); // the /stt and /tts models downloaded after the image (src/models.js)
 const BACKUP_DIR = path.join(CACHE_DIR, 'backups'); // database backups (/backup)
 const NOTES_DIR = path.join(CACHE_DIR, 'notes');   // note images (/notes)
 const CONTACTS_DIR = path.join(CACHE_DIR, 'contacts'); // contacts' profile photos (/contacts)
@@ -70,6 +71,7 @@ module.exports = {
     ROOT_DIR,
     SCRIPT_STT,
     SCRIPT_TTS,
+    MODELS_DIR,
     PIPER_DIR,
     THUMBNAIL_MAX_BYTES,
     THUMBNAIL_TIMEOUT_MS,

@@ -6,7 +6,7 @@ const fs = require('fs-extra');
 const path = require('path');
 
 const { listBackups } = require('../backup');
-const { BACKUP_DIR, CACHE_DIR, CONTACTS_DIR, DB_PATH, MEDIA_DIR, NOTES_DIR, TMP_DIR } = require('../constants');
+const { BACKUP_DIR, CACHE_DIR, CONTACTS_DIR, DB_PATH, MEDIA_DIR, MODELS_DIR, NOTES_DIR, TMP_DIR } = require('../constants');
 const { dbGet } = require('../db');
 const { REAL } = require('./data');
 const { getSetting } = require('../settings');
@@ -37,8 +37,8 @@ async function overview() {
     const messages = await dbGet(`SELECT COUNT(*) AS total, COALESCE(SUM(revoked), 0) AS deleted, COALESCE(SUM(has_media), 0) AS withMedia,
         MIN(timestamp) AS firstAt, MAX(timestamp) AS lastAt, COUNT(DISTINCT chat_id) AS chats FROM messages WHERE ${REAL}`);
 
-    const [media, notesDir, contacts, tmp, backupsList] = await Promise.all([
-        folderStats(MEDIA_DIR), folderStats(NOTES_DIR), folderStats(CONTACTS_DIR), folderStats(TMP_DIR), listBackups().catch(() => [])
+    const [media, notesDir, contacts, tmp, models, backupsList] = await Promise.all([
+        folderStats(MEDIA_DIR), folderStats(NOTES_DIR), folderStats(CONTACTS_DIR), folderStats(TMP_DIR), folderStats(MODELS_DIR), listBackups().catch(() => [])
     ]);
     const backups = await folderStats(BACKUP_DIR);
     const db = (await size(DB_PATH)) + (await size(`${DB_PATH}-wal`));
@@ -61,7 +61,8 @@ async function overview() {
             notes: { ...notesDir },
             contacts: { ...contacts },
             backups: { count: backupsList.length, bytes: backups.bytes },
-            temporary: { ...tmp }
+            temporary: { ...tmp },
+            models: { ...models }
         },
         retention: {
             messageDays: getSetting('cache.messageRetentionDays'),

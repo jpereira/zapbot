@@ -959,7 +959,13 @@ const SETTINGS_SCHEMA = {
     'stt.model': {
         default: 'small',
         type: 'string',
-        desc: 'Modelo do faster-whisper no /stt: tiny, base, small, medium ou large-v3-turbo (maior = melhor e mais lento). O small vem na imagem; outro é baixado na primeira vez. O -model muda na chamada.'
+        desc: 'Modelo do faster-whisper no /stt: tiny, base, small, medium ou large-v3-turbo (maior = melhor e mais lento). O small vem na imagem; outro é baixado na primeira vez (ou no início, com STT_MODELS). O -model muda na chamada.',
+        // a name faster-whisper knows (src/models.js), or a Hugging Face repository (org/name) of a converted model
+        validate: (v) => {
+            const { STT_MODEL_NAMES } = require('./models');
+            if (!STT_MODEL_NAMES.includes(v) && !/^[\w.-]+\/[\w.-]+$/.test(v)) throw new Error(t('adm.settings.unsupported', { s: v, list: STT_MODEL_NAMES.join(', ') }));
+            return v;
+        }
     },
     'stt.vad': {
         default: true,
@@ -1508,6 +1514,8 @@ async function setSetting(key, value) {
     if (key === 'zapbot.client.userAgent') updateAxiosUserAgent();
     if (key === 'monitor.maxRecords') await limitHistoryMonitor(value);
     if (require('./mailConfig').isMailSetting(key)) require('./mailConfig').applyMailSettings();
+    // a model that is not here (stt.model, tts.voice.*): downloaded in the background, with a notice in your private chat
+    if (key === 'stt.model' || key === 'tts.voice.pt' || key === 'tts.voice.en') require('./models').onSettingChanged(key, value).catch(() => {});
 
     return value;
 }

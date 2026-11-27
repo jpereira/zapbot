@@ -59,6 +59,7 @@ function health() {
         eventLoop: loop,
         loops,
         regex: regexStats(),
+        models: require('../models').modelsStatus(),
         errors
     };
 }

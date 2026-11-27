@@ -11,7 +11,7 @@ Roda **dentro do servidor**, com o [faster-whisper](https://github.com/SYSTRAN/f
 |---|---|---|
 | `-quiet`, `-q` | | Devolve **só** o texto transcrito: sem cabeçalho (idioma e duração), sem a dica do motor e sem o aviso `⏳`. Com `-sum`, o resumo e o texto, sem títulos. Para esconder a dica sempre: o setting `stt.footer` em `off` |
 | `-lang`, `-L` | `<código>` | O idioma da fala: `pt`, `en`, `es`, `pt-br`... ou `auto` (o whisper detecta). Com `-gpt`, também vai para a API da OpenAI. O padrão é o setting `stt.language` (`auto`). (O `-l` é o atalho do `-local`) |
-| `-model`, `-M` | `<nome>` | O modelo do faster-whisper (`tiny`, `base`, `small`, `medium`, `large-v3-turbo`...; maior é melhor e mais lento; o que não está na imagem é baixado na primeira vez). Com `-gpt`, o modelo da OpenAI. O padrão é o setting `stt.model` |
+| `-model`, `-M` | `<nome>` | O modelo do faster-whisper (`tiny`, `base`, `small`, `medium`, `large-v3-turbo`...; maior é melhor e mais lento; o que não está na imagem é baixado na primeira vez, ou no início com o [`STT_MODELS`](../configuration.md#modelos-locais-do-stt-e-do-tts)). Com `-gpt`, o modelo da OpenAI. O padrão é o setting `stt.model` |
 | `-beam`, `-b` | `<1-10>` | O tamanho do beam da busca local: `1` é o mais rápido, mais pode acertar um pouco mais e demora mais. O padrão é o setting `stt.beam` |
 | `-vad` | `<on\|off>` | `on`: pula o silêncio e a música antes de transcrever (onde o whisper inventa texto); `off`: transcreve tudo. Só no motor local. O padrão é o setting `stt.vad` |
 | `-startSec`, `-ss` | `<tempo>` | Começa neste ponto (padrão 0), em segundos (`30`) ou em `min:seg` (`09:33`). Com `-` na frente, conta do **final** (`-60` é o último minuto) |

@@ -141,6 +141,33 @@ and check the service's production terms.
 No variable needed: `/translate` uses Google Translate with no key. The only cost is the possible
 rate limit by IP.
 
+## Local models of /stt and /tts
+
+| Variable | Example | Description |
+|---|---|---|
+| `STT_MODELS` | `small,large-v3-turbo` | The [`/stt`](commands/stt.md) models (faster-whisper) kept ready. Default `small`, which comes in the image. `large-v3-turbo` (~1.6 GB) is close to `large-v3` and much faster; `medium`, `distil-large-v3` and the others the start lists also work |
+| `TTS_VOICES` | `pt_BR-faber-medium,en_US-lessac-medium,pt_PT-tugão-medium` | The [`/tts`](commands/tts.md) voices (Piper) kept ready. Default: the two of the image |
+| `ZAPBOT_MODELS_PREFETCH` | `false` | `false`: no list and no download at the start (the first use of a model still downloads it) |
+
+At the start the bot lists **every model that exists**, with ✅ on the ones that are here, and downloads the missing
+ones **in the background**, one at a time, to the cache volume (`cache/models/`): they survive a new image, and
+Health shows each one ready, downloading or failed. The ones the settings use (`stt.model`, `tts.voice.pt`,
+`tts.voice.en`) join the list by themselves, so the first `/stt` never waits for a download:
+
+```text
+[!] 🎙️ STT STT_MODELS=small,large-v3-turbo: ready small (image, 464.0 MB); downloading large-v3-turbo in the background
+[!] 🎙️ STT available: tiny.en, tiny, base.en, base, small.en, small ✅, medium.en, medium, large-v1, large-v2, large-v3, large, distil-large-v2, distil-medium.en, distil-small.en, distil-large-v3, distil-large-v3.5, large-v3-turbo ⬇️, turbo
+[!] 🎙️ STT: downloading large-v3-turbo (≈ 1.6 GB) to /app/cache/models/whisper...
+[+] 🎙️ STT: large-v3-turbo ready (1.5 GB) in 2 min
+```
+
+A name that does not exist is told with the close ones (`'pt_BR-fabe-medium' does not exist; close ones: …`).
+Then `/set stt.model large-v3-turbo` uses it. **Changing the setting to a model that is not here starts the
+download at once**, with a notice in your private chat (`⬇️ Updating /stt: downloading large-v3-turbo (≈ 1.6 GB) in
+the background. Please wait…`) and another when it is ready; a `/stt` meanwhile asks you to wait instead of
+downloading it twice. The same for `tts.voice.pt` and `tts.voice.en`. And `/stt model` (without the dash) asks
+"did you mean `-model`?".
+
 ## Email (QR Code and alerts)
 
 | Variable | Example | Description |

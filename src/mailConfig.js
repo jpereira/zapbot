@@ -70,7 +70,8 @@ function applyMailSettings({ boot = false } = {}) {
     }
     if (boot && overridden.length) printInfo(`Overriding db mail settings by local env: ${overridden.join(', ')} (config/.env wins over /set zapbot.email.*; /set zapbot.email.overrideEnv on gives the database priority)`);
     if (boot && ignored.length) printInfo(`Overriding local env mail settings by db: ${ignored.join(', ')} ignored (zapbot.email.overrideEnv is on)`);
-    if (!boot) require('./email').rebuildTransport();
+    // at the boot too: email.js may have built the SMTP before the database values came (127.0.0.1:465)
+    require('./email').rebuildTransport();
     return { overridden, applied, ignored };
 }
 

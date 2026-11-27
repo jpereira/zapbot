@@ -31,6 +31,8 @@ for (const v of ENV_CLEAN) delete process.env[v];
 process.env.ZAPBOT_CACHE_DIR = CACHE_DIR;
 process.env.ZAPBOT_HEARTBEAT_FILE = path.join(CACHE_DIR, 'heartbeat.json');
 process.env.PHONE_NUMBER = '5521900000000';
+// no list and no download of the /stt and /tts models in the background (src/models.js): the tests spawn nothing
+process.env.ZAPBOT_MODELS_PREFETCH = 'false';
 
 const OWNER = { user: '5521900000000', jid: '5521900000000@c.us', name: 'Dono' };
 

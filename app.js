@@ -111,6 +111,7 @@ const { startHeartbeat } = require('./src/heartbeat');
 const { startCleanupPeriodic } = require('./src/cleanup');
 const { startApi } = require('./src/api');
 const { startWeb } = require('./src/web/server');
+const { startModels } = require('./src/models');
 const { startMonitor } = require('./src/monitor');
 const { startReopenings } = require('./src/groupReopen');
 
@@ -129,5 +130,6 @@ startMonitor();
 startReopenings();
 startApi();
 startWeb();
+startModels();
 
 startBot();

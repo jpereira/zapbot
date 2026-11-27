@@ -140,6 +140,33 @@ e consulte as condições de produção do serviço.
 Nenhuma variável necessária: o `/translate` usa o Google Translate sem chave. O único custo é o
 possível limite por IP.
 
+## Modelos locais do /stt e do /tts
+
+| Variável | Exemplo | Descrição |
+|---|---|---|
+| `STT_MODELS` | `small,large-v3-turbo` | Os modelos do [`/stt`](commands/stt.md) (faster-whisper) mantidos prontos. Padrão `small`, que vem na imagem. O `large-v3-turbo` (~1,6 GB) chega perto do `large-v3` e é bem mais rápido; `medium`, `distil-large-v3` e os outros que o início lista também valem |
+| `TTS_VOICES` | `pt_BR-faber-medium,en_US-lessac-medium,pt_PT-tugão-medium` | As vozes do [`/tts`](commands/tts.md) (Piper) mantidas prontas. Padrão: as duas da imagem |
+| `ZAPBOT_MODELS_PREFETCH` | `false` | `false`: sem lista e sem download no início (o primeiro uso de um modelo continua baixando) |
+
+No início o bot lista **todos os modelos que existem**, com ✅ nos que já estão aqui, e baixa os que faltam **em
+segundo plano**, um de cada vez, para o volume do cache (`cache/models/`): eles sobrevivem a uma imagem nova, e a
+Saúde mostra cada um pronto, baixando ou com falha. Os que os settings usam (`stt.model`, `tts.voice.pt`,
+`tts.voice.en`) entram na lista sozinhos, então o primeiro `/stt` nunca espera um download:
+
+```text
+[!] 🎙️ STT STT_MODELS=small,large-v3-turbo: ready small (image, 464.0 MB); downloading large-v3-turbo in the background
+[!] 🎙️ STT available: tiny.en, tiny, base.en, base, small.en, small ✅, medium.en, medium, large-v1, large-v2, large-v3, large, distil-large-v2, distil-medium.en, distil-small.en, distil-large-v3, distil-large-v3.5, large-v3-turbo ⬇️, turbo
+[!] 🎙️ STT: downloading large-v3-turbo (≈ 1.6 GB) to /app/cache/models/whisper...
+[+] 🎙️ STT: large-v3-turbo ready (1.5 GB) in 2 min
+```
+
+Um nome que não existe é avisado com os parecidos (`'pt_BR-fabe-medium' does not exist; close ones: …`). Depois,
+`/set stt.model large-v3-turbo` passa a usá-lo. **Trocar o setting para um modelo que não está aqui já começa o
+download**, com um aviso no seu privado (`⬇️ Atualizando o /stt: baixando large-v3-turbo (≈ 1.6 GB) em segundo
+plano. Aguarde…`) e outro quando estiver pronto; um `/stt` nesse meio-tempo pede para aguardar em vez de baixar duas
+vezes. O mesmo vale para `tts.voice.pt` e `tts.voice.en`. E `/stt model` (sem o traço) pergunta "você quis dizer
+`-model`?".
+
 ## E-mail (QR Code e alertas)
 
 | Variável | Exemplo | Descrição |

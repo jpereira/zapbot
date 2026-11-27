@@ -19,13 +19,17 @@ import wave
 from pathlib import Path
 
 # This script's version: it goes up when the options or the output change
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 PROG = os.path.basename(sys.argv[0]) if sys.argv and sys.argv[0] else "tts.py"
 DEFAULT_DIR = os.environ.get("PIPER_VOICES_DIR", "/opt/piper")
+# The voices that come in the Docker image (read-only): used from there, never downloaded again to DIR
+IMAGE_DIR = os.environ.get("PIPER_IMAGE_DIR", "")
+# The catalog of the Piper voices (voices.json), kept in DIR for a day
+CATALOG_MAX_AGE = 24 * 60 * 60
 
-SHORT_OPTIONS = "hmVDlpi:t:v:d:o:s:r:n:w:"
+SHORT_OPTIONS = "hmVDlpSi:t:v:d:o:s:r:n:w:"
 LONG_OPTIONS = [
-    "help", "man", "version", "debug", "list", "prefetch",
+    "help", "man", "version", "debug", "list", "prefetch", "status",
     "input=", "text=", "voice=", "dir=", "output=", "speed=", "speaker=", "noise=", "noise-w=",
 ]
 
@@ -33,6 +37,7 @@ USAGE = f"""\
 usage: {PROG} -v VOICE -o OUTPUT.wav (-i FILE | -t TEXT) [-d DIR] [-s SPEED] [-r ID] [-n N] [-w N] [-D]
        {PROG} -p -v VOICE [-d DIR]
        {PROG} -l [-d DIR]
+       {PROG} -S [-d DIR]
        {PROG} -h | -m | -V
 
   -i, --input FILE     text file to speak ("-" reads the standard input)
@@ -45,7 +50,8 @@ usage: {PROG} -v VOICE -o OUTPUT.wav (-i FILE | -t TEXT) [-d DIR] [-s SPEED] [-r
   -n, --noise N        variation of the voice (Piper noise_scale)
   -w, --noise-w N      variation of the rhythm (Piper noise_w_scale)
   -p, --prefetch       only downloads the voice, speaks nothing
-  -l, --list           lists the voices that are in DIR
+  -l, --list           lists the voices that are in DIR (and in $PIPER_IMAGE_DIR)
+  -S, --status         the voices that exist (the Piper catalog) and the installed ones, as JSON
   -D, --debug          prints on the stderr what the script received and what it will do
   -V, --version        prints the versions of this script and of Piper, as JSON
   -h, --help           this help
@@ -92,7 +98,11 @@ OPTIONS
     -p, --prefetch
         Only downloads the voice; needs --voice and speaks nothing.
     -l, --list
-        Prints the ids of the voices that are in the folder, one per line.
+        Prints the ids of the installed voices (in DIR and in $PIPER_IMAGE_DIR), one per line.
+    -S, --status
+        One JSON line: "available" (the ids of the Piper catalog, voices.json, kept in DIR for a day; null
+        without network), "installed" (each one with "where": image or dir, and "bytes"), "dir" and "image".
+        The bot reads it at startup.
     -D, --debug
         Prints on the stderr the arguments received, the options understood and each step.
     -V, --version
@@ -117,6 +127,7 @@ EXAMPLES
 
 FILES
     $PIPER_VOICES_DIR (default {DEFAULT_DIR})   the voices: <voice>.onnx and <voice>.onnx.json
+    $PIPER_IMAGE_DIR   voices that come in the image (read-only): used from there, never downloaded again
 
 AUTHOR
     Jorge Pereira - ZapBot, https://github.com/jpereira/zapbot
@@ -168,6 +179,8 @@ def parse(argv):
             opts["action"] = "list"
         elif flag in ("-p", "--prefetch"):
             opts["action"] = "prefetch"
+        elif flag in ("-S", "--status"):
+            opts["action"] = "status"
         elif flag in ("-D", "--debug"):
             opts["debug"] = True
         elif flag in ("-i", "--input"):
@@ -214,10 +227,49 @@ def versions():
     return 0
 
 
+def installed_voices(opts):
+    """{voice: (where, path of the .onnx)}: the image first, then DIR."""
+    found = {}
+    for where, folder in (("dir", opts["dir"]), ("image", IMAGE_DIR)):
+        if folder:
+            for model in Path(folder).glob("*.onnx"):
+                if model.with_suffix(".onnx.json").exists():
+                    found[model.stem] = (where, model)
+    return found
+
+
 def list_voices(opts):
-    folder = Path(opts["dir"])
-    for model in sorted(folder.glob("*.onnx")):
-        print(model.stem)
+    for voice in sorted(installed_voices(opts)):
+        print(voice)
+    return 0
+
+
+def catalog(opts):
+    """The ids of every Piper voice (voices.json, kept in DIR for a day), or None without network."""
+    import time
+    from urllib.request import urlopen
+
+    from piper.download_voices import VOICES_JSON
+
+    cached = Path(opts["dir"]) / "voices.json"
+    try:
+        if not cached.exists() or time.time() - cached.stat().st_mtime > CATALOG_MAX_AGE:
+            with urlopen(VOICES_JSON, timeout=20) as response:
+                data = response.read()
+            json.loads(data)
+            cached.parent.mkdir(parents=True, exist_ok=True)
+            cached.write_bytes(data)
+        return sorted(json.loads(cached.read_text(encoding="utf-8")))
+    except Exception as err:  # noqa: BLE001 - no network: the installed ones still answer
+        debug(opts, f"catalog: {err}")
+        return sorted(json.loads(cached.read_text(encoding="utf-8"))) if cached.exists() else None
+
+
+def status(opts):
+    installed = [{"voice": voice, "where": where, "bytes": model.stat().st_size + model.with_suffix(".onnx.json").stat().st_size}
+                 for voice, (where, model) in sorted(installed_voices(opts).items())]
+    print(json.dumps({"available": catalog(opts), "installed": installed, "dir": opts["dir"], "image": IMAGE_DIR or None},
+                     ensure_ascii=False))
     return 0
 
 
@@ -233,6 +285,10 @@ def prepare_download():
 def ensure_voice(opts):
     """Returns the path of the voice model, downloading it if it is not in the folder."""
     folder = Path(opts["dir"])
+    image = Path(IMAGE_DIR) / f"{opts['voice']}.onnx" if IMAGE_DIR else None
+    if image and image.exists():
+        debug(opts, f"voice in the image, {IMAGE_DIR}")
+        return image
     model = folder / f"{opts['voice']}.onnx"
     if model.exists():
         debug(opts, f"voice already in {folder}")
@@ -301,6 +357,8 @@ def main(argv):
             return versions()
         if action == "list":
             return list_voices(opts)
+        if action == "status":
+            return status(opts)
         if action == "prefetch":
             ensure_voice(opts)
             return 0

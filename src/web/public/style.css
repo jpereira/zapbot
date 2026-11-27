@@ -234,6 +234,7 @@ button.link:hover { text-decoration: underline; }
 .seg-contacts { background: #a78bfa; }
 .seg-backups { background: #f15c6d; }
 .seg-temporary { background: #8696a0; }
+.seg-models { background: #c084fc; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; color: var(--muted); font-size: 12.5px; }
 .legend b { color: var(--text); font-weight: 500; }
 .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
@@ -755,3 +756,4 @@ dialog.modal { color: var(--text); }
 .setup-card .mail-test { display: flex; flex-wrap: wrap; gap: 8px; }
 .setup-skip { width: 100%; background: transparent; }
 .setup-card input:disabled { opacity: .7; }
+.models-list { display: grid; gap: 4px; margin: 6px 0; font-size: 14px; }

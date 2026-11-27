@@ -11,7 +11,7 @@ It runs **inside the server**, with [faster-whisper](https://github.com/SYSTRAN/
 |---|---|---|
 | `-quiet`, `-q` | | Returns **only** the transcribed text: no header (language and duration), no engine tip and no `⏳` notice. With `-sum`, the summary and the text, with no titles. To hide the tip always: the `stt.footer` setting off |
 | `-lang`, `-L` | `<code>` | The language of the speech: `pt`, `en`, `es`, `pt-br`... or `auto` (whisper detects it). With `-gpt`, it also goes to the OpenAI API. The default is the `stt.language` setting (`auto`). (`-l` is the short of `-local`) |
-| `-model`, `-M` | `<name>` | The faster-whisper model (`tiny`, `base`, `small`, `medium`, `large-v3-turbo`...; bigger is better and slower; one that isn't in the image is downloaded the first time). With `-gpt`, the OpenAI model. The default is the `stt.model` setting |
+| `-model`, `-M` | `<name>` | The faster-whisper model (`tiny`, `base`, `small`, `medium`, `large-v3-turbo`...; bigger is better and slower; one that isn't in the image is downloaded the first time, or at the start with [`STT_MODELS`](../configuration.md#local-models-of-stt-and-tts)). With `-gpt`, the OpenAI model. The default is the `stt.model` setting |
 | `-beam`, `-b` | `<1-10>` | The beam size of the local search: `1` is the fastest, more can get a little more right and takes longer. The default is the `stt.beam` setting |
 | `-vad` | `<on\|off>` | `on`: skips the silence and the music before transcribing (where whisper invents text); `off`: transcribes it all. Local engine only. The default is the `stt.vad` setting |
 | `-startSec`, `-ss` | `<time>` | Starts at this point (default 0), in seconds (`30`) or `min:sec` (`09:33`). With a `-` in front, counts from the **end** (`-60` is the last minute) |
