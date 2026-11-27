@@ -15,13 +15,17 @@ const { getSetting } = require('../settings');
 async function folderStats(dir) {
     let files = 0;
     let bytes = 0;
+    const seen = new Set(); // a hard link (the media joined by "the same files") takes its space once, like du
     const walk = async (current) => {
         for (const entry of await fs.readdir(current, { withFileTypes: true }).catch(() => [])) {
             const full = path.join(current, entry.name);
             if (entry.isDirectory()) await walk(full);
             else if (entry.isFile()) {
                 files++;
-                bytes += (await fs.stat(full).catch(() => ({ size: 0 }))).size;
+                const stat = await fs.lstat(full).catch(() => null);
+                if (!stat || seen.has(`${stat.dev}:${stat.ino}`)) continue;
+                seen.add(`${stat.dev}:${stat.ino}`);
+                bytes += stat.size;
             }
         }
     };

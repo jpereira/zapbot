@@ -288,3 +288,23 @@ describe('caracteres invisíveis (util/messageBody.js)', () => {
         assert.equal(withoutInvisible(runner), runner);
     });
 });
+
+describe('getDirSize, like du', () => {
+    test('a symlink is not followed and a hard link counts once (the /stt models, the media joined)', () => {
+        const fs = require('fs');
+        const os = require('os');
+        const path = require('path');
+        const { getDirSize } = bot.src('util/files');
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zb-du-'));
+        try {
+            fs.mkdirSync(path.join(dir, 'blobs'));
+            fs.writeFileSync(path.join(dir, 'blobs', 'b'), Buffer.alloc(1000));
+            fs.symlinkSync(path.join(dir, 'blobs', 'b'), path.join(dir, 'model.bin'));
+            fs.linkSync(path.join(dir, 'blobs', 'b'), path.join(dir, 'hard'));
+            fs.writeFileSync(path.join(dir, 'other'), Buffer.alloc(10));
+            assert.equal(getDirSize(dir), 1010);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+});

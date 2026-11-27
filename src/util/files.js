@@ -9,12 +9,21 @@ const { CACHE_DIR, MEDIA_DIR } = require('../constants');
 const { printInfo } = require('../log');
 const { t } = require('../i18n');
 
-function getDirSize(dir) {
+// The space a folder takes, like du: a symlink is not followed (the /stt models link model.bin to blobs/, which
+// counted the 1.5 GB three times) and a hard link counts once (the media joined by "the same files")
+function getDirSize(dir, seen = new Set()) {
     let total = 0;
 
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         const fullPath = path.join(dir, entry.name);
-        total += entry.isDirectory() ? getDirSize(fullPath) : fs.statSync(fullPath).size;
+        if (entry.isDirectory()) total += getDirSize(fullPath, seen);
+        else if (entry.isFile()) {
+            const stat = fs.lstatSync(fullPath);
+            const inode = `${stat.dev}:${stat.ino}`;
+            if (seen.has(inode)) continue;
+            seen.add(inode);
+            total += stat.size;
+        }
     }
 
     return total;
