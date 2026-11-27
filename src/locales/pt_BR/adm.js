@@ -323,6 +323,7 @@ module.exports = {
     'adm.set.detail': '⚙️ *{key}*\n{desc}\n\n*Valor:* {value}\n*Padrão:* {fallback}\n*Tipo:* {type}',
     'adm.set.pollWarning': '⚠️ Intervalos curtos e mais contatos aumentam as consultas e podem contribuir para bloqueio pelo WhatsApp. Nenhum valor garante segurança.',
     'adm.settings.badNumber': 'número inválido: {v} (use DDI + DDD + número, ex.: +5521999999999)',
+    'adm.settings.imapIsSmtp': '{host} é o servidor de envio (SMTP), não o IMAP. Do mesmo provedor, costuma ser {imap}.',
     'adm.settings.unknownCommand': 'comando desconhecido: {name}',
     'adm.settings.ownerOnlyCmd': 'o {cmd} é só do dono, não dá para liberar',
     'adm.settings.adminOnlyCmd': 'o {cmd} é só do dono e dos admins, não dá para liberar',

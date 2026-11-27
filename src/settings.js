@@ -1155,7 +1155,12 @@ const SETTINGS_SCHEMA = {
         default: '',
         type: 'string',
         allowEmpty: true,
-        desc: 'Servidor IMAP (porta 993, SSL), opcional: liga o /bot -flush-email; usa o login do SMTP (QRCODE_EMAIL_IMAP_HOST tem prioridade).'
+        desc: 'Servidor IMAP (porta 993, SSL), opcional: liga o /bot -flush-email; usa o login do SMTP (QRCODE_EMAIL_IMAP_HOST tem prioridade).',
+        // smtp.mail.yahoo.com here never answers on 993 (the /bot -test waited 20 s): the IMAP one, suggested
+        validate: (v) => {
+            if (/^smtp[.-]/i.test(v)) throw new Error(t('adm.settings.imapIsSmtp', { host: v, imap: v.replace(/^smtp/i, 'imap') }));
+            return v;
+        }
     },
     'zapbot.email.overrideEnv': {
         default: false,

@@ -323,6 +323,7 @@ module.exports = {
     'adm.set.detail': '⚙️ *{key}*\n{desc}\n\n*Value:* {value}\n*Default:* {fallback}\n*Type:* {type}',
     'adm.set.pollWarning': '⚠️ Short intervals and more contacts increase the queries and can contribute to a WhatsApp block. No value guarantees safety.',
     'adm.settings.badNumber': 'invalid number: {v} (use country code + area code + number, e.g.: +5521999999999)',
+    'adm.settings.imapIsSmtp': '{host} is the sending server (SMTP), not the IMAP one. Of the same provider, it is usually {imap}.',
     'adm.settings.unknownCommand': 'unknown command: {name}',
     'adm.settings.ownerOnlyCmd': '{cmd} is for the owner only, it can\'t be delegated',
     'adm.settings.adminOnlyCmd': '{cmd} is for the owner and admins only, it can\'t be delegated',

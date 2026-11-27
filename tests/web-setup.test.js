@@ -226,3 +226,13 @@ describe('the email settings in the database', () => {
         assert.equal(mail.isMailSetting('zapbot.email.alerts'), false, 'the alerts switch is not a variable');
     });
 });
+
+describe('the IMAP host', () => {
+    beforeEach(() => bot.restart());
+
+    test('the SMTP server in the IMAP one is refused, with the IMAP of the same provider suggested', async () => {
+        await assert.rejects(bot.setSetting('zapbot.email.imap.host', 'smtp.mail.yahoo.com'), /imap\.mail\.yahoo\.com/);
+        await bot.setSetting('zapbot.email.imap.host', 'imap.mail.yahoo.com');
+        assert.equal(bot.getSetting('zapbot.email.imap.host'), 'imap.mail.yahoo.com');
+    });
+});
