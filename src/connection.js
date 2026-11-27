@@ -114,7 +114,7 @@ async function restartClient(reasonAlt) {
         await client.initialize();
     } catch (e) {
         errorAlt = e;
-        printError('initialize failed:', e.message);
+        printError('initialize failed:', e.message, initializeWhere(e));
     } finally {
         stateAlt.restarting = false;
     }
@@ -136,6 +136,15 @@ async function watchBrowser() {
 // Called in app.js
 function startWatchdog() {
     setInterval(watchBrowser, 30000);
+}
+
+// Where an initialize stopped: the page it was on and the lines of whatsapp-web.js in the stack (a timeout alone
+// does not say which wait it was)
+function initializeWhere(err) {
+    let page = '?';
+    try { page = client.pupPage?.url?.() ?? '?'; } catch { /* the browser is gone */ }
+    const stack = String(err?.stack ?? '').split('\n').filter(l => /whatsapp-web\.js[\\/]src/.test(l)).slice(0, 3).map(l => l.trim()).join(' | ');
+    return `(page: ${page}${stack ? `; at: ${stack}` : ''})`;
 }
 
 /*
@@ -463,7 +472,7 @@ async function startBot() {
         await client.initialize();
         watchReady();
     } catch (error) {
-        printError('Error caught during initialization:', error.message);
+        printError('Error caught during initialization:', error.message, initializeWhere(error));
 
         // Closes the old browser if it was partially opened
         try {

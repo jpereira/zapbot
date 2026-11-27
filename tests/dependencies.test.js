@@ -44,7 +44,9 @@ test('patches reais são aplicados sem repositório, repetíveis e recusam arqui
     assert.match(content[1], /require\("punycode\/"\)/);
     // the new /login/ page of WhatsApp Web (no WAWebSocketModel): the state from the BackendEventBus
     assert.match(content[2], /zapbot patch: the \/login\/ page of WhatsApp Web/);
-    assert.match(content[2], /BackendEventBus\?\.socketState/);
+    assert.match(content[2], /pathname\.startsWith\('\/login'\)[\s\S]*BackendEventBus\.socketState/);
+    // two navigations in a row after the QR Code: the first one's evaluate in a gone page does not crash the process
+    assert.match(content[2], /framenavigated[\s\S]*try \{[\s\S]*Execution context was destroyed[\s\S]*throw err;/);
     applyPatches(root);
     assert.deepEqual(files.map(a => fs.readFileSync(path.join(root, a), 'utf8')), content);
     fs.writeFileSync(path.join(root, files[0]), 'arquivo incompatível\n');
