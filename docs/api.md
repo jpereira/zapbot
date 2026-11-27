@@ -59,7 +59,7 @@ $ curl -s http://127.0.0.1:3100/health
 {"ok":true,"connected":true}
 
 $ curl -s -H "Authorization: Bearer $KEY" http://127.0.0.1:3100/status
-{"name":"zapbot","version":"1.0.27 (devel)","connected":true,"mcp":false}
+{"name":"zapbot","version":"1.0.27","connected":true,"mcp":false}
 
 $ curl -s -H "Authorization: Bearer $KEY" "http://127.0.0.1:3100/notes?limit=2"
 [{"id":12,"text":"call the bank #tomorrow","createdAt":1794800000000,"alertAt":null},

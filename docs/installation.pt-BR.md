@@ -14,14 +14,14 @@ Confira `docker compose version` antes de começar. O Compose precisa aceitar
 
 ## Instalação (Docker)
 
-A versão estável atual é a `v1.0.26` (de 26/11/2026); os passos abaixo instalam essa versão. As
+A versão estável atual é a `v1.0.27` (de 27/11/2026); os passos abaixo instalam essa versão. As
 notas de cada uma ficam em [Releases](https://github.com/jpereira/zapbot/releases).
 
 ```bash
 # 1. Clonar o projeto e ir para a última versão estável
 git clone https://github.com/jpereira/zapbot.git
 cd zapbot
-git checkout v1.0.26
+git checkout v1.0.27
 
 # 2. Crie o arquivo de configuração a partir do exemplo (PHONE_NUMBER, e ZAPBOT_WEB_URL para abrir a web de outros aparelhos)
 cp config/.env.example config/.env
@@ -59,13 +59,13 @@ e receber uma mensagem no seu WhatsApp (`🤖 ZapBot X.Y.Z (git+4465374/vX.Y.Z) 
 
 ### Atualizar para uma nova versão
 
-A **versão estável** é a última release, hoje a `v1.0.26` (cada uma tem as notas em
+A **versão estável** é a última release, hoje a `v1.0.27` (cada uma tem as notas em
 [Releases](https://github.com/jpereira/zapbot/releases)). Para ir para ela:
 
 ```bash
 git fetch --tags
-git checkout v1.0.26
-git describe --tags        # confere a versão: v1.0.26
+git checkout v1.0.27
+git describe --tags        # confere a versão: v1.0.27
 docker compose -f docker/docker-compose.yml build zapbot
 docker compose -f docker/docker-compose.yml up -d --force-recreate zapbot
 ```
