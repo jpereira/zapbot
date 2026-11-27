@@ -147,8 +147,8 @@ um arquivo. Roda **dentro do servidor**, com o [faster-whisper](https://github.c
 - `-ss` e `-es` escolhem um trecho (mesmo formato de sempre, `-ss -60` é o último minuto).
 - O idioma é detectado pelo whisper. Se errar num trecho curto, fixe com
   `/set stt.language pt`.
-- O modelo é o `stt.model` (padrão `small`, que já vem na imagem do Docker). O `medium` ou
-  o `large-v3-turbo` são melhores e mais lentos; são baixados na primeira vez que forem usados.
+- O modelo é o `stt.model` (padrão `large-v3`, o melhor, que já vem na imagem do Docker). O
+  `large-v3-turbo` chega perto e é bem mais rápido; outro é baixado na primeira vez.
 - No máximo `stt.maxMinutes` (padrão 20) de áudio; acima disso o bot pede um trecho com
   `-ss` e `-es`. Usa a CPU do servidor e conta no limite de 2 `/get` ao mesmo tempo.
 - O `-sum` (com `-t`) resume também, como no [`/stt`](stt.md).

@@ -681,8 +681,8 @@ problema. Ele também avisa quando há versão nova do `yt-dlp` e do `whatsapp-w
 • ffmpeg: 7.1.1
 • ffprobe: 7.1.1
 • Python: 3.13.5
-• faster-whisper: 1.0.2 (modelo small) · stt.py 2.0.0
-• Piper: 1.8.0 (vozes pt_BR-faber-medium, en_US-lessac-medium) · tts.py 2.0.0
+• faster-whisper: 1.0.2 (modelo large-v3) · stt.py 2.0.0
+• Piper: 1.8.0 (vozes pt_PT-tugão-medium, en_US-lessac-high) · tts.py 2.0.0
 • Tesseract: 5.5.0 (por+eng)
 • pdftotext: 25.03.0
 

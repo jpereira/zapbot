@@ -144,7 +144,7 @@ em português).
 | `stt.footer` | on/off | `on` | Termina a transcrição do /stt e do /get -stt com a dica "💡 Transcrito por <motor>". O -quiet (-q) esconde na chamada. |
 | `stt.language` | texto | `auto` | Idioma da fala no [`/stt`](commands/stt.md) (`pt`, `en`, `es`...). `auto`: o whisper detecta. O `-lang` muda na chamada |
 | `stt.maxMinutes` | 1–180 | `20` | Duração máxima (minutos) do áudio que o `/get -stt` transcreve: usa a CPU do servidor |
-| `stt.model` | texto | `small` | Modelo do faster-whisper no [`/stt`](commands/stt.md): `tiny`, `base`, `small`, `medium` ou `large-v3-turbo` (maior = melhor e mais lento). O `small` vem na imagem; outro é baixado na primeira vez. O `-model` muda na chamada |
+| `stt.model` | texto | `large-v3` | Modelo do faster-whisper no [`/stt`](commands/stt.md): `large-v3` (o padrão: o melhor), `large-v3-turbo` (perto dele, bem mais rápido), `medium`, `small`, `base`, `tiny`... O padrão ([`STT_MODEL`](configuration.md#modelos-locais-do-stt-e-do-tts)) vem na imagem; outro é baixado na primeira vez (ou no início, com `STT_MODELS=all`). Um nome que o faster-whisper não conhece é recusado. O `-model` muda na chamada |
 | `stt.vad` | on/off | `on` | Pula o silêncio e a música antes de transcrever no [`/stt`](commands/stt.md) (onde o whisper inventa texto). O `-vad on\|off` muda na chamada |
 | `tldr.footer` | on/off | `on` | Termina o resumo do /tldr com a dica "💡 Resumido por ChatGPT". O -quiet (-q) esconde na chamada. |
 | `tldr.maxMsgs` | 10–2000 | `500` | Máximo de mensagens enviadas à OpenAI por [`/tldr`](commands/tldr.md) |
@@ -155,8 +155,8 @@ em português).
 | `tts.pause` | 0–3000 | `300` | O silêncio (ms) entre as linhas de um `/tts` com várias linhas ([um áudio só](commands/tts.md#várias-linhas-e-uma-batida)). Uma linha em branco dobra. O `-pause` muda na chamada |
 | `tts.pitch` | -12–12 | `0` | Tom da voz do [`/tts`](commands/tts.md) e do `/gpt -voice`, em semitons (`0` normal, `3` mais agudo, `-3` mais grave). O `-pitch` (`-pi`) muda na chamada |
 | `tts.speed` | 50–200 | `50` | Velocidade da voz local (Piper) do [`/tts`](commands/tts.md), em % (`100` é a velocidade original do motor, `150` mais rápido; o padrão `50` fala mais devagar, que fica melhor de ouvir). Com `-gpt` vale o `gpt.tts.speed`. O `-speed` (`-sp`) muda na chamada |
-| `tts.voice.en` | texto | `en_US-lessac-medium` | Voz local (Piper) do [`/tts`](commands/tts.md) para texto em inglês: `en_US-lessac-medium`, `en_US-amy-medium`, `en_GB-alan-medium`... A que não está na imagem é baixada na primeira vez |
-| `tts.voice.pt` | texto | `pt_BR-faber-medium` | Voz local (Piper) do [`/tts`](commands/tts.md) para texto em português: `pt_BR-faber-medium`, `pt_BR-edresson-low`, `pt_PT-tugão-medium`... A que não está na imagem é baixada na primeira vez |
+| `tts.voice.en` | texto | `en_US-lessac-high` | Voz local (Piper) do [`/tts`](commands/tts.md) para texto em inglês: `en_US-lessac-high` (o padrão, qualidade alta), `en_US-ryan-high`, `en_US-lessac-medium`, `en_US-amy-medium`, `en_GB-alan-medium`... A que não está na imagem é baixada na primeira vez |
+| `tts.voice.pt` | texto | `pt_PT-tugão-medium` | Voz local (Piper) do [`/tts`](commands/tts.md) para texto em português: `pt_PT-tugão-medium` (o padrão, a voz tuga), `pt_BR-faber-medium`, `pt_BR-cadu-medium`, `pt_BR-jeff-medium`, `pt_BR-edresson-low`. O padrão ([`TTS_VOICE_PT`](configuration.md#modelos-locais-do-stt-e-do-tts)) vem na imagem; outra é baixada na primeira vez |
 | `tts.volume` | 20–300 | `100` | Volume da voz do [`/tts`](commands/tts.md) e do `/gpt -voice`, em % (`100` normal, `200` o dobro). O `-volume` (`-vol`) muda na chamada |
 | `usage.footer` | on/off | `on` | Depois de um comando com limite de uso, avisa quantas chamadas restam (`📊 /gpt: restam 1 de 3 por dia`) |
 | `usage.logDays` | 1–365 | `90` | Dias que o histórico das chamadas com limite (`/usage -l`) fica guardado |

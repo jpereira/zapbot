@@ -53,7 +53,7 @@ It runs **inside the server**, with [faster-whisper](https://github.com/SYSTRAN/
   transcription still comes, with the reason where the summary would be. Without a key, the bot says
   so before using the CPU.
 - The language is detected by whisper; fix it with `/set stt.language pt` if it gets it
-  wrong on a short clip. The model is `stt.model` (default `small`).
+  wrong on a short clip. The model is `stt.model` (default `large-v3`, the best).
 - At most `stt.maxMinutes` (default 20) of audio: for a longer one, pick a part with `-ss`
   and `-es`.
 - A link with **no video or audio** (an Instagram carousel with only photos, for example) gets

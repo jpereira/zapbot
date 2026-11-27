@@ -440,8 +440,8 @@ describe('/tts: voz, velocidade, tom e volume', () => {
 describe('/tts -v: lista as vozes', () => {
     test('/tts -v lista as do Piper (português e inglês, com o padrão marcado); /tts -g -v as do ChatGPT', async () => {
         const [local] = await bot.replyAlt('/tts -v');
-        assert.match(local, /^🎙️ \*Vozes do \/tts\* \(local, Piper\)\n\n\*Português \(Brasil\)\*\n• cadu\n• edresson\n• faber ✅\n• jeff\n\n\*Português \(Portugal\)\*\n• tugão\n/);
-        assert.match(local, /\*Inglês \(EUA\)\*\n• amy \(low, medium\)\n[\s\S]*• lessac \(low, medium ✅, high\)/);
+        assert.match(local, /^🎙️ \*Vozes do \/tts\* \(local, Piper\)\n\n\*Português \(Brasil\)\*\n• cadu\n• edresson\n• faber\n• jeff\n\n\*Português \(Portugal\)\*\n• tugão ✅\n/);
+        assert.match(local, /\*Inglês \(EUA\)\*\n• amy \(low, medium\)\n[\s\S]*• lessac \(low, medium, high ✅\)/);
         assert.match(local, /\*Inglês \(Reino Unido\)\*\n• alan \(low, medium\)/);
         const [gpt] = await bot.replyAlt('/tts -g -v');
         assert.match(gpt, /^🎙️ \*Vozes do \/tts\* \(ChatGPT\)\n\n• alloy\n/);

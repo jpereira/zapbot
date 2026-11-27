@@ -61,22 +61,23 @@ RUN /venv/bin/pip install --no-cache-dir yt-dlp
 RUN /venv/bin/python -m pip install -U yt-dlp
 
 # faster-whisper (local transcription, CPU), used by "/get -stt". The av stays below 17:
-# 19 does not open audio with the current faster-whisper (error "metadata_errors"). The default model
-# (stt.model) goes in the image (/opt/whisper, WHISPER_IMAGE_DIR): the first transcription does not wait for a
-# download. The others (STT_MODELS in config/.env, or the first use) go to the cache volume, WHISPER_MODELS_DIR:
-# they survive a new image (src/models.js).
+# 19 does not open audio with the current faster-whisper (error "metadata_errors"). The default model, large-v3
+# (stt.model, STT_MODEL: the best), goes in the image (/opt/whisper, WHISPER_IMAGE_DIR): the first transcription
+# does not wait for a download. The others (the first use, or STT_MODELS="all") go to the cache volume,
+# WHISPER_MODELS_DIR: they survive a new image (src/models.js).
 ENV WHISPER_IMAGE_DIR=/opt/whisper WHISPER_MODELS_DIR=/app/cache/models/whisper
 RUN /venv/bin/pip install --no-cache-dir faster-whisper "av<17" \
- && /venv/bin/python -c "from faster_whisper import WhisperModel; WhisperModel('small', device='cpu', compute_type='int8', download_root='/opt/whisper')" \
+ && /venv/bin/python -c "from faster_whisper import WhisperModel; WhisperModel('large-v3', device='cpu', compute_type='int8', download_root='/opt/whisper')" \
  && chown -R node:node /opt/whisper
 
-# Piper (local text to speech, CPU), used by "/tts". The default voices (tts.voice.pt and tts.voice.en) go in the
-# image (/opt/piper, PIPER_IMAGE_DIR): the first speech does not wait for a download. The others (TTS_VOICES in
-# config/.env, or the first use) go to the cache volume, PIPER_VOICES_DIR: they survive a new image.
+# Piper (local text to speech, CPU), used by "/tts". The default voices (tts.voice.pt: pt_PT-tugão-medium, the tuga
+# one; tts.voice.en: en_US-lessac-high) go in the image (/opt/piper, PIPER_IMAGE_DIR): the first speech does not
+# wait for a download. The others (the first use, or TTS_VOICES="all") go to the cache volume, PIPER_VOICES_DIR.
+# The URL of a voice with an accent (tugão) is encoded here: piper builds it without encoding (scripts/tts.py too).
 ENV PIPER_IMAGE_DIR=/opt/piper PIPER_VOICES_DIR=/app/cache/models/piper
 RUN mkdir -p /opt/piper \
  && /venv/bin/pip install --no-cache-dir piper-tts \
- && /venv/bin/python -c "from pathlib import Path; from piper.download_voices import download_voice; [download_voice(v, Path('/opt/piper')) for v in ('pt_BR-faber-medium', 'en_US-lessac-medium')]" \
+ && /venv/bin/python -c "from pathlib import Path; from urllib.parse import quote; import piper.download_voices as dv; o = dv.urlopen; dv.urlopen = lambda u, *a, **k: o(quote(u, safe=':/?=&%'), *a, **k); [dv.download_voice(v, Path('/opt/piper')) for v in ('pt_PT-tugão-medium', 'en_US-lessac-high')]" \
  && chown -R node:node /opt/piper
 
 # Misc

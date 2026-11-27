@@ -23,7 +23,7 @@ PROG = os.path.basename(sys.argv[0]) if sys.argv and sys.argv[0] else "stt.py"
 DEFAULT_DIR = os.environ.get("WHISPER_MODELS_DIR", "/opt/whisper")
 # The models that come in the Docker image (read-only): used from there, never downloaded again to DIR
 IMAGE_DIR = os.environ.get("WHISPER_IMAGE_DIR", "")
-DEFAULT_MODEL = "small"
+DEFAULT_MODEL = "large-v3"
 
 SHORT_OPTIONS = "hmVDlpSni:M:d:L:b:f:"
 LONG_OPTIONS = [

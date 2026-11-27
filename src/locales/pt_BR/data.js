@@ -27,6 +27,7 @@ module.exports = {
     'get.audioNoSticker': '❌ Não dá para fazer figurinha de um áudio.',
     'get.invalidUrl': "A URL '{url}' é inválida. Ignorando",
     'models.downloading': '⬇️ Atualizando o {kind}: baixando *{name}*{size} em segundo plano. Aguarde, eu aviso aqui quando estiver pronto.',
+    'models.noDisk': 'sem espaço no disco ({free} livres)',
     'models.ready': '✅ *{name}* pronto para o {kind} (baixado em {time}).',
     'models.failed': '⚠️ O download de *{name}* para o {kind} falhou: {reason}',
     'stt.forgottenDash': "❓ Você quis dizer *-{opt}*? '{word}' sem o traço vira um link. Ex.: {ex}",

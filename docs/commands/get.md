@@ -150,8 +150,8 @@ sending a file. It runs **inside the server**, with [faster-whisper](https://git
 - `-ss` and `-es` pick a part (same format as always, `-ss -60` is the last minute).
 - The language is detected by whisper. If it gets it wrong on a short clip, fix it with
   `/set stt.language pt`.
-- The model is `stt.model` (default `small`, which comes in the Docker image). `medium` or
-  `large-v3-turbo` are better and slower; they are downloaded the first time they are used.
+- The model is `stt.model` (default `large-v3`, the best, which comes in the Docker image).
+  `large-v3-turbo` is close to it and much faster; another one is downloaded the first time.
 - At most `stt.maxMinutes` (default 20) of audio, otherwise the bot asks for a part with
   `-ss` and `-es`. It uses the server CPU, and counts in the limit of 2 `/get` at once.
 - `-sum` (with `-t`) also summarizes, as in [`/stt`](stt.md).

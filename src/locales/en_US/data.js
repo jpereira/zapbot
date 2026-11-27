@@ -27,6 +27,7 @@ module.exports = {
     'get.audioNoSticker': "❌ Can't make a sticker from an audio.",
     'get.invalidUrl': "The URL '{url}' is invalid. Ignoring",
     'models.downloading': '⬇️ Updating {kind}: downloading *{name}*{size} in the background. Please wait, I will tell you here when it is ready.',
+    'models.noDisk': 'no space on the disk ({free} free)',
     'models.ready': '✅ *{name}* is ready for {kind} (downloaded in {time}).',
     'models.failed': '⚠️ The download of *{name}* for {kind} failed: {reason}',
     'stt.forgottenDash': "❓ Did you mean *-{opt}*? '{word}' without the dash becomes a link. E.g.: {ex}",

@@ -144,17 +144,23 @@ possível limite por IP.
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `STT_MODELS` | `small,large-v3-turbo` | Os modelos do [`/stt`](commands/stt.md) (faster-whisper) mantidos prontos. Padrão `small`, que vem na imagem. O `large-v3-turbo` (~1,6 GB) chega perto do `large-v3` e é bem mais rápido; `medium`, `distil-large-v3` e os outros que o início lista também valem |
-| `TTS_VOICES` | `pt_BR-faber-medium,en_US-lessac-medium,pt_PT-tugão-medium` | As vozes do [`/tts`](commands/tts.md) (Piper) mantidas prontas. Padrão: as duas da imagem |
+| `STT_MODELS` | `all` | Desligado por padrão: só os modelos padrão (os da imagem). `all` baixa os 15 modelos do [`/stt`](commands/stt.md) (faster-whisper, ~20 GB) em segundo plano, então o `-model` e um `/set stt.model` nunca esperam download; ou uma lista, como `large-v3-turbo,medium` |
+| `TTS_VOICES` | `all` | Desligado por padrão. `all` baixa as 183 vozes do [`/tts`](commands/tts.md) (Piper, ~11 GB); ou ids, como `pt_BR-cadu-medium,en_US-ryan-high` |
+| `STT_MODEL` | `large-v3` | O modelo que o `/stt` usa por padrão (o padrão do `stt.model`; um `/set` continua mudando). Padrão `large-v3`, o melhor, na imagem; o `large-v3-turbo` chega perto e é bem mais rápido. **Mudou e reiniciou o bot: o setting passa para o novo, e ele é baixado no início**; um `.env` sem mudança nunca desfaz um `/set` |
+| `TTS_VOICE_PT` | `pt_PT-tugão-medium` | A voz que o `/tts` usa em português por padrão (o padrão do `tts.voice.pt`): a tuga, na imagem. Mudou e reiniciou: o mesmo do `STT_MODEL` |
+| `TTS_VOICE_EN` | `en_US-lessac-high` | A voz que o `/tts` usa em inglês por padrão (o padrão do `tts.voice.en`). Mudou e reiniciou: o mesmo do `STT_MODEL` |
 | `ZAPBOT_MODELS_PREFETCH` | `false` | `false`: sem lista e sem download no início (o primeiro uso de um modelo continua baixando) |
 
-No início o bot lista **todos os modelos que existem**, com ✅ nos que já estão aqui, e baixa os que faltam **em
-segundo plano**, um de cada vez, para o volume do cache (`cache/models/`): eles sobrevivem a uma imagem nova, e a
-Saúde mostra cada um pronto, baixando ou com falha. Os que os settings usam (`stt.model`, `tts.voice.pt`,
-`tts.voice.en`) entram na lista sozinhos, então o primeiro `/stt` nunca espera um download:
+**Os melhores são os padrões, e vêm na imagem**: o `large-v3` no `/stt`, e a `pt_PT-tugão-medium` (a voz tuga) e a
+`en_US-lessac-high` no `/tts`, então os dois respondem desde o primeiro minuto, sem download. Outro modelo ou voz é
+baixado na primeira vez que for usado, para o volume do cache (`cache/models/`: sobrevive a uma imagem nova). **Com
+`all`**, o bot baixa todos eles **em segundo plano** depois do início, um de cada vez (os menores primeiro): ~31 GB,
+cerca de 2 h, e daí nenhum `-model` ou voz espera. Um download nunca deixa o disco com menos de 5 GB livres (o log diz
+qual pulou), e a Saúde mostra os dos settings e uma contagem dos outros. O início lista todos os modelos que existem,
+com ✅ nos que já estão aqui:
 
 ```text
-[!] 🎙️ STT STT_MODELS=small,large-v3-turbo: ready small (image, 464.0 MB); downloading large-v3-turbo in the background
+[!] 🎙️ STT STT_MODELS=all: ready large-v3 (image, 2.88 GB); downloading 14 models (≈ 17.19 GB) in the background
 [!] 🎙️ STT available: tiny.en, tiny, base.en, base, small.en, small ✅, medium.en, medium, large-v1, large-v2, large-v3, large, distil-large-v2, distil-medium.en, distil-small.en, distil-large-v3, distil-large-v3.5, large-v3-turbo ⬇️, turbo
 [!] 🎙️ STT: downloading large-v3-turbo (≈ 1.6 GB) to /app/cache/models/whisper...
 [+] 🎙️ STT: large-v3-turbo ready (1.5 GB) in 2 min

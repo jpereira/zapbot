@@ -78,6 +78,18 @@ function validateUrlFeed(v) {
     return v;
 }
 
+// STT_MODEL, TTS_VOICE_PT and TTS_VOICE_EN (config/.env): the default of stt.model and tts.voice.* (the best ones when
+// empty); a /set still changes it. A name that is not a model is ignored, with the reason in the log
+function modelDefault(env, fallback, valid) {
+    const value = String(process.env[env] ?? '').trim();
+    if (!value) return fallback;
+    if (valid(value)) return value;
+    console.error(`[settings] ${env}="${value}" is not a model: using ${fallback}`);
+    return fallback;
+}
+const isSttModel = (v) => require('./constants').STT_MODEL_NAMES.includes(v) || /^[\w.-]+\/[\w.-]+$/.test(v);
+const isPiperVoice = (v) => /^[a-z]{2,3}_[A-Z]{2}-[^-\s]+-(x_low|low|medium|high)$/.test(v);
+
 const SETTINGS_SCHEMA = {
     'alias.examples': {
         default: [],
@@ -957,12 +969,12 @@ const SETTINGS_SCHEMA = {
         desc: 'Duração máxima (minutos) do áudio que o /get -stt transcreve. A transcrição usa a CPU do servidor.'
     },
     'stt.model': {
-        default: 'small',
+        default: modelDefault('STT_MODEL', 'large-v3', isSttModel),
         type: 'string',
-        desc: 'Modelo do faster-whisper no /stt: tiny, base, small, medium ou large-v3-turbo (maior = melhor e mais lento). O small vem na imagem; outro é baixado na primeira vez (ou no início, com STT_MODELS). O -model muda na chamada.',
+        desc: 'Modelo do faster-whisper no /stt: large-v3 (padrão: o melhor), large-v3-turbo (quase a mesma qualidade, bem mais rápido), medium, small, base, tiny... O padrão (STT_MODEL) vem na imagem; os outros são baixados na primeira vez (ou no início, com STT_MODELS=all). O -model muda na chamada.',
         // a name faster-whisper knows (src/models.js), or a Hugging Face repository (org/name) of a converted model
         validate: (v) => {
-            const { STT_MODEL_NAMES } = require('./models');
+            const { STT_MODEL_NAMES } = require('./constants');
             if (!STT_MODEL_NAMES.includes(v) && !/^[\w.-]+\/[\w.-]+$/.test(v)) throw new Error(t('adm.settings.unsupported', { s: v, list: STT_MODEL_NAMES.join(', ') }));
             return v;
         }
@@ -1020,14 +1032,14 @@ const SETTINGS_SCHEMA = {
         desc: 'A velocidade da voz local (Piper) do /tts, em % (100 é a velocidade original do motor; o padrão 50 fala mais devagar, que fica melhor de ouvir). Com -gpt vale o gpt.tts.speed. O -speed (-sp) muda na chamada.'
     },
     'tts.voice.en': {
-        default: 'en_US-lessac-medium',
+        default: modelDefault('TTS_VOICE_EN', 'en_US-lessac-high', isPiperVoice),
         type: 'string',
-        desc: 'Voz local (Piper) do /tts para texto em inglês: en_US-lessac-medium, en_US-amy-medium, en_GB-alan-medium... A que não está na imagem é baixada na primeira vez.'
+        desc: 'Voz local (Piper) do /tts para texto em inglês: en_US-lessac-high (padrão, qualidade alta), en_US-ryan-high, en_US-lessac-medium, en_US-amy-medium, en_GB-alan-medium... A que não está na imagem é baixada na primeira vez.'
     },
     'tts.voice.pt': {
-        default: 'pt_BR-faber-medium',
+        default: modelDefault('TTS_VOICE_PT', 'pt_PT-tugão-medium', isPiperVoice),
         type: 'string',
-        desc: 'Voz local (Piper) do /tts para texto em português: pt_BR-faber-medium, pt_BR-edresson-low, pt_PT-tugão-medium... A que não está na imagem é baixada na primeira vez.'
+        desc: 'Voz local (Piper) do /tts para texto em português: pt_PT-tugão-medium (padrão, a voz tuga), pt_BR-faber-medium, pt_BR-cadu-medium, pt_BR-jeff-medium, pt_BR-edresson-low. O padrão (TTS_VOICE_PT) vem na imagem; outra é baixada na primeira vez.',
     },
     'tts.volume': {
         default: 100,
@@ -1334,6 +1346,41 @@ function automaticUserAgentSuffix(value) {
     return String(value).slice(match[0].length);
 }
 
+// Once: the old defaults of the local models (small, pt_BR-faber-medium, en_US-lessac-medium) become the new ones
+// (STT_MODEL, TTS_VOICE_PT, TTS_VOICE_EN: the best by default); a model chosen by hand is not touched. Done once
+// (migrations_done), so a later /set stt.model small stays
+const OLD_MODEL_DEFAULTS = [['stt.model', 'small'], ['tts.voice.pt', 'pt_BR-faber-medium'], ['tts.voice.en', 'en_US-lessac-medium']];
+async function migrateBestModels() {
+    await dbRun('CREATE TABLE IF NOT EXISTS migrations_done (name TEXT PRIMARY KEY, at INTEGER)');
+    if (await dbGet("SELECT 1 FROM migrations_done WHERE name = 'best-models'")) return;
+    for (const [key, before] of OLD_MODEL_DEFAULTS) {
+        const after = SETTINGS_SCHEMA[key].default;
+        if (after === before) continue;
+        const r = await dbRun('UPDATE settings SET value = ? WHERE key = ? AND value = ?', [JSON.stringify(after), key, JSON.stringify(before)]);
+        if (r?.changes) printInfo(`Setting '${key}': ${before} → ${after} (the new default, the best one)`);
+    }
+    await dbRun("INSERT OR IGNORE INTO migrations_done (name, at) VALUES ('best-models', ?)", [Date.now()]);
+}
+
+// STT_MODEL, TTS_VOICE_PT and TTS_VOICE_EN changed in config/.env since the last start: the setting takes the new one
+// (and src/models.js downloads it at this start). The value applied is kept (env_applied), so an unchanged .env
+// never undoes a later /set; the first time it is only recorded (the setting stays as it was)
+const MODEL_ENVS = { 'stt.model': 'STT_MODEL', 'tts.voice.pt': 'TTS_VOICE_PT', 'tts.voice.en': 'TTS_VOICE_EN' };
+async function applyModelEnvChanges() {
+    await dbRun('CREATE TABLE IF NOT EXISTS env_applied (key TEXT PRIMARY KEY, value TEXT)');
+    for (const [key, env] of Object.entries(MODEL_ENVS)) {
+        const value = String(process.env[env] ?? '').trim();
+        if (!value || value !== SETTINGS_SCHEMA[key].default) continue; // empty, or not a model (modelDefault said why)
+        const last = (await dbGet('SELECT value FROM env_applied WHERE key = ?', [key]))?.value;
+        if (last === value) continue;
+        if (last !== undefined) {
+            await dbRun('UPDATE settings SET value = ? WHERE key = ?', [JSON.stringify(value), key]);
+            printInfo(`Setting '${key}' → ${value}: ${env} changed in config/.env (${last} before)`);
+        }
+        await dbRun('INSERT OR REPLACE INTO env_applied (key, value) VALUES (?, ?)', [key, value]);
+    }
+}
+
 async function migrateClientUserAgent() {
     const rows = await dbAll(`SELECT key, value FROM settings
         WHERE key IN ('zapbot.client.userAgent', 'weather.userAgent', 'screenshot.userAgent')`);
@@ -1447,6 +1494,8 @@ async function loadSettings() {
     }
 
     await migrateClientUserAgent();
+    await migrateBestModels();
+    await applyModelEnvChanges();
 
     for (const row of await dbAll('SELECT key, value FROM settings')) {
         if (!SETTINGS_SCHEMA[row.key]) {

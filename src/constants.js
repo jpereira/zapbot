@@ -36,6 +36,10 @@ const BIN_PYTHON = '/venv/bin/python';
 const BIN_TESSERACT = '/usr/bin/tesseract';
 // /get -stt: the faster-whisper script and the models folder (downloaded at image build)
 const SCRIPT_STT = path.join(ROOT_DIR, 'scripts', 'stt.py');
+// The names faster-whisper 1.2 downloads by itself (faster_whisper.utils._MODELS); "stt.py --status" gives the
+// current ones at the start (src/models.js)
+const STT_MODEL_NAMES = ['tiny.en', 'tiny', 'base.en', 'base', 'small.en', 'small', 'medium.en', 'medium', 'large-v1', 'large-v2',
+    'large-v3', 'large', 'distil-large-v2', 'distil-medium.en', 'distil-small.en', 'distil-large-v3', 'distil-large-v3.5', 'large-v3-turbo', 'turbo'];
 const WHISPER_DIR = process.env.WHISPER_MODELS_DIR || '/opt/whisper';
 // /tts without -gpt: the Piper script and the voices folder (downloaded at image build)
 const SCRIPT_TTS = path.join(ROOT_DIR, 'scripts', 'tts.py');
@@ -76,5 +80,6 @@ module.exports = {
     THUMBNAIL_MAX_BYTES,
     THUMBNAIL_TIMEOUT_MS,
     TMP_DIR,
+    STT_MODEL_NAMES,
     WHISPER_DIR
 };

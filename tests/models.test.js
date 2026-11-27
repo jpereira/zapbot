@@ -59,3 +59,69 @@ describe('/stt without the dash', () => {
         assert.doesNotMatch(reply, /inválida|invalid/);
     });
 });
+
+describe('"all" and the best defaults', () => {
+    test('"all": every model, without the aliases; the ones of the settings first, then the smallest', () => {
+        const available = ['tiny', 'small', 'large-v3', 'large', 'large-v3-turbo', 'turbo', 'medium'];
+        assert.deepEqual(models.expandWanted(['all'], ['large-v3-turbo'], available, models.sttSize),
+            ['large-v3-turbo', 'tiny', 'small', 'medium', 'large-v3']);
+        assert.deepEqual(models.expandWanted(['small', 'medium'], ['large-v3-turbo'], available, models.sttSize), ['large-v3-turbo', 'small', 'medium']);
+        assert.deepEqual(models.expandWanted(['all'], ['x'], null, models.sttSize), ['x'], 'no catalog: only the ones of the settings');
+    });
+
+    test('the defaults are the best ones: large-v3, the tuga voice and en_US-lessac-high', async () => {
+        await bot.restart();
+        assert.equal(bot.getSetting('stt.model'), 'large-v3');
+        assert.equal(bot.getSetting('tts.voice.en'), 'en_US-lessac-high');
+        assert.equal(bot.getSetting('tts.voice.pt'), 'pt_PT-tugão-medium');
+    });
+});
+
+describe('STT_MODEL, TTS_VOICE_PT and TTS_VOICE_EN', () => {
+    test('the env is the default of the setting; a name that is not a model keeps the best one', () => {
+        const path = require.resolve('../src/settings');
+        const saved = require.cache[path];
+        process.env.STT_MODEL = 'large-v3';
+        process.env.TTS_VOICE_EN = 'not a voice';
+        delete require.cache[path];
+        try {
+            const { SETTINGS_SCHEMA } = require(path);
+            assert.equal(SETTINGS_SCHEMA['stt.model'].default, 'large-v3');
+            assert.equal(SETTINGS_SCHEMA['tts.voice.en'].default, 'en_US-lessac-high');
+            assert.equal(SETTINGS_SCHEMA['tts.voice.pt'].default, 'pt_PT-tugão-medium');
+        } finally {
+            delete process.env.STT_MODEL;
+            delete process.env.TTS_VOICE_EN;
+            require.cache[path] = saved;
+        }
+    });
+});
+
+describe('STT_MODEL changed in config/.env and the bot restarted', () => {
+    beforeEach(() => bot.restart());
+
+    test('the setting takes the new model (downloaded at the start); an unchanged .env keeps a /set', async () => {
+        const settings = bot.src('settings');
+        const { dbRun } = bot.src('db');
+        const schema = settings.SETTINGS_SCHEMA['stt.model'];
+        const saved = schema.default;
+        try {
+            await dbRun('DELETE FROM env_applied');
+            process.env.STT_MODEL = schema.default;
+            await settings.loadSettings();
+            assert.equal(bot.getSetting('stt.model'), 'large-v3', 'the first time it is only recorded');
+
+            await bot.setSetting('stt.model', 'small');
+            await settings.loadSettings();
+            assert.equal(bot.getSetting('stt.model'), 'small', 'the same .env does not undo the /set');
+
+            process.env.STT_MODEL = schema.default = 'medium';
+            await settings.loadSettings();
+            assert.equal(bot.getSetting('stt.model'), 'medium', 'the .env changed: it wins');
+            assert.ok(bot.logs.some(l => /'stt.model' → medium: STT_MODEL changed/.test(l)));
+        } finally {
+            schema.default = saved;
+            delete process.env.STT_MODEL;
+        }
+    });
+});

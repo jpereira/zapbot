@@ -688,8 +688,8 @@ also warns when there's a new version of `yt-dlp` and `whatsapp-web.js`.
 • ffmpeg: 7.1.1
 • ffprobe: 7.1.1
 • Python: 3.13.5
-• faster-whisper: 1.0.2 (model small) · stt.py 2.0.0
-• Piper: 1.8.0 (voices pt_BR-faber-medium, en_US-lessac-medium) · tts.py 2.0.0
+• faster-whisper: 1.0.2 (model large-v3) · stt.py 2.0.0
+• Piper: 1.8.0 (voices pt_PT-tugão-medium, en_US-lessac-high) · tts.py 2.0.0
 • Tesseract: 5.5.0 (por+eng)
 • pdftotext: 25.03.0
 

@@ -878,7 +878,7 @@ describe('/get -stt', () => {
         assert.ok(ff.includes('-vn'));
         const py = argsDo('python');
         assert.match(py[0], /scripts\/stt\.py$/);
-        assert.deepEqual(['--model', '--dir', '--language'].map(f => py[py.indexOf(f) + 1]), ['small', '/opt/whisper', 'auto']);
+        assert.deepEqual(['--model', '--dir', '--language'].map(f => py[py.indexOf(f) + 1]), ['large-v3', '/opt/whisper', 'auto']);
         assert.ok(py.includes('--input'));
         assert.deepEqual(filesTemporary(), [], 'os temporários foram apagados');
     });
@@ -993,7 +993,7 @@ describe('/stt', () => {
         const flag = (args, f) => args[args.indexOf(f) + 1];
         await bot.execute(`/stt ${URL}`);
         let py = argsDo('python');
-        assert.deepEqual(['--language', '--model', '--beam'].map(f => flag(py, f)), ['auto', 'small', '1']);
+        assert.deepEqual(['--language', '--model', '--beam'].map(f => flag(py, f)), ['auto', 'large-v3', '1']);
         assert.ok(!py.includes('--no-vad'));
 
         bot.processes.calls.length = 0;
@@ -1063,7 +1063,7 @@ describe('/stt', () => {
 
     test('-v: manda os comandos do yt-dlp, ffmpeg e faster-whisper antes do texto', async () => {
         const r = await bot.execute(`/stt -v ${URL}`);
-        assert.match(r[1].text, /🛠️ \*Verbose Mode\*[\s\S]*yt-dlp[\s\S]*ffmpeg[\s\S]*faster-whisper\* \(\d+\.\d s\)[\s\S]*stt\.py[\s\S]*small/);
+        assert.match(r[1].text, /🛠️ \*Verbose Mode\*[\s\S]*yt-dlp[\s\S]*ffmpeg[\s\S]*faster-whisper\* \(\d+\.\d s\)[\s\S]*stt\.py[\s\S]*large-v3/);
         assert.match(r[0].text, /olá mundo/, 'o aviso vira o texto');
         const g = await bot.execute(`/get -t -v ${URL}`);
         assert.match(g[1].text, /Verbose Mode/);

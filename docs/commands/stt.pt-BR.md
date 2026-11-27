@@ -53,7 +53,7 @@ Roda **dentro do servidor**, com o [faster-whisper](https://github.com/SYSTRAN/f
   transcrição sai mesmo assim, com o motivo no lugar do resumo. Sem chave, o bot avisa antes de
   gastar a CPU.
 - O idioma é detectado pelo whisper; fixe com `/set stt.language pt` se ele errar num
-  trecho curto. O modelo é o `stt.model` (padrão `small`).
+  trecho curto. O modelo é o `stt.model` (padrão `large-v3`, o melhor).
 - No máximo `stt.maxMinutes` (padrão 20) de áudio: para um mais longo, escolha um trecho
   com `-ss` e `-es`.
 - Um link **sem vídeo nem áudio** (um carrossel do Instagram só com fotos, por exemplo) recebe

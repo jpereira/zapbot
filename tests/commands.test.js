@@ -434,9 +434,9 @@ describe('/set', () => {
 describe('/bot -info: a versão do Piper (tts.py)', () => {
     test('vem do "tts.py --version": a versão do Piper, as vozes padrão e a versão do script', () => {
         const { describePiper } = bot.src('system');
-        const voices = { pt: 'pt_BR-faber-medium', en: 'en_US-lessac-medium' };
+        const voices = { pt: 'pt_PT-tugão-medium', en: 'en_US-lessac-high' };
         assert.equal(describePiper('{"wrapper": "2.0.0", "piper": "1.8.0"}', voices),
-            '1.8.0 (vozes pt_BR-faber-medium, en_US-lessac-medium) · tts.py 2.0.0');
+            '1.8.0 (vozes pt_PT-tugão-medium, en_US-lessac-high) · tts.py 2.0.0');
         assert.equal(describePiper(null, voices), null);
         assert.equal(describePiper('lixo', voices), null);
         assert.equal(describePiper('{"wrapper": "2.0.0"}', voices), null);
