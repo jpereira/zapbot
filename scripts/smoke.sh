@@ -5,7 +5,7 @@
 #
 # Usage: scripts/smoke.sh "<docker --context X>" <service> [seconds]
 # failure (1): the container stopped, or the commands did not load in time
-# warns (0): did not connect to WhatsApp in time (it may be waiting for the QR code), or there are [*] lines in the log
+# warns (0): WhatsApp is waiting for the QR Code (it stops waiting then), did not connect in time, or [*] lines in the log
 #
 set -u
 
@@ -16,6 +16,8 @@ PRAZO=${3:-120}
 inicio=$(date +%s)
 carregou=0
 conectou=0
+pedeqr=0
+echo "smoke: esperando o bot subir (até ${PRAZO}s)..." >&2
 
 while :; do
     # shellcheck disable=SC2086
@@ -30,8 +32,11 @@ while :; do
     log=$($DOCKER logs --tail 400 "$SERVICE" 2>&1)
     echo "$log" | grep -Eq 'Loaded [0-9]+ callers' && carregou=1
     echo "$log" | grep -Eq 'ZapBot .* ready!' && conectou=1
+    # WhatsApp waiting for the QR Code: "ready!" only comes after someone reads it, waiting is pointless
+    echo "$log" | grep -Eq 'QR Code received' && pedeqr=1
 
     [ "$conectou" = 1 ] && break
+    [ "$carregou" = 1 ] && [ "$pedeqr" = 1 ] && break
     [ $(($(date +%s) - inicio)) -ge "$PRAZO" ] && break
     sleep 3
 done
@@ -45,7 +50,9 @@ fi
 n=$(echo "$log" | grep -Eo 'Loaded [0-9]+ callers' | tail -1 | grep -Eo '[0-9]+')
 echo "smoke: ok, $n comandos carregados"
 
-if [ "$conectou" != 1 ]; then
+if [ "$pedeqr" = 1 ] && [ "$conectou" != 1 ]; then
+    echo "smoke: aviso, o WhatsApp está esperando o QR Code (no log, ou na Saúde da web)" >&2
+elif [ "$conectou" != 1 ]; then
     echo "smoke: aviso, não vi o WhatsApp conectar em ${PRAZO}s (esperando o QR code?)" >&2
 fi
 

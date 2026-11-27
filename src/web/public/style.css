@@ -697,3 +697,61 @@ dialog.modal { color: var(--text); }
 @media (max-width: 760px) { .pair-qr { width: 100%; height: auto; max-width: 320px; } }
 .danger-btn { margin-top: 8px; border: 1px solid var(--deleted); color: var(--deleted); background: transparent; }
 .danger-btn:hover { background: color-mix(in srgb, var(--deleted) 15%, transparent); }
+
+/* the first setup (the single-use link of the log) */
+.setup { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background: radial-gradient(circle at 20% 0%, color-mix(in srgb, var(--accent) 25%, var(--bg)), var(--bg) 60%); }
+.setup-card { width: min(440px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 28px; display: grid; gap: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, .35); }
+.setup-card h1 { margin: 0; font-size: 22px; }
+.setup-logo img { width: 56px; height: 56px; }
+.setup-steps { display: flex; gap: 6px; list-style: none; padding: 0; margin: 0; counter-reset: step; }
+.setup-steps li { flex: 1; font-size: 12px; color: var(--muted); border-top: 3px solid var(--line); padding-top: 6px; }
+.setup-steps li.on { color: var(--text); border-color: var(--accent); }
+.setup-go { padding: 12px; font-size: 15px; }
+.setup-note { font-size: 12px; margin: 0; }
+.setup-cmd { background: var(--chip); padding: 8px 10px; border-radius: 8px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+.strength { display: flex; align-items: center; gap: 10px; margin-top: -4px; }
+.strength-track { flex: 1; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.strength-fill { display: block; height: 100%; width: 0; background: var(--deleted); transition: width .2s; }
+.strength-fill[data-score="2"] { background: var(--edited); }
+.strength-fill[data-score="3"], .strength-fill[data-score="4"] { background: var(--accent); }
+.strength-label { font-size: 12px; min-width: 70px; text-align: right; }
+
+/* first steps (Home) */
+.onboarding { background: var(--panel); border: 2px solid var(--accent); border-radius: 14px; padding: 14px 16px; margin: 10px 0 14px; }
+.onboarding-head { display: flex; align-items: center; gap: 10px; }
+.onboarding-head h3 { margin: 0; color: var(--text); text-transform: none; letter-spacing: 0; font-size: 17px; }
+.onboarding-head .grow { flex: 1; }
+.onboarding-track { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin: 10px 0; }
+.onboarding-track span { display: block; height: 100%; background: var(--accent); }
+.onboarding-steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.onboarding-steps li { display: flex; align-items: center; gap: 12px; padding: 8px 6px; border-radius: 10px; }
+.onboarding-steps li .grow { flex: 1; min-width: 0; }
+.onboarding-steps li.done { opacity: .6; }
+.onboarding-mark { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-weight: 700; flex: none; color: #fff; }
+.onboarding-steps li.done .onboarding-mark { background: var(--accent); border-color: var(--accent); }
+
+/* access and email (Settings) */
+.access-rows { display: grid; gap: 8px; padding: 4px 0 8px; }
+.access-row { display: flex; align-items: center; gap: 12px; }
+.access-row .grow { flex: 1; }
+.access-form { display: grid; gap: 10px; }
+.totp-qr { width: 220px; height: 220px; background: #fff; padding: 6px; border-radius: 8px; justify-self: center; }
+.mail-presets, .mail-test { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0; }
+.webpanel.flash { animation: flash 1.6s ease-out; }
+@keyframes flash { 0% { box-shadow: 0 0 0 3px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.setup-card .field, .access-form .field { display: grid; gap: 4px; }
+.setup-card .field span, .access-form .field span, .setup-card .check { color: var(--muted); font-size: 13px; }
+.setup-card .check { display: flex; align-items: center; gap: 6px; }
+.setup-card input[type=text], .setup-card input[type=password], .modal input[type=password] { background: var(--header); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; width: 100%; color: var(--text); }
+.wp-control input[type=password] { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; width: min(260px, 100%); color: var(--text); }
+.setup-steps li.done { color: var(--muted); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.setup-row { display: grid; grid-template-columns: 110px 1fr; gap: 10px; }
+.setup-env { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--header); }
+.setup-env p { margin: 0 0 8px; }
+.setup-env .check { display: flex; align-items: center; gap: 8px; }
+.setup-more summary { cursor: pointer; color: var(--muted); }
+.setup-more .field { margin-top: 10px; }
+.setup-card .mail-presets { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.setup-card .mail-test { display: flex; flex-wrap: wrap; gap: 8px; }
+.setup-skip { width: 100%; background: transparent; }
+.setup-card input:disabled { opacity: .7; }

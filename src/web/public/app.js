@@ -31,9 +31,18 @@ const TEXTS = {
         cannotShow: 'this message could not be shown', phTag: 'travel', phTagDesc: 'places to visit', phNoteTag: 'ideas', envForced: (env) => `Decided by the ${env} variable (config/.env), which has priority over this setting`, noticeOn: 'Off: click to turn it on', noticeOff: 'On: click to turn it off', flag: { quiet: ['Quiet (-q): click to answer normally', 'Answers normally: click to make it quiet (-q)'], ownerOnly: ['Only you (-p): click to open it to everyone', 'Everyone can use it: click to make it only yours (-p)'] }, runOn: 'Running: click to pause', runOff: 'Paused: click to resume', clearHistory: 'Clear the history of this chat', clearBtn: 'Clear', clearTitle: (name) => `Clear the history · ${name}`, clearInfo: (r) => `${r.removed} messages will be deleted (with their media). ${r.kept} stay: the deleted, the edited and the ones with reactions, with what they had before.`, clearNothing: 'Nothing to delete: every message here is a deleted, edited or reacted one.', clearEmpty: 'This chat has no messages in the database.', cacheBtn: 'Clean', deleteNote: 'Delete the note', notice: 'Notice', spy: { nav: 'Show', subtitle: 'What /show keeps: the deleted, the edited, the reactions, the statuses and the channels', kinds: { deleted: 'Deleted', edited: 'Edited', reactions: 'Reactions', status: 'Statuses', channels: 'Channels' }, alerts: 'Notices in your private chat', alertOn: 'On: click to turn it off', alertOff: 'Off: click to turn it on', people: 'Who deletes, edits and reacts the most', nobody: 'Nobody yet.', search: 'Search the text, the chat or the person', empty: 'Nothing here.', mute: 'Mute this person (/mute)', unmute: 'Unmute (/unmute)', muted: 'muted', removeTitle: 'Take it out of the cache', removeText: 'The bot forgets this item (and its media); WhatsApp is not touched.', removed: 'removed', media: 'Open the media', openChat: 'Open the chat at this message', mutedCount: (n) => `${n} muted`, selectAll: 'All', selectOne: 'Select', selectHint: 'Click the items to select them (Shift+click: a range)', selected: (n) => `${n} selected`, removeSelected: (n) => `Take ${n} item${n === 1 ? '' : 's'} out of the cache` }, cacheClean: 'Clean the cache (/cache)', cacheRetention: 'What is past the retention windows (/cache -clean)', cachePick: 'Pick at least one.', cacheAll: 'Everything (/cache -all): every message (deleted, edited and reacted included), media, temporary files and backups', cacheAllWarning: '⚠️ Everything takes the whole history of every chat and the backups too: there is no undo. The notes always stay.', flushAll: 'Clear the history of every chat', flushBtn: 'Clear every chat', flushEmpty: 'There are no messages in the database.', flushWarning: (n) => `⚠️ This clears the history of all the ${n} chats at once, not only this one. There is no undo (only a /backup).`, clearAll: (n) => `Delete everything (${n}), including the deleted, the edited and the reacted ones, with their media`, webPanel: 'Web interface', webAt: 'Open at', webAccess: 'Access', webLogin: 'Login and session', webScreen: 'Screen', webAlerts: 'Warnings', notSet: 'not set', needsRestart: 'Takes effect when the bot restarts', restSettings: 'All the other settings', protectedHere: 'Change it with /set in WhatsApp',  meBtn: 'Me (my private chat)', watchedBy: '/watch', openInHistory: 'Open in the history, at this message', presenceSource: 'WhatsApp presence · time not confirmed', newTag: 'New tag', newNote: 'New note', editTagBtn: 'Edit the tag', copyTag: 'Duplicate the tag', copyTagInfo: (n) => `Its ${n} note${n === 1 ? '' : 's'} (and files) go as copies to the new tag, without the alerts.`, moveNote: 'Move to another tag', copyNote: 'Copy to another tag', duplicateNote: 'Duplicate the note', moveTag: 'Move every note to another tag', moveTagInfo: (n) => `The ${n} note${n === 1 ? '' : 's'} go to the tag you pick (if it has notes, the two merge).`, copyNoteInfo: 'The copy keeps the text and the file, without the alert.', pickTag: 'Tag', orNewTag: 'or a new tag', removeTag: 'Remove the tag', confirmRemoveTag: 'Remove this tag (it has no notes)?', removeTagWithNotes: 'Remove the tag and everything in it', removeTagInfo: (n) => `${n} note${n === 1 ? '' : 's'} (and their media) will be deleted, along with the tag's description and lock, if any.`, historyBtn: 'History', loadingHistory: 'Loading the history…', searchContact: 'Search a contact or group (name or number) or type an email', pickContact: 'Search the contact (name or number)', noMatches: 'No contact found', privateChat: 'Empty: it goes to your private chat', useEmail: (email) => `✉️ Use ${email}`, updatedAt: (time) => `updated at ${time}`, noHistory: 'Nothing recorded yet.', removeReading: 'Remove this reading', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 ${who ? `${who}'s` : 'a participant\'s'} security code changed`, systemNotice: (text) => `ℹ️ ${text ?? 'WhatsApp notice'}`, loadMore: 'Load more', noMore: 'No more messages.', loadingFor: (name) => `Loading ${name}…`, loadingStats: 'Loading the statistics…', loadingHome: 'Loading…', statsOverview: 'Statistics', last30: 'last 30 days', seeAllStats: 'See all the statistics',
         code: '6-digit code', quotedGone: 'message not in the database', searchAll: 'Search all the messages', searchResults: (n) => `${n} results`, exportChat: 'Export PDF', reacted: 'reaction', removedReaction: 'removed', reactionHistory: 'Reaction history',
         reactionChanged: 'Changed reaction', reactionRemoved: 'Removed reaction', autoRefresh: 'New messages',
+        setup: { title: 'Welcome to ZapBot', intro: 'Choose the login and the password of this web page. It takes a minute, and the rest is in First steps.', steps: ['Your access', 'Email', 'WhatsApp', 'The rest'], login: 'Login', password: 'Password', passwordHint: 'at least 12 characters', repeat: 'Repeat the password', show: 'Show the password', create: 'Create my access', mismatch: 'The two passwords are different.', linkExpired: 'This link was already used or expired. Ask for a new one: /web -setup in your private chat, or restart the bot.', note: 'The link of the log works once: after this, it is gone. The password is kept only as a hash.', missing: 'This ZapBot has no login yet. Open the link the bot showed in the log at startup: it works once, for 24 h.', missingWhatsApp: 'Already paired? /web -setup in your private chat on WhatsApp sends a new link.', strength: ['too short', 'weak', 'fair', 'good', 'strong'] },
+        onboarding: { title: 'First steps', progress: (done, total) => `${done} of ${total} done`, hide: 'Hide (it comes back after a new setup)', addressNow: (url) => `Now it shows ${url}: in Docker, set ZAPBOT_WEB_URL (or zapbot.web.url) so the links (the QR Code included) open from other devices.`, steps: { login: ['Your access', 'Login and password created.', ''], whatsapp: ['Pair WhatsApp', 'Read the QR Code with the phone of the bot number, right here in Health.', 'Open the QR Code'], address: ['The address of the web', 'The address the links point to.', 'Check'], email: ['Email (optional)', 'The QR Code, the alerts and the backups by email: SMTP and IMAP, saved here (no file to edit).', 'Set up the email'], twoFactor: ['Two-step verification', 'A 6-digit code of an authenticator app at the login.', 'Turn it on'], push: ['Notices on this device', 'An online contact, a /watch match, a price alert, WhatsApp asking to be paired: even with the page closed.', 'Turn them on'], users: ['Who can use the bot', 'For now, only you: add people or groups (bot.users).', 'Choose'] } },
+        access: { title: 'Access', password: 'Password', passwordNow: (login) => `Login ${login || '—'}`, change: 'Change the password', current: 'Current password', newPassword: 'New password', changeNote: 'The other sessions are closed, and your private chat and email are told.', wrongCurrent: 'The current password is not right.', changed: '✅ Password changed. The other sessions were closed.', totpTitle: 'Two-step verification', totpIsOn: 'On: the login asks for the 6-digit code of the app.', totpIsOff: 'Off: only the password. /web -2fa off in WhatsApp turns it off.', totpTurnOn: 'Turn it on', totpSteps: ['Open an authenticator app (Google Authenticator, Authy, 1Password...)', 'Add an account by reading this QR Code (or typing the key)', 'Type the 6 digits it shows'], totpSecret: 'Key:', totpCode: 'Code of the app', totpConfirm: 'Turn on', wrongCode: 'That code is not right (or it expired): try the next one.', totpOn: '✅ Two-step verification is on: the next login asks for the code.' },
+        mail: { title: 'Email', intro: 'The SMTP that sends the QR Code, the alerts and the backups, and the IMAP of /bot -flush-email. Saved here, in the database: no file to edit. Use an app password; port 465 (SSL) or 587 (STARTTLS).', presets: 'Fill in:', test: '🔌 Test the connection', send: '✉️ Send a test email', testing: 'Testing…', works: '✅ The SMTP accepted the login (nothing was sent).', sent: '✅ Sent: check the inbox of the recipient.', envNote: 'A QRCODE_EMAIL_* in config/.env wins over these (🔧): the boot says which.' },
+        mailSmtp: 'SMTP', mailWho: 'Sender, recipient and IMAP', mailUse: 'What goes by email',
+        setupMail: { title: 'Email', intro: 'The bot emails you the WhatsApp QR Code when it needs pairing again, the alerts (crash, outage) and the backups. Pick your provider, use an app password, and test it.', host: 'SMTP server', port: 'Port', user: 'Login (your email)', pass: 'App password', to: 'Who receives', from: 'Sender (optional: the SMTP login)', imap: 'IMAP server (optional: /bot -flush-email)', qr: 'Send the WhatsApp QR Code by email', more: 'More: the sender and the IMAP', save: 'Save and continue', skip: 'Skip for now', saving: 'Saving…', envIntro: (names) => `config/.env already sets ${names}: it wins over what you type here.`, useDatabase: 'Use the ones of this page (ignore config/.env)', envIgnored: 'config/.env is ignored: what is here wins (zapbot.email.overrideEnv).' },
+        setupWhatsApp: { title: 'WhatsApp', ready: '🟢 WhatsApp is already paired: nothing to do here.', pairing: 'Read the QR Code with the phone of the bot number: Health shows it and follows it.', open: 'Open the QR Code', next: 'Continue' },
+        mailEnv: { title: 'config/.env', intro: (names) => `Set in config/.env: ${names}. They win over this page (🔧).`, ignored: 'config/.env is ignored: this page wins.', toggle: 'Use the ones of this page (ignore config/.env)' },
+        updated: (v) => `🔄 ZapBot was updated (${v}): reload`,
         sched: { run: 'Test now: build it as it will go out (nothing is sent)', title: (text) => `🧪 Test · ${text}`, running: 'Running its {/commands}, as at the scheduled time…', goesTo: 'Goes to', when: 'Next', message: 'What goes out', onlyMedia: 'Only the media of its {/commands}', nothingSent: (ms) => `Nothing was sent: the {/commands} ran for real (${ms} ms), as at the scheduled time, and their replies were kept.`, failures: 'Commands that failed', slashText: (braces) => `It starts with /: it goes out as text and does not run (the bot never runs what it sends itself). To run a command, put it in braces: ${braces}`, again: '↻ Run again', formTest: '🧪 Test' },
         gal: { nav: 'Media', subtitle: 'Every picture, video, audio, sticker and document the bot kept', kinds: { image: 'Photos', video: 'Videos', audio: 'Audios', sticker: 'Stickers', document: 'Documents' }, all: 'All', allChats: 'Every chat', period: { 7: '7 days', 30: '30 days', 90: '90 days', 0: 'Always' }, total: (n, size) => `${n} files · ${size}`, chats: 'The chats that take the most space', empty: 'No media here.', open: 'Open in the chat', download: 'Download', remove: 'Free this file', removeText: 'The file leaves the disk; the message stays in the history, with its media missing.', removeSelected: (n) => `Free ${n} file${n === 1 ? '' : 's'}`, freed: (size) => `${size} freed`, select: 'Select', selected: (n) => `${n} selected`, deleted: 'deleted', prev: 'Previous (←)', next: 'Next (→)', fromMe: 'you', grid: 'Grid', list: 'List', search: 'Search the name, the caption or the chat', same: '🧬 The same', sameTitle: 'Group the files that are the same (same content)', cols: { name: 'Name', size: 'Size', mime: 'Type', date: 'Date', chat: 'Chat', expires: 'Leaves' }, sortHint: 'Click to sort', expiresIn: (ago) => `leaves ${ago}`, expiresNext: 'in the next cleanup', expiresTitle: (when) => `The cleanup takes it on ${when} (cache.messageMediaRetentionDays; a deleted one: cache.revokedRetentionDays)`, linked: 'A joined copy: the same file as others (hard link)', dupes: (n, copies, size) => `${n} file${n === 1 ? '' : 's'} with copies · ${copies} messages · ${size} to free`, noDupes: 'No two files are the same here. 🎉', join: (size) => `🔗 Join the copies (frees ${size})`, joinAll: (size) => `🔗 Join them all (frees ${size})`, joinText: 'Each copy becomes a hard link of the oldest one: the space is freed and every message keeps its media (the cleanup still takes each one on its own date).', joined: (n, size) => `${n} copies joined, ${size} freed.`, alreadyJoined: '✅ already one file', copies: (n) => `× ${n}`, disk: (size) => `${size} on disk (the joined copies count once)`, shown: (n, total) => `${n} of ${total}`, mime: 'Type' },
-        health: { nav: 'Health', subtitle: 'How the bot is doing right now', verdict: { ok: '✅ All good', warn: '⚠️ Worth a look', bad: '🚨 Something is wrong' }, problems: { whatsapp: 'WhatsApp is not connected', loops: 'a periodic check is stuck', eventLoop: 'the bot is slow to answer (event loop)', errors: 'errors in the last 15 minutes' }, whatsapp: 'WhatsApp', wa: { ready: '🟢 Connected', connecting: '⏳ Connecting', down: '🔴 Down', restarting: '🔄 Restarting', pairing: '📲 Waiting to be paired' }, pair: { title: '📲 Pair WhatsApp', steps: ['On the phone with the bot number, open WhatsApp', 'Settings (⋮ on Android) › Linked devices', 'Link a device, and point the camera at this code'], code: (n, time) => `Code #${n} · ${time}`, renews: 'WhatsApp renews the code about every 20 s: this page follows it. Once read, this card turns into 🟢 Connected.', warning: '🔒 This code links a device to the account: whoever reads it gets the account. Each one shown here goes to the log, with the address that opened it.', bar: '📲 WhatsApp needs to be paired: read the QR Code in Health', open: 'Open', logout: '🔌 Disconnect (logout)', logoutTitle: '🔌 Disconnect WhatsApp', logoutText: 'The bot leaves the linked devices of the account and a new QR Code shows up here, to pair again (the same number or another one). Until it is read, the bot does not answer, nor sends the schedule, the alerts or the monitor.', logoutType: 'Type logout to confirm', logoutDone: 'Disconnecting… the new QR Code shows up here in a few seconds.' }, since: (ago) => `since ${ago}`, outage: 'Last drop', attempts: 'Failed attempts', paused: '⏸️ the bot is paused (/bot -pause)', process: 'Process', uptime: 'Up since', memory: 'Memory (RSS)', heap: 'JS heap', load: 'Load (1, 5, 15 min)', host: 'Free memory of the host', eventLoop: 'Event loop delay', mean: 'mean', p99: 'p99', max: 'max', loops: 'Periodic checks', loopIdle: 'idle', loopRunning: (ago) => `running ${ago}`, loopStuck: (ago) => `🚨 stuck, running ${ago}`, runs: (n) => `${n} round${n === 1 ? '' : 's'}`, lastRound: (ms, ago) => `last: ${ms} ms, ${ago}`, never: 'not run yet', regex: 'Regex worker (/watch, searches)', queueLabel: 'Waiting', missedLabel: 'Answered "no match"', queue: (n, max) => `${n} waiting (limit ${max})`, urgent: (n) => `${n} urgent`, regexRun: (n) => `${n} batches run`, regexMissed: (full, slow) => `${full} refused (queue full) · ${slow} past the deadline`, errors: 'Last errors of the log', noErrors: 'No error since the start. 🎉', auto: 'Updates every 10 s', version: 'Version' },
+        health: { nav: 'Health', subtitle: 'How the bot is doing right now', verdict: { ok: '✅ All good', warn: '⚠️ Worth a look', bad: '🚨 Something is wrong' }, problems: { whatsapp: 'WhatsApp is not connected', loops: 'a periodic check is stuck', eventLoop: 'the bot is slow to answer (event loop)', errors: 'errors in the last 15 minutes' }, whatsapp: 'WhatsApp', wa: { ready: '🟢 Connected', connecting: '⏳ Connecting', down: '🔴 Down', restarting: '🔄 Restarting', pairing: '📲 Waiting to be paired' }, pair: { title: '📲 Pair WhatsApp', steps: ['On the phone with the bot number, open WhatsApp', 'Settings (⋮ on Android) › Linked devices', 'Link a device, and point the camera at this code'], code: (n, time) => `Code #${n} · ${time}`, renews: 'WhatsApp renews the code about every 20 s: this page follows it. Once read, this card turns into 🟢 Connected.', warning: '🔒 This code links a device to the account: whoever reads it gets the account. Each one shown here goes to the log, with the address that opened it.', bar: '📲 WhatsApp needs to be paired: read the QR Code in Health', open: 'Open', logout: '🔌 Disconnect (logout)', logoutTitle: '🔌 Disconnect WhatsApp', logoutText: 'The bot leaves the linked devices of the account and a new QR Code shows up here, to pair again (the same number or another one). Until it is read, the bot does not answer, nor sends the schedule, the alerts or the monitor.', logoutAsk: 'Disconnect now?', logoutDone: 'Disconnecting… the new QR Code shows up here in a few seconds.' }, since: (ago) => `since ${ago}`, outage: 'Last drop', attempts: 'Failed attempts', paused: '⏸️ the bot is paused (/bot -pause)', process: 'Process', uptime: 'Up since', memory: 'Memory (RSS)', heap: 'JS heap', load: 'Load (1, 5, 15 min)', host: 'Free memory of the host', eventLoop: 'Event loop delay', mean: 'mean', p99: 'p99', max: 'max', loops: 'Periodic checks', loopIdle: 'idle', loopRunning: (ago) => `running ${ago}`, loopStuck: (ago) => `🚨 stuck, running ${ago}`, runs: (n) => `${n} round${n === 1 ? '' : 's'}`, lastRound: (ms, ago) => `last: ${ms} ms, ${ago}`, never: 'not run yet', regex: 'Regex worker (/watch, searches)', queueLabel: 'Waiting', missedLabel: 'Answered "no match"', queue: (n, max) => `${n} waiting (limit ${max})`, urgent: (n) => `${n} urgent`, regexRun: (n) => `${n} batches run`, regexMissed: (full, slow) => `${full} refused (queue full) · ${slow} past the deadline`, errors: 'Last errors of the log', noErrors: 'No error since the start. 🎉', auto: 'Updates every 10 s', version: 'Version' },
         push: { title: '📲 This device', install: '⬇️ Install the app', installed: 'Installed as an app', installHint: 'In Safari: Share → Add to Home Screen', on: '🔔 Notify me here', off: '🔕 Stop notifying here', test: 'Send a test', enabled: '✅ Done: the notices of the bot come to this device too (Settings → 📲 picks which).', testSent: 'Sent: it shows up in a few seconds.', kinds: { monitor: '👀 a monitored contact came online', watch: '🔎 a /watch match', price: '📈 a price alert', web: '🌐 an access to this page', connection: '📲 WhatsApp needs to be paired (the QR Code)' }, devices: (n) => `${n} device${n === 1 ? '' : 's'} get the notices`, needsHttps: 'The notices need the page on https (Tailscale serve, a proxy with a certificate) or on localhost.', unsupported: 'This browser has no push notices.', denied: 'The notices are blocked for this site in the browser: allow them in its settings.', offline: '📴 Offline: the notes you opened are here; the rest comes back with the network.', offlineReady: 'The notes you open stay available offline (never a protected tag).' },
         tryCmd: { check: 'Check', run: '▶️ Test', running: 'Running…', ok: 'ok', unknown: 'does not exist', options: 'options', noInput: 'does not read a pipe', option: (o) => `${o} is not tested here (it changes something)`, command: 'is not tested here (it may change something)', text: 'A text shortcut: its {/commands} run when it is used.', result: (ms) => `What it would answer (${ms} ms), nothing was sent`, nothing: 'It answered nothing.', notRunnable: 'Checked: it is not run here.', voice: 'voice', sticker: 'sticker' },
         wtest: { title: 'Try it on the last messages', none: 'No match in the last messages.', matches: (n, total, since) => `Would match ${n} of the last ${total} messages received${since ? ` (since ${since})` : ''}`, many: 'Many matches: a notice for each one. A narrower rule may be better.', chats: 'Where', cheats: 'Insert', regexHint: 'A text matches anywhere, without case and accents. /regex/i for more.' },
@@ -81,9 +90,18 @@ const TEXTS = {
         cannotShow: 'não foi possível mostrar esta mensagem', phTag: 'viagens', phTagDesc: 'lugares para conhecer', phNoteTag: 'ideias', envForced: (env) => `Decidido pela variável ${env} (config/.env), que tem prioridade sobre este setting`, noticeOn: 'Desligado: clique para ligar', noticeOff: 'Ligado: clique para desligar', flag: { quiet: ['Silencioso (-q): clique para responder normalmente', 'Responde normalmente: clique para silenciar (-q)'], ownerOnly: ['Só você (-p): clique para liberar a todos', 'Todos podem usar: clique para deixar só para você (-p)'] }, runOn: 'Ativo: clique para pausar', runOff: 'Pausado: clique para retomar', clearHistory: 'Limpar o histórico desta conversa', clearBtn: 'Limpar', clearTitle: (name) => `Limpar o histórico · ${name}`, clearInfo: (r) => `${r.removed} mensagens serão apagadas (com a mídia). ${r.kept} ficam: as apagadas, as editadas e as com reações, com o que tinham antes.`, clearNothing: 'Nada a apagar: toda mensagem daqui é apagada, editada ou tem reação.', clearEmpty: 'Esta conversa não tem mensagens no banco.', cacheBtn: 'Limpar', deleteNote: 'Apagar a nota', notice: 'Aviso', spy: { nav: 'Show', subtitle: 'O que o /show guarda: as apagadas, as editadas, as reações, os status e os canais', kinds: { deleted: 'Apagadas', edited: 'Editadas', reactions: 'Reações', status: 'Status', channels: 'Canais' }, alerts: 'Avisos no seu privado', alertOn: 'Ligado: clique para desligar', alertOff: 'Desligado: clique para ligar', people: 'Quem mais apaga, edita e reage', nobody: 'Ninguém ainda.', search: 'Busque no texto, na conversa ou na pessoa', empty: 'Nada aqui.', mute: 'Silenciar esta pessoa (/mute)', unmute: 'Tirar o silêncio (/unmute)', muted: 'silenciada', removeTitle: 'Tirar do cache', removeText: 'O bot esquece este item (e a mídia dele); o WhatsApp não é tocado.', removed: 'tirou', media: 'Abrir a mídia', openChat: 'Abrir a conversa nesta mensagem', mutedCount: (n) => `${n} silenciadas`, selectAll: 'Todas', selectOne: 'Selecionar', selectHint: 'Clique nos itens para selecioná-los (Shift+clique: um intervalo)', selected: (n) => `${n} selecionado${n === 1 ? '' : 's'}`, removeSelected: (n) => `Tirar ${n} ${n === 1 ? 'item' : 'itens'} do cache` }, cacheClean: 'Limpar o cache (/cache)', cacheRetention: 'O que passou da retenção (/cache -clean)', cachePick: 'Marque pelo menos um.', cacheAll: 'Tudo (/cache -all): todas as mensagens (inclusive apagadas, editadas e com reações), mídias, temporários e backups', cacheAllWarning: '⚠️ Tudo leva o histórico inteiro de todas as conversas e os backups também: não tem como desfazer. As notas ficam sempre.', flushAll: 'Limpar o histórico de todas as conversas', flushBtn: 'Limpar todas as conversas', flushEmpty: 'Não há mensagens no banco.', flushWarning: (n) => `⚠️ Isto limpa o histórico de todas as ${n} conversas de uma vez, não só de uma. Não tem como desfazer (só por um /backup).`, clearAll: (n) => `Apagar tudo (${n}), inclusive as apagadas, as editadas e as com reações, com a mídia delas`, webPanel: 'Interface web', webAt: 'Abra em', webAccess: 'Acesso', webLogin: 'Login e sessão', webScreen: 'Tela', webAlerts: 'Avisos', notSet: 'não definido', needsRestart: 'Vale quando o bot reiniciar', restSettings: 'Todos os outros settings', protectedHere: 'Mude com o /set no WhatsApp',  meBtn: 'Eu (meu privado)', watchedBy: '/watch', openInHistory: 'Abrir no histórico, nesta mensagem', presenceSource: 'presença do WhatsApp · horário não confirmado', newTag: 'Nova tag', newNote: 'Nova nota', editTagBtn: 'Editar a tag', copyTag: 'Duplicar a tag', copyTagInfo: (n) => `As ${n} nota${n === 1 ? '' : 's'} (e os arquivos) vão como cópia para a nova tag, sem os alertas.`, moveNote: 'Mover para outra tag', copyNote: 'Copiar para outra tag', duplicateNote: 'Duplicar a nota', moveTag: 'Mover todas as notas para outra tag', moveTagInfo: (n) => `As ${n} nota${n === 1 ? '' : 's'} vão para a tag que você escolher (se ela já tem notas, as duas se juntam).`, copyNoteInfo: 'A cópia leva o texto e o arquivo, sem o alerta.', pickTag: 'Tag', orNewTag: 'ou uma tag nova', removeTag: 'Remover a tag', confirmRemoveTag: 'Remover esta tag (ela não tem notas)?', removeTagWithNotes: 'Remover a tag e tudo dentro dela', removeTagInfo: (n) => `${n} nota${n === 1 ? '' : 's'} (e a mídia delas) serão apagadas, junto com a descrição e o cadeado da tag, se houver.`, historyBtn: 'Histórico', loadingHistory: 'Carregando o histórico…', searchContact: 'Busque um contato ou grupo (nome ou número) ou digite um e-mail', pickContact: 'Busque o contato (nome ou número)', noMatches: 'Nenhum contato encontrado', privateChat: 'Vazio: vai para o seu privado', useEmail: (email) => `✉️ Usar ${email}`, updatedAt: (time) => `atualizado às ${time}`, noHistory: 'Nada registrado ainda.', removeReading: 'Remover esta leitura', historyOf: (name, total) => `${name} · ${total}`, securityChanged: (who) => `🔒 o código de segurança de ${who ?? 'um participante'} mudou`, systemNotice: (text) => `ℹ️ ${text ?? 'aviso do WhatsApp'}`, loadMore: 'Carregar mais', noMore: 'Não há mais mensagens.', loadingFor: (name) => `Carregando ${name}…`, loadingStats: 'Carregando as estatísticas…', loadingHome: 'Carregando…', statsOverview: 'Estatísticas', last30: 'últimos 30 dias', seeAllStats: 'Ver todas as estatísticas',
         code: 'Código de 6 dígitos', quotedGone: 'mensagem fora do banco', searchAll: 'Buscar em todas as mensagens', searchResults: (n) => `${n} resultados`, exportChat: 'Exportar PDF', reacted: 'reação', removedReaction: 'removida', reactionHistory: 'Histórico de reações',
         reactionChanged: 'Alterou a reação', reactionRemoved: 'Removeu a reação', autoRefresh: 'Mensagens novas',
+        setup: { title: 'Bem-vindo ao ZapBot', intro: 'Escolha o login e a senha desta página. Leva um minuto, e o resto está nos Primeiros passos.', steps: ['Seu acesso', 'E-mail', 'WhatsApp', 'O resto'], login: 'Login', password: 'Senha', passwordHint: 'mínimo 12 caracteres', repeat: 'Repita a senha', show: 'Mostrar a senha', create: 'Criar meu acesso', mismatch: 'As duas senhas estão diferentes.', linkExpired: 'Este link já foi usado ou expirou. Peça um novo: /web -setup no seu privado, ou reinicie o bot.', note: 'O link do log vale uma vez: depois disto, ele não existe mais. A senha fica guardada só como hash.', missing: 'Este ZapBot ainda não tem login. Abra o link que o bot mostrou no log ao iniciar: ele vale uma vez, por 24 h.', missingWhatsApp: 'Já pareado? /web -setup no seu privado do WhatsApp manda um link novo.', strength: ['curta demais', 'fraca', 'razoável', 'boa', 'forte'] },
+        onboarding: { title: 'Primeiros passos', progress: (done, total) => `${done} de ${total} feitos`, hide: 'Esconder (volta depois de uma nova configuração)', addressNow: (url) => `Agora aparece ${url}: no Docker, preencha o ZAPBOT_WEB_URL (ou o zapbot.web.url) para os links (o do QR Code também) abrirem de outros aparelhos.`, steps: { login: ['Seu acesso', 'Login e senha criados.', ''], whatsapp: ['Parear o WhatsApp', 'Leia o QR Code com o celular do número do bot, aqui mesmo na Saúde.', 'Abrir o QR Code'], address: ['O endereço da web', 'O endereço para onde os links apontam.', 'Conferir'], email: ['E-mail (opcional)', 'O QR Code, os alertas e os backups por e-mail: SMTP e IMAP, salvos aqui (sem arquivo para editar).', 'Configurar o e-mail'], twoFactor: ['Verificação em duas etapas', 'Um código de 6 dígitos de um app autenticador no login.', 'Ligar'], push: ['Avisos neste aparelho', 'Um contato online, uma ocorrência do /watch, um alerta de preço, o WhatsApp pedindo pareamento: mesmo com a página fechada.', 'Ligar'], users: ['Quem pode usar o bot', 'Por enquanto, só você: libere pessoas ou grupos (bot.users).', 'Escolher'] } },
+        access: { title: 'Acesso', password: 'Senha', passwordNow: (login) => `Login ${login || '—'}`, change: 'Trocar a senha', current: 'Senha atual', newPassword: 'Nova senha', changeNote: 'As outras sessões são encerradas, e o seu privado e o e-mail são avisados.', wrongCurrent: 'A senha atual não confere.', changed: '✅ Senha trocada. As outras sessões foram encerradas.', totpTitle: 'Verificação em duas etapas', totpIsOn: 'Ligada: o login pede o código de 6 dígitos do app.', totpIsOff: 'Desligada: só a senha. /web -2fa off no WhatsApp desliga.', totpTurnOn: 'Ligar', totpSteps: ['Abra um app autenticador (Google Authenticator, Authy, 1Password...)', 'Adicione uma conta lendo este QR Code (ou digitando a chave)', 'Digite os 6 dígitos que ele mostrar'], totpSecret: 'Chave:', totpCode: 'Código do app', totpConfirm: 'Ligar', wrongCode: 'Esse código não confere (ou expirou): tente o próximo.', totpOn: '✅ Verificação em duas etapas ligada: o próximo login pede o código.' },
+        mail: { title: 'E-mail', intro: 'O SMTP que manda o QR Code, os alertas e os backups, e o IMAP do /bot -flush-email. Salvos aqui, no banco: sem arquivo para editar. Use uma senha de app; porta 465 (SSL) ou 587 (STARTTLS).', presets: 'Preencher:', test: '🔌 Testar a conexão', send: '✉️ Mandar um e-mail de teste', testing: 'Testando…', works: '✅ O SMTP aceitou o login (nada foi enviado).', sent: '✅ Enviado: confira a caixa de entrada do destinatário.', envNote: 'Um QRCODE_EMAIL_* no config/.env tem prioridade sobre estes (🔧): o início do bot diz quais.' },
+        mailSmtp: 'SMTP', mailWho: 'Remetente, destinatário e IMAP', mailUse: 'O que vai por e-mail',
+        setupMail: { title: 'E-mail', intro: 'O bot manda por e-mail o QR Code do WhatsApp quando precisar parear de novo, os alertas (crash, queda) e os backups. Escolha o seu provedor, use uma senha de app e teste.', host: 'Servidor SMTP', port: 'Porta', user: 'Login (o seu e-mail)', pass: 'Senha de app', to: 'Quem recebe', from: 'Remetente (opcional: o login do SMTP)', imap: 'Servidor IMAP (opcional: /bot -flush-email)', qr: 'Mandar o QR Code do WhatsApp por e-mail', more: 'Mais: o remetente e o IMAP', save: 'Salvar e continuar', skip: 'Pular por agora', saving: 'Salvando…', envIntro: (names) => `O config/.env já define ${names}: ele tem prioridade sobre o que você digitar aqui.`, useDatabase: 'Usar os desta página (ignorar o config/.env)', envIgnored: 'O config/.env é ignorado: vale o que está aqui (zapbot.email.overrideEnv).' },
+        setupWhatsApp: { title: 'WhatsApp', ready: '🟢 O WhatsApp já está pareado: nada a fazer aqui.', pairing: 'Leia o QR Code com o celular do número do bot: a Saúde mostra e acompanha.', open: 'Abrir o QR Code', next: 'Continuar' },
+        mailEnv: { title: 'config/.env', intro: (names) => `Definidas no config/.env: ${names}. Elas têm prioridade sobre esta página (🔧).`, ignored: 'O config/.env é ignorado: vale esta página.', toggle: 'Usar os desta página (ignorar o config/.env)' },
+        updated: (v) => `🔄 O ZapBot foi atualizado (${v}): recarregar`,
         sched: { run: 'Testar agora: montar como vai sair (nada é enviado)', title: (text) => `🧪 Teste · ${text}`, running: 'Rodando os {/comandos} dela, como na hora agendada…', goesTo: 'Vai para', when: 'Próxima', message: 'O que sai', onlyMedia: 'Só a mídia dos {/comandos}', nothingSent: (ms) => `Nada foi enviado: os {/comandos} rodaram de verdade (${ms} ms), como na hora agendada, e as respostas ficaram guardadas.`, failures: 'Comandos que falharam', slashText: (braces) => `Começa com /: sai como texto e não roda (o bot nunca executa o que ele mesmo envia). Para rodar um comando, ponha entre chaves: ${braces}`, again: '↻ Rodar de novo', formTest: '🧪 Testar' },
         gal: { nav: 'Mídias', subtitle: 'Toda foto, vídeo, áudio, figurinha e documento que o bot guardou', kinds: { image: 'Fotos', video: 'Vídeos', audio: 'Áudios', sticker: 'Figurinhas', document: 'Documentos' }, all: 'Tudo', allChats: 'Todas as conversas', period: { 7: '7 dias', 30: '30 dias', 90: '90 dias', 0: 'Sempre' }, total: (n, size) => `${n} arquivos · ${size}`, chats: 'As conversas que mais ocupam espaço', empty: 'Nenhuma mídia aqui.', open: 'Abrir na conversa', download: 'Baixar', remove: 'Liberar este arquivo', removeText: 'O arquivo sai do disco; a mensagem fica no histórico, com a mídia faltando.', removeSelected: (n) => `Liberar ${n} arquivo${n === 1 ? '' : 's'}`, freed: (size) => `${size} liberados`, select: 'Selecionar', selected: (n) => `${n} selecionado${n === 1 ? '' : 's'}`, deleted: 'apagada', prev: 'Anterior (←)', next: 'Próxima (→)', fromMe: 'você', grid: 'Grade', list: 'Lista', search: 'Busque no nome, na legenda ou na conversa', same: '🧬 Iguais', sameTitle: 'Agrupar os arquivos iguais (mesmo conteúdo)', cols: { name: 'Nome', size: 'Tamanho', mime: 'Tipo', date: 'Data', chat: 'Conversa', expires: 'Sai' }, sortHint: 'Clique para ordenar', expiresIn: (ago) => `sai ${ago}`, expiresNext: 'na próxima limpeza', expiresTitle: (when) => `A limpeza tira em ${when} (cache.messageMediaRetentionDays; uma apagada: cache.revokedRetentionDays)`, linked: 'Uma cópia unida: o mesmo arquivo que outras (hard link)', dupes: (n, copies, size) => `${n} arquivo${n === 1 ? '' : 's'} com cópias · ${copies} mensagens · ${size} para liberar`, noDupes: 'Nenhum arquivo igual a outro aqui. 🎉', join: (size) => `🔗 Unir as cópias (libera ${size})`, joinAll: (size) => `🔗 Unir todas (libera ${size})`, joinText: 'Cada cópia vira um hard link da mais antiga: o espaço é liberado e toda mensagem continua com a mídia (a limpeza ainda tira cada uma na sua data).', joined: (n, size) => `${n} cópias unidas, ${size} liberados.`, alreadyJoined: '✅ já são um arquivo só', copies: (n) => `× ${n}`, disk: (size) => `${size} no disco (as cópias unidas contam uma vez)`, shown: (n, total) => `${n} de ${total}`, mime: 'Tipo' },
-        health: { nav: 'Saúde', subtitle: 'Como o bot está agora', verdict: { ok: '✅ Tudo certo', warn: '⚠️ Vale uma olhada', bad: '🚨 Algo está errado' }, problems: { whatsapp: 'o WhatsApp não está conectado', loops: 'uma checagem periódica travou', eventLoop: 'o bot está lento para responder (event loop)', errors: 'erros nos últimos 15 minutos' }, whatsapp: 'WhatsApp', wa: { ready: '🟢 Conectado', connecting: '⏳ Conectando', down: '🔴 Fora do ar', restarting: '🔄 Reiniciando', pairing: '📲 Esperando o pareamento' }, pair: { title: '📲 Parear o WhatsApp', steps: ['No celular com o número do bot, abra o WhatsApp', 'Configurações (⋮ no Android) › Aparelhos conectados', 'Conectar um aparelho, e aponte a câmera para este código'], code: (n, time) => `Código #${n} · ${time}`, renews: 'O WhatsApp troca o código a cada ~20 s: esta página acompanha. Depois de lido, este card vira 🟢 Conectado.', warning: '🔒 Este código conecta um aparelho à conta: quem ler fica com a conta. Cada um exibido aqui vai para o log, com o endereço que abriu.', bar: '📲 O WhatsApp precisa ser pareado: leia o QR Code na Saúde', open: 'Abrir', logout: '🔌 Desconectar (logout)', logoutTitle: '🔌 Desconectar o WhatsApp', logoutText: 'O bot sai dos aparelhos conectados da conta e um QR Code novo aparece aqui, para parear de novo (o mesmo número ou outro). Até ser lido, o bot não responde, nem manda a agenda, os alertas ou o monitor.', logoutType: 'Digite logout para confirmar', logoutDone: 'Desconectando… o QR Code novo aparece aqui em alguns segundos.' }, since: (ago) => `desde ${ago}`, outage: 'Última queda', attempts: 'Tentativas falhas', paused: '⏸️ o bot está pausado (/bot -pause)', process: 'Processo', uptime: 'No ar desde', memory: 'Memória (RSS)', heap: 'Heap do JS', load: 'Carga (1, 5, 15 min)', host: 'Memória livre do servidor', eventLoop: 'Atraso do event loop', mean: 'média', p99: 'p99', max: 'máx', loops: 'Checagens periódicas', loopIdle: 'parada', loopRunning: (ago) => `rodando ${ago}`, loopStuck: (ago) => `🚨 travada, rodando ${ago}`, runs: (n) => `${n} rodada${n === 1 ? '' : 's'}`, lastRound: (ms, ago) => `última: ${ms} ms, ${ago}`, never: 'ainda não rodou', regex: 'Worker de regex (/watch, buscas)', queueLabel: 'Na fila', missedLabel: 'Respondidos "sem match"', queue: (n, max) => `${n} na fila (limite ${max})`, urgent: (n) => `${n} urgentes`, regexRun: (n) => `${n} lotes rodados`, regexMissed: (full, slow) => `${full} recusados (fila cheia) · ${slow} passaram do prazo`, errors: 'Últimos erros do log', noErrors: 'Nenhum erro desde o início. 🎉', auto: 'Atualiza a cada 10 s', version: 'Versão' },
+        health: { nav: 'Saúde', subtitle: 'Como o bot está agora', verdict: { ok: '✅ Tudo certo', warn: '⚠️ Vale uma olhada', bad: '🚨 Algo está errado' }, problems: { whatsapp: 'o WhatsApp não está conectado', loops: 'uma checagem periódica travou', eventLoop: 'o bot está lento para responder (event loop)', errors: 'erros nos últimos 15 minutos' }, whatsapp: 'WhatsApp', wa: { ready: '🟢 Conectado', connecting: '⏳ Conectando', down: '🔴 Fora do ar', restarting: '🔄 Reiniciando', pairing: '📲 Esperando o pareamento' }, pair: { title: '📲 Parear o WhatsApp', steps: ['No celular com o número do bot, abra o WhatsApp', 'Configurações (⋮ no Android) › Aparelhos conectados', 'Conectar um aparelho, e aponte a câmera para este código'], code: (n, time) => `Código #${n} · ${time}`, renews: 'O WhatsApp troca o código a cada ~20 s: esta página acompanha. Depois de lido, este card vira 🟢 Conectado.', warning: '🔒 Este código conecta um aparelho à conta: quem ler fica com a conta. Cada um exibido aqui vai para o log, com o endereço que abriu.', bar: '📲 O WhatsApp precisa ser pareado: leia o QR Code na Saúde', open: 'Abrir', logout: '🔌 Desconectar (logout)', logoutTitle: '🔌 Desconectar o WhatsApp', logoutText: 'O bot sai dos aparelhos conectados da conta e um QR Code novo aparece aqui, para parear de novo (o mesmo número ou outro). Até ser lido, o bot não responde, nem manda a agenda, os alertas ou o monitor.', logoutAsk: 'Desconectar agora?', logoutDone: 'Desconectando… o QR Code novo aparece aqui em alguns segundos.' }, since: (ago) => `desde ${ago}`, outage: 'Última queda', attempts: 'Tentativas falhas', paused: '⏸️ o bot está pausado (/bot -pause)', process: 'Processo', uptime: 'No ar desde', memory: 'Memória (RSS)', heap: 'Heap do JS', load: 'Carga (1, 5, 15 min)', host: 'Memória livre do servidor', eventLoop: 'Atraso do event loop', mean: 'média', p99: 'p99', max: 'máx', loops: 'Checagens periódicas', loopIdle: 'parada', loopRunning: (ago) => `rodando ${ago}`, loopStuck: (ago) => `🚨 travada, rodando ${ago}`, runs: (n) => `${n} rodada${n === 1 ? '' : 's'}`, lastRound: (ms, ago) => `última: ${ms} ms, ${ago}`, never: 'ainda não rodou', regex: 'Worker de regex (/watch, buscas)', queueLabel: 'Na fila', missedLabel: 'Respondidos "sem match"', queue: (n, max) => `${n} na fila (limite ${max})`, urgent: (n) => `${n} urgentes`, regexRun: (n) => `${n} lotes rodados`, regexMissed: (full, slow) => `${full} recusados (fila cheia) · ${slow} passaram do prazo`, errors: 'Últimos erros do log', noErrors: 'Nenhum erro desde o início. 🎉', auto: 'Atualiza a cada 10 s', version: 'Versão' },
         push: { title: '📲 Este aparelho', install: '⬇️ Instalar o app', installed: 'Instalado como app', installHint: 'No Safari: Compartilhar → Adicionar à Tela de Início', on: '🔔 Me avisar aqui', off: '🔕 Parar de avisar aqui', test: 'Mandar um teste', enabled: '✅ Pronto: os avisos do bot chegam também neste aparelho (Settings → 📲 escolhe quais).', testSent: 'Enviado: aparece em alguns segundos.', kinds: { monitor: '👀 um contato monitorado ficou online', watch: '🔎 uma ocorrência do /watch', price: '📈 um alerta de preço', web: '🌐 um acesso a esta página', connection: '📲 o WhatsApp precisa ser pareado (o QR Code)' }, devices: (n) => `${n} aparelho${n === 1 ? '' : 's'} recebe${n === 1 ? '' : 'm'} os avisos`, needsHttps: 'Os avisos precisam da página em https (Tailscale serve, um proxy com certificado) ou em localhost.', unsupported: 'Este navegador não tem avisos push.', denied: 'Os avisos estão bloqueados para este site no navegador: libere nas configurações dele.', offline: '📴 Sem rede: as notas que você abriu estão aqui; o resto volta com a rede.', offlineReady: 'As notas que você abre ficam disponíveis sem rede (nunca as de tag protegida).' },
         tryCmd: { check: 'Checagem', run: '▶️ Testar', running: 'Rodando…', ok: 'ok', unknown: 'não existe', options: 'opções', noInput: 'não lê um pipe', option: (o) => `o ${o} não é testado aqui (muda alguma coisa)`, command: 'não é testado aqui (pode mudar alguma coisa)', text: 'Um atalho de texto: os {/comandos} dele rodam quando ele é usado.', result: (ms) => `O que ele responderia (${ms} ms), nada foi enviado`, nothing: 'Não respondeu nada.', notRunnable: 'Checado: não roda aqui.', voice: 'voz', sticker: 'figurinha' },
         wtest: { title: 'Teste nas últimas mensagens', none: 'Nenhuma ocorrência nas últimas mensagens.', matches: (n, total, since) => `Casaria com ${n} das últimas ${total} mensagens recebidas${since ? ` (desde ${since})` : ''}`, many: 'Muitas ocorrências: um aviso para cada uma. Uma regra mais estreita pode ser melhor.', chats: 'Onde', cheats: 'Inserir', regexHint: 'Um texto casa em qualquer lugar, sem maiúsculas e acentos. /regex/i para mais.' },
@@ -153,7 +171,19 @@ async function api(path, options = {}) {
         showLogin();
         throw new Error('login');
     }
+    checkVersion(response.headers.get('X-ZapBot-Version'));
     return response;
+}
+
+// A page opened before a deploy keeps the old app.js (the screens refresh only their data): when the bot answers with
+// another version, it reloads by itself, unless something is being typed (then a bar asks for it)
+function checkVersion(header) {
+    if (!header || !state.version) return;
+    const now = decodeURIComponent(header);
+    if (now === state.version || document.querySelector('.update-bar')) return;
+    const typing = document.querySelector('dialog[open]') || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName ?? '');
+    if (!typing) return location.reload();
+    document.body.append(el('button', { class: 'pair-bar update-bar', onclick: () => location.reload() }, T.updated(now.split(' ')[0])));
 }
 
 // Every time the API gives is in milliseconds (as the database keeps them)
@@ -739,6 +769,10 @@ async function start() {
     state.refreshSeconds = session.refreshSeconds ?? 15;
     state.needsCode = Boolean(session.needsCode);
     state.version = session.version ?? '';
+    // The first setup (or a recovery): the single-use link of the log brings its token after the #
+    const setupToken = location.pathname === '/setup' ? location.hash.slice(1) : '';
+    if (setupToken) return showSetup(setupToken);
+    if (session.setup) return showSetupMissing();
     if (!session.authenticated) return showLogin();
     startSessionChecks();
     startRefresh();
@@ -862,8 +896,11 @@ async function showHome(content) {
         el('div', { class: 'stack' }, parts.filter(([, , bytes]) => bytes > 0).map(([key, label, bytes]) => el('span', { class: `seg seg-${key}`, style: `width:${bytes / sum * 100}%`, title: `${label}: ${humanSize(bytes)}` }))),
         el('div', { class: 'storage-legend' }, parts.map(([key, label, bytes, text]) => el('div', { class: 'storage-item' },
             el('span', { class: `dot seg-${key}` }), el('div', {}, el('div', { class: 'storage-name' }, label), el('div', { class: 'muted' }, `${text} · ${Math.round(bytes / sum * 100)}%`))))));
+    // The first steps (after the first setup), on top until they are done or hidden
+    const firstSteps = await onboardingCard();
     content.replaceChildren(el('div', { class: 'page' },
         el('div', { class: 'page-head' }, el('h2', {}, T.home), el('button', { class: 'btn', onclick: () => show('home') }, `↻ ${T.refresh}`)),
+        firstSteps,
         storageCard,
         el('h3', {}, T.counts2),
         el('div', { class: 'cards' },
@@ -1563,14 +1600,15 @@ function scheduleTester(inputs) {
 
 /* health: what the bot is doing right now */
 let healthTimer = null;
-// 🔌 Disconnect: the bot leaves the linked devices; the new QR Code comes in this same page (it checks every 3 s)
+// 🔌 Disconnect: the bot leaves the linked devices; the new QR Code comes in this same page (it checks every 3 s).
+// A Yes/No question, as everywhere else
 function logoutWhatsApp(content) {
     const P = T.health.pair;
-    openForm({
-        title: P.logoutTitle, submitLabel: P.logout,
-        fields: [{ type: 'note', name: 'info', text: P.logoutText, warn: true }, { name: 'confirm', label: P.logoutType, type: 'text', placeholder: 'logout' }],
-        onSubmit: async (body) => {
-            const result = await manage({ section: 'whatsapp', op: 'logout', confirm: String(body.confirm ?? '').trim().toLowerCase() });
+    confirmBox({
+        title: P.logoutTitle, text: `${P.logoutText}\n\n${P.logoutAsk}`,
+        submitLabel: T.contact.yes, cancelLabel: T.contact.no,
+        action: async () => {
+            const result = await manage({ section: 'whatsapp', op: 'logout', confirm: true });
             if (result.error) return result;
             messageBox(P.logoutDone);
             setTimeout(() => { if (state.view === 'health') showHealth(content); }, 4000);
@@ -2047,43 +2085,365 @@ const WEB_GROUPS = [
     ['🔔', 'webAlerts', ['zapbot.web.warnAccess', 'zapbot.web.warnChangedPhone']]
 ];
 
-function webSettingsPanel(data, refresh) {
+// One setting, editable in place: a switch, a number or a text (a secret one as a password field, empty: unchanged);
+// the ones config/.env decides show as 🔧 (read-only), the protected ones as 🔒
+function settingRow(data, refresh, key, prefix) {
     const section = data.sections[0];
-    const at = (key) => section.ids.indexOf(key);
+    const i = section.ids.indexOf(key);
+    if (i < 0) return null;
     const restart = new Set(data.web?.restartKeys ?? []);
-
-    const row = (key) => {
-        const i = at(key);
-        if (i < 0) return null;
-        const [, current, fallback, desc] = section.rows[i];
-        const meta = section.values[i];
-        const status = el('span', { class: 'muted wp-status' });
-        const save = async (value) => {
-            const result = await manage({ section: 'setting', op: 'edit', id: key, value: String(value) });
-            if (result.error) { status.textContent = `⚠ ${result.error}`; status.classList.add('error'); return; }
-            status.classList.remove('error');
-            status.textContent = `✔ ${T.saved}`;
-            setTimeout(refresh, 700);
-        };
-        let control;
-        const forced = data.web?.overridden?.[key];
-        const env = forced?.env;
-        if (env) control = el('span', { class: 'muted', title: T.envForced(env) }, `🔧 ${forced.value} · ${env}`);
-        else if (meta.protected) control = el('span', { class: 'muted', title: T.protectedHere }, `🔒 ${meta.secret ? (current ? '••••••••' : T.notSet) : (current || T.notSet)}`);
-        else if (meta.type === 'boolean') control = el('input', { type: 'checkbox', class: 'switch', checked: meta.value === 'true', onchange: (event) => save(event.target.checked) });
-        else if (meta.type === 'number') control = el('input', { type: 'number', value: meta.value, onchange: (event) => save(event.target.value) });
-        else control = el('input', { type: 'text', value: meta.value, onchange: (event) => save(event.target.value) });
-        const changed = !meta.protected && String(meta.value) !== String(fallback);
-        return el('div', { class: 'wp-row' },
-            el('div', { class: 'wp-name' }, el('code', {}, key.replace('zapbot.web.', '')), restart.has(key) ? el('span', { class: 'badge', title: T.needsRestart }, '⟳') : null),
-            el('div', { class: 'wp-control' }, control,
-                changed && !env ? el('button', { type: 'button', class: 'icon-btn', title: T.reset, onclick: async () => { await manage({ section: 'setting', op: 'delete', id: key }); refresh(); } }, '↺') : null, status),
-            el('div', { class: 'wp-desc muted' }, desc));
+    const [, current, fallback, desc] = section.rows[i];
+    const meta = section.values[i];
+    const status = el('span', { class: 'muted wp-status' });
+    const save = async (value) => {
+        const result = await manage({ section: 'setting', op: 'edit', id: key, value: String(value) });
+        if (result.error) { status.textContent = `⚠ ${result.error}`; status.classList.add('error'); return; }
+        status.classList.remove('error');
+        status.textContent = `✔ ${T.saved}`;
+        setTimeout(refresh, 700);
     };
+    let control;
+    const forced = data.web?.overridden?.[key];
+    const env = forced?.env;
+    if (env) control = el('span', { class: 'muted', title: T.envForced(env) }, `🔧 ${forced.value} · ${env}`);
+    else if (meta.protected) control = el('span', { class: 'muted', title: T.protectedHere }, `🔒 ${meta.secret ? (current ? '••••••••' : T.notSet) : (current || T.notSet)}`);
+    else if (meta.type === 'boolean') control = el('input', { type: 'checkbox', class: 'switch', checked: meta.value === 'true', onchange: (event) => save(event.target.checked) });
+    else if (meta.type === 'number') control = el('input', { type: 'number', value: meta.value, onchange: (event) => save(event.target.value) });
+    else if (meta.secret) control = el('input', { type: 'password', autocomplete: 'new-password', placeholder: current ? '••••••••' : T.notSet, onchange: (event) => { if (event.target.value) save(event.target.value); } });
+    else control = el('input', { type: 'text', value: meta.value, onchange: (event) => save(event.target.value) });
+    const changed = !meta.protected && (meta.secret ? Boolean(current) : String(meta.value) !== String(fallback));
+    return el('div', { class: 'wp-row' },
+        el('div', { class: 'wp-name' }, el('code', {}, key.replace(prefix, '')), restart.has(key) ? el('span', { class: 'badge', title: T.needsRestart }, '⟳') : null),
+        el('div', { class: 'wp-control' }, control,
+            changed && !env ? el('button', { type: 'button', class: 'icon-btn', title: T.reset, onclick: async () => { await manage({ section: 'setting', op: 'delete', id: key }); refresh(); } }, '↺') : null, status),
+        el('div', { class: 'wp-desc muted' }, desc));
+}
+const settingGroups = (data, refresh, groups, prefix) => el('div', { class: 'wp-groups' }, groups.map(([icon, name, keys]) =>
+    el('div', { class: 'wp-group' }, el('h4', {}, `${icon} ${T[name]}`), keys.map(key => settingRow(data, refresh, key, prefix)))));
 
-    return el('div', { class: 'section webpanel' },
+function webSettingsPanel(data, refresh) {
+    return el('div', { class: 'section webpanel', id: 'webpanel' },
         el('div', { class: 'section-head' }, el('h3', {}, `🌐 ${T.webPanel}`), data.web?.url ? el('span', { class: 'muted' }, `${T.webAt} `, el('a', { class: 'link', href: data.web.url, target: '_blank', rel: 'noopener' }, data.web.url)) : null),
-        el('div', { class: 'wp-groups' }, WEB_GROUPS.map(([icon, name, keys]) => el('div', { class: 'wp-group' }, el('h4', {}, `${icon} ${T[name]}`), keys.map(row)))));
+        settingGroups(data, refresh, WEB_GROUPS, 'zapbot.web.'));
+}
+
+/* the first setup: the single-use link of the log opens this page; the login and the password are chosen here */
+// How strong a password is: 0 to 4 (length and the kinds of characters), with its label
+function passwordStrength(text) {
+    const value = String(text ?? '');
+    let score = 0;
+    if (value.length >= 12) score++;
+    if (value.length >= 16) score++;
+    if (/[a-z]/.test(value) && /[A-Z]/.test(value)) score++;
+    if (/\d/.test(value) && /[^A-Za-z0-9]/.test(value)) score++;
+    return value.length < 12 ? 0 : Math.min(4, score);
+}
+function strengthMeter(input) {
+    const S = T.setup;
+    const fill = el('span', { class: 'strength-fill' });
+    const label = el('span', { class: 'muted strength-label' }, S.strength[0]);
+    const update = () => {
+        const score = passwordStrength(input.value);
+        fill.style.width = `${score * 25}%`;
+        fill.dataset.score = String(score);
+        label.textContent = S.strength[score];
+    };
+    input.addEventListener('input', update);
+    update();
+    return el('div', { class: 'strength' }, el('span', { class: 'strength-track' }, fill), label);
+}
+
+function showSetup(token) {
+    const S = T.setup;
+    const error = el('div', { class: 'error' });
+    const login = el('input', { type: 'text', value: 'admin', autocomplete: 'username', required: true });
+    const password = el('input', { type: 'password', autocomplete: 'new-password', required: true, placeholder: S.passwordHint });
+    const repeat = el('input', { type: 'password', autocomplete: 'new-password', required: true });
+    const show = el('label', { class: 'check' }, el('input', { type: 'checkbox', onchange: (event) => { password.type = repeat.type = event.target.checked ? 'text' : 'password'; } }), S.show);
+    const form = el('form', { class: 'setup-card', onsubmit: async (event) => {
+        event.preventDefault();
+        error.textContent = '';
+        if (password.value !== repeat.value) { error.textContent = S.mismatch; return; }
+        const response = await fetch('/api/setup', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, login: login.value.trim(), password: password.value }) });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) { error.textContent = data.error === 'link' ? S.linkExpired : (data.error ?? 'error'); return; }
+        history.replaceState(null, '', '/');
+        state.view = 'home';
+        try { localStorage.removeItem('zb_onboarding_hidden'); } catch { /* only a convenience */ }
+        setupMailStep();
+    } },
+    el('div', { class: 'setup-logo' }, el('img', { src: '/icon.svg', alt: '' })),
+    el('h1', {}, S.title),
+    el('p', { class: 'muted' }, S.intro),
+    setupSteps(0),
+    el('label', { class: 'field' }, el('span', {}, S.login), login),
+    el('label', { class: 'field' }, el('span', {}, S.password), password),
+    strengthMeter(password),
+    el('label', { class: 'field' }, el('span', {}, S.repeat), repeat),
+    show, error,
+    el('button', { type: 'submit', class: 'btn on setup-go' }, S.create),
+    el('p', { class: 'muted setup-note' }, S.note));
+    root.replaceChildren(el('div', { class: 'setup' }, form));
+    password.focus();
+}
+
+const setupSteps = (current) => el('ol', { class: 'setup-steps' }, T.setup.steps.map((step, i) => el('li', { class: i < current ? 'done' : i === current ? 'on' : '' }, step)));
+const setupCard = (...children) => root.replaceChildren(el('div', { class: 'setup' }, el('div', { class: 'setup-card' },
+    el('div', { class: 'setup-logo' }, el('img', { src: '/icon.svg', alt: '' })), ...children)));
+
+// Step 2: the email (SMTP and IMAP), right after the access; saved as zapbot.email.* (skippable: First steps remind it)
+async function setupMailStep() {
+    const S = T.setupMail;
+    const data = await (await api('/api/lists/settings')).json().catch(() => null);
+    if (!data) return setupWhatsAppStep();
+    const { ids, values } = data.sections[0];
+    const value = (key) => values[ids.indexOf(key)]?.value ?? '';
+    const forced = (key) => data.web?.overridden?.[key];
+    const env = data.web?.mailEnv ?? [];
+    const dbWins = value('zapbot.email.overrideEnv') === 'true';
+    const status = el('span', { class: 'muted' });
+    const fields = {};
+    const input = (key, label, attrs = {}) => {
+        const meta = values[ids.indexOf(key)] ?? {};
+        const lock = forced(key);
+        const node = lock ? el('input', { type: 'text', value: `🔧 ${lock.value} · ${lock.env}`, disabled: true })
+            : el('input', { type: meta.secret ? 'password' : 'text', value: meta.secret ? '' : value(key), placeholder: meta.secret && value(key) ? '••••••••' : '', ...attrs });
+        if (!lock) fields[key] = node;
+        return el('label', { class: 'field' }, el('span', {}, label), node);
+    };
+    const save = async () => {
+        for (const [key, node] of Object.entries(fields)) {
+            const meta = values[ids.indexOf(key)] ?? {};
+            const next = node.type === 'checkbox' ? String(node.checked) : node.value.trim();
+            if (meta.secret ? !next : next === String(value(key))) continue;
+            const result = await manage({ section: 'setting', op: 'edit', id: key, value: next });
+            if (result.error) { status.textContent = `⚠️ ${key}: ${result.error}`; return false; }
+        }
+        return true;
+    };
+    const run = async (button, action) => {
+        button.disabled = true;
+        try { await action(); } finally { button.disabled = false; }
+    };
+    const qr = el('input', { type: 'checkbox', checked: value('zapbot.email.qr') === 'true' });
+    if (!forced('zapbot.email.qr')) fields['zapbot.email.qr'] = qr;
+    const presets = el('div', { class: 'mail-presets' }, el('span', { class: 'muted' }, T.mail.presets), Object.keys(MAIL_PRESETS).map(name =>
+        el('button', { type: 'button', class: 'btn chip-btn', onclick: () => {
+            for (const [key, preset] of Object.entries(MAIL_PRESETS[name])) if (fields[key]) fields[key].value = String(preset);
+            (fields['zapbot.email.smtp.user'] ?? fields['zapbot.email.smtp.pass'])?.focus();
+        } }, name)));
+    const envBox = env.length ? el('div', { class: 'setup-env' },
+        el('p', { class: 'muted' }, dbWins ? S.envIgnored : S.envIntro(env.join(', '))),
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: dbWins, onchange: async (event) => {
+            await manage({ section: 'setting', op: 'edit', id: 'zapbot.email.overrideEnv', value: String(event.target.checked) });
+            setupMailStep();
+        } }), S.useDatabase)) : null;
+    const test = (send) => async (event) => run(event.target, async () => {
+        status.textContent = T.mail.testing;
+        if (!await save()) return;
+        const result = await manage({ section: 'mail', op: 'test', send });
+        status.textContent = result.error ? `⚠️ ${result.error}` : (send ? T.mail.sent : T.mail.works);
+    });
+    setupCard(
+        el('h1', {}, `✉️ ${S.title}`), el('p', { class: 'muted' }, S.intro), setupSteps(1), envBox, presets,
+        input('zapbot.email.smtp.host', S.host, { placeholder: 'smtp.gmail.com' }),
+        el('div', { class: 'setup-row' }, input('zapbot.email.smtp.port', S.port, { inputmode: 'numeric' }), input('zapbot.email.smtp.user', S.user, { autocomplete: 'email' })),
+        input('zapbot.email.smtp.pass', S.pass, { autocomplete: 'new-password' }),
+        input('zapbot.email.to', S.to, { placeholder: 'voce@exemplo.com' }),
+        el('details', { class: 'setup-more' }, el('summary', {}, S.more),
+            input('zapbot.email.from', S.from, { placeholder: 'ZapBot <bot@exemplo.com>' }),
+            input('zapbot.email.imap.host', S.imap, { placeholder: 'imap.gmail.com' })),
+        el('label', { class: 'check' }, qr, S.qr),
+        el('div', { class: 'mail-test' }, el('button', { type: 'button', class: 'btn', onclick: test(false) }, T.mail.test), el('button', { type: 'button', class: 'btn', onclick: test(true) }, T.mail.send)),
+        status,
+        el('button', { type: 'button', class: 'btn on setup-go', onclick: (event) => run(event.target, async () => { status.textContent = S.saving; if (await save()) setupWhatsAppStep(); }) }, S.save),
+        el('button', { type: 'button', class: 'btn setup-skip', onclick: () => setupWhatsAppStep() }, S.skip));
+}
+
+// Step 3: WhatsApp; already paired, it says so (a bot that paired before the setup); else the QR Code in Health
+async function setupWhatsAppStep() {
+    const W = T.setupWhatsApp;
+    const health = await api('/api/health').then(r => r.json()).catch(() => null);
+    const ready = health?.whatsapp?.status === 'ready';
+    const done = () => { state.view = ready ? 'home' : 'health'; start(); };
+    setupCard(
+        el('h1', {}, `📲 ${W.title}`), setupSteps(2),
+        el('p', {}, ready ? W.ready : W.pairing),
+        el('button', { type: 'button', class: 'btn on setup-go', onclick: done }, ready ? W.next : W.open));
+}
+
+// No link in the address: where to get one
+function showSetupMissing() {
+    const S = T.setup;
+    root.replaceChildren(el('div', { class: 'setup' }, el('div', { class: 'setup-card' },
+        el('div', { class: 'setup-logo' }, el('img', { src: '/icon.svg', alt: '' })),
+        el('h1', {}, S.title), el('p', {}, S.missing), el('pre', { class: 'setup-cmd' }, 'docker logs zapbot | grep -A2 "configure the access"'),
+        el('p', { class: 'muted' }, S.missingWhatsApp))));
+}
+
+/* first steps (Home): what is left after the setup, a button for each */
+async function onboardingCard() {
+    const O = T.onboarding;
+    try { if (localStorage.getItem('zb_onboarding_hidden') === '1') return null; } catch { /* shows it */ }
+    const data = await api('/api/onboarding').then(r => r.json()).catch(() => null);
+    if (!data) return null;
+    let pushOn = false;
+    try { pushOn = pushSupported() && Notification.permission === 'granted' && Boolean((await currentPush()).subscription); } catch { /* not on this browser */ }
+    const steps = [
+        ['login', true, null],
+        ['whatsapp', data.steps.whatsapp, () => show('health')],
+        ['address', data.steps.address, () => openSettingsAt('webpanel')],
+        ['email', data.steps.email, () => openSettingsAt('mailpanel')],
+        ['twoFactor', data.steps.twoFactor, () => totpDialog()],
+        ['push', pushOn, async () => { const r = await enablePush(['monitor', 'watch', 'price', 'web', 'connection']); messageBox(r.error ?? T.push.enabled); }],
+        ['users', data.steps.users, () => openSettingsAt('bot.users')]
+    ];
+    const done = steps.filter(s => s[1]).length;
+    if (done === steps.length) return null;
+    const hide = () => { try { localStorage.setItem('zb_onboarding_hidden', '1'); } catch { /* only a convenience */ } card.remove(); };
+    const card = el('div', { class: 'onboarding' },
+        el('div', { class: 'onboarding-head' }, el('h3', {}, `🚀 ${O.title}`), el('span', { class: 'muted grow' }, O.progress(done, steps.length)),
+            el('button', { class: 'icon-btn', title: O.hide, onclick: hide }, '✕')),
+        el('div', { class: 'onboarding-track' }, el('span', { style: `width:${done / steps.length * 100}%` })),
+        el('ol', { class: 'onboarding-steps' }, steps.map(([key, ok, action]) => el('li', { class: ok ? 'done' : '' },
+            el('span', { class: 'onboarding-mark' }, ok ? '✓' : ''),
+            el('div', { class: 'grow' }, el('strong', {}, O.steps[key][0]), el('div', { class: 'muted' }, key === 'address' && !ok ? O.addressNow(data.url) : O.steps[key][1])),
+            ok || !action ? null : el('button', { class: 'btn', onclick: action }, O.steps[key][2])))));
+    return card;
+}
+
+// Settings at one panel (or one setting, by its key in the filter)
+async function openSettingsAt(target) {
+    await show('settings');
+    const panel = document.getElementById(target);
+    if (panel) { panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); panel.classList.add('flash'); return; }
+    const filter = document.querySelector('.toolbar-inline input[type=search]');
+    if (filter) { filter.value = target; filter.dispatchEvent(new Event('input')); }
+}
+
+/* access: the password and the 2FA (Settings) */
+function passwordDialog(login) {
+    const S = T.setup;
+    const A = T.access;
+    const error = el('div', { class: 'error' });
+    const current = el('input', { type: 'password', autocomplete: 'current-password', required: true });
+    const name = el('input', { type: 'text', value: login ?? '', autocomplete: 'username' });
+    const password = el('input', { type: 'password', autocomplete: 'new-password', required: true, placeholder: S.passwordHint });
+    const repeat = el('input', { type: 'password', autocomplete: 'new-password', required: true });
+    const close = () => dialog.close();
+    const dialog = el('dialog', { class: 'modal' }, el('form', { class: 'access-form', onsubmit: async (event) => {
+        event.preventDefault();
+        if (password.value !== repeat.value) { error.textContent = S.mismatch; return; }
+        const response = await api('/api/password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ current: current.value, login: name.value.trim(), password: password.value }) });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) { error.textContent = data.error === 'current password' ? A.wrongCurrent : (data.error ?? 'error'); return; }
+        close();
+        messageBox(A.changed);
+    } },
+    el('h3', {}, `🔑 ${A.change}`),
+    el('label', { class: 'field' }, el('span', {}, A.current), current),
+    el('label', { class: 'field' }, el('span', {}, S.login), name),
+    el('label', { class: 'field' }, el('span', {}, A.newPassword), password), strengthMeter(password),
+    el('label', { class: 'field' }, el('span', {}, S.repeat), repeat),
+    el('p', { class: 'muted' }, A.changeNote), error,
+    el('div', { class: 'modal-actions' }, el('button', { type: 'button', class: 'btn', onclick: close }, T.cancel), el('button', { type: 'submit', class: 'btn on' }, A.change))));
+    dialog.addEventListener('close', () => dialog.remove(), { once: true });
+    document.body.append(dialog);
+    dialog.showModal();
+    current.focus();
+}
+
+// The 2FA from the page: the QR Code of a new secret, and the code of the app to turn it on
+async function totpDialog() {
+    const A = T.access;
+    const response = await api('/api/totp/new', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) { messageBox(data.error ?? 'error'); return; }
+    const code = el('input', { type: 'text', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: '6', pattern: '\\d{6}', required: true, placeholder: '123456' });
+    const error = el('div', { class: 'error' });
+    const close = () => dialog.close();
+    const dialog = el('dialog', { class: 'modal' }, el('form', { onsubmit: async (event) => {
+        event.preventDefault();
+        const r = await api('/api/totp/confirm', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: code.value.trim() }) });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) { error.textContent = d.error === 'code' ? A.wrongCode : (d.error ?? 'error'); return; }
+        close();
+        messageBox(A.totpOn);
+        if (state.view === 'settings' || state.view === 'home') show(state.view);
+    } },
+    el('h3', {}, `🔒 ${A.totpTitle}`),
+    el('ol', {}, A.totpSteps.map(s => el('li', {}, s))),
+    el('img', { class: 'totp-qr', src: data.qr, alt: 'QR' }),
+    el('div', { class: 'muted' }, A.totpSecret, ' ', el('code', {}, data.secret)),
+    el('label', { class: 'field' }, el('span', {}, A.totpCode), code), error,
+    el('div', { class: 'modal-actions' }, el('button', { type: 'button', class: 'btn', onclick: close }, T.cancel), el('button', { type: 'submit', class: 'btn on' }, A.totpConfirm))));
+    dialog.addEventListener('close', () => dialog.remove(), { once: true });
+    document.body.append(dialog);
+    dialog.showModal();
+    code.focus();
+}
+
+function accessPanel(data) {
+    const A = T.access;
+    const web = data.web ?? {};
+    return el('div', { class: 'section webpanel', id: 'accesspanel' },
+        el('div', { class: 'section-head' }, el('h3', {}, `🔑 ${A.title}`)),
+        el('div', { class: 'access-rows' },
+            el('div', { class: 'access-row' }, el('div', { class: 'grow' }, el('strong', {}, A.password), el('div', { class: 'muted' }, A.passwordNow(web.login))),
+                el('button', { class: 'btn', onclick: () => passwordDialog(web.login) }, A.change)),
+            el('div', { class: 'access-row' }, el('div', { class: 'grow' }, el('strong', {}, A.totpTitle), el('div', { class: 'muted' }, web.totp ? A.totpIsOn : A.totpIsOff)),
+                web.totp ? el('span', { class: 'muted' }, '✅') : el('button', { class: 'btn on', onclick: totpDialog }, A.totpTurnOn))));
+}
+
+/* the email (Settings): SMTP and IMAP saved in the database (/set zapbot.email.*); config/.env wins (🔧) */
+const MAIL_PRESETS = {
+    Gmail: { 'zapbot.email.smtp.host': 'smtp.gmail.com', 'zapbot.email.smtp.port': 465, 'zapbot.email.imap.host': 'imap.gmail.com' },
+    Yahoo: { 'zapbot.email.smtp.host': 'smtp.mail.yahoo.com', 'zapbot.email.smtp.port': 465, 'zapbot.email.imap.host': 'imap.mail.yahoo.com' },
+    iCloud: { 'zapbot.email.smtp.host': 'smtp.mail.me.com', 'zapbot.email.smtp.port': 587, 'zapbot.email.imap.host': 'imap.mail.me.com' },
+    Zoho: { 'zapbot.email.smtp.host': 'smtp.zoho.com', 'zapbot.email.smtp.port': 465, 'zapbot.email.imap.host': 'imap.zoho.com' }
+};
+const MAIL_GROUPS = [
+    ['📤', 'mailSmtp', ['zapbot.email.smtp.host', 'zapbot.email.smtp.port', 'zapbot.email.smtp.user', 'zapbot.email.smtp.pass']],
+    ['✉️', 'mailWho', ['zapbot.email.from', 'zapbot.email.to', 'zapbot.email.antiphishing', 'zapbot.email.imap.host']],
+    ['📲', 'mailUse', ['zapbot.email.qr', 'zapbot.email.qrFallbackTerminal', 'zapbot.email.alerts']]
+];
+// The QRCODE_EMAIL_* of config/.env win over this page, unless zapbot.email.overrideEnv says the opposite: the switch
+function mailEnvSwitch(data, refresh) {
+    const env = data.web?.mailEnv ?? [];
+    if (!env.length) return null;
+    const E = T.mailEnv;
+    const ids = data.sections[0].ids;
+    const on = data.sections[0].values[ids.indexOf('zapbot.email.overrideEnv')]?.value === 'true';
+    return el('div', { class: 'setup-env' },
+        el('p', { class: 'muted' }, on ? E.ignored : E.intro(env.join(', '))),
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', class: 'switch', checked: on, onchange: async (event) => {
+            await manage({ section: 'setting', op: 'edit', id: 'zapbot.email.overrideEnv', value: String(event.target.checked) });
+            refresh();
+        } }), E.toggle));
+}
+function mailPanel(data, refresh) {
+    const M = T.mail;
+    const status = el('span', { class: 'muted' });
+    const test = async (send) => {
+        status.textContent = M.testing;
+        const result = await manage({ section: 'mail', op: 'test', send });
+        status.textContent = result.error ? `⚠️ ${result.error}` : (send ? M.sent : M.works);
+    };
+    const preset = async (name) => {
+        for (const [key, value] of Object.entries(MAIL_PRESETS[name])) {
+            if (data.web?.overridden?.[key]) continue;
+            await manage({ section: 'setting', op: 'edit', id: key, value: String(value) });
+        }
+        refresh();
+    };
+    return el('div', { class: 'section webpanel', id: 'mailpanel' },
+        el('div', { class: 'section-head' }, el('h3', {}, `✉️ ${M.title}`)),
+        el('p', { class: 'muted' }, M.intro),
+        mailEnvSwitch(data, refresh),
+        el('div', { class: 'mail-presets' }, el('span', { class: 'muted' }, M.presets), Object.keys(MAIL_PRESETS).map(name => el('button', { class: 'btn chip-btn', onclick: () => preset(name) }, name))),
+        settingGroups(data, refresh, MAIL_GROUPS, 'zapbot.email.'),
+        el('div', { class: 'mail-test' }, el('button', { class: 'btn', onclick: () => test(false) }, M.test), el('button', { class: 'btn', onclick: () => test(true) }, M.send), status),
+        el('p', { class: 'muted' }, M.envNote));
 }
 
 /* the read-only lists: alerts, shortcuts, schedule, stats and settings */
@@ -2188,7 +2548,7 @@ async function openHistory(kind, id) {
 }
 
 /* a form in a window, from the field definitions of the section */
-function openForm({ title, fields, values = {}, onSubmit, submitLabel = null, noCancel = false, addOn = null }) {
+function openForm({ title, fields, values = {}, onSubmit, submitLabel = null, cancelLabel = null, noCancel = false, addOn = null }) {
     const inputs = fields.map((field) => {
         const value = values[field.name] ?? '';
         let input;
@@ -2220,7 +2580,7 @@ function openForm({ title, fields, values = {}, onSubmit, submitLabel = null, no
     inputs.map(([field, input]) => field.type === 'note' ? input : el(field.type === 'people' ? 'div' : 'label', { class: field.type === 'checkbox' ? 'check' : 'field' }, el('span', {}, T.col[field.label] ?? field.label), input)),
     extra,
     error,
-    el('div', { class: 'modal-actions' }, noCancel ? null : el('button', { type: 'button', class: 'btn', onclick: close }, T.cancel), el('button', { type: 'submit', class: 'btn on' }, submitLabel ?? T.save)));
+    el('div', { class: 'modal-actions' }, noCancel ? null : el('button', { type: 'button', class: 'btn', onclick: close }, cancelLabel ?? T.cancel), el('button', { type: 'submit', class: 'btn on' }, submitLabel ?? T.save)));
     const overlay = el('div', { class: 'overlay', onclick: (event) => { if (event.target === overlay) close(); } }, form);
     document.body.append(overlay);
     (form.querySelector('input:not([type=checkbox]), textarea') ?? form).focus();
@@ -2228,8 +2588,8 @@ function openForm({ title, fields, values = {}, onSubmit, submitLabel = null, no
 
 // The page's own popups, never the browser's confirm() and alert(): a question whose action runs on the confirm (its
 // error shows in the window), and a notice with only OK
-function confirmBox({ title, text, submitLabel = `🗑️ ${T.remove}`, action }) {
-    openForm({ title, fields: [{ type: 'note', name: 'info', text }], submitLabel, onSubmit: action });
+function confirmBox({ title, text, submitLabel = `🗑️ ${T.remove}`, cancelLabel = null, action }) {
+    openForm({ title, fields: [{ type: 'note', name: 'info', text }], submitLabel, cancelLabel, onSubmit: action });
 }
 function messageBox(text, title = T.notice) {
     openForm({ title, fields: [{ type: 'note', name: 'info', text }], submitLabel: 'OK', noCancel: true, onSubmit: async () => null });
@@ -2250,7 +2610,7 @@ async function showList(content, view, days = 30) {
     const draw = () => {
         const q = filter.value.trim().toLowerCase();
         sections.replaceChildren(...data.sections.map(section => {
-            const rest = (i) => view !== 'settings' || !String(section.ids[i]).startsWith('zapbot.web.'); // the web ones are in the panel above
+            const rest = (i) => view !== 'settings' || !/^zapbot\.(web|email)\./.test(String(section.ids[i])); // the web and email ones are in the panels above
             const indexes = section.rows.map((row, i) => i).filter(i => rest(i) && (!q || section.rows[i].some(cell => cellText(cell).includes(q))));
             const m = section.manage;
             const refresh = () => showList(content, view, days);
@@ -2283,7 +2643,10 @@ async function showList(content, view, days = 30) {
             return el('div', { class: 'section' }, el('div', { class: 'section-head' }, el('h3', {}, `${view === 'settings' ? T.restSettings : (T.sec[section.title] ?? section.title)} · ${T.rows(indexes.length)}`), add), el('div', { class: 'tablewrap' }, table));
         }));
         if (view === 'settings') {
-            sections.prepend(webSettingsPanel(data, () => showList(content, view, days)));
+            const again = () => showList(content, view, days);
+            const web = webSettingsPanel(data, again);
+            sections.prepend(accessPanel(data), web);
+            web.after(mailPanel(data, again));
             // The device first (async: the service worker and the browser's push state)
             const device = el('div');
             sections.prepend(device);

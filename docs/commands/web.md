@@ -7,9 +7,10 @@ the command shows whether the service is running and its URL.
 |---|---|---|
 | `-list`, `-l` | | Lists active sessions numbered from 1 to N, with expiration times in UTC |
 | `-destroy`, `-d` | `[number]` | Revokes a session by its number in the last list, or all without a number |
-| `-enable`, `-e` | | Enables and starts the service once the login and password are set |
+| `-enable`, `-e` | | Enables and starts the service (with no login yet, the log shows the link of the first setup) |
 | `-disable`, `-off` | | Stops the service and revokes all sessions |
-| `-pass`, `-p` | `<password>` | Sets the password (at least eight characters). Quote a password with spaces |
+| `-setup`, `-su` | | A single-use link (24 h) to choose the login and the password on the web: the [first setup](../web.md#first-setup-in-a-few-clicks), or a forgotten password |
+| `-pass`, `-p` | `<password>` | Sets the password (at least 12 characters). Quote a password with spaces |
 | `-login`, `-lg` | `<name>` | Sets the login name |
 | `-timeout`, `-t` | `[minutes\|off]` | Shows or sets the idle timeout. The default is 30 minutes |
 | `-2fa`, `-totp` | `<new\|qr\|code\|off>` | Creates a QR code, shows it again, confirms a code or disables 2FA |

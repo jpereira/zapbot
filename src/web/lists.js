@@ -163,7 +163,16 @@ function settings() {
     const { webUrl } = require('./server');
     return {
         // overridden: the settings an environment variable decides (it has priority; the page shows them as read-only)
-        web: { url: webUrl(), restartKeys: ['zapbot.web.enabled', 'zapbot.web.host', 'zapbot.web.port'], overridden: Object.fromEntries(Object.entries(WEB_ENV).filter(([, env]) => String(process.env[env] ?? '').trim()).map(([key, env]) => [key, { env, value: String(process.env[env]).trim() }])) },
+        // (the email ones too: a QRCODE_EMAIL_* of config/.env wins over /set zapbot.email.*, src/mailConfig.js)
+        web: {
+            url: webUrl(), restartKeys: ['zapbot.web.enabled', 'zapbot.web.host', 'zapbot.web.port'],
+            overridden: Object.fromEntries([
+                ...Object.entries(WEB_ENV).filter(([, env]) => String(process.env[env] ?? '').trim()).map(([key, env]) => [key, { env, value: String(process.env[env]).trim() }]),
+                ...Object.keys(require('../mailConfig').MAIL_ENV).map(key => [key, require('../mailConfig').envOverride(key)]).filter(([, forced]) => forced)
+            ]),
+            totp: Boolean(getSetting('zapbot.web.totp')), login: getSetting('zapbot.web.login'),
+            mailEnv: require('../mailConfig').envNames()
+        },
         sections: [{
             title: 'settings', columns: ['setting', 'value', 'default', 'what it does'], rows, ids: keys,
             values: keys.map(key => ({ value: raw(key), type: SETTINGS_SCHEMA[key].type, secret: Boolean(SETTINGS_SCHEMA[key].secret), protected: PROTECTED_SETTINGS.has(key) })),

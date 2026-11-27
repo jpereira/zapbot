@@ -15,6 +15,7 @@ module.exports = {
         { opts: ['destroy', 'd'], values: ['[number]'], desc: 'Revoke a session by its number in the last list, or all without a number.', cron: false },
         { opts: ['enable', 'e'], values: [], desc: 'Enable and start the web interface.', cron: false },
         { opts: ['disable', 'off'], values: [], desc: 'Stop the web interface and revoke sessions.', cron: false },
+        { opts: ['setup', 'su'], values: [], desc: 'A single-use link (24 h) to choose the login and the password on the web: the first setup, or a forgotten password.', cron: false },
         { opts: ['pass', 'p'], values: ['<password...>'], desc: 'Set the web password.', cron: false },
         { opts: ['login', 'lg'], values: ['<name>'], desc: 'Set the web login name.', cron: false },
         { opts: ['timeout', 't'], values: ['[minutes|off]'], desc: 'Show or set the idle logout interval.', cron: false },

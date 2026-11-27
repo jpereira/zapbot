@@ -81,7 +81,7 @@ setting, which `gpt.pricing.auto` keeps up to date (see [Settings](settings.md))
 
 | Variable | Example | Description |
 |---|---|---|
-| `ZAPBOT_WEB_ENABLED` | `true` | `true` or `false` turns the [web interface](web.md) on or off, **over** the `zapbot.web.enabled` setting. If empty, the setting decides. It still needs `zapbot.web.login` and `zapbot.web.password` (`/set` in WhatsApp), and it is read when the bot starts. |
+| `ZAPBOT_WEB_ENABLED` | `true` | `true` or `false` turns the [web interface](web.md) on or off, **over** the `zapbot.web.enabled` setting. If empty, the setting decides (on by default). With no login yet, the first start shows a single-use link to choose it on the web ([first setup](web.md#first-setup-in-a-few-clicks)); the WhatsApp QR Code is there too, at `http://<ip>:3200/qr`. Read when the bot starts. |
 | `ZAPBOT_WEB_URL` | `http://192.168.1.253:3200` | The address you open the interface at, which the startup message shows. In Docker the container does not know the IP of the server, so fill it in. The `zapbot.web.url` setting, when filled in, has priority over it. |
 | `ZAPBOT_WEB_HOST` | `0.0.0.0` | The address it listens on, **over** the `zapbot.web.host` setting. The Docker image already sets `0.0.0.0`. |
 | `ZAPBOT_WEB_PORT` | `3200` | The port it listens on, **over** the `zapbot.web.port` setting (3200 by default). In Docker Compose the published port follows it. |
@@ -149,7 +149,7 @@ rate limit by IP.
 | `QRCODE_EMAIL_ENABLE` | `"true"` / `"false"` | Turns on sending the QR Code by email. With `false`, it shows up in the terminal (and on the web, when it is on, with its address in the terminal and in the email). [Email alerts](emails.md#email-alerts) don't depend on it. |
 | `QRCODE_EMAIL_FALLBACK_TERMINAL` | `"true"` / `"false"` | If sending the QR by email fails, shows the QR in the terminal. Default: `"true"`. |
 | `QRCODE_EMAIL_SMTP_HOST` | `smtp.mail.yahoo.com` | SMTP server. |
-| `QRCODE_EMAIL_SMTP_PORT` | `465` | SMTP port. **Use an implicit SSL/TLS port (465)**: the bot connects with `secure: true`, STARTTLS ports like 587 don't work. The server certificate is validated: servers with a self-signed/invalid certificate are refused, because a MITM would capture the password and the QR Code (which gives access to the account). |
+| `QRCODE_EMAIL_SMTP_PORT` | `465` | SMTP port. **465** (implicit SSL) or **587** (STARTTLS, with TLS required: the password never goes in clear text); any other port is taken as implicit SSL. The server certificate is validated: servers with a self-signed/invalid certificate are refused, because a MITM would capture the password and the QR Code (which gives access to the account). |
 | `QRCODE_EMAIL_IMAP_HOST` | `imap.mail.yahoo.com` | IMAP server (port 993, SSL). Optional: without it `/bot -flush-email` is disabled. Uses the SMTP login (`_USER` and `_PASS`). See [Clearing the email](commands/bot.md#cleaning-the-email). |
 | `QRCODE_EMAIL_SMTP_USER` | `minhaconta@yahoo.com.br` | SMTP login user. |
 | `QRCODE_EMAIL_SMTP_PASS` | `abcd efgh ijkl mnop` | SMTP password. Use the SMTP credential the provider requires; on accounts with an app password, set that password instead of the login password. |

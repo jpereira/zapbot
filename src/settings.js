@@ -1133,6 +1133,69 @@ const SETTINGS_SCHEMA = {
         type: 'boolean',
         desc: 'Avisa por e-mail (SMTP do QR Code) crash, queda, reconexão e outros eventos do bot.'
     },
+    'zapbot.email.antiphishing': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        desc: 'Código anti-phishing mostrado em todo e-mail do bot (QRCODE_EMAIL_SMTP_ANTIPHISHING no config/.env tem prioridade).'
+    },
+    'zapbot.email.from': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        desc: 'Remetente dos e-mails do bot, ex.: ZapBot <conta@yahoo.com.br>; o endereço deve ser o da conta SMTP (QRCODE_EMAIL_SMTP_FROM tem prioridade).'
+    },
+    'zapbot.email.imap.host': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        desc: 'Servidor IMAP (porta 993, SSL), opcional: liga o /bot -flush-email; usa o login do SMTP (QRCODE_EMAIL_IMAP_HOST tem prioridade).'
+    },
+    'zapbot.email.overrideEnv': {
+        default: false,
+        type: 'boolean',
+        desc: 'Os zapbot.email.* do banco ganham dos QRCODE_EMAIL_* do config/.env (que passam a ser ignorados). Desligado: o config/.env tem prioridade.'
+    },
+    'zapbot.email.qr': {
+        default: false,
+        type: 'boolean',
+        desc: 'Manda o QR Code por e-mail (QRCODE_EMAIL_ENABLE tem prioridade). Desligado: no terminal (e na web, quando ligada).'
+    },
+    'zapbot.email.qrFallbackTerminal': {
+        default: true,
+        type: 'boolean',
+        desc: 'Se o envio do QR por e-mail falhar, mostra o QR no terminal (QRCODE_EMAIL_FALLBACK_TERMINAL tem prioridade).'
+    },
+    'zapbot.email.smtp.host': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        desc: 'Servidor SMTP com SSL implícito, ex.: smtp.gmail.com (QRCODE_EMAIL_SMTP_HOST no config/.env tem prioridade).'
+    },
+    'zapbot.email.smtp.pass': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        secret: true,
+        desc: 'Senha do SMTP (use uma senha de app). Fica no banco, mascarada nas listas (QRCODE_EMAIL_SMTP_PASS tem prioridade).'
+    },
+    'zapbot.email.smtp.port': {
+        default: 465,
+        type: 'number', min: 1, max: 65535,
+        desc: 'Porta SMTP: 465 (SSL implícito) ou 587 (STARTTLS, com TLS obrigatório). QRCODE_EMAIL_SMTP_PORT tem prioridade.'
+    },
+    'zapbot.email.smtp.user': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        desc: 'Usuário (login) do SMTP, também usado pelo IMAP (QRCODE_EMAIL_SMTP_USER tem prioridade).'
+    },
+    'zapbot.email.to': {
+        default: '',
+        type: 'string',
+        allowEmpty: true,
+        desc: 'Quem recebe o QR Code e os alertas por e-mail; é também o destino email do -to (QRCODE_EMAIL_SMTP_TO tem prioridade).'
+    },
     'zapbot.lang': {
         default: 'en_US',
         type: 'string',
@@ -1146,9 +1209,9 @@ const SETTINGS_SCHEMA = {
         desc: 'EXPERIMENTAL. Liga o servidor MCP da API (POST /mcp), para um cliente de IA enviar mensagens (para o zapbot.api.sendTo) e ler as notas do /notes. Exige zapbot.api.enabled e zapbot.api.key.'
     },
     'zapbot.web.enabled': {
-        default: false,
+        default: true,
         type: 'boolean',
-        desc: 'Liga a interface web (src/web): o histórico de mensagens do banco, no estilo do WhatsApp Web, só com senha (zapbot.web.password). Desligada por padrão; muda só ao reiniciar o bot.'
+        desc: 'Liga a interface web (src/web): o histórico, as notas, os alertas, o monitor e o QR Code para parear o WhatsApp, com login e senha. Ligada por padrão: no primeiro início, o log mostra um link de uso único para escolher o login e a senha. Muda só ao reiniciar o bot.'
     },
     'zapbot.web.host': {
         default: '127.0.0.1',
@@ -1177,10 +1240,11 @@ const SETTINGS_SCHEMA = {
         secret: true,
         validate: (v) => {
             if (!v || v.startsWith('scrypt$')) return v;
-            if (v.length < 8) throw new Error(t('login.senhaCurta', { min: 8 }));
+            // 12, the same as the first setup and the change on the web (src/web/setup.js); a stored hash stays valid
+            if (v.length < 12) throw new Error(t('login.senhaCurta', { min: 12 }));
             return createHash(v);
         },
-        desc: 'A senha da interface web. Digite a senha em /set zapbot.web.password <senha> (mínimo 8 caracteres): o bot guarda só o hash (scrypt). Vazia: a interface não inicia.'
+        desc: 'A senha da interface web. Digite a senha em /set zapbot.web.password <senha> (mínimo 12 caracteres): o bot guarda só o hash (scrypt). Vazia: a interface não inicia.'
     },
     'zapbot.web.port': {
         default: 3200,
@@ -1402,6 +1466,8 @@ async function loadSettings() {
     printSuccess(`Loaded ${getSetting('crypto.coins').length} crypto coins (${getSetting('crypto.coins').join(',')})`);
     printInfo(`debug.enabled=${getSetting('debug.enabled')} commands.disabled=${getSetting('commands.disabled').join(',') || '-'}`);
     printInfo(`Loaded ${getSetting('watch.rules').length} watch rules`);
+    // The email settings saved in the database become the QRCODE_EMAIL_* the bot reads (the .env wins)
+    require('./mailConfig').applyMailSettings({ boot: true });
 }
 
 function getSetting(key) {
@@ -1441,6 +1507,7 @@ async function setSetting(key, value) {
     settings.set(key, value);
     if (key === 'zapbot.client.userAgent') updateAxiosUserAgent();
     if (key === 'monitor.maxRecords') await limitHistoryMonitor(value);
+    if (require('./mailConfig').isMailSetting(key)) require('./mailConfig').applyMailSettings();
 
     return value;
 }

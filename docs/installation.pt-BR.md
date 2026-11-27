@@ -23,9 +23,9 @@ git clone https://github.com/jpereira/zapbot.git
 cd zapbot
 git checkout v1.0.26
 
-# 2. Criar o arquivo de configuração a partir do exemplo e editá-lo
+# 2. Crie o arquivo de configuração a partir do exemplo (PHONE_NUMBER, e ZAPBOT_WEB_URL para abrir a web de outros aparelhos)
 cp config/.env.example config/.env
-vim config/.env            # PHONE_NUMBER e, recomendado, o e-mail do QR Code (veja abaixo)
+vim config/.env            # o e-mail, o 2FA e o resto você faz pela web, em poucos cliques
 
 # 3. Build da imagem
 docker compose -f docker/docker-compose.yml build zapbot
@@ -33,9 +33,13 @@ docker compose -f docker/docker-compose.yml build zapbot
 # 4. Subir o container em background
 docker compose -f docker/docker-compose.yml up -d zapbot
 
-# 5. Acompanhar os logs (e ler o QR Code, se estiver no modo terminal)
+# 5. Acompanhe os logs: o link da primeira configuração (a web) e o QR Code aparecem ali
 docker logs -f zapbot
 ```
+
+> 🚀 **O resto é no navegador.** O log mostra `🔐 ZapBot web: configure the access … http://<ip>:3200/setup#…`:
+> abra, escolha seu login e senha, e os **Primeiros passos** levam você por parear o WhatsApp (o QR Code está na
+> página), o e-mail e o 2FA. Veja [Primeira configuração em poucos cliques](web.md#primeira-configuração-em-poucos-cliques).
 
 > 💡 Para não repetir `-f docker/docker-compose.yml` em todo comando:
 > `export COMPOSE_FILE=docker/docker-compose.yml`

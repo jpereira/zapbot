@@ -51,7 +51,7 @@ describe('password and session', () => {
         const saved = bot.getSetting('zapbot.web.password');
         assert.match(saved, /^scrypt\$[0-9a-f]+\$[0-9a-f]+$/);
         assert.ok(!saved.includes(PASSWORD));
-        await assert.rejects(bot.setSetting('zapbot.web.password', 'curta'), /8/);
+        await assert.rejects(bot.setSetting('zapbot.web.password', 'curta-de-11'), /12/);
         await bot.setSetting('zapbot.web.password', createHash('outra-senha-longa'));
         assert.match(bot.getSetting('zapbot.web.password'), /^scrypt\$/);
     });
@@ -60,7 +60,7 @@ describe('password and session', () => {
         for (const route of ['/api/chats', '/api/messages?chat=x', '/api/media?id=x', '/api/photo?chat=x', '/api/chat?chat=x']) {
             assert.equal((await get(route)).status, 401, route);
         }
-        assert.deepEqual(await (await get('/api/session')).json(), { authenticated: false, lang: bot.getSetting('zapbot.lang'), pageSize: 100, refreshSeconds: 15, needsCode: false, version: bot.src('version').versionWithCommit() });
+        assert.deepEqual(await (await get('/api/session')).json(), { setup: false, authenticated: false, lang: bot.getSetting('zapbot.lang'), pageSize: 100, refreshSeconds: 15, needsCode: false, version: bot.src('version').versionWithCommit() });
         assert.equal((await get('/')).status, 200);
         assert.equal((await get('/app.js')).status, 200);
         assert.equal((await get('/etc/passwd')).status, 404);
@@ -227,10 +227,27 @@ describe('password and session', () => {
         assert.equal((await login(PASSWORD, 'Maria_01')).r.status, 200);
     });
 
-    test('without the login or without the password the interface does not start', async () => {
+    test('without the login or the password it starts for the first setup, with a single-use link in the log', async () => {
+        const web = bot.src('web/server');
         await bot.setSetting('zapbot.web.enabled', true);
-        await bot.setSetting('zapbot.web.login', '');
-        assert.equal(await bot.src('web/server').startWeb(), null);
+        await bot.setSetting('zapbot.web.port', 38204);
+        for (const missing of ['zapbot.web.login', 'zapbot.web.password']) {
+            await bot.setSetting('zapbot.web.login', USER);
+            await bot.setSetting('zapbot.web.password', PASSWORD);
+            await bot.setSetting(missing, '');
+            const started = await web.startWeb();
+            try {
+                assert.ok(started, `${missing} empty: it starts anyway`);
+                if (!started.listening) await new Promise(resolve => started.once('listening', resolve));
+                assert.ok(bot.logs.some(l => /configure the access \(login and password\) in a few clicks/.test(l)));
+                assert.ok(bot.logs.some(l => /\/setup#[\w-]{24}/.test(l)), 'the link, with its token');
+                assert.ok(!bot.logs.some(l => l.includes(PASSWORD)), 'never a password in the log');
+            } finally {
+                await web.stopWeb();
+                web.resetWeb();
+                bot.logs.length = 0;
+            }
+        }
     });
 
     test('ZAPBOT_WEB_ENABLED decides over the setting: true starts it, false stops it, empty leaves the setting', async () => {
@@ -290,11 +307,6 @@ describe('password and session', () => {
         assert.deepEqual((await (await get('/api/lists/settings', cookie)).json()).web.overridden, process.env.ZAPBOT_WEB_HOST ? { 'zapbot.web.host': { env: 'ZAPBOT_WEB_HOST', value: process.env.ZAPBOT_WEB_HOST.trim() } } : {});
     });
 
-    test('without the password setting the interface does not start', async () => {
-        await bot.setSetting('zapbot.web.enabled', true);
-        await bot.setSetting('zapbot.web.password', '');
-        assert.equal(await bot.src('web/server').startWeb(), null);
-    });
 });
 
 describe('chats and messages', () => {

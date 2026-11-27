@@ -32,9 +32,6 @@ async function cmdWeb({ msg, chatId, opts, args }) {
             if (env && envOuSetting('ZAPBOT_WEB_ENABLED', 'zapbot.web.enabled') !== Boolean(enable)) {
                 return say(t('web.command.environment'));
             }
-            if (enable && (!getSetting('zapbot.web.login') || !getSetting('zapbot.web.password'))) {
-                return say(t('web.command.credentials'));
-            }
             await setSetting('zapbot.web.enabled', Boolean(enable));
             if (disable) {
                 await stopWeb();
@@ -45,13 +42,21 @@ async function cmdWeb({ msg, chatId, opts, args }) {
             if (!isWebRunning()) await once(server, 'listening');
             return say(t('web.command.started', { url: webUrl() }));
         }
+        // A new setup link (the first setup, a forgotten password): the web has to be on to open it
+        if (opts.given.has('setup')) {
+            const server = isWebRunning() ? true : await startWeb();
+            if (!server) return say(t('web.command.environment'));
+            const { announceSetup } = require('../web/server');
+            const link = announceSetup('/web -setup');
+            return say(t('web.command.setup', { url: link.url }));
+        }
         if (opts.given.has('pass') || opts.given.has('login')) {
             const changePassword = opts.given.has('pass');
             const value = changePassword && pass
                 ? args.trim().replace(/^-(?:pass|pas|pa|p)\s+/i, '').replace(/^(["'])([\s\S]*)\1$/, '$2')
                 : login;
-            if (changePassword && value && value.length < 8) {
-                return say(t('login.senhaCurta', { min: 8 }));
+            if (changePassword && value && value.length < 12) {
+                return say(t('login.senhaCurta', { min: 12 }));
             }
             if (!value) return say(commandUsage('/web'));
             await setSetting(changePassword ? 'zapbot.web.password' : 'zapbot.web.login', value);

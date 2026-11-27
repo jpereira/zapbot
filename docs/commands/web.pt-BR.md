@@ -7,9 +7,10 @@ o comando mostra se o serviço está rodando e o endereço de acesso.
 |---|---|---|
 | `-list`, `-l` | | Lista as sessões ativas numeradas de 1 a N, com vencimentos em UTC |
 | `-destroy`, `-d` | `[número]` | Encerra uma sessão pelo número na última lista ou todas sem número |
-| `-enable`, `-e` | | Ativa e inicia o serviço quando o login e a senha estão definidos |
+| `-enable`, `-e` | | Ativa e inicia o serviço (sem login ainda, o log mostra o link da primeira configuração) |
 | `-disable`, `-off` | | Para o serviço e encerra todas as sessões |
-| `-pass`, `-p` | `<senha>` | Define a senha (mínimo de oito caracteres). Use aspas para senhas com espaços |
+| `-setup`, `-su` | | Um link de uso único (24 h) para escolher o login e a senha pela web: a [primeira configuração](../web.md#primeira-configuração-em-poucos-cliques), ou uma senha esquecida |
+| `-pass`, `-p` | `<senha>` | Define a senha (mínimo de 12 caracteres). Use aspas para senhas com espaços |
 | `-login`, `-lg` | `<nome>` | Define o nome de login |
 | `-timeout`, `-t` | `[minutos\|off]` | Consulta ou define o limite de inatividade. O padrão é 30 minutos |
 | `-2fa`, `-totp` | `<new\|qr\|código\|off>` | Cria um QR code, exibe de novo, confirma um código ou desativa o 2FA |

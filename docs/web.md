@@ -1,6 +1,6 @@
 # Web interface
 
-The bot can serve a **web interface** (off by default) to look at, and to manage, what it keeps: the history of every
+The bot serves a **web interface** (on by default) to look at, and to manage, what it keeps: the history of every
 chat in the style of WhatsApp Web (with the **deleted** and the **edited** messages highlighted), the notes, the
 alerts, the shortcuts, the schedule, charts of your conversations and the settings.
 
@@ -14,18 +14,69 @@ button at the bottom of the left bar switches it; the Portuguese page of this ma
 
 Use [`/web`](commands/web.md) in your private chat to manage access, sessions and 2FA.
 
-## Quick start
+## First setup in a few clicks
 
-```text
-/set zapbot.web.login jorge.admin
-/set zapbot.web.password a-long-password-here
-/set zapbot.web.enabled on
-```
+No file to edit, no command to type: **start the bot and open one link**.
 
-Restart the bot: the interface starts with it, on `http://127.0.0.1:3200`. The **login** is the name you choose (3 to
-40 characters: letters, digits, `.`, `-`, `_` or `@`) and the **password** has at least 8 characters; the bot stores
-only the password's **hash** (scrypt), and `/set` shows it hidden. Without a login or without a password the interface
-does not start (the log says which one is missing).
+1. **Start it.** The web comes up with the bot (on by default). The first time, with no login yet, the log shows a
+   link that works **once, for 24 hours**:
+
+   ```text
+   ╔══════════════════════════════════════════════════════════╗
+   ║ 🔐 ZapBot web: configure the access (login and password) in a few clicks:
+   ║    http://192.168.1.253:3200/setup#a8F3kQ…
+   ║    It works once, for 24 h. Lost it? /web -setup in your private chat makes a new one.
+   ╚══════════════════════════════════════════════════════════╝
+   ```
+
+   (`docker logs zapbot | grep -A2 "configure the access"` finds it; with the SMTP set, it also goes by email.)
+
+2. **Open it and choose your login and password.** A strength meter helps (12 characters at least); the link dies
+   right there, and you are in.
+
+   ![The first setup: the login, the password and its strength](assets/web/setup.png)
+
+3. **Set up the email, right there.** A button fills in the server of Gmail, Yahoo, iCloud or Zoho; you type the
+   login, the app password and who receives, and **🔌 Test the connection** (or **✉️ Send a test email**) proves it
+   before you go on. From then on, the bot emails you the WhatsApp QR Code when it needs pairing again, the alerts
+   and the backups. No SMTP? **Skip for now**: First steps remind you. If `config/.env` already sets the email, the
+   step says so, and *Use the ones of this page* makes the page win ([email from the web](emails.md#email-from-the-web)).
+
+   ![The email step: a button per provider, the app password and the test](assets/web/setup-mail.png)
+
+4. **WhatsApp.** Already paired, the step just says so; if not, it opens Health, where the QR Code is.
+
+5. **Follow the First steps.** Home shows what is left, each with its button, until all of it is done (or you hide
+   it): pair WhatsApp with the **QR Code on the page** (Health), check the **address** of the web, set up the
+   **email** (SMTP and IMAP, with buttons for Gmail, Yahoo, iCloud and Zoho), turn on the **two-step
+   verification** with the QR Code of an authenticator app, the **notices on this device**, and **who can use the bot**.
+
+   ![First steps: what is done and a button for what is left](assets/web/onboarding.png)
+
+That is a whole install from the browser: from `docker compose up` to a paired bot, with the email and the 2FA,
+without opening a file or reading a log again.
+
+**Why a link, and not a generated password:** no password ever goes to the log. The link is random, works once and
+expires; only its hash is kept. **Lost the link, or forgot the password?** `/web -setup` in your private chat on
+WhatsApp sends a new one (whoever uses it replaces the login and the password, and the open sessions close). With
+no WhatsApp paired yet, restarting the bot shows a new link.
+
+**The other way**, still there: `/set zapbot.web.login <name>` and `/set zapbot.web.password <password>` in
+WhatsApp, or `/web -login` and `/web -p`. `ZAPBOT_WEB_ENABLED="false"` in `config/.env` turns the web off.
+
+The address of the links is `ZAPBOT_WEB_URL` (or `zapbot.web.url`): **in Docker, fill it in**, since the container
+does not know the IP of the server (the First steps warn when it is missing). By default only the machine itself
+reaches the web (`127.0.0.1`); `ZAPBOT_WEB_BIND=0.0.0.0` in `docker/.env` opens it to the network, and then prefer
+HTTPS ([Tailscale serve](#from-the-phone-over-the-internet-tailscale) or a proxy with a certificate).
+
+### Change the password and turn on the 2FA, from the page
+
+**Settings › 🔑 Access** has **Change the password** (the current one is asked again; the login can change too) and
+**Two-step verification › Turn it on**, which shows the QR Code for Google Authenticator, Authy or 1Password and turns
+on only after the 6-digit code of the app. Either way, the other sessions close and your private chat and the email
+are told (`🔐 ZapBot-Web: the web password was changed … from 192.168.1.10`).
+
+![Turning on the 2FA from the page: the QR Code of the authenticator app](assets/web/totp.png)
 
 ![The login screen: the name, the password and, under "ZapBot", the version that is running](assets/web/login.png)
 
@@ -534,7 +585,7 @@ it **only on the web**, set `QRCODE_WEB_ONLY="true"` (see [where the QR shows up
 
 **🔌 Disconnect (logout)**, in the WhatsApp card while it is connected, unlinks the bot from the account (the same as
 *Linked devices › Log out* on the phone) and the new QR Code shows up right there, to pair again: the same number or
-another one. It asks you to type `logout` first; until the code is read, the bot does not answer, nor sends the
+another one. It asks **Yes / No** first; until the code is read, the bot does not answer, nor sends the
 schedule, the alerts or the monitor. The log and the email say who asked (`WhatsApp: logout asked by the web
 (192.168.1.10)`).
 

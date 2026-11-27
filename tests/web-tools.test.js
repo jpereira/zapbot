@@ -221,15 +221,15 @@ describe('pairing WhatsApp from the web (the QR Code)', () => {
         assert.deepEqual([short.status, short.headers.get('location')], [302, '/?view=health']);
     });
 
-    test('🔌 Disconnect: only with "logout" typed; then the bot logs out and restarts for a new QR Code', async () => {
+    test('🔌 Disconnect: only after the Yes (confirm: true); then the bot logs out and restarts for a new QR Code', async () => {
         assert.equal((await manage({ section: 'whatsapp', op: 'logout' })).status, 400);
-        assert.equal((await manage({ section: 'whatsapp', op: 'logout', confirm: 'sim' })).status, 400);
+        assert.equal((await manage({ section: 'whatsapp', op: 'logout', confirm: 'logout' })).status, 400, 'no typed word');
         const connection = bot.src('connection');
         const original = connection.logoutWhatsApp;
         let asked = null;
         connection.logoutWhatsApp = async (who) => { asked = who; };
         try {
-            assert.equal((await manage({ section: 'whatsapp', op: 'logout', confirm: 'logout' })).status, 200);
+            assert.equal((await manage({ section: 'whatsapp', op: 'logout', confirm: true })).status, 200);
             assert.match(asked, /^the web \(127\.0\.0\.1\)$/, 'who asked, in the log and the email');
         } finally {
             connection.logoutWhatsApp = original;

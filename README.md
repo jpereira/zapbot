@@ -35,6 +35,10 @@ Yep, we've been busy. The best of the latest batch:
   6-digit code, if you want): the chats with their photos, the **deleted** and **edited** messages in a frame with the
   *before and after*, stickers, videos you can play, notes (even the encrypted ones), charts of your conversations,
   and shortcuts, alerts and settings you can edit. [Web interface](docs/web.md)
+- 🚀 **Up and running in a few clicks.** The web comes up with the bot and the log shows a single-use link: open it,
+  choose your login and password, and **First steps** take you through pairing WhatsApp (the QR Code is on the page),
+  the email (SMTP and IMAP, with Gmail, Yahoo, iCloud and Zoho in one click) and the 2FA. No file to edit.
+  [First setup](docs/web.md#first-setup-in-a-few-clicks)
 - 👀 **The monitor got eyes.** Each monitored contact's **time online** on a 7-day timeline, **who was online
   together** (the overlap in orange), the habits as a heatmap, and the alert as a **notification on your phone**, even
   with the page closed (the web installs as an app). [Monitor](docs/web.md#monitor)
@@ -107,8 +111,9 @@ Yep, we've been busy. The best of the latest batch:
 
 ## 🖥️ The web interface
 
-Turn it on with `/set zapbot.web.login <name>`, `/set zapbot.web.password <password>` and `/set zapbot.web.enabled on`,
-and open `http://<your-server>:3200`. Everything below is made-up data. [All the screens and the settings](docs/web.md)
+It comes up with the bot: the first start shows a single-use link in the log to choose your login and password, and
+**First steps** take you through the rest ([first setup](docs/web.md#first-setup-in-a-few-clicks)). Everything below
+is made-up data. [All the screens and the settings](docs/web.md)
 
 | | |
 |---|---|
@@ -137,7 +142,7 @@ and open `http://<your-server>:3200`. Everything below is made-up data. [All the
 | 🎲 | **Fun and games** | Magic 8 ball, truth, dare and trivia for the group (you can play just by replying), jokes and your friends drawn into pictures | [`/games`](docs/commands/games.md) · [`/joke`](docs/commands/joke.md) · [`/draw`](docs/commands/draw.md) |
 | 📣 | **Your profile and Status** | Posts on your WhatsApp Status (and schedules it), shows anyone's About text and changes yours, exports your contacts with photos | [`/status`](docs/commands/status.md) · [`/profile`](docs/commands/profile.md) · [`/contacts`](docs/commands/contacts.md) |
 | 🔌 | **API and MCP (experimental)** | A local HTTP API (off by default) to send messages and read your notes from scripts, and an experimental MCP server for AI clients | [API and MCP](docs/api.md) |
-| 🖥️ | **Web interface** | Your history in a WhatsApp Web style page, behind a password (off by default): chats with photos, stickers, media to download, and the deleted and edited messages highlighted with the diff | [Web interface](docs/web.md) |
+| 🖥️ | **Web interface** | On by default, set up in a few clicks: your history in a WhatsApp Web style page (the deleted and edited messages highlighted), the notes, alerts, monitor, media, health and the QR Code to pair WhatsApp, behind a login | [Web interface](docs/web.md) |
 | ⭐ | **Pro: limits per person** | Share `/gpt` and other commands with friends and groups, with a limit of successful calls per person, per day, week or month, and `/usage` to see what is left | [`/usage`](docs/commands/usage.md) |
 | 🔐 | **Private notes** | Notes with `#tags`, and **protected tags**: text and files encrypted with a password, opened only in your own private chat, locked again by themselves and never sent to others | [`/notes`](docs/commands/notes.md#protected-tags--lock) · [`/notes -lock`](docs/commands/notes.md#password-in-the-command) |
 | 🛡️ | **Yours, and safe** | Owner, admin and user roles per command, flood protection, anti-SSRF in downloads, backups, **encrypted notes**, QR Code login by e-mail, and English or Brazilian Portuguese | [`/bot`](docs/commands/bot.md) · [`/backup`](docs/commands/backup.md) · [`/set`](docs/commands/set.md) |

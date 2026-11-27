@@ -1,6 +1,6 @@
 # Interface web
 
-O bot pode servir uma **interface web** (desligada por padrão) para ver, e também administrar, o que ele guarda: o
+O bot serve uma **interface web** (ligada por padrão) para ver, e também administrar, o que ele guarda: o
 histórico de todas as conversas no estilo do WhatsApp Web (com as mensagens **apagadas** e **editadas** em destaque),
 as notas, os alertas, os atalhos, a agenda, gráficos das suas conversas e os settings.
 
@@ -15,18 +15,69 @@ em inglês.
 
 Use [`/web`](commands/web.md) no seu privado para gerenciar o acesso, as sessões e o 2FA.
 
-## Início rápido
+## Primeira configuração em poucos cliques
 
-```text
-/set zapbot.web.login jorge.admin
-/set zapbot.web.password uma-senha-bem-longa-aqui
-/set zapbot.web.enabled on
-```
+Nenhum arquivo para editar, nenhum comando para digitar: **suba o bot e abra um link**.
 
-Reinicie o bot: a interface sobe junto com ele, em `http://127.0.0.1:3200`. O **login** é o nome que você escolhe (3 a
-40 caracteres: letras, dígitos, `.`, `-`, `_` ou `@`) e a **senha** tem no mínimo 8 caracteres; o bot guarda só o
-**hash** da senha (scrypt), e o `/set` a mostra escondida. Sem login ou sem senha a interface não sobe (o log diz o
-que falta).
+1. **Suba o bot.** A web sobe junto (ligada por padrão). Na primeira vez, sem login ainda, o log mostra um link que
+   vale **uma vez, por 24 horas**:
+
+   ```text
+   ╔══════════════════════════════════════════════════════════╗
+   ║ 🔐 ZapBot web: configure the access (login and password) in a few clicks:
+   ║    http://192.168.1.253:3200/setup#a8F3kQ…
+   ║    It works once, for 24 h. Lost it? /web -setup in your private chat makes a new one.
+   ╚══════════════════════════════════════════════════════════╝
+   ```
+
+   (`docker logs zapbot | grep -A2 "configure the access"` encontra; com o SMTP configurado, ele vai por e-mail também.)
+
+2. **Abra e escolha seu login e senha.** Um medidor de força ajuda (mínimo 12 caracteres); o link morre ali mesmo, e
+   você já está dentro.
+
+   ![A primeira configuração: o login, a senha e a força dela](assets/web/pt-BR/setup.png)
+
+3. **Configure o e-mail, ali mesmo.** Um botão preenche o servidor do Gmail, Yahoo, iCloud ou Zoho; você digita o
+   login, a senha de app e quem recebe, e **🔌 Testar a conexão** (ou **✉️ Mandar um e-mail de teste**) comprova antes
+   de seguir. Daí em diante, o bot manda por e-mail o QR Code do WhatsApp quando precisar parear de novo, os alertas e
+   os backups. Sem SMTP? **Pular por agora**: os Primeiros passos lembram. Se o `config/.env` já define o e-mail, a
+   etapa avisa, e *Usar os desta página* faz a página ganhar ([e-mail pela web](emails.md#e-mail-pela-web)).
+
+   ![A etapa do e-mail: um botão por provedor, a senha de app e o teste](assets/web/pt-BR/setup-mail.png)
+
+4. **WhatsApp.** Já pareado, a etapa só avisa; se não, ela abre a Saúde, onde está o QR Code.
+
+5. **Siga os Primeiros passos.** O Início mostra o que falta, cada item com seu botão, até tudo estar feito (ou você
+   esconder): parear o WhatsApp com o **QR Code na própria página** (Saúde), conferir o **endereço** da web,
+   configurar o **e-mail** (SMTP e IMAP, com botões para Gmail, Yahoo, iCloud e Zoho), ligar a **verificação
+   em duas etapas** com o QR Code de um app autenticador, os **avisos neste aparelho**, e **quem pode usar o bot**.
+
+   ![Primeiros passos: o que já foi feito e um botão para o que falta](assets/web/pt-BR/onboarding.png)
+
+É uma instalação inteira pelo navegador: do `docker compose up` ao bot pareado, com e-mail e 2FA, sem abrir arquivo
+nem ler log de novo.
+
+**Por que um link, e não uma senha gerada:** nenhuma senha passa pelo log. O link é aleatório, vale uma vez e expira;
+só o hash dele fica guardado. **Perdeu o link, ou esqueceu a senha?** `/web -setup` no seu privado do WhatsApp manda
+um novo (quem usar troca o login e a senha, e as sessões abertas são encerradas). Sem WhatsApp pareado ainda,
+reiniciar o bot mostra um link novo.
+
+**O outro jeito** continua lá: `/set zapbot.web.login <nome>` e `/set zapbot.web.password <senha>` no WhatsApp, ou
+`/web -login` e `/web -p`. `ZAPBOT_WEB_ENABLED="false"` no `config/.env` desliga a web.
+
+O endereço dos links é o `ZAPBOT_WEB_URL` (ou o `zapbot.web.url`): **no Docker, preencha**, porque o container não
+sabe o IP do servidor (os Primeiros passos avisam quando falta). Por padrão só a própria máquina acessa a web
+(`127.0.0.1`); `ZAPBOT_WEB_BIND=0.0.0.0` no `docker/.env` abre para a rede, e aí prefira HTTPS
+([Tailscale serve](#do-celular-pela-internet-tailscale) ou um proxy com certificado).
+
+### Trocar a senha e ligar o 2FA pela página
+
+**Settings › 🔑 Acesso** tem **Trocar a senha** (a atual é pedida de novo; o login também pode mudar) e **Verificação
+em duas etapas › Ligar**, que mostra o QR Code para o Google Authenticator, o Authy ou o 1Password e só liga depois do
+código de 6 dígitos do app. Nos dois casos, as outras sessões são encerradas e o seu privado e o e-mail são avisados
+(`🔐 ZapBot-Web: a senha da web foi trocada … a partir de 192.168.1.10`).
+
+![Ligando o 2FA pela página: o QR Code do app autenticador](assets/web/pt-BR/totp.png)
 
 ![A tela de login: o nome, a senha e, embaixo do "ZapBot", a versão que está rodando](assets/web/pt-BR/login.png)
 
@@ -538,7 +589,7 @@ ele **só na web**, use `QRCODE_WEB_ONLY="true"` (veja [onde o QR aparece](insta
 
 **🔌 Desconectar (logout)**, no card do WhatsApp enquanto ele está conectado, desvincula o bot da conta (o mesmo que
 *Aparelhos conectados › Desconectar* no celular) e o QR Code novo aparece ali mesmo, para parear de novo: o mesmo
-número ou outro. Ele pede para você digitar `logout` antes; até o código ser lido, o bot não responde, nem manda a
+número ou outro. Ele pergunta **Sim / Não** antes; até o código ser lido, o bot não responde, nem manda a
 agenda, os alertas ou o monitor. O log e o e-mail dizem quem pediu (`WhatsApp: logout asked by the web
 (192.168.1.10)`).
 

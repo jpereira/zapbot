@@ -11,11 +11,16 @@ const { getSetting } = require('./settings');
 const { versionWithCommit } = require('./version');
 const { language, t } = require('./i18n');
 
-// SMTP transport: used by the QR Code email and by the alerts below
-const transporter = nodemailer.createTransport({
+// SMTP transport: used by the QR Code email and by the alerts below. Made again when an email setting changes (the
+// web, /set zapbot.email.*: src/mailConfig.js); everyone holds `transporter`, which always sends through the current one
+// 587 (and 25) are STARTTLS: plain at first, then TLS, required (requireTLS: never the password in clear text); any other
+// port is implicit SSL (465)
+const startTls = (port) => ['587', '25'].includes(String(port ?? '').trim());
+const buildTransport = () => nodemailer.createTransport({
     host: process.env.QRCODE_EMAIL_SMTP_HOST,
     port: process.env.QRCODE_EMAIL_SMTP_PORT,
-    secure: true, // SSL (465)
+    secure: !startTls(process.env.QRCODE_EMAIL_SMTP_PORT),
+    requireTLS: startTls(process.env.QRCODE_EMAIL_SMTP_PORT),
     auth: {
         user: process.env.QRCODE_EMAIL_SMTP_USER,
         pass: process.env.QRCODE_EMAIL_SMTP_PASS
@@ -23,6 +28,18 @@ const transporter = nodemailer.createTransport({
     // No "tls.rejectUnauthorized: false": the SMTP certificate must be valid,
     // otherwise a MITM captures the password and the QR Code (= the WhatsApp session).
 });
+let current = buildTransport();
+// The sender: QRCODE_EMAIL_SMTP_FROM (zapbot.email.from), or the SMTP login when it is empty (optional in the first setup);
+// an empty From is refused by the servers ("550 Mailbox unavailable" on Yahoo)
+const mailFrom = () => process.env.QRCODE_EMAIL_SMTP_FROM || process.env.QRCODE_EMAIL_SMTP_USER;
+const transporter = {
+    sendMail: (...args) => current.sendMail(...args),
+    verify: () => current.verify()
+};
+function rebuildTransport() {
+    current = buildTransport();
+    eauthUntil = 0; // new credentials: the pause of the old ones does not hold them
+}
 
 /*
  * Login failure (EAUTH): stops trying for a while. Each wrong attempt counts toward the
@@ -31,7 +48,7 @@ const transporter = nodemailer.createTransport({
  */
 const EAUTH_PAUSE_MS = 30 * 60 * 1000;
 let eauthUntil = 0; // until when SMTP stays paused
-const sendMailOriginal = transporter.sendMail.bind(transporter);
+const sendMailOriginal = (options, ...rest) => current.sendMail({ ...options, from: options?.from || mailFrom() }, ...rest);
 
 // Paused by a previous EAUTH? Throws the error without opening an SMTP connection
 function requireSmtpWithoutPause() {
@@ -152,7 +169,7 @@ async function sendEmail({ to: recipients, subject, text: textAlt, attachments =
 
     const antiPhishing = process.env.QRCODE_EMAIL_SMTP_ANTIPHISHING || '-';
     await transporter.sendMail({
-        from: process.env.QRCODE_EMAIL_SMTP_FROM || process.env.QRCODE_EMAIL_SMTP_USER,
+        from: mailFrom(),
         to: recipients.join(', '),
         subject: `[ZapBot] ${subject}`,
         text: `${textAlt}\n\n🛡️ ${t('email.antiPhishing')}: ${antiPhishing}`,
@@ -181,6 +198,10 @@ async function leaveAlertBefore(event, details, ms) {
 }
 
 module.exports = {
+    smtpConfigured,
+    rebuildTransport,
+    mailFrom,
+    startTls,
     escapeHtml,
     leaveAlertBefore,
     alertPerEmail,

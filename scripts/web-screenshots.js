@@ -304,6 +304,17 @@ async function main() {
     page.on('pageerror', (err) => process.stderr.write(`page error: ${err.message}\n`));
     await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
     await page.evaluateOnNewDocument(() => localStorage.setItem('zb_order', 'start')); // the conversation from its start
+    // (the first steps of Home have their own picture: hidden in the others)
+    await page.evaluateOnNewDocument(() => { if (!sessionStorage.getItem('zb_show_onboarding')) localStorage.setItem('zb_onboarding_hidden', '1'); });
+
+    /* the first setup: the single-use link of the log opens this page (the password half typed, for the meter) */
+    const { token } = bot.src('web/setup').issueSetupLink(base);
+    await page.goto(`${base}/setup#${token}`);
+    await page.waitForSelector('.setup-card');
+    await page.type('.setup-card input[autocomplete=new-password]', 'Cafe-com-pao-2026!');
+    await shot('setup', 900);
+    bot.src('web/setup').reset();
+
     await page.goto(base);
     await page.waitForSelector('.login input');
     await shot('login');
@@ -312,8 +323,27 @@ async function main() {
     await page.click('button[type=submit]');
     await page.waitForSelector('.rail');
 
+    /* the email step of the first setup, right after the access: Gmail picked, the login and who receives typed */
+    await page.evaluate(() => window.setupMailStep());
+    await page.waitForSelector('.setup-card .chip-btn');
+    await page.evaluate(() => [...document.querySelectorAll('.setup-card .chip-btn')].find(b => b.textContent === 'Gmail').click());
+    await page.type('.setup-card input[autocomplete=email]', 'meu.bot@gmail.com');
+    await page.type('.setup-card input[autocomplete=new-password]', 'abcd efgh ijkl mnop');
+    await page.type('.setup-card input[placeholder="voce@exemplo.com"]', 'jorge@exemplo.com');
+    await shot('setup-mail', 1000);
+    await page.reload();
+    await page.waitForSelector('.rail');
+
     /* home */
     await shot('home', 1480);
+    // the first steps, as right after the setup (WhatsApp paired; the email, the 2FA and the rest still to do)
+    await page.evaluate(() => { sessionStorage.setItem('zb_show_onboarding', '1'); localStorage.removeItem('zb_onboarding_hidden'); });
+    await page.reload();
+    await page.waitForSelector('.onboarding');
+    await shot('onboarding', 860);
+    await page.evaluate(() => { sessionStorage.removeItem('zb_show_onboarding'); localStorage.setItem('zb_onboarding_hidden', '1'); });
+    await page.reload();
+    await page.waitForSelector('.storage-head .btn');
     // the /cache of the storage: each part with its size, and everything with the warning
     await page.evaluate(() => [...document.querySelectorAll('.storage-head .btn')].find(b => b.textContent.includes('🧹')).click());
     await page.waitForSelector('.modal');
@@ -516,6 +546,18 @@ async function main() {
     await view('settings');
     await page.waitForSelector('.webpanel');
     await shot('settings', 900);
+    // the email: the buttons that fill in a provider, the SMTP and the IMAP, and the test
+    await page.evaluate(() => { const panel = document.getElementById('mailpanel'); document.querySelector('#content .page').scrollTop = panel.offsetTop - 20; });
+    await wait(300);
+    await shot('settings-mail', 900);
+    // 2FA from the page: the QR Code of the authenticator app and the code to turn it on
+    await page.evaluate(() => [...document.querySelectorAll('#accesspanel .btn')].find(b => /Turn it on|Ligar/.test(b.textContent)).click());
+    await page.waitForSelector('dialog .totp-qr');
+    await wait(300);
+    await shot('totp', 860);
+    await page.evaluate(() => document.querySelector('dialog .modal-actions .btn:not(.on)').click());
+    await wait(200);
+    await page.evaluate(() => { document.querySelector('#content .page').scrollTop = 0; });
     await page.evaluate(() => { document.querySelector('#content .page').scrollTop = document.querySelector('.webpanel').offsetHeight + 120; });
     await wait(300);
     await shot('settings-table', 760);

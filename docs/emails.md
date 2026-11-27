@@ -13,6 +13,42 @@ The bot uses the same SMTP (`QRCODE_EMAIL_SMTP_*`) for:
 
 The `email` destination uses `QRCODE_EMAIL_SMTP_TO`; `-to you@example.com` picks another address.
 
+## Email from the web
+
+The easiest way: **Settings › ✉️ Email** on the [web interface](web.md) (or *Set up the email* in the
+[First steps](web.md#first-setup-in-a-few-clicks)). A button fills in the server of **Gmail, Yahoo, iCloud
+or Zoho**; you type the login, the app password, the sender and who receives, and **🔌 Test the connection** checks
+the SMTP login without sending anything (**✉️ Send a test email** sends one). It is saved in the database, as
+`/set zapbot.email.*`: **no file to edit, and it applies at once** (the SMTP is made again, no restart).
+
+![The email on the web: a button per provider, the SMTP and the IMAP, and the test](assets/web/settings-mail.png)
+
+| Setting | Variable in `config/.env` |
+|---|---|
+| `zapbot.email.smtp.host`, `.smtp.port`, `.smtp.user`, `.smtp.pass` | `QRCODE_EMAIL_SMTP_HOST`, `_PORT`, `_USER`, `_PASS` |
+| `zapbot.email.from`, `zapbot.email.to` | `QRCODE_EMAIL_SMTP_FROM`, `QRCODE_EMAIL_SMTP_TO` |
+| `zapbot.email.antiphishing` | `QRCODE_EMAIL_SMTP_ANTIPHISHING` |
+| `zapbot.email.imap.host` | `QRCODE_EMAIL_IMAP_HOST` |
+| `zapbot.email.qr`, `zapbot.email.qrFallbackTerminal` | `QRCODE_EMAIL_ENABLE`, `QRCODE_EMAIL_FALLBACK_TERMINAL` |
+
+**`config/.env` wins.** A variable set there overrides its setting: on the web it shows as 🔧 (read-only), and the
+start says which ones:
+
+```text
+[2026-11-26 19:40:12] [!] Overriding db mail settings by local env: QRCODE_EMAIL_SMTP_HOST, QRCODE_EMAIL_SMTP_USER (config/.env wins over /set zapbot.email.*)
+```
+
+**Or let the database win:** the switch *Use the ones of this page (ignore config/.env)*, in the email step of the
+setup and in Settings › Email, turns on `zapbot.email.overrideEnv`; it applies at once, and the start says it:
+
+```text
+[2026-11-26 19:40:12] [!] Overriding local env mail settings by db: QRCODE_EMAIL_SMTP_HOST, QRCODE_EMAIL_SMTP_USER ignored (zapbot.email.overrideEnv is on)
+```
+
+Or comment the `QRCODE_EMAIL_*` lines in `config/.env` and restart. The SMTP password
+stays in the database (masked in every list, never in the JSON of the page): a [backup](commands/backup.md) carries
+it, as `config/.env` carries it in the other way.
+
 ## QR Code email
 
 Subject: **`[ZapBot] WhatsApp QR Code Authentication`**

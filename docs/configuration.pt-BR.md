@@ -80,7 +80,7 @@ A estimativa de custo do rodapé `-status` do `/gpt`, do `/tldr` e do `/draw` us
 
 | Variável | Exemplo | Descrição |
 |---|---|---|
-| `ZAPBOT_WEB_ENABLED` | `true` | `true` ou `false` liga ou desliga a [interface web](web.md), **por cima** do setting `zapbot.web.enabled`. Se estiver vazia, vale o setting. Ainda precisa de `zapbot.web.login` e `zapbot.web.password` (`/set` no WhatsApp), e é lida quando o bot inicia. |
+| `ZAPBOT_WEB_ENABLED` | `true` | `true` ou `false` liga ou desliga a [interface web](web.md), **por cima** do setting `zapbot.web.enabled`. Se estiver vazia, vale o setting (ligado por padrão). Sem login ainda, o primeiro início mostra um link de uso único para escolher pela web ([primeira configuração](web.md#primeira-configuração-em-poucos-cliques)); o QR Code do WhatsApp também fica lá, em `http://<ip>:3200/qr`. É lida quando o bot inicia. |
 | `ZAPBOT_WEB_URL` | `http://192.168.1.253:3200` | O endereço pelo qual você abre a interface, que a mensagem de inicialização mostra. No Docker o container não sabe o IP do servidor, então preencha. O setting `zapbot.web.url`, quando preenchido, tem prioridade sobre ela. |
 | `ZAPBOT_WEB_HOST` | `0.0.0.0` | O endereço em que ela escuta, **por cima** do setting `zapbot.web.host`. A imagem do Docker já define `0.0.0.0`. |
 | `ZAPBOT_WEB_PORT` | `3200` | A porta em que ela escuta, **por cima** do setting `zapbot.web.port` (3200 por padrão). No Docker Compose a porta publicada acompanha. |
@@ -148,7 +148,7 @@ possível limite por IP.
 | `QRCODE_EMAIL_ENABLE` | `"true"` / `"false"` | Liga o envio do QR Code por e-mail. Com `false`, ele aparece no terminal (e na web, quando ela está ligada, com o endereço dela no terminal e no e-mail). Os [alertas por e-mail](emails.md#alertas-por-e-mail) não dependem dele. |
 | `QRCODE_EMAIL_FALLBACK_TERMINAL` | `"true"` / `"false"` | Se o envio do QR por e-mail falhar, mostra o QR no terminal. Padrão: `"true"`. |
 | `QRCODE_EMAIL_SMTP_HOST` | `smtp.mail.yahoo.com` | Servidor SMTP. |
-| `QRCODE_EMAIL_SMTP_PORT` | `465` | Porta SMTP. **Use uma porta SSL/TLS implícita (465)**: o bot conecta com `secure: true`, portas STARTTLS como 587 não funcionam. O certificado do servidor é validado: servidores com certificado autoassinado/inválido são recusados, porque um MITM capturaria a senha e o QR Code (que dá acesso à conta). |
+| `QRCODE_EMAIL_SMTP_PORT` | `465` | Porta SMTP. **465** (SSL implícito) ou **587** (STARTTLS, com TLS obrigatório: a senha nunca vai em texto puro); qualquer outra porta é tratada como SSL implícito. O certificado do servidor é validado: servidores com certificado autoassinado/inválido são recusados, porque um MITM capturaria a senha e o QR Code (que dá acesso à conta). |
 | `QRCODE_EMAIL_IMAP_HOST` | `imap.mail.yahoo.com` | Servidor IMAP (porta 993, SSL). Opcional: sem ele o `/bot -flush-email` fica desativado. Usa o login do SMTP (`_USER` e `_PASS`). Veja [Limpar o e-mail](commands/bot.md#limpar-o-e-mail). |
 | `QRCODE_EMAIL_SMTP_USER` | `minhaconta@yahoo.com.br` | Usuário de login no SMTP. |
 | `QRCODE_EMAIL_SMTP_PASS` | `abcd efgh ijkl mnop` | Senha do SMTP. Use a credencial SMTP exigida pelo provedor; em contas com senha de app, configure essa senha em vez da senha de login. |

@@ -25,7 +25,8 @@ const zlib = require('zlib');
 const { dbReady } = require('../db');
 const { printError, printInfo } = require('../log');
 const { attemptFor } = require('../util/attempts');
-const { envOuSetting, getSetting } = require('../settings');
+const { envOuSetting, getSetting, setSetting } = require('../settings');
+const { t } = require('../i18n');
 const { checkPassword } = require('../util/password');
 const sha = (text) => crypto.createHash('sha256').update(String(text)).digest();
 const totp = require('../util/totp');
@@ -44,6 +45,7 @@ const { monitorOverview } = require('./monitor');
 const { health } = require('./health');
 const { duplicates, gallery, mimeOf: mimeOfFile } = require('./gallery');
 const { thumbnail } = require('./thumbs');
+const webSetup = require('./setup');
 const webPush = require('../webPush');
 const qrcode = require('qrcode');
 const { state } = require('../state');
@@ -60,6 +62,8 @@ const STATIC = {
     '/': ['index.html', 'text/html; charset=utf-8'],
     '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
     '/style.css': ['style.css', 'text/css; charset=utf-8'],
+    // the link of the first setup (/setup#token): the page itself, which reads the token
+    '/setup': ['index.html', 'text/html; charset=utf-8'],
     // The installable app (PWA): the service worker (the push notices and the page offline), its manifest and icons
     '/sw.js': ['sw.js', 'text/javascript; charset=utf-8'],
     '/manifest.webmanifest': ['manifest.webmanifest', 'application/manifest+json; charset=utf-8'],
@@ -153,7 +157,8 @@ function securityHeaders(res) {
 
 function sendJson(res, status, body) {
     const text = JSON.stringify(body);
-    res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(text) });
+    // The version on every answer: a page opened before a deploy notices it and reloads (src/web/public/app.js)
+    res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(text), 'X-ZapBot-Version': encodeURIComponent(versionWithCommit()) });
     res.end(text);
 }
 
@@ -234,15 +239,102 @@ async function login(req, res) {
     }
     attempts.delete(address);
     if (secret) lastTotpStep = step;
+    openSession(req, res);
+    printInfo(`Web: login of '${shown(user)}' from ${address}`);
+    sendJson(res, 200, { ok: true });
+}
+
+// A new session, in its cookie (the login, the first setup, and the password change, which drops the others)
+function openSession(req, res) {
     const token = crypto.randomBytes(32).toString('hex');
     const hours = getSetting('zapbot.web.sessionHours');
     activeSessions();
     if (sessions.size >= 256) forgetSession(sessions.keys().next().value);
     const now = Date.now();
     sessions.set(token, { id: crypto.randomUUID(), until: now + hours * 3600_000, lastActivity: now });
-    printInfo(`Web: login of '${shown(user)}' from ${address}`);
     res.setHeader('Set-Cookie', `${COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${hours * 3600}${isSecure(req) ? '; Secure' : ''}`);
-    sendJson(res, 200, { ok: true });
+    return token;
+}
+
+/*
+ * The first setup (or a recovery, /web -setup): the link of the log brings a single-use token; with it, the login and
+ * the password are chosen here and a session opens. A wrong token counts as a wrong password (the same block).
+ */
+async function setupAccess(req, res) {
+    const address = clientAddress(req);
+    const { token, login: user, password } = (await readJson(req)) ?? {};
+    const entry = attemptFor(attempts, address, BLOCK_MS);
+    if (!entry || entry.until > Date.now()) return sendJson(res, 429, { error: 'blocked' });
+    const invalid = webSetup.setupError(user, password);
+    if (invalid) return sendJson(res, 400, { error: invalid });
+    if (!webSetup.consumeSetupToken(token)) {
+        entry.errors += 1;
+        if (entry.errors >= MAX_ERRORS) { entry.errors = 0; entry.until = Date.now() + BLOCK_MS; }
+        printError(`Web: setup link wrong or expired, from ${address}`);
+        return sendJson(res, 401, { error: 'link' });
+    }
+    await setSetting('zapbot.web.login', user);
+    await setSetting('zapbot.web.password', password);
+    destroySessions();
+    openSession(req, res);
+    printInfo(`Web: access configured ('${shown(user)}') from ${address}`);
+    notifyAccessChange(t('web.alert.setupDone', { login: user, address }));
+    return sendJson(res, 200, { ok: true });
+}
+
+// The password (and the login) changed from the page: the current one is asked again; the other sessions drop
+async function changePassword(req, res) {
+    const address = clientAddress(req);
+    const { current, password, login: user } = (await readJson(req)) ?? {};
+    const name = typeof user === 'string' && user.trim() ? user.trim() : getSetting('zapbot.web.login');
+    const ok = typeof current === 'string' && await checkPassword(current, getSetting('zapbot.web.password'));
+    if (!ok) {
+        printError(`Web: password change with a wrong current password, from ${address}`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return sendJson(res, 401, { error: 'current password' });
+    }
+    const invalid = webSetup.setupError(name, password);
+    if (invalid) return sendJson(res, 400, { error: invalid });
+    if (await checkPassword(password, getSetting('zapbot.web.password'))) return sendJson(res, 400, { error: 'password: the same as now' });
+    await setSetting('zapbot.web.login', name);
+    await setSetting('zapbot.web.password', password);
+    destroySessions();
+    openSession(req, res);
+    printInfo(`Web: password changed ('${shown(name)}') from ${address}`);
+    notifyAccessChange(t('web.alert.passwordChanged', { login: name, address }));
+    return sendJson(res, 200, { ok: true });
+}
+
+// The access changed: your private chat (when connected; it waits otherwise) and the email
+function notifyAccessChange(text) {
+    require('../client').messageToSelf(text);
+    require('../email').alertPerEmail('🔐 ZapBot web', text, { force: true }).catch(() => {});
+}
+
+/*
+ * 2FA from the page: a new secret and its QR Code (the authenticator app reads it); it only turns on when the code of
+ * the app is typed back (the same as /web -2fa new). One pending secret per session, for 10 minutes.
+ */
+const pendingTotp = new Map(); // session token → { secret, until }
+async function totpNew(req, res, token) {
+    const secret = totp.newSecret();
+    pendingTotp.set(token, { secret, until: Date.now() + 10 * 60_000 });
+    const uri = require('../webTotp').otpauthUri(secret, getSetting('zapbot.web.login'));
+    const png = await qrcode.toBuffer(uri, { type: 'png', width: 320, margin: 2 });
+    return sendJson(res, 200, { secret: secret.replace(/(.{4})/g, '$1 ').trim(), qr: `data:image/png;base64,${png.toString('base64')}` });
+}
+async function totpConfirm(req, res, token) {
+    const { code } = (await readJson(req)) ?? {};
+    const wait = pendingTotp.get(token);
+    if (!wait || wait.until < Date.now()) return sendJson(res, 400, { error: 'start again' });
+    const step = totp.verifyStep(wait.secret, code);
+    if (step === null) return sendJson(res, 400, { error: 'code' });
+    pendingTotp.delete(token);
+    await setSetting('zapbot.web.totp', wait.secret);
+    lastTotpStep = step;
+    printInfo(`Web: 2FA turned on from ${clientAddress(req)}`);
+    notifyAccessChange(t('web.alert.totpOn', { address: clientAddress(req) }));
+    return sendJson(res, 200, { ok: true });
 }
 
 // "Range: bytes=0-1023" of a file of the given size → { start, end } (null: not a valid range)
@@ -304,9 +396,13 @@ const toSeconds = (value) => {
 async function api(req, res, url) {
     const route = url.pathname;
     if (route === '/api/session') {
-        return sendJson(res, 200, { authenticated: Boolean(sessionOf(req)), lang: getSetting('zapbot.lang'), pageSize: getSetting('zapbot.web.pageSize'), refreshSeconds: getSetting('zapbot.web.refreshSeconds'), needsCode: Boolean(getSetting('zapbot.web.totp')), version: versionWithCommit() });
+        return sendJson(res, 200, { setup: webSetup.needsSetup(), authenticated: Boolean(sessionOf(req)), lang: getSetting('zapbot.lang'), pageSize: getSetting('zapbot.web.pageSize'), refreshSeconds: getSetting('zapbot.web.refreshSeconds'), needsCode: Boolean(getSetting('zapbot.web.totp')), version: versionWithCommit() });
     }
-    if (route === '/api/login' && req.method === 'POST') return login(req, res);
+    if (route === '/api/login' && req.method === 'POST') {
+        if (webSetup.needsSetup()) return sendJson(res, 409, { error: 'setup' });
+        return login(req, res);
+    }
+    if (route === '/api/setup' && req.method === 'POST') return setupAccess(req, res);
     if (route === '/api/logout' && req.method === 'POST') {
         const token = sessionOf(req);
         if (token) {
@@ -341,6 +437,9 @@ async function api(req, res, url) {
         }
         return sendJson(res, result.ok ? 200 : (result.error === 'blocked' ? 429 : result.error === 'unknown' ? 404 : 401), result);
     }
+    if (req.method === 'POST' && route === '/api/password') return changePassword(req, res);
+    if (req.method === 'POST' && route === '/api/totp/new') return totpNew(req, res, token);
+    if (req.method === 'POST' && route === '/api/totp/confirm') return totpConfirm(req, res, token);
     if (req.method === 'POST' && route === '/api/manage') {
         try {
             return sendJson(res, 200, await manage(await readJson(req), clientAddress(req), token, String(req.headers['user-agent'] ?? '').replace(/[^\P{C}]/gu, '').slice(0, 120)));
@@ -437,6 +536,8 @@ async function api(req, res, url) {
             return sendJson(res, 200, await lists.watchHits(url.searchParams.get('rule')));
         case '/api/health':
             return sendJson(res, 200, health());
+        case '/api/onboarding':
+            return sendJson(res, 200, { steps: webSetup.onboarding(), url: webUrl() });
         // The bar on top of every page: WhatsApp waiting for the QR Code to be read
         case '/api/whatsapp':
             return sendJson(res, 200, { pairing: Boolean(state.waitingQr && state.qr), qr: state.waitingQr && state.qr ? { count: state.qr.count, at: state.qr.at } : null });
@@ -614,10 +715,6 @@ async function startWeb() {
     if (server) return server;
     // ZAPBOT_WEB_ENABLED (true/false) has priority over the setting; empty: the setting
     if (!envOuSetting('ZAPBOT_WEB_ENABLED', 'zapbot.web.enabled')) return null;
-    if (!getSetting('zapbot.web.login') || !getSetting('zapbot.web.password')) {
-        printError('Web: zapbot.web.enabled is on, but the login or the password is missing: not starting (/set zapbot.web.login <name> and /set zapbot.web.password <password>)');
-        return null;
-    }
     // ZAPBOT_WEB_HOST (the Docker image sets 0.0.0.0, and the compose keeps the published port on the host's 127.0.0.1)
     const host = process.env.ZAPBOT_WEB_HOST || getSetting('zapbot.web.host');
     const port = envOuSetting('ZAPBOT_WEB_PORT', 'zapbot.web.port');
@@ -633,6 +730,8 @@ async function startWeb() {
     server.listen(port, host, () => {
         listening = true;
         printInfo(`Web: listening on http://${host}:${port} (open it at ${webUrl()})`);
+        // The first boot (no login nor password yet): the single-use link to choose them, in the log and by email
+        if (webSetup.needsSetup()) announceSetup('first boot');
         if (host !== '127.0.0.1' && host !== 'localhost') {
             printInfo('Web: listening outside localhost: put an HTTPS proxy in front and keep the password strong');
         }
@@ -641,7 +740,15 @@ async function startWeb() {
 }
 
 // Forgets the sessions and the blocks (the tests)
-const resetWeb = () => { destroySessions(); attempts.clear(); lastTotpStep = -1; webNotes.reset(); require('./alert').reset(); require('./data').resetNames(); };
+// A new setup link: the log (with a banner) and, when the SMTP is set, the email
+function announceSetup(reason) {
+    const link = webSetup.issueSetupLink(webUrl(), reason);
+    webSetup.printSetupBanner(link.url);
+    require('../email').alertPerEmail('🔐 ZapBot web', t('web.alert.setupLink', { url: link.url }), { force: true }).catch(() => {});
+    return link;
+}
+
+const resetWeb = () => { destroySessions(); attempts.clear(); lastTotpStep = -1; pendingTotp.clear(); webSetup.reset(); webNotes.reset(); require('./alert').reset(); require('./data').resetNames(); };
 
 async function stopWeb() {
     destroySessions();
@@ -657,5 +764,5 @@ async function stopWeb() {
 }
 
 module.exports = {
-    activeSessions, createServer, destroySessions, isWebRunning, resetWeb, startWeb, stopWeb, webUrl
+    activeSessions, announceSetup, createServer, destroySessions, isWebRunning, resetWeb, startWeb, stopWeb, webUrl
 };

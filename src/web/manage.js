@@ -498,13 +498,29 @@ const HANDLERS = {
         watch: async (body) => require('./watchTest').tryWatchRule(body.rule),
         schedule: trySchedule
     },
-    // Health: "Disconnect" (the bot leaves the linked devices; a new QR Code comes). Typed confirmation
+    // Health: "Disconnect" (the bot leaves the linked devices; a new QR Code comes), after the Yes of the page
     whatsapp: {
         logout: async (body, token, req) => {
-            if (body.confirm !== 'logout') throw new ManageError('confirm: "logout"');
+            if (body.confirm !== true) throw new ManageError('confirm: true (the Yes of the question)');
             const { logoutWhatsApp } = require('../connection');
             logoutWhatsApp(`the web (${req?.address ?? '?'})`).catch(err => printError('WhatsApp: logout from the web:', err.message));
             return { ok: true };
+        }
+    },
+    // The email of the Settings: the connection tested (the SMTP login, nothing sent), or a test email to the recipient
+    mail: {
+        test: async (body) => {
+            const email = require('../email');
+            try {
+                if (body.send) {
+                    await email.sendEmail({ to: email.smtpForSend() ? [process.env.QRCODE_EMAIL_SMTP_TO] : [], subject: '✉️ Test', text: 'ZapBot: the email of the web works.' });
+                } else {
+                    await email.checkSmtp();
+                }
+                return { ok: true };
+            } catch (err) {
+                throw new ManageError(String(err.message ?? err).slice(0, 300));
+            }
         }
     },
     gallery: { delete: async (body) => noteResult(await require('./gallery').deleteMedia(body)), join: async (body) => noteResult(await require('./gallery').joinCopies(body)) },

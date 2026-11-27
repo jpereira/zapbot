@@ -8,6 +8,7 @@
     { "opts": ["destroy", "d"], "values": ["[número]"], "desc": "Encerra uma sessão pelo número da última lista ou todas sem número." },
     { "opts": ["enable", "e"], "desc": "Ativa e inicia a interface web." },
     { "opts": ["disable", "off"], "desc": "Para a interface web e encerra as sessões." },
+    { "opts": ["setup", "su"], "desc": "Um link de uso único (24 h) para escolher o login e a senha pela web: a primeira configuração, ou uma senha esquecida." },
     { "opts": ["pass", "p"], "values": ["<senha>"], "desc": "Define a senha da interface web." },
     { "opts": ["login", "lg"], "values": ["<nome>"], "desc": "Define o nome de login da interface web." },
     { "opts": ["timeout", "t"], "values": ["[minutos|off]"], "desc": "Consulta ou define o tempo de inatividade antes de sair." },

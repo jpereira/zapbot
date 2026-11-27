@@ -13,6 +13,42 @@ O bot usa o mesmo SMTP (`QRCODE_EMAIL_SMTP_*`) para:
 
 O destino `email` usa `QRCODE_EMAIL_SMTP_TO`; `-to voce@exemplo.com` escolhe outro endereço.
 
+## E-mail pela web
+
+O jeito mais fácil: **Settings › ✉️ E-mail** na [interface web](web.md) (ou *Configurar o e-mail* nos
+[Primeiros passos](web.md#primeira-configuração-em-poucos-cliques)). Um botão preenche o servidor do **Gmail,
+Yahoo, iCloud ou Zoho**; você digita o login, a senha de app, o remetente e quem recebe, e **🔌 Testar a conexão**
+confere o login no SMTP sem mandar nada (**✉️ Mandar um e-mail de teste** manda um). Fica salvo no banco, como
+`/set zapbot.email.*`: **sem arquivo para editar, e vale na hora** (o SMTP é refeito, sem reiniciar).
+
+![O e-mail pela web: um botão por provedor, o SMTP e o IMAP, e o teste](assets/web/pt-BR/settings-mail.png)
+
+| Setting | Variável no `config/.env` |
+|---|---|
+| `zapbot.email.smtp.host`, `.smtp.port`, `.smtp.user`, `.smtp.pass` | `QRCODE_EMAIL_SMTP_HOST`, `_PORT`, `_USER`, `_PASS` |
+| `zapbot.email.from`, `zapbot.email.to` | `QRCODE_EMAIL_SMTP_FROM`, `QRCODE_EMAIL_SMTP_TO` |
+| `zapbot.email.antiphishing` | `QRCODE_EMAIL_SMTP_ANTIPHISHING` |
+| `zapbot.email.imap.host` | `QRCODE_EMAIL_IMAP_HOST` |
+| `zapbot.email.qr`, `zapbot.email.qrFallbackTerminal` | `QRCODE_EMAIL_ENABLE`, `QRCODE_EMAIL_FALLBACK_TERMINAL` |
+
+**O `config/.env` ganha.** Uma variável definida lá sobrepõe o setting: na web ela aparece como 🔧 (só leitura), e o
+início do bot diz quais:
+
+```text
+[2026-11-26 19:40:12] [!] Overriding db mail settings by local env: QRCODE_EMAIL_SMTP_HOST, QRCODE_EMAIL_SMTP_USER (config/.env wins over /set zapbot.email.*)
+```
+
+**Ou deixe o banco ganhar:** a chave *Usar os desta página (ignorar o config/.env)*, na etapa do e-mail da
+configuração e em Settings › E-mail, liga o `zapbot.email.overrideEnv`; vale na hora, e o início do bot avisa:
+
+```text
+[2026-11-26 19:40:12] [!] Overriding local env mail settings by db: QRCODE_EMAIL_SMTP_HOST, QRCODE_EMAIL_SMTP_USER ignored (zapbot.email.overrideEnv is on)
+```
+
+Ou comente as linhas `QRCODE_EMAIL_*` do `config/.env` e reinicie. A senha do SMTP
+fica no banco (mascarada em toda lista, nunca no JSON da página): um [backup](commands/backup.md) leva ela, como o
+`config/.env` leva no outro jeito.
+
 ## E-mail do QR Code
 
 Assunto: **`[ZapBot] Autenticação do QR Code do WhatsApp`**
