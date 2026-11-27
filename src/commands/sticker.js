@@ -32,7 +32,7 @@ function readText(args) {
 
     return {
         withText: Boolean(m),
-        withVideo: /(^|\s)(-(ss|es|startSec|endSec|photo|ph|v|verbose)(\s|$)|https?:\/\/)/i.test(beforeAlt),
+        withVideo: /(^|\s)(-(ss|es|startSec|endSec|photo|ph|v|vv|v2|verbose)(\s|$)|https?:\/\/)/i.test(beforeAlt),
         text: (m?.[2] ?? '').trim().replace(/^(["'])(.*)\1$/s, '$2').trim(),
         bg: bg ?? '#FFFFFF',
         fg: fg ?? '#000000',

@@ -40,7 +40,8 @@ through ffmpeg. If the media has a link in the caption, the media wins.
 | `-vad` | `<on\|off>` | `on`: skips the silence and the music before transcribing (where whisper invents text); `off`: transcribes it all. Local engine only. The default is the `stt.vad` setting |
 | `-startSec`, `-ss` | `<time>` | Starts at this point of the original video (default 0), in seconds (`22`, `1.5`) or in `min:sec` (`09:33`, or `h:min:sec`). With a `-` in front, counts from the **end** of the video (`-10`, `-01:44`) |
 | `-endSec`, `-es` | `<time>` | Ends at this point of the original video, in the same format as `-ss` (`-es -5` ends 5 s before the end); must be greater than the start. Also works without `-ss` and for stickers |
-| `-verbose`, `-v` | | Shows yt-dlp/ffmpeg commands and technical details if a download fails |
+| `-verbose`, `-v` | | A summary of what ran: each step (yt-dlp, ffmpeg...) with how long it took, and the total |
+| `-vv`, `-v2` | | The full report: every command that ran with its time, the options understood (JSON) and, when a download fails, the end of its log |
 | `<url>` | | Video link; wins over the replied message |
 
 The converted file is limited to 20 MB (setting `get.maxSizeMB`). The original file of a replied
@@ -52,7 +53,7 @@ the six seconds from `-ss` (or from the start), and a shorter range set by `-ss`
 requested duration. `get.showAsMedia` sends media inline by default; off, it sends documents instead.
 Media larger than `get.maxInlineSizeMB` (16 MB by default) always goes as a document, even when inline
 media is enabled. X post text goes in the inline video's caption or in a separate message below a
-document. Download failures show a friendly message; `-v` includes technical details. Replies to WhatsApp
+document. Download failures show a friendly message; `-v` the reason, and `-vv` the command and the end of its log. Replies to WhatsApp
 images, videos or audio follow the same rule. Use `/set get.showAsMedia off` to always send documents
 with `📥 Here is the media to download.`.
 
@@ -155,8 +156,8 @@ sending a file. It runs **inside the server**, with [faster-whisper](https://git
 - At most `stt.maxMinutes` (default 20) of audio, otherwise the bot asks for a part with
   `-ss` and `-es`. It uses the server CPU, and counts in the limit of 2 `/get` at once.
 - `-sum` (with `-t`) also summarizes, as in [`/stt`](stt.md).
-- `-v` also sends the commands that ran (yt-dlp, ffmpeg, faster-whisper) and how long the
-  transcription took, before the text.
+- `-v` also sends, before the text, how long each step took (yt-dlp, ffmpeg, faster-whisper,
+  with the model) and the total; `-vv`, every command whole and the options.
 - It doesn't mix with `-a`, `-st` or `-pos`. Instagram may ask for login: it uses the same
   `cookies.txt` as the rest of `/get` (see below).
 
@@ -255,5 +256,6 @@ blocks all access to the internal network from the bot.
 (reply to a WhatsApp video)       /get -ss 5 -es 20    → the range, as a document
 /get -t https://www.instagram.com/reel/XXXXXXXX/   → the speech, as text
 /get -st -pos top https://youtu.be/XXXXXXXXXXX   → sticker framed on the top
-/get -v https://youtu.be/XXXXXXXXXXX            → also shows the commands that ran
+/get -v https://youtu.be/XXXXXXXXXXX            → also shows how long each step took
+/get -vv https://youtu.be/XXXXXXXXXXX           → and every command, whole
 ```

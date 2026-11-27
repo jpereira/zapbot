@@ -40,7 +40,8 @@ pelo ffmpeg. Se a mídia tiver um link na legenda, vale a mídia.
 | `-vad` | `<on\|off>` | `on`: pula o silêncio e a música antes de transcrever (onde o whisper inventa texto); `off`: transcreve tudo. Só no motor local. O padrão é o setting `stt.vad` |
 | `-startSec`, `-ss` | `<tempo>` | Começa neste ponto do vídeo original (padrão 0), em segundos (`22`, `1.5`) ou em `min:seg` (`09:33`, ou `h:min:seg`). Com `-` na frente, conta do **final** do vídeo (`-10`, `-01:44`) |
 | `-endSec`, `-es` | `<tempo>` | Termina neste ponto do vídeo original, no mesmo formato do `-ss` (`-es -5` termina 5 s antes do fim); deve ser maior que o início. Vale também sem `-ss` e para figurinhas |
-| `-verbose`, `-v` | | Mostra os comandos do yt-dlp/ffmpeg e detalhes técnicos se o download falhar |
+| `-verbose`, `-v` | | Um resumo do que rodou: cada etapa (yt-dlp, ffmpeg...) com quanto tempo levou, e o total |
+| `-vv`, `-v2` | | O relatório completo: cada comando que rodou com o tempo, as opções entendidas (JSON) e, se o download falhar, o fim do log dele |
 | `<url>` | | Link do vídeo; vale mais que a mensagem respondida |
 
 O arquivo convertido é limitado a 20 MB (setting `get.maxSizeMB`). O arquivo original de uma mídia
@@ -54,7 +55,7 @@ acima de `get.maxInlineSizeMB` (16 MB por padrão) sempre vão como documento, m
 O texto de um vídeo do X vai na legenda quando inline e em uma mensagem abaixo quando enviado como
 documento. Use `/set get.showAsMedia off` para sempre enviar como documento com
 `📥 Aqui está a mídia para download.`. Replies de imagem, vídeo e áudio também seguem essa regra. Se o
-download falhar, o `/get` mostra uma mensagem simples; com `-v`, inclui os detalhes técnicos.
+download falhar, o `/get` mostra uma mensagem simples; com `-v`, o motivo; com `-vv`, o comando e o fim do log.
 
 De um link, com `-ss`, `-es` ou `-st`, o yt-dlp baixa só o trecho pedido (`--download-sections`,
 cortado no tempo exato com `--force-keyframes-at-cuts`), sem o vídeo inteiro. Se o site não deixar
@@ -152,8 +153,8 @@ um arquivo. Roda **dentro do servidor**, com o [faster-whisper](https://github.c
 - No máximo `stt.maxMinutes` (padrão 20) de áudio; acima disso o bot pede um trecho com
   `-ss` e `-es`. Usa a CPU do servidor e conta no limite de 2 `/get` ao mesmo tempo.
 - O `-sum` (com `-t`) resume também, como no [`/stt`](stt.md).
-- O `-v` manda também os comandos que rodaram (yt-dlp, ffmpeg, faster-whisper) e quanto a
-  transcrição levou, antes do texto.
+- O `-v` manda também, antes do texto, quanto cada etapa levou (yt-dlp, ffmpeg, faster-whisper,
+  com o modelo) e o total; o `-vv`, cada comando inteiro e as opções.
 - Não mistura com `-a`, `-st` nem `-pos`. O Instagram pode pedir login: vale o mesmo `cookies.txt`
   do resto do `/get` (veja abaixo).
 
@@ -251,5 +252,6 @@ firewall de egresso no container (`docker/app/egress-firewall.sh`, ligado por
 (reply num vídeo do WhatsApp)   /get -ss 5 -es 20    → o trecho, como documento
 /get -t https://www.instagram.com/reel/XXXXXXXX/   → a fala, em texto
 /get -st -pos top https://youtu.be/XXXXXXXXXXX   → figurinha com o recorte no topo
-/get -v https://youtu.be/XXXXXXXXXXX            → mostra também os comandos que rodaram
+/get -v https://youtu.be/XXXXXXXXXXX            → mostra também quanto cada etapa levou
+/get -vv https://youtu.be/XXXXXXXXXXX           → e cada comando, inteiro
 ```

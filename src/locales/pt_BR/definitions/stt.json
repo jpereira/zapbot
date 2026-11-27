@@ -129,7 +129,15 @@
         "v"
       ],
       "values": [],
-      "desc": "Mostra os comandos usados no yt-dlp, no ffmpeg e no faster-whisper, e quanto tempo a transcrição levou."
+      "desc": "Um resumo do que rodou: cada etapa (yt-dlp, ffmpeg, faster-whisper) com quanto tempo levou, e o total. -vv: o relatório completo."
+    },
+    {
+      "opts": [
+        "vv",
+        "v2"
+      ],
+      "values": [],
+      "desc": "O relatório completo: cada comando que rodou (yt-dlp, ffmpeg, faster-whisper) com o tempo, e as opções entendidas (JSON)."
     },
     {
       "argv": [

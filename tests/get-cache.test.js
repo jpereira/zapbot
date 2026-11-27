@@ -307,10 +307,19 @@ describe('/get', () => {
         assert.deepEqual(filesTemporary(), []);
     });
 
-    test('-v manda os comandos executados antes da mídia', async () => {
+    test('-v: a summary before the media, each step with its time and the total; no command, no JSON', async () => {
         const r = await bot.execute(`/get -v ${URL}`);
-        assert.match(r[1].text, /🛠️ \*Verbose Mode\*[\s\S]*yt-dlp[\s\S]*ffmpeg/);
+        assert.match(r[1].text, /^🛠️ \*Verbose\* · total \d+\.\d s\n💾 yt-dlp \([^)]+\): \d+\.\d s\n🔗 ffmpeg \([^)]+\): \d+\.\d s\n\n💡 _-vv: o relatório completo/);
+        assert.doesNotMatch(r[1].text, /cmdArgs|\/venv\/bin|ffmpeg -y/);
         assert.ok(r[2].content instanceof MessageMedia);
+    });
+
+    test('-vv (or -v2): the full report, every command with its time, the total and the options as JSON', async () => {
+        for (const flag of ['-vv', '-v2']) {
+            const r = await bot.execute(`/get ${flag} ${URL}`);
+            assert.match(r[1].text, /🛠️ \*Verbose Mode\* · total \d+\.\d s[\s\S]*💾 \*yt-dlp\* \(\d+\.\d s\): _[\s\S]*🔗 \*ffmpeg\* \(\d+\.\d s\): _[\s\S]*🧩 \*cmdArgs\*/, flag);
+            assert.ok(r[2].content instanceof MessageMedia);
+        }
     });
 
     test('-es sozinho corta a partir do início e aceita frações de segundo', async () => {
@@ -386,14 +395,18 @@ describe('/get', () => {
         assert.match(friendly, /Não consegui baixar ou processar essa mídia/);
         assert.doesNotMatch(friendly, /yt-dlp|Cmd|Inner|rate limit/i);
         const verbose = await errorInNotice(`/get -v ${URL}`);
-        assert.match(verbose, /Problemas para baixar com '\/venv\/bin\/yt-dlp'[\s\S]*🛠️ \*Cmd\*/);
-        assert.match(verbose, /rate limit/i);
+        assert.match(verbose, /Problemas para baixar com '\/venv\/bin\/yt-dlp'/, '-v: the reason, short');
+        assert.doesNotMatch(verbose, /🛠️ \*Cmd\*|Detalhes/);
+        assert.match(verbose, /-vv/);
+        const full = await errorInNotice(`/get -vv ${URL}`);
+        assert.match(full, /Problemas para baixar com '\/venv\/bin\/yt-dlp'[\s\S]*🛠️ \*Cmd\*/, '-vv: the command and the log');
+        assert.match(full, /rate limit/i);
 
         processes.fail = 'ffmpeg';
         const decodeFriendly = await errorInNotice(`/get ${URL}`);
         assert.match(decodeFriendly, /Não consegui baixar ou processar essa mídia/);
         assert.doesNotMatch(decodeFriendly, /ffmpeg|Cmd|Inner/);
-        const decodeVerbose = await errorInNotice(`/get -v ${URL}`);
+        const decodeVerbose = await errorInNotice(`/get -vv ${URL}`);
         assert.match(decodeVerbose, /Problemas para decodificar com '\/usr\/bin\/ffmpeg'[\s\S]*🛠️ \*Cmd\*/);
 
         processes.fail = null;
@@ -525,7 +538,7 @@ describe('/get respondendo uma mídia do WhatsApp', () => {
 
     test('-v: sem o yt-dlp, que não rodou', async () => {
         const r = await bot.execute('/get -v -a', replying(video));
-        assert.match(r[1].text, /🔗 \*ffmpeg\*/);
+        assert.match(r[1].text, /🔗 ffmpeg/);
         assert.doesNotMatch(r[1].text, /yt-dlp/);
     });
 
@@ -1061,12 +1074,15 @@ describe('/stt', () => {
         assert.equal(r[0].text, '• fala de um teste\n\nolá mundo, isto é um teste');
     });
 
-    test('-v: manda os comandos do yt-dlp, ffmpeg e faster-whisper antes do texto', async () => {
+    test('-v: the summary of yt-dlp, ffmpeg and faster-whisper (model) with the times; -vv the commands', async () => {
         const r = await bot.execute(`/stt -v ${URL}`);
-        assert.match(r[1].text, /🛠️ \*Verbose Mode\*[\s\S]*yt-dlp[\s\S]*ffmpeg[\s\S]*faster-whisper\* \(\d+\.\d s\)[\s\S]*stt\.py[\s\S]*large-v3/);
+        assert.match(r[1].text, /^🛠️ \*Verbose\* · total \d+\.\d s\n💾 yt-dlp: \d+\.\d s\n🔗 ffmpeg \(1:40\): \d+\.\d s\n🧠 faster-whisper \(large-v3\): \d+\.\d s\n/);
+        assert.doesNotMatch(r[1].text, /stt\.py|cmdArgs/, 'the summary: no command');
         assert.match(r[0].text, /olá mundo/, 'o aviso vira o texto');
+        const full = await bot.execute(`/stt -vv ${URL}`);
+        assert.match(full[1].text, /🛠️ \*Verbose Mode\*[\s\S]*💾 \*yt-dlp\* \(\d+\.\d s\)[\s\S]*🔗 \*ffmpeg\* \(\d+\.\d s\)[\s\S]*faster-whisper\* \(\d+\.\d s\)[\s\S]*stt\.py[\s\S]*large-v3[\s\S]*cmdArgs/);
         const g = await bot.execute(`/get -t -v ${URL}`);
-        assert.match(g[1].text, /Verbose Mode/);
+        assert.match(g[1].text, /Verbose/);
     });
 
     test('-sum: o resumo do ChatGPT no alto e a transcrição embaixo', async () => {

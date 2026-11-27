@@ -3,7 +3,7 @@
  */
 
 const { USER } = require('../../roles').ROLES;
-const { OPTION_VERBOSE_FFMPEG } = require('./_options');
+const { OPTION_VERBOSE_FULL, OPTION_VERBOSE_FFMPEG } = require('./_options');
 
 module.exports = {
     cmd: '/sticker',
@@ -56,6 +56,7 @@ module.exports = {
             ex: ['/sticker -ss 10 -es 13', '/sticker -ss 01:10 -es 01:13', '/sticker -es -2']
         },
         OPTION_VERBOSE_FFMPEG,
+        OPTION_VERBOSE_FULL,
         {
             argv: ['[url]'],
             desc: 'Video link; takes precedence over the replied message.',

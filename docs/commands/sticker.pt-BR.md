@@ -48,7 +48,8 @@ qualidade e, se ainda não couber, sugere um trecho menor com `-ss` e `-es`.
 | `-fg` | `<cor>` | Com `-txt`: a cor da letra, em `#RRGGBB` (padrão `#000000`, preto) |
 | `-startSec`, `-ss` | `<tempo>` | Vídeo: começa neste ponto (padrão 0) e pega os 6 s seguintes. Em segundos (`12`, `1.5`) ou em `min:seg` (`01:12`). Com `-` na frente, conta do final (`-10`) |
 | `-endSec`, `-es` | `<tempo>` | Vídeo: termina neste ponto, no mesmo formato do `-ss` (também com `-` na frente) e maior que o início; no máximo 6 s depois do `-ss` |
-| `-verbose`, `-v` | | Mostra os parâmetros usados no yt-dlp/ffmpeg |
+| `-verbose`, `-v` | | Um resumo do que rodou: cada etapa (yt-dlp, ffmpeg...) com quanto tempo levou, e o total |
+| `-vv`, `-v2` | | O relatório completo: cada comando que rodou com o tempo, as opções entendidas (JSON) e, se o download falhar, o fim do log dele |
 | `[url]` | | Link do vídeo; vale mais que a mensagem respondida |
 
 Os limites e a proteção contra URLs da rede interna são os do [`/get`](get.md). A miniatura da

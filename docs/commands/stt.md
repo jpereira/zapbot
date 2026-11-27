@@ -19,7 +19,8 @@ It runs **inside the server**, with [faster-whisper](https://github.com/SYSTRAN/
 | `-gpt`, `-g` | | Transcribes with ChatGPT (OpenAI API, spends your account) instead of the local faster-whisper. Without `-gpt` or `-local`, the [`stt.engine`](../settings.md) setting decides |
 | `-local`, `-l` | | Transcribes with the local faster-whisper (no key, uses the server CPU), even with `stt.engine` at `gpt` |
 | `-summary`, `-sum` | | Also summarizes the speech with ChatGPT (same key as [`/gpt`](gpt.md), which spends your OpenAI account): the summary in topics on top, the whole transcription below |
-| `-verbose`, `-v` | | Shows the commands used in yt-dlp, ffmpeg and faster-whisper, and how long the transcription took |
+| `-verbose`, `-v` | | A summary of what ran: each step (yt-dlp, ffmpeg, faster-whisper) with how long it took, and the total |
+| `-vv`, `-v2` | | The full report: every command that ran with its time, the options understood (JSON) |
 | `<url>` | | Video or audio link; wins over the replied message |
 
 ```text
@@ -37,7 +38,8 @@ It runs **inside the server**, with [faster-whisper](https://github.com/SYSTRAN/
 📄 Transcription
 (the whole text)
 
-/stt -v <url>                                       → also shows the commands that ran
+/stt -v <url>                                       → also shows how long each step took
+/stt -vv <url>                                      → and every command, whole
 (reply to a message with a link)  /stt
 (reply to a voice note)           /stt
 (reply to any video or audio)     /stt

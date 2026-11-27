@@ -4,7 +4,7 @@
 
 const { USER } = require('../../roles').ROLES;
 
-const { OPTION_QUIET_TIP } = require('./_options');
+const { OPTION_QUIET_TIP, OPTION_VERBOSE_FFMPEG, OPTION_VERBOSE_FULL } = require('./_options');
 
 module.exports = {
     cmd: '/stt',
@@ -68,11 +68,8 @@ module.exports = {
             desc: 'Also summarizes the speech with ChatGPT (same key as /gpt, which spends your OpenAI account): the summary in topics on top and the whole transcription below.',
             ex: ['/stt -sum https://www.instagram.com/reel/...']
         },
-        {
-            opts: ['verbose', 'v'],
-            values: [],
-            desc: 'Shows the commands used in yt-dlp, ffmpeg and faster-whisper, and how long the transcription took.'
-        },
+        { ...OPTION_VERBOSE_FFMPEG, desc: 'A summary of what ran: each step (yt-dlp, ffmpeg, faster-whisper) with how long it took, and the total. -vv: the full report.' },
+        { ...OPTION_VERBOSE_FULL, desc: 'The full report: every command that ran (yt-dlp, ffmpeg, faster-whisper) with its time, and the options understood (JSON).' },
         {
             argv: ['<url>'],
             desc: 'Video or audio link; takes precedence over the replied message.',

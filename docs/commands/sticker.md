@@ -49,7 +49,8 @@ lower quality and, if it still doesn't fit, suggests a shorter clip with `-ss` a
 | `-fg` | `<color>` | With `-txt`: the letter color, in `#RRGGBB` (default `#000000`, black) |
 | `-startSec`, `-ss` | `<time>` | Video: starts at this point (default 0) and takes the next 6 s. In seconds (`12`, `1.5`) or in `min:sec` (`01:12`). With a leading `-`, counts from the end (`-10`) |
 | `-endSec`, `-es` | `<time>` | Video: ends at this point, in the same format as `-ss` (also with a leading `-`) and after the start; at most 6 s after `-ss` |
-| `-verbose`, `-v` | | Shows the parameters used in yt-dlp/ffmpeg |
+| `-verbose`, `-v` | | A summary of what ran: each step (yt-dlp, ffmpeg...) with how long it took, and the total |
+| `-vv`, `-v2` | | The full report: every command that ran with its time, the options understood (JSON) and, when a download fails, the end of its log |
 | `[url]` | | Video link; takes precedence over the replied message |
 
 The limits and the protection against internal network URLs are the ones from [`/get`](get.md). The

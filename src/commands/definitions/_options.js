@@ -55,10 +55,17 @@ const OPTION_ALERT_TO = {
     ]
 };
 
+// -v: a summary (each step with its time, and the total); -vv: the full report (the commands, the options as JSON,
+// the end of the log when a download fails). /get, /stt and /sticker (src/commands/get.js)
 const OPTION_VERBOSE_FFMPEG = {
     opts: ['verbose', 'v'],
     values: [],
-    desc: 'Shows the commands used in yt-dlp and ffmpeg, plus technical details when a download fails.'
+    desc: 'A summary of what ran: each step (yt-dlp, ffmpeg...) with how long it took, and the total. -vv: the full report.'
+};
+const OPTION_VERBOSE_FULL = {
+    opts: ['vv', 'v2'],
+    values: [],
+    desc: 'The full report: every command that ran (yt-dlp, ffmpeg...) with its time, the options understood (JSON) and, when a download fails, the end of its log.'
 };
 
 // -status|-s of /gpt, /tldr and /draw: the call usage in the footer (see src/openaiChat.js)
@@ -85,5 +92,6 @@ module.exports = {
     OPTION_ALERT_PAUSE,
     OPTION_ALERT_RESUME,
     OPTION_ALERT_TO,
-    OPTION_VERBOSE_FFMPEG
+    OPTION_VERBOSE_FFMPEG,
+    OPTION_VERBOSE_FULL
 };

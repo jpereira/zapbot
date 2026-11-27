@@ -37,11 +37,16 @@ const isXUrl = (url) => {
     }
 };
 
-function errorGet(e, verbose) {
-    if (!verbose && !e?.cmd && !e?.cause) return formatErrorCommand(e);
-    if (verbose) {
+// The error of a download: -vv the command and the end of its log; -v the reason, short; neither, the friendly one
+function errorGet(e, level) {
+    if (!level && !e?.cmd && !e?.cause) return formatErrorCommand(e);
+    if (level >= 2) {
         const textAlt = formatErrorCommand(e);
         return e.details ? `${textAlt}\n🧾 *Detalhes*:\n\`\`\`\n${e.details}\n\`\`\`` : textAlt;
+    }
+    if (level === 1) {
+        const inner = e?.cause?.inner ?? e?.cause;
+        return `⚠️💥 ${e.message}.${inner ? `\n⛓️‍💥 ${String(inner.message || inner).split('\n')[0]}` : ''}\n💡 _${t('get.verboseFullTip')}_`;
     }
     // No media or a login: the reason itself helps; the rest is the general message
     const message = e.noMedia || e.needsLogin ? e.message : t('get.mediaFailed');
@@ -355,6 +360,27 @@ function searchInCache(url, snippet) {
 // The extension of the replied media, by mimetype (ffmpeg looks at the content, not the name)
 const extension = (media) => String(media.mimetype).split(/[/;]/)[1]?.replace(/[^a-z0-9]/gi, '') || 'bin';
 
+// How long a step took: "3.2 s", and "(3.2 s)" in the full report
+const secs = (ms) => `${(ms / 1000).toFixed(1)} s`;
+const took = (ms) => `(${secs(ms)})`;
+
+// -v: 1 (the summary); -vv or -v2: 2 (the full report); neither: 0
+const verboseLevel = (opts) => (opts?.opt?.vv ? 2 : opts?.opt?.verbose ? 1 : 0);
+
+/**
+ * The -v report. steps: [{icon, name, ms, cmd, note}], in the order they ran.
+ * 1: each step with its time and the total (short: no command, no JSON); 2: every command whole, the options as JSON.
+ */
+function verboseReport(steps, opts, level, totalMs) {
+    if (level >= 2) {
+        let textMsg = `🛠️ *Verbose Mode* · ${t('get.verboseTotal')} ${secs(totalMs)}\n\n`;
+        for (const s of steps) textMsg += `${s.icon} *${s.name}* ${took(s.ms)}: _${s.cmd}_\n\n`;
+        return textMsg + '🧩 *cmdArgs*:```\n' + JSON.stringify(opts, null, 4) + '\n```';
+    }
+    const lines = steps.map(s => `${s.icon} ${s.name}${s.note ? ` (${s.note})` : ''}: ${secs(s.ms)}`);
+    return `🛠️ *Verbose* · ${t('get.verboseTotal')} ${secs(totalMs)}\n${lines.join('\n')}\n\n💡 _${t('get.verboseFullTip')}_`;
+}
+
 // The URL must be http(s) and public (anti-SSRF); otherwise it throws the error
 async function checkUrl(url, senderName) {
     if (!isValidHttpUrl(url)) {
@@ -367,6 +393,7 @@ async function checkUrl(url, senderName) {
 }
 
 async function converterAndSend({ msg, opts, senderName, url, media, preview }) {
+    const startAll = Date.now(); // the total of -v
     // Random: with Date.now() two /get in the same millisecond would use the same files
     const id = crypto.randomUUID();
     let originalFile = null;
@@ -377,7 +404,8 @@ async function converterAndSend({ msg, opts, senderName, url, media, preview }) 
     let notice = null; // the "Processando…": edited with the result (success or error)
 
     try {
-        const { audio: isAudio, sticker: isSticker, verbose: isVerbose } = opts.opt;
+        const { audio: isAudio, sticker: isSticker } = opts.opt;
+        const verbose = verboseLevel(opts);
 
         if (isDebugMode()) {
             printDebug(`url=${url} media=${media?.mimetype} opts=`, opts);
@@ -397,6 +425,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, preview }) 
         printInfo(`> All the commands' output saved in ${logCmdFile}`);
 
         let cmdYt = null;
+        let msYt = 0; // how long yt-dlp took (-v), the failed snippet included
         let optsFfmpeg = opts; // with the snippet downloaded, ffmpeg's cut starts at 0
         if (media) {
             fs.writeFileSync(originalFile, Buffer.from(media.data, 'base64'));
@@ -417,6 +446,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, preview }) 
                 printInfo(`> From the cache (get.cache.tmp), without downloading: ${path.basename(originalFile)}`);
             } else {
                 // With a cut, tries to download only the snippet; if the site does not allow it, downloads everything and ffmpeg cuts
+                const startYt = Date.now();
                 if (snippet) {
                     try {
                         cmdYt = await downloadWithYtDlp(url, originalFile, logCmd, snippet, logCmdFile);
@@ -429,6 +459,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, preview }) 
                 if (optsFfmpeg === opts) {
                     cmdYt = await downloadWithYtDlp(url, originalFile, logCmd, null, logCmdFile);
                 }
+                msYt = Date.now() - startYt;
 
                 // Above --max-filesize yt-dlp aborts with no error and no file
                 if (!fs.existsSync(originalFile)) {
@@ -452,6 +483,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, preview }) 
         // Convert. The sticker lowers quality and fps until it fits WhatsApp's limit
         const attempts = isSticker ? ATTEMPTS_STICKER : [undefined];
         let cmdFfmpeg = null;
+        const startFfmpeg = Date.now(); // every attempt of the sticker counts
 
         for (const attemptAlt of attempts) {
             const ffmpegArgs = argsDoFfmpeg(optsFfmpeg, originalFile, outputFile, attemptAlt);
@@ -473,6 +505,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, preview }) 
                 throw new Error(t('get.stickerTooBig', { max: STICKER_ANIMATED_MAX_BYTES / 1024 }));
             }
         }
+        const msFfmpeg = Date.now() - startFfmpeg;
 
         const maxSizeMB = getSetting('get.maxSizeMB');
         if (fs.statSync(outputFile).size > maxSizeMB * 1024 * 1024) {
@@ -492,13 +525,12 @@ async function converterAndSend({ msg, opts, senderName, url, media, preview }) 
                 }
             }
 
-            if (isVerbose) {
-                let textMsg = '🛠️ *Verbose Mode*\n\n';
-                if (cmdYt) textMsg += `💾 *yt-dlp*: _${cmdYt}_\n\n`;
-                textMsg += `🔗 *ffmpeg*: _${cmdFfmpeg}_\n\n`;
-                textMsg += '🧩 *cmdArgs*:```\n' + JSON.stringify(opts, null, 4) + '\n```';
-
-                await msg.reply(textMsg, null, { linkPreview: false });
+            if (verbose) {
+                const steps = [
+                    ...(cmdYt ? [{ icon: '💾', name: 'yt-dlp', ms: msYt, cmd: cmdYt, note: humanSize(fs.statSync(originalFile).size) }] : []),
+                    { icon: '🔗', name: 'ffmpeg', ms: msFfmpeg, cmd: cmdFfmpeg, note: humanSize(outputSize) }
+                ];
+                await msg.reply(verboseReport(steps, opts, verbose, Date.now() - startAll), null, { linkPreview: false });
             }
 
             if (isSticker) {
@@ -530,7 +562,7 @@ async function converterAndSend({ msg, opts, senderName, url, media, preview }) 
         if (e.noMedia && url && opts.opt.sticker && (await postPhotoSticker(msg, notice, url, opts))) return;
         if (e.onDownload && preview && (await previewSticker(msg, preview, notice, e, opts.opt.pos))) return;
         printError(e.message);
-        await completeNotice(msg, notice, errorGet(e, opts.opt.verbose), { linkPreview: false });
+        await completeNotice(msg, notice, errorGet(e, verboseLevel(opts)), { linkPreview: false });
     } finally {
         if (logCmd !== null) {
             try { fs.closeSync(logCmd); } catch { /* already closed */ }
@@ -557,6 +589,7 @@ const TRANSCRIPTION_MAX_CHARACTERS = 60000;
  * O notice "Processando" vira o text.
  */
 async function transcribeAndSend({ msg, opts, senderName, url, media }) {
+    const startAll = Date.now(); // the total of -v
     let engine;
     try {
         engine = pickEngine(opts, 'stt.engine');
@@ -598,6 +631,7 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
 
         let fileAlt = raw;
         let cmdYt = null;
+        const startYt = Date.now();
         if (media) {
             fs.writeFileSync(raw, Buffer.from(media.data, 'base64'));
         } else {
@@ -605,6 +639,7 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
             fileAlt = find(`${id}_fala.`);
             if (!fileAlt) throw errorOnDownload(t('get.nothingDownloaded', { max: getSetting('get.maxDownloadMB') }));
         }
+        const msYt = Date.now() - startYt;
         printInfo(`> Audio to transcribe: ${humanSize(fs.statSync(fileAlt).size)}`);
 
         // The cut (-ss/-es), with the time counted from the end resolved by the audio duration
@@ -619,6 +654,7 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
         ];
         const cmdFfmpeg = [BIN_FFMPEG, ...ffmpegArgs].join(' ');
         fs.writeSync(logCmd, `\n# Executando: ${cmdFfmpeg}\n`);
+        const startFfmpeg = Date.now();
         try {
             await runCommand(BIN_FFMPEG, ffmpegArgs, logCmd);
         } catch (inner) {
@@ -627,6 +663,7 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
             errorAlt.details = tailLog(logCmdFile);
             throw errorAlt;
         }
+        const msFfmpeg = Date.now() - startFfmpeg;
 
         const duration = await fileDuration(wav);
         const maxMin = getSetting('stt.maxMinutes');
@@ -648,16 +685,19 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
         } catch (inner) {
             throw new Error(t('get.transcribeFailed'), { cause: inner });
         }
+        const msTranscription = Date.now() - start;
 
-        if (opts.opt.verbose) {
-            let textMsg = '🛠️ *Verbose Mode*\n\n';
-            if (cmdYt) textMsg += `💾 *yt-dlp*: _${cmdYt}_\n\n`;
-            textMsg += `🔗 *ffmpeg*: _${cmdFfmpeg}_\n\n`;
-            textMsg += gpt
-                ? `🧠 *OpenAI* (${((Date.now() - start) / 1000).toFixed(1)} s): _${sttOptions.model ?? getSetting('gpt.transcribe.model')}_\n\n`
-                : `🧠 *faster-whisper* (${((Date.now() - start) / 1000).toFixed(1)} s): _${transcriptionCommand(wav, sttOptions)}_\n\n`;
-            textMsg += '🧩 *cmdArgs*:```\n' + JSON.stringify(opts, null, 4) + '\n```';
-            await msg.reply(textMsg, null, { linkPreview: false });
+        const verbose = verboseLevel(opts);
+        if (verbose) {
+            const model = gpt ? (sttOptions.model ?? getSetting('gpt.transcribe.model')) : (sttOptions.model || getSetting('stt.model'));
+            const steps = [
+                ...(cmdYt ? [{ icon: '💾', name: 'yt-dlp', ms: msYt, cmd: cmdYt }] : []),
+                { icon: '🔗', name: 'ffmpeg', ms: msFfmpeg, cmd: cmdFfmpeg, note: mmss(duration) },
+                gpt
+                    ? { icon: '🧠', name: 'OpenAI', ms: msTranscription, cmd: model, note: model }
+                    : { icon: '🧠', name: 'faster-whisper', ms: msTranscription, cmd: transcriptionCommand(wav, sttOptions), note: model }
+            ];
+            await msg.reply(verboseReport(steps, opts, verbose, Date.now() - startAll), null, { linkPreview: false });
         }
 
         const textAlt = r.text.length > TRANSCRIPTION_MAX_CHARACTERS ? `${r.text.slice(0, TRANSCRIPTION_MAX_CHARACTERS)}…` : r.text;
@@ -673,7 +713,7 @@ async function transcribeAndSend({ msg, opts, senderName, url, media }) {
         }
     } catch (e) {
         printError(e.message);
-        await completeNotice(msg, notice, errorGet(e, opts.opt.verbose), { linkPreview: false });
+        await completeNotice(msg, notice, errorGet(e, verboseLevel(opts)), { linkPreview: false });
     } finally {
         if (logCmd !== null) {
             try { fs.closeSync(logCmd); } catch { /* already closed */ }

@@ -117,7 +117,15 @@
         "v"
       ],
       "values": [],
-      "desc": "Mostra os comandos usados no yt-dlp e no ffmpeg."
+      "desc": "Um resumo do que rodou: cada etapa (yt-dlp, ffmpeg...) com quanto tempo levou, e o total. -vv: o relatório completo."
+    },
+    {
+      "opts": [
+        "vv",
+        "v2"
+      ],
+      "values": [],
+      "desc": "O relatório completo: cada comando que rodou (yt-dlp, ffmpeg...) com o tempo, as opções entendidas (JSON) e, se o download falhar, o fim do log dele."
     },
     {
       "argv": [
